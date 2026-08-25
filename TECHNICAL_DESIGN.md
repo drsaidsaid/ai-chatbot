@@ -78,6 +78,11 @@ root. Upstream remains a read-only review remote; upgrades are selected, tested,
 and merged through a dedicated maintenance branch rather than treated as an
 external runtime dependency.
 
+The V1 operator surface is intentionally limited to Inbox, Hot Leads, Leads,
+Reviews, Knowledge, Bookings, and owned settings. Other Community Edition
+capabilities are retained but hidden until a separate product decision enables
+them. `docs/V1_OWNED_INBOX_SCOPE.md` is the authoritative feature boundary.
+
 ## 5. State Mapping
 
 Lead Quality, Follow-up State, Control State, and Inbox Conversation Status are independent.
