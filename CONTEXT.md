@@ -1,0 +1,77 @@
+# AI Lead Employee
+
+AI Lead Employee receives business inquiries, determines whether each person is a suitable buyer, and coordinates the transition from automated conversation to human action.
+
+## Language
+
+**Business Account**:
+The tenant whose offers, knowledge, leads, conversations, rules, team, and integrations are isolated from every other business.
+_Avoid_: Client account, workspace, company account
+
+**Offer**:
+A service that a Business Account presents to leads and qualifies them for.
+_Avoid_: Product, package, campaign
+
+**Lead**:
+A person or business identity that has contacted the Business Account and may be evaluated for an Offer.
+_Avoid_: Customer, user, contact
+
+**Conversation**:
+A channel-specific exchange between a Lead and the Business Account. A Lead can have multiple conversations over time.
+_Avoid_: Chat, thread, session
+
+**AI Employee**:
+The automated participant that answers approved questions, gathers qualification evidence, and follows configured rules.
+_Avoid_: Chatbot, agent, bot
+
+**Human Operator**:
+A person authorized to review, take ownership of, and reply to conversations.
+_Avoid_: Agent, admin, salesperson
+
+**Qualification**:
+The current evaluation of a Lead for one Offer, including quality, score, reasons, evidence, and missing signals.
+_Avoid_: Lead status, classification
+
+**Qualification Evidence**:
+A normalized fact supporting or contradicting a qualification signal, linked to the message or human edit that supplied it.
+_Avoid_: Extracted field, AI guess
+
+**Lead Quality**:
+The qualification outcome: Unknown, Unqualified, Low Qualified, Qualified, or Highly Qualified.
+_Avoid_: Status, stage, temperature
+
+**Hot Lead**:
+An operational description of a Highly Qualified Lead that requires immediate human attention. It is not a separate Lead Quality value.
+_Avoid_: Hot quality, hot status
+
+**Follow-up State**:
+The next-action condition for a Lead: no follow-up, nurture, human review, call booked, or closed.
+_Avoid_: Lead status, conversation status
+
+**Control State**:
+The authority governing who may reply automatically: AI Active, Handoff Requested, Human Active, AI Paused, or Closed.
+_Avoid_: Conversation status, bot status
+
+**Handoff**:
+The controlled transfer of a Conversation from the AI Employee to a Human Operator.
+_Avoid_: Escalation, assignment
+
+**Knowledge Item**:
+An approved, versioned answer or rule that the AI Employee may use when responding.
+_Avoid_: Memory, training data
+
+**Review Request**:
+A question or decision the AI Employee cannot safely complete and has submitted to a Human Operator.
+_Avoid_: Ticket, escalation
+
+**Booking**:
+A calendar reservation created for a Highly Qualified Lead with confirmed start and end times.
+_Avoid_: Call request, appointment lead
+
+**Alert**:
+A routed notification about a hot lead, booking, urgent review, or knowledge decision.
+_Avoid_: Message, notification event
+
+**Chatwoot Conversation Status**:
+Chatwoot's operational inbox state: pending, open, snoozed, or resolved. It must never be used as Lead Quality.
+_Avoid_: Status
