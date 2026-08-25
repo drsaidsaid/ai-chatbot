@@ -346,7 +346,10 @@ The booked-call alert should also include:
 - The assigned human receives the direct WhatsApp alert; the admin may be copied on high-priority alerts.
 - Reassignment remains possible after booking and must be recorded in the audit history.
 - When a human sends a reply, the AI pauses automatically for that conversation.
+- A human assignment, handoff, pause, reply, or resolution cancels any pending AI reply before it can be sent.
+- Before every outbound AI message, the system must recheck that the AI still owns the conversation; an already-queued reply must be blocked after human takeover.
 - The AI resumes only when a human explicitly resumes it.
+- Resuming the AI does not immediately send a message; it permits the next eligible lead message or scheduled action to be evaluated.
 - Internal notes are never sent to the lead.
 
 ## 13. Follow-Up
@@ -512,10 +515,13 @@ The v1 is complete only when all of these scenarios work:
 4. A returning lead is recognized and reclassified when new budget or urgency evidence appears.
 5. An unknown question is escalated, answered by a human, sent to the lead, and optionally added to the correct knowledge category after approval.
 6. A human takes over a conversation, the AI pauses, and it does not resume until explicitly enabled.
-7. A voice note is stored and the lead is asked to send text.
-8. A lead opts out and receives no further automated follow-up.
-9. Two leads cannot book the same calendar time.
-10. A team member sees only assigned leads while the admin sees all leads and activity.
+7. An AI reply queued before human takeover completes late and is blocked without sending.
+8. Chatwoot delivers the same inbound event twice, but the lead receives only one AI reply and no duplicate side effect.
+9. A resolved conversation receives a new lead message, retains the remembered Lead identity, and starts a new AI-controlled lifecycle.
+10. A voice note is stored and the lead is asked to send text.
+11. A lead opts out and receives no further automated follow-up.
+12. Two leads cannot book the same calendar time.
+13. A team member sees only assigned leads while the admin sees all leads and activity.
 
 ## 20. Deferred Decisions
 

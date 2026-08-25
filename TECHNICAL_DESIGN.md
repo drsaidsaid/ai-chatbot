@@ -93,6 +93,21 @@ Lead Quality, Follow-up State, Control State, and Chatwoot Conversation Status a
 
 A human-authored outgoing message always transitions Control State to `human_active`. Only an explicit resume command may return it to `ai_active`.
 
+### Control State Transitions
+
+| Current state | Event | Next state | Required side effect |
+|---|---|---|---|
+| `ai_active` | AI requests a human | `handoff_requested` | Clear AI ownership, cancel pending AI replies, open the Chatwoot conversation |
+| `ai_active` or `handoff_requested` | Human assigned or human replies | `human_active` | Assign the Human Operator and cancel pending AI replies and automatic follow-ups |
+| Any non-closed state | Human pauses AI | `ai_paused` | Cancel pending AI replies and automatic follow-ups |
+| `human_active` or `ai_paused` | Human explicitly resumes AI | `ai_active` | Return Chatwoot to the bot-ready state; do not send until a new eligible lead message exists |
+| Any non-closed state | Conversation resolved | `closed` | Cancel pending AI replies and automatic follow-ups |
+| `closed` | Lead sends a new message | `ai_active` | Begin a new conversation lifecycle while retaining the existing Lead identity |
+
+Assignment, human reply, pause, and resolution events are authoritative even when
+an AI job was queued earlier. A queued job must not infer permission from the state
+that existed when it was created.
+
 ## 6. Draft PostgreSQL Schema
 
 All primary keys are UUIDs unless the table stores an external identifier. Every tenant-owned table includes `business_account_id`. Timestamps use UTC; business display and booking rules use the Business Account timezone.
@@ -160,8 +175,12 @@ All primary keys are UUIDs unless the table stores an external identifier. Every
 
 #### `conversations`
 
-- `business_account_id`, `lead_id`, channel, external inbox ID, external conversation ID, Control State, Follow-up State, current question key, question debt, last activity timestamps, and current Human Operator.
+- `business_account_id`, `lead_id`, channel, external inbox ID, external conversation ID, Control State, Follow-up State, current question key, question debt, last activity timestamps, current Human Operator, and monotonic `control_version`.
 - Unique: `(business_account_id, channel, external_conversation_id)`.
+
+Every ownership-changing transition increments `control_version`. AI reply jobs
+record the version they observed, but the worker must still lock and re-read the
+Conversation before sending.
 
 #### `messages`
 
@@ -205,7 +224,7 @@ All primary keys are UUIDs unless the table stores an external identifier. Every
 
 #### `scheduled_actions`
 
-- `business_account_id`, conversation ID, action type, run time, status, attempt count, idempotency key, cancellation reason, and result metadata.
+- `business_account_id`, conversation ID, action type, run time, status, attempt count, observed control version, idempotency key, cancellation reason, and result metadata.
 - Unique: `idempotency_key`.
 
 #### `alert_routes`
@@ -273,13 +292,15 @@ Mirrored labels should initially include `hot-lead`, `needs-review`, `follow-up-
 1. Verify the Chatwoot webhook signature before accepting an event.
 2. Store and deduplicate the webhook before running AI logic.
 3. Serialize processing per Conversation.
-4. Re-read Control State immediately before sending an AI reply.
+4. Immediately before sending an AI reply, lock and re-read Control State, Chatwoot status, current owner, and `control_version` from PostgreSQL. Send only when the state is `ai_active`, Chatwoot status is `pending`, and the AI Employee still owns the Conversation.
 5. Persist the AI decision, outbound message intent, and outbox event in one database transaction.
 6. Send through Chatwoot using an idempotency key where supported and reconcile the external message ID.
-7. A human reply invalidates pending AI reply and follow-up jobs.
+7. A handoff request, human assignment, human reply, manual pause, or resolution invalidates pending AI reply jobs. Human activity, pause, and resolution also invalidate automatic follow-up jobs.
 8. Booking and alert creation are idempotent and retryable.
 9. Every Lead Quality transition records evidence, reasons, configuration version, and actor.
 10. No cross-tenant query may execute without Business Account scope.
+11. A duplicate Chatwoot event has no second logical effect, even when it arrives after the first event has been processed.
+12. Manual resume grants permission for future eligible work; it does not by itself send an AI reply.
 
 ## 9. Security and Operations
 
