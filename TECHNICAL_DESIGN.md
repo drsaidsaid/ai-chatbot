@@ -73,6 +73,11 @@ The pinned Community Edition source is the reviewable upstream baseline. Our own
 fork will retain its MIT notice and exclude enterprise code. Modules outside v1
 remain hidden through our configuration or navigation until needed.
 
+The pinned `v4.17.0` Community Edition source is imported at the owned repository
+root. Upstream remains a read-only review remote; upgrades are selected, tested,
+and merged through a dedicated maintenance branch rather than treated as an
+external runtime dependency.
+
 ## 5. State Mapping
 
 Lead Quality, Follow-up State, Control State, and Inbox Conversation Status are independent.
