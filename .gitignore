@@ -7,5 +7,6 @@ upstream/chatwoot/
 !.env.example
 .DS_Store
 node_modules/
+.next/
 coverage/
 dist/
