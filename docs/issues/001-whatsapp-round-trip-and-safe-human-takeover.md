@@ -25,4 +25,4 @@ AI reply cannot escape after human takeover.
 
 ## Blocked by
 
-None - can start immediately.
+- Ticket 000: Owned Community Edition baseline and access.

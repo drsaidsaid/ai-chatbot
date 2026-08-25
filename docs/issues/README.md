@@ -6,7 +6,8 @@ interface, and automated verification where those layers are relevant.
 
 | ID | Title | Blocked by | Initial state |
 |---|---|---|---|
-| 001 | Direct Meta WhatsApp round trip and safe human takeover | None | Ready |
+| 000 | Owned Community Edition baseline and access | None | Ready |
+| 001 | Direct Meta WhatsApp round trip and safe human takeover | 000 | Blocked |
 | 002 | Approved answers and unsupported media | 001 | Blocked |
 | 003 | One-question-at-a-time lead qualification | 002 | Blocked |
 | 004 | Unanswered-question review and knowledge approval | 002 | Blocked |
