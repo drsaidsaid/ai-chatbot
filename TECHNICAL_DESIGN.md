@@ -127,6 +127,12 @@ All primary keys are UUIDs unless the table stores an external identifier. Every
 - Roles in v1: `admin`, `team_member`.
 - Unique: `(business_account_id, user_id)`.
 
+Authentication is owned by the application. V1 is invite-only and uses
+email/password sign-in, verification, password recovery, and server-side
+Business Account membership resolution. A browser never establishes tenant
+scope by submitting an arbitrary `business_account_id`; the server verifies the
+membership before any account selection or query.
+
 #### `integration_connections`
 
 - `business_account_id`, `provider`, `status`, external account identifiers, encrypted secret reference, scopes, expiry, and health metadata.
