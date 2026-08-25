@@ -13,7 +13,7 @@ rules permit handoff.
 - [ ] An unqualified Lead requesting a human receives the configured explanation and qualification continues without a handoff.
 - [ ] The handoff cancels all pending AI replies before assigning the Human Operator.
 - [ ] Alert recipients are configurable by alert type and can include the assignee and admin.
-- [ ] The alert includes full contact details, business type, problem, lead volume, urgency, budget signal, decision authority, qualification reasons, and a Chatwoot conversation link.
+- [ ] The alert includes full contact details, business type, problem, lead volume, urgency, budget signal, decision authority, qualification reasons, and an owned inbox Conversation link.
 - [ ] The operator can assign or reassign the Lead, and reassignment is audited.
 - [ ] Retried events create only one logical handoff and one alert per configured route.
 - [ ] A qualified but non-urgent Lead remains available for follow-up without automatic booking or urgent handoff.

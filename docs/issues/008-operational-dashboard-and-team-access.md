@@ -2,11 +2,11 @@
 
 ## What to build
 
-Complete the operator experience around the Chatwoot inbox. Admins need clear
+Complete the operator experience around the owned inbox. Admins need clear
 queues for all Leads, Highly Qualified Leads, unanswered questions, follow-up,
 and booked calls. Human Operators need the conversations and actions assigned to
-them. Product intelligence may be embedded in Chatwoot, while AI Lead Employee
-remains authoritative for qualification and control state.
+them. AI Lead Employee is authoritative for inbox operations, qualification, and
+control state.
 
 ## Acceptance criteria
 
@@ -17,7 +17,7 @@ remains authoritative for qualification and control state.
 - [ ] Internal notes can never be sent to a Lead.
 - [ ] Admins see all tenant activity; Human Operators see only permitted or assigned records.
 - [ ] Every sensitive action is tenant-scoped and recorded in append-only audit history.
-- [ ] Mirrored Chatwoot labels or attributes can be rebuilt from authoritative product data.
+- [ ] Inbox labels and attributes can be rebuilt from authoritative product data.
 - [ ] Desktop and mobile layouts support the primary operator workflows without overlapping controls or text.
 
 ## Blocked by

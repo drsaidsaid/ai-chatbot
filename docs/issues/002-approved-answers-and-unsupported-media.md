@@ -11,7 +11,7 @@ for text instead of being transcribed in V1.
 ## Acceptance criteria
 
 - [ ] An admin can add, edit, approve, reject, and deactivate knowledge used by the AI Employee.
-- [ ] An approved FAQ answer can travel from a real WhatsApp question through the AI service and back through Chatwoot.
+- [ ] An approved FAQ answer can travel from a real WhatsApp question through the AI service and back through Meta.
 - [ ] FAQ, offer, and pricing sources win when supporting documents conflict.
 - [ ] Unapproved, rejected, and cross-tenant knowledge cannot appear in a lead-facing answer.
 - [ ] Out-of-scope topics receive a brief boundary response and no extended conversation.

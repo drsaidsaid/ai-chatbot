@@ -54,11 +54,11 @@ control. Upstream code is an implementation foundation, not a separate service.
 ## 3. Production Services
 
 1. HTTPS reverse proxy and public domain.
-2. Chatwoot Rails web service.
-3. Chatwoot Sidekiq worker.
+2. Owned Rails web service.
+3. Owned Sidekiq worker.
 4. AI Lead Employee web/API service.
 5. AI Lead Employee background worker.
-6. PostgreSQL with separate Chatwoot and AI Lead Employee databases.
+6. PostgreSQL database under our control.
 7. Redis with isolated namespaces or databases.
 8. S3-compatible attachment storage.
 9. SMTP provider for account and operational email.
@@ -69,17 +69,17 @@ control. Upstream code is an implementation foundation, not a separate service.
 
 ## 4. Feature Preservation
 
-The pinned Chatwoot source under `upstream/chatwoot` is treated as read-only upstream. Community Edition modules that are outside v1 remain in the source and are hidden through account feature flags, inbox configuration, or navigation. This includes later channels, Help Center, campaigns, CSAT, website chat, contact segments, and optional integrations.
-
-Production uses the versioned Community Edition image, not an image containing Chatwoot Enterprise code. A narrow Chatwoot patch is allowed only after an integration test proves that supported extension points cannot satisfy a required behavior.
+The pinned Community Edition source is the reviewable upstream baseline. Our owned
+fork will retain its MIT notice and exclude enterprise code. Modules outside v1
+remain hidden through our configuration or navigation until needed.
 
 ## 5. State Mapping
 
-Lead Quality, Follow-up State, Control State, and Chatwoot Conversation Status are independent.
+Lead Quality, Follow-up State, Control State, and Inbox Conversation Status are independent.
 
-| Product meaning | Authoritative state | Chatwoot representation |
+| Product meaning | Authoritative state | Owned inbox representation |
 |---|---|---|
-| AI may reply | Control State = `ai_active` | Conversation usually `pending`, assigned to AgentBot |
+| AI may reply | Control State = `ai_active` | Conversation is `pending`, assigned to AI Employee |
 | Human requested | Control State = `handoff_requested` | Bot handoff event; conversation becomes `open` |
 | Human owns replies | Control State = `human_active` | Conversation `open`, assigned to Human Operator |
 | AI manually paused | Control State = `ai_paused` | Conversation remains operationally open or pending; product attribute records pause |
@@ -93,10 +93,10 @@ A human-authored outgoing message always transitions Control State to `human_act
 
 | Current state | Event | Next state | Required side effect |
 |---|---|---|---|
-| `ai_active` | AI requests a human | `handoff_requested` | Clear AI ownership, cancel pending AI replies, open the Chatwoot conversation |
+| `ai_active` | AI requests a human | `handoff_requested` | Clear AI ownership, cancel pending AI replies, open the owned inbox Conversation |
 | `ai_active` or `handoff_requested` | Human assigned or human replies | `human_active` | Assign the Human Operator and cancel pending AI replies and automatic follow-ups |
 | Any non-closed state | Human pauses AI | `ai_paused` | Cancel pending AI replies and automatic follow-ups |
-| `human_active` or `ai_paused` | Human explicitly resumes AI | `ai_active` | Return Chatwoot to the bot-ready state; do not send until a new eligible lead message exists |
+| `human_active` or `ai_paused` | Human explicitly resumes AI | `ai_active` | Return the owned inbox to the AI-ready state; do not send until a new eligible lead message exists |
 | Any non-closed state | Conversation resolved | `closed` | Cancel pending AI replies and automatic follow-ups |
 | `closed` | Lead sends a new message | `ai_active` | Begin a new conversation lifecycle while retaining the existing Lead identity |
 
@@ -113,8 +113,8 @@ All primary keys are UUIDs unless the table stores an external identifier. Every
 #### `business_accounts`
 
 - `id`, `name`, `timezone`, `status`.
-- `chatwoot_account_id` for the current adapter.
-- Unique: `chatwoot_account_id` when present.
+- `meta_business_account_id` for the WhatsApp connection.
+- Unique: `meta_business_account_id` when present.
 
 #### `users`
 
@@ -123,14 +123,14 @@ All primary keys are UUIDs unless the table stores an external identifier. Every
 
 #### `business_account_memberships`
 
-- `business_account_id`, `user_id`, `role`, `chatwoot_user_id`.
+- `business_account_id`, `user_id`, and `role`.
 - Roles in v1: `admin`, `team_member`.
-- Unique: `(business_account_id, user_id)` and `(business_account_id, chatwoot_user_id)` when present.
+- Unique: `(business_account_id, user_id)`.
 
 #### `integration_connections`
 
 - `business_account_id`, `provider`, `status`, external account identifiers, encrypted secret reference, scopes, expiry, and health metadata.
-- Provider categories initially: `chatwoot`, `ai_model`, and `calendar`; the concrete AI and calendar providers remain replaceable.
+- Provider categories initially: `meta_whatsapp`, `ai_model`, and `calendar`; the concrete AI and calendar providers remain replaceable.
 - Raw secrets must never be returned to the browser or written to logs.
 
 ### Offer and Qualification Configuration
@@ -255,20 +255,11 @@ Conversation before sending.
 #### `outbox_events`
 
 - `business_account_id`, event type, aggregate type and ID, payload, idempotency key, state, attempts, and timestamps.
-- Database changes and required side effects are committed together; workers deliver outbox events to Chatwoot, calendar, and alert adapters.
+- Database changes and required side effects are committed together; workers deliver outbox events to Meta, calendar, and alert adapters.
 
-## 7. Chatwoot Mapping
+## 7. Owned Inbox Attributes
 
-The adapter stores these stable links:
-
-- Business Account -> Chatwoot account.
-- Channel connection -> Chatwoot inbox.
-- Lead -> Chatwoot contact.
-- Conversation -> Chatwoot conversation.
-- Message -> Chatwoot message.
-- Human Operator -> Chatwoot user/agent.
-
-Mirrored Chatwoot custom attributes should initially include:
+The owned inbox stores these attributes directly:
 
 - `lead_quality`.
 - `qualification_score`.
@@ -281,27 +272,28 @@ Mirrored Chatwoot custom attributes should initially include:
 - `booking_status`.
 - `control_state`.
 
-Mirrored labels should initially include `hot-lead`, `needs-review`, `follow-up-due`, and `call-booked`. Mirroring failures must not change the authoritative product state and must be retried through the outbox.
+Owned labels initially include `hot-lead`, `needs-review`, `follow-up-due`, and
+`call-booked`. Inbox projections must be rebuilt through the outbox when needed.
 
 ## 8. Event Processing Invariants
 
-1. Verify the Chatwoot webhook signature before accepting an event.
+1. Verify the Meta webhook signature before accepting an event.
 2. Store and deduplicate the webhook before running AI logic.
 3. Serialize processing per Conversation.
-4. Immediately before sending an AI reply, lock and re-read Control State, Chatwoot status, current owner, and `control_version` from PostgreSQL. Send only when the state is `ai_active`, Chatwoot status is `pending`, and the AI Employee still owns the Conversation.
+4. Immediately before sending an AI reply, lock and re-read Control State, inbox status, current owner, and `control_version` from PostgreSQL. Send only when the state is `ai_active`, inbox status is `pending`, and the AI Employee still owns the Conversation.
 5. Persist the AI decision, outbound message intent, and outbox event in one database transaction.
-6. Send through Chatwoot using an idempotency key where supported and reconcile the external message ID.
+6. Send through Meta using an idempotency key where supported and reconcile the external message ID.
 7. A handoff request, human assignment, human reply, manual pause, or resolution invalidates pending AI reply jobs. Human activity, pause, and resolution also invalidate automatic follow-up jobs.
 8. Booking and alert creation are idempotent and retryable.
 9. Every Lead Quality transition records evidence, reasons, configuration version, and actor.
 10. No cross-tenant query may execute without Business Account scope.
-11. A duplicate Chatwoot event has no second logical effect, even when it arrives after the first event has been processed.
+11. A duplicate Meta event has no second logical effect, even when it arrives after the first event has been processed.
 12. Manual resume grants permission for future eligible work; it does not by itself send an AI reply.
 
 ## 9. Security and Operations
 
 - Encrypt integration secrets at rest and rotate them without redeploying the application.
-- Use least-privilege Chatwoot and calendar credentials.
+- Use least-privilege Meta, calendar, and AI-provider credentials.
 - Redact message content and personal data from logs.
 - Enforce role and Business Account scope at the API and query layers.
 - Back up PostgreSQL and attachment storage, and test restoration.
@@ -312,8 +304,8 @@ Mirrored labels should initially include `hot-lead`, `needs-review`, `follow-up-
 ## 10. Implementation Order
 
 1. Infrastructure and empty schema migrations.
-2. Chatwoot adapter, webhook ingestion, deduplication, and normalized messages.
-3. Control State and human takeover safety.
+2. Owned inbox baseline, Meta webhook ingestion, deduplication, and normalized messages.
+3. Control State and human takeover safety in the owned inbox.
 4. Configurable offers, questions, rules, and qualification evidence.
 5. Approved knowledge and review requests.
 6. Embedded qualification panel and operational queues.

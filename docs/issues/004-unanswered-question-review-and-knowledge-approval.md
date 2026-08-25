@@ -11,7 +11,7 @@ be proposed as reusable knowledge in a selected category.
 
 - [ ] An unknown, conflicting, sensitive, or blocking question creates one deduplicated Human Review Request.
 - [ ] Configured recipients receive a WhatsApp alert and the request appears in the operator queue.
-- [ ] A Human Operator can answer the lead in the same Chatwoot conversation.
+- [ ] A Human Operator can answer the lead in the same owned inbox Conversation.
 - [ ] Human activity safely takes control and blocks pending AI replies.
 - [ ] After answering, the operator is asked whether to propose the answer for future use and to select its category.
 - [ ] Proposed knowledge remains unavailable to the AI until explicitly approved.

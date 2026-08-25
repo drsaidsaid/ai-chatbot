@@ -2,8 +2,8 @@
 
 ## Product Requirements Document
 
-**Status:** Revised for Chatwoot-based v1 implementation  
-**Revision:** 2 (2026-08-25)  
+**Status:** Revised for owned-inbox v1 implementation
+**Revision:** 3 (2026-08-25)
 **Working product name:** AI Lead Employee  
 **Initial channel:** WhatsApp  
 **Initial customer:** Our own online education and AI employee services business  
@@ -35,10 +35,10 @@ The product succeeds when it:
 
 ### Included
 
-- Official WhatsApp Business Cloud API integration.
-- Chatwoot Community Edition as the shared inbox and channel operations layer.
-- Native Chatwoot AgentBot integration and bot-to-human handoff.
-- An embedded lead-qualification panel using Chatwoot Dashboard Apps.
+- Direct Meta WhatsApp Business Cloud API integration.
+- An owned inbox frontend and backend derived from the Community Edition source.
+- First-party AI-to-human handoff, qualification panel, and operational queues.
+- First-party user authentication, role management, and tenant-scoped database.
 - AI replies to inbound text messages.
 - Approved FAQ, offer, pricing, objection, and policy knowledge.
 - Configurable qualification questions and rules.
@@ -53,7 +53,7 @@ The product succeeds when it:
 - Approval-based knowledge improvement.
 - Follow-up messages for incomplete conversations.
 - Basic analytics, testing tools, audit history, CSV export, and manual lead import.
-- Saved operational queues using Chatwoot labels, priorities, snoozing, and filters.
+- Saved operational queues using owned labels, priorities, snoozing, and filters.
 - Human macros and canned responses for common manual actions.
 - Click-to-WhatsApp advertisement attribution when Meta referral data is available.
 - Business-hours-aware human handoff messaging.
@@ -70,8 +70,7 @@ The product succeeds when it:
 - Google Sheets synchronization.
 - Fully autonomous custom pricing, refunds, legal advice, or medical advice.
 - Guaranteed sales or revenue claims.
-- Reimplementation of the generic shared inbox, contact directory, message delivery, or team assignment features already supplied by Chatwoot Community Edition.
-- Chatwoot Enterprise features or code requiring a commercial Chatwoot license.
+- Chatwoot Enterprise features or code requiring a commercial license.
 
 ## 4. Users and Roles
 
@@ -367,7 +366,7 @@ The system follows up when a lead stops responding before qualification is compl
 
 ### Inbox
 
-- Chatwoot Community Edition is the operational inbox and displays all permitted conversations in a familiar messaging layout.
+- The owned inbox displays all permitted conversations in a familiar messaging layout.
 - Filters for quality, follow-up state, assignee, source, unanswered questions, and booking status.
 - Search by name, phone number, business, or message text.
 - Visible AI/human control state.
@@ -516,7 +515,7 @@ The v1 is complete only when all of these scenarios work:
 5. An unknown question is escalated, answered by a human, sent to the lead, and optionally added to the correct knowledge category after approval.
 6. A human takes over a conversation, the AI pauses, and it does not resume until explicitly enabled.
 7. An AI reply queued before human takeover completes late and is blocked without sending.
-8. Chatwoot delivers the same inbound event twice, but the lead receives only one AI reply and no duplicate side effect.
+8. Meta delivers the same inbound event twice, but the lead receives only one AI reply and no duplicate side effect.
 9. A resolved conversation receives a new lead message, retains the remembered Lead identity, and starts a new AI-controlled lifecycle.
 10. A voice note is stored and the lead is asked to send text.
 11. A lead opts out and receives no further automated follow-up.
@@ -538,37 +537,16 @@ These decisions do not block v1 planning but must be resolved before related imp
 
 ## 21. Architecture and Data Ownership
 
-Chatwoot Community Edition is an integrated operational dependency, not the system of record for the AI Lead Employee's differentiating business logic.
+AI Lead Employee is the system of record for its inbox, message delivery,
+contacts, conversations, human replies, private notes, assignments, labels,
+qualification, evidence, AI/human control state, knowledge, booking, alerts,
+follow-up, audit, evaluations, and billing.
 
-### Chatwoot Owns
+Every owned record carries `business_account_id`. Every external Meta object is
+linked through stable identifiers. Webhook ingestion is idempotent, and no Meta
+webhook may trigger a duplicate AI reply, booking, follow-up, or alert.
 
-- Official channel connectivity and message delivery.
-- The shared inbox and message presentation.
-- Operational contacts and conversation history.
-- Human replies, private notes, teams, assignments, labels, priorities, and inbox notifications.
-- WhatsApp policy-window and template mechanics.
-- Operational channel metadata and attachment handling.
-
-### AI Lead Employee Owns
-
-- Business-account tenancy and product configuration.
-- Offers, qualification questions, hard rules, scoring, and thresholds.
-- Canonical lead identity and offer-specific qualification.
-- Qualification evidence, reasons, confidence, and missing signals.
-- AI/human control state and manual-resume authorization.
-- Approved knowledge, unanswered-question review, and knowledge versioning.
-- Calendar availability rules and bookings.
-- Follow-up policies and scheduled actions.
-- Hot-lead alerts and recipient routing.
-- Product audit history, evaluation scenarios, and quality results.
-
-### Mirrored Data
-
-Operator-friendly summaries such as lead quality, budget range, urgency, source, booking state, and qualification reason may be mirrored into Chatwoot custom attributes or labels. These copies are not authoritative and must be rebuildable from the AI Lead Employee database.
-
-Every owned record must carry `business_account_id`. Every external Chatwoot object must be linked through stable external identifiers. Webhook ingestion must be idempotent, and no Chatwoot webhook may trigger a duplicate AI reply, booking, follow-up, or alert.
-
-The detailed system boundary, runtime services, status mappings, and draft PostgreSQL schema are defined in `TECHNICAL_DESIGN.md`. Canonical product terminology is defined in `CONTEXT.md`.
+The detailed owned-product boundary, runtime services, status mappings, and draft PostgreSQL schema are defined in `TECHNICAL_DESIGN.md`. Canonical product terminology is defined in `CONTEXT.md`.
 
 ## 22. Product Principle
 

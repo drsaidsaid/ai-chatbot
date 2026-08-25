@@ -72,6 +72,6 @@ _Avoid_: Call request, appointment lead
 A routed notification about a hot lead, booking, urgent review, or knowledge decision.
 _Avoid_: Message, notification event
 
-**Chatwoot Conversation Status**:
-Chatwoot's operational inbox state: pending, open, snoozed, or resolved. It must never be used as Lead Quality.
+**Inbox Conversation Status**:
+The owned inbox's operational state: pending, open, snoozed, or resolved. It must never be used as Lead Quality.
 _Avoid_: Status
