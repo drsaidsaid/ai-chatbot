@@ -2,58 +2,54 @@
 
 **Status:** Draft approved for v1 implementation planning  
 **Product requirements:** `PRODUCT_REQUIREMENTS.md`  
-**Architecture decision:** `docs/adr/0001-chatwoot-as-inbox-boundary.md`  
+**Architecture decision:** `docs/adr/0002-owned-inbox-fork.md`
 
 ## 1. System Boundary
 
-Chatwoot Community Edition supplies official channel connectivity, the shared inbox, contacts, conversations, messages, attachments, human replies, private notes, labels, teams, assignments, priorities, and operational notifications.
+AI Lead Employee is an owned product built from the Chatwoot Community Edition
+source. Its inbox, contacts, conversations, messages, attachments, human
+replies, notes, labels, teams, assignments, notifications, qualification,
+evidence, conversation control, knowledge approval, booking, alerts, follow-up,
+audit, and evaluations run inside our application boundary.
 
-AI Lead Employee supplies the business-specific intelligence and workflow: qualification, evidence, conversation control, knowledge approval, booking, alerts, follow-up, audit, and evaluations.
-
-Chatwoot data is accessed through a dedicated adapter. Product domain code must not call Chatwoot APIs directly.
+The system does not call a Chatwoot service or depend on Chatwoot credentials.
 
 ```text
-Lead
-  |
-  v
-Meta WhatsApp Cloud API
-  |
-  v
-Chatwoot CE <---- Human Operator
-  |
-  | signed webhook events
-  v
-Chatwoot Adapter
-  |
-  v
-AI Lead Employee API + Worker
-  |          |           |           |
-  v          v           v           v
-Postgres   AI model   Calendar   Alert delivery
+Lead <---- WhatsApp ----> Meta WhatsApp Cloud API
+                               |
+                               v
+              AI Lead Employee (owned inbox + AI workflow)
+                    |          |           |           |
+                    v          v           v           v
+                Postgres   AI model   Calendar   Alert delivery
 ```
 
 ## 2. Runtime Stack
 
-### Chatwoot
+### Owned Inbox Foundation
 
-- Vue 3 frontend built with Vite and Tailwind CSS.
-- Ruby 3.4 and Rails 7.2 backend served by Puma.
+- Chatwoot Community Edition's Vue 3 frontend built with Vite and Tailwind CSS,
+  renamed and extended as our inbox interface.
+- Chatwoot Community Edition's Ruby and Rails backend, renamed and extended as
+  our owned backend.
 - Rails Action Cable for real-time browser updates.
 - Sidekiq workers and Sidekiq Cron.
-- PostgreSQL 16 with pgvector.
+- Our PostgreSQL 16 database with pgvector.
 - Redis for queues, caching, and Action Cable.
 - Rails Active Storage backed by local disk in development and S3-compatible storage in production.
 
-### AI Lead Employee
+### Product Extensions
 
-- Next.js and TypeScript for the admin dashboard and embedded Chatwoot Dashboard App.
-- A TypeScript API and background worker for webhook ingestion, AI orchestration, scheduling, and alerts.
-- PostgreSQL as the authoritative application store.
-- Redis-backed jobs for immediate processing, with durable job intent recorded in PostgreSQL.
+- First-party AI orchestration, scheduling, alerts, qualification, booking, and
+  knowledge modules inside the owned backend.
+- Redis-backed jobs for immediate processing, with durable job intent recorded
+  in our PostgreSQL database.
 - OpenAI-compatible model adapter so the model provider is replaceable.
-- A calendar adapter, with Google Calendar as the current leading candidate but not a locked provider decision.
+- A calendar adapter, with Google Calendar as the current leading candidate but
+  not a locked provider decision.
 
-The first deployment may share one PostgreSQL server and one Redis server with Chatwoot, but each application must use separate databases, credentials, key prefixes, backups, and migrations.
+The first deployment uses one application database and Redis namespace under our
+control. Upstream code is an implementation foundation, not a separate service.
 
 ## 3. Production Services
 
