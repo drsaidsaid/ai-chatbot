@@ -70,6 +70,11 @@ any time.
 - The owned Rails backend, PostgreSQL database, Redis queues, Vue inbox, user
   identity, and product API share one application boundary. Meta is the only
   messaging provider in V1.
+- The operator UI keeps the Community Edition dashboard shell, inbox layout,
+  component conventions, Tailwind styling approach, and interaction model.
+  AI Lead Employee surfaces are integrated into that system so the product feels
+  like one owned Community Edition-derived application, not two patched-together
+  products.
 - The Meta adapter is the sole channel boundary. It verifies GET callback
   challenges and raw-body POST HMAC signatures, records webhook events and
   normalized messages transactionally, and treats outbound delivery status
@@ -94,7 +99,8 @@ any time.
   V1. Booking checks both connected-calendar availability and the Business
   Account's configured working hours.
 - The owned UI exposes Inbox, Hot Leads, Leads, Reviews, Knowledge, Bookings,
-  and Settings. Other Community Edition surfaces remain hidden and unsupported.
+  and Settings as native-feeling Community Edition dashboard areas. Other
+  Community Edition surfaces remain hidden and unsupported.
 - Authentication is owned and invite-only. V1 roles are `admin` and
   `team_member`; tenant scope comes from server-verified Business Account
   membership, never a client-supplied identifier.

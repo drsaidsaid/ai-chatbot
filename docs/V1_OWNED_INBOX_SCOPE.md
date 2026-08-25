@@ -4,6 +4,12 @@ AI Lead Employee V1 is an operator workspace for handling and qualifying
 WhatsApp leads. It retains Community Edition capabilities that support this
 workflow and hides unrelated capabilities without deleting their source.
 
+The UI and UX should remain recognizably Community Edition-derived: the same
+dashboard shell, inbox layout, component vocabulary, Tailwind styling approach,
+and interaction model should carry the owned AI Lead Employee surfaces. V1
+navigation is narrowed and rebranded, but the product must not feel like a
+separate application bolted beside Community Edition.
+
 ## Visible V1 areas
 
 - **Inbox:** conversation list, messages, notes, assignment, labels, human

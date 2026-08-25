@@ -11,12 +11,18 @@ dedicated baseline commit, with the Community Edition MIT license and copyright
 notice retained. The current prototype remains recoverable from repository
 history and is not a production foundation.
 
+The Rails/Vue dashboard, inbox layout, component system, Tailwind conventions,
+and interaction patterns remain the product foundation. AI Lead Employee
+features should be integrated as native-feeling Community Edition-derived
+surfaces, not as a visually or technically separate application shell.
+
 The upstream repository is retained as a read-only `upstream-chatwoot` remote.
 It is not deployed as a separate service and it is not a runtime dependency.
 The upstream `enterprise/` directory is never imported into the owned baseline.
 
 Product-specific code lives in clearly owned modules, migrations, and branded
-frontend areas. Upstream updates are adopted deliberately:
+frontend areas that follow Community Edition conventions. Upstream updates are
+adopted deliberately:
 
 1. Review upstream release notes and security advisories.
 2. Bring selected Community Edition commits into a dedicated update branch.

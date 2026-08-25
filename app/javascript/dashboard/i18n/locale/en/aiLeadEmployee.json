@@ -1,0 +1,35 @@
+{
+  "AI_LEAD_EMPLOYEE": {
+    "PRODUCT_NAME": "AI Lead Employee",
+    "BASELINE_NOTICE": "This V1 surface uses the Community Edition dashboard shell and will grow into the owned workflow here.",
+    "NAV": {
+      "HOT_LEADS": "Hot Leads",
+      "LEADS": "Leads",
+      "REVIEWS": "Reviews",
+      "KNOWLEDGE": "Knowledge",
+      "BOOKINGS": "Bookings"
+    },
+    "SURFACES": {
+      "HOT_LEADS": {
+        "TITLE": "Hot Leads",
+        "DESCRIPTION": "Highly qualified leads that need immediate Human Operator attention."
+      },
+      "LEADS": {
+        "TITLE": "Leads",
+        "DESCRIPTION": "A focused lead workspace for qualification evidence, quality, reasons, ownership, and booking state."
+      },
+      "REVIEWS": {
+        "TITLE": "Reviews",
+        "DESCRIPTION": "Questions and decisions the AI Employee could not safely answer without Human Operator review."
+      },
+      "KNOWLEDGE": {
+        "TITLE": "Knowledge",
+        "DESCRIPTION": "Approved FAQ, offer, pricing, objection, policy, and supporting Knowledge Items."
+      },
+      "BOOKINGS": {
+        "TITLE": "Bookings",
+        "DESCRIPTION": "Confirmed and upcoming calls for highly qualified leads."
+      }
+    }
+  }
+}
