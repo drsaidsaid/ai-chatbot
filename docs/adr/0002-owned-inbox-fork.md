@@ -19,6 +19,22 @@ The Community Edition content in the pinned source is MIT licensed. The license
 notice must remain in all substantial copies. The upstream `enterprise/`
 directory is excluded unless separately licensed.
 
+## Enterprise boundary
+
+We will not copy, run, modify, or distribute code from the upstream
+`enterprise/` directory. Its license requires a separate Enterprise license for
+production use. It is not a dependency of AI Lead Employee V1.
+
+Some Enterprise product ideas are relevant, but they will be implemented in
+our owned code only when the product needs them:
+
+- Direct Meta WhatsApp Cloud API support is required in V1 and will be built
+  from Meta's official API documentation.
+- AI knowledge, reply assistance, qualification, and human handoff are core
+  V1 product capabilities and will be built as owned modules.
+- Audit history is useful in V1; custom roles, SLA policies, capacity rules,
+  voice transcription, campaigns, customer portals, and billing are deferred.
+
 ## Consequences
 
 - Our application owns the inbox UI and backend instead of integrating through
