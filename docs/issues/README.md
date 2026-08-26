@@ -13,8 +13,8 @@ interface, and automated verification where those layers are relevant.
 | 004 | Unanswered-question review and knowledge approval | 002 | Done |
 | 005 | Highly Qualified handoff and WhatsApp alert | 003 | Done |
 | 006 | Conflict-free call booking | 005 | Done |
-| 007 | Incomplete-lead follow-up and opt-out | 003 | Ready |
-| 008 | Operational dashboard and team access | 001, 005 | Ready |
+| 007 | Incomplete-lead follow-up and opt-out | 003 | Done |
+| 008 | Operational dashboard and team access | 001, 005 | Done |
 | 009 | Evaluation sandbox and launch gate | 002-008 | Blocked |
 
 Ticket 001 is intentionally the first production proof. It must confirm direct

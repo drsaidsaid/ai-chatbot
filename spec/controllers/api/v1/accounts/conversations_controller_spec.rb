@@ -110,9 +110,11 @@ RSpec.describe 'Conversations API', type: :request do
     end
 
     it 'pauses the AI Employee and invalidates pending automated work' do
-      post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/pause_ai",
-           headers: agent.create_new_auth_token,
-           as: :json
+      expect do
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/pause_ai",
+             headers: agent.create_new_auth_token,
+             as: :json
+      end.to change(Audited::Audit, :count).by(1)
 
       expect(response).to have_http_status(:success)
       expect(conversation.reload).to be_ai_paused
@@ -120,6 +122,15 @@ RSpec.describe 'Conversations API', type: :request do
       expect(response.parsed_body).to include(
         'control_state' => 'ai_paused',
         'control_version' => 8
+      )
+      expect(Audited::Audit.last).to have_attributes(
+        auditable: conversation,
+        associated: account,
+        user: agent,
+        audited_changes: hash_including(
+          'ai_lead_employee_action' => 'pause_ai',
+          'control_state' => %w[ai_active ai_paused]
+        )
       )
     end
   end

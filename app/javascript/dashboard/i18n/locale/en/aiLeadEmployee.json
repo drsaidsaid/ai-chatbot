@@ -134,6 +134,53 @@
         "REJECTED": "Rejected",
         "INACTIVE": "Inactive"
       }
+    },
+    "DASHBOARD": {
+      "LOADING": "Loading leads",
+      "EMPTY": "No leads match this queue",
+      "EMPTY_VALUE": "Not set",
+      "UNASSIGNED": "Unassigned",
+      "CONVERSATION_NUMBER": "#{id}",
+      "SAVE_QUEUE": "Save queue",
+      "SAVED_QUEUE_PLACEHOLDER": "Queue name",
+      "CLEAR": "Clear",
+      "METRIC": {
+        "TOTAL_LEADS": "Total leads",
+        "HIGHLY_QUALIFIED": "Highly qualified",
+        "UNANSWERED": "Unanswered",
+        "BOOKED_CALLS": "Booked calls",
+        "KNOWLEDGE_APPROVALS": "Knowledge approvals",
+        "HUMAN_ACTIVE": "Human active",
+        "AI_ACTIVE": "AI active"
+      },
+      "FILTER": {
+        "QUALITY": "Quality",
+        "FOLLOW_UP": "Follow-up",
+        "ASSIGNEE": "Assignee",
+        "ME": "Mine",
+        "UNASSIGNED": "Unassigned",
+        "SOURCE": "Source",
+        "BOOKING": "Booking",
+        "UNANSWERED": "Unanswered questions",
+        "KNOWLEDGE_APPROVAL": "Knowledge approval"
+      },
+      "QUEUE": {
+        "ALL_LEADS": "All leads",
+        "HOT_LEADS": "Hot leads",
+        "UNANSWERED_QUESTIONS": "Unanswered",
+        "KNOWLEDGE_APPROVAL": "Knowledge approval",
+        "BOOKED_CALLS": "Booked calls",
+        "MY_QUEUE": "My queue"
+      },
+      "FIELD": {
+        "LEAD": "Lead",
+        "CONTACT": "Contact",
+        "QUALITY": "Quality",
+        "REASONS": "Reasons",
+        "ASSIGNEE": "Assignee",
+        "SOURCE": "Source",
+        "BOOKING": "Booking"
+      }
     }
   }
 }

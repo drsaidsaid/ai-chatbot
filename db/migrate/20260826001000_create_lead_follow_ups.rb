@@ -2,6 +2,14 @@
 
 class CreateLeadFollowUps < ActiveRecord::Migration[7.1]
   def change
+    create_follow_up_opt_outs_table
+    create_follow_ups_table
+    add_follow_up_indexes
+  end
+
+  private
+
+  def create_follow_up_opt_outs_table
     create_table :lead_follow_up_opt_outs do |t|
       t.references :account, null: false, foreign_key: true
       t.references :contact, null: false, foreign_key: true
@@ -12,9 +20,9 @@ class CreateLeadFollowUps < ActiveRecord::Migration[7.1]
 
       t.timestamps
     end
+  end
 
-    add_index :lead_follow_up_opt_outs, [:account_id, :contact_id], unique: true
-
+  def create_follow_ups_table # rubocop:disable Metrics/MethodLength
     create_table :lead_follow_ups do |t|
       t.references :account, null: false, foreign_key: true
       t.references :contact, null: false, foreign_key: true
@@ -37,7 +45,10 @@ class CreateLeadFollowUps < ActiveRecord::Migration[7.1]
 
       t.timestamps
     end
+  end
 
+  def add_follow_up_indexes
+    add_index :lead_follow_up_opt_outs, [:account_id, :contact_id], unique: true
     add_index :lead_follow_ups, [:account_id, :conversation_id, :status]
     add_index :lead_follow_ups, [:account_id, :contact_id, :stage, :attempt_number],
               unique: true,

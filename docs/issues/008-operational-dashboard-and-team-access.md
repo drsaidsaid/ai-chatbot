@@ -10,15 +10,15 @@ control state.
 
 ## Acceptance criteria
 
-- [ ] The dashboard provides inbox, Leads, Highly Qualified, unanswered-question, knowledge-approval, booking, and basic-performance views.
-- [ ] Lead rows show name, phone number, contact details, quality, reasons, assignee, source, and booking state without opening every conversation.
-- [ ] Operators can filter and save queues by quality, Follow-up State, assignee, source, unanswered questions, and booking status.
-- [ ] An authorized user can reply, take over, pause, resume, assign, reassign, and add a private note.
-- [ ] Internal notes can never be sent to a Lead.
-- [ ] Admins see all tenant activity; Human Operators see only permitted or assigned records.
-- [ ] Every sensitive action is tenant-scoped and recorded in append-only audit history.
-- [ ] Inbox labels and attributes can be rebuilt from authoritative product data.
-- [ ] Desktop and mobile layouts support the primary operator workflows without overlapping controls or text.
+- [x] The dashboard provides inbox, Leads, Highly Qualified, unanswered-question, knowledge-approval, booking, and basic-performance views.
+- [x] Lead rows show name, phone number, contact details, quality, reasons, assignee, source, and booking state without opening every conversation.
+- [x] Operators can filter and save queues by quality, Follow-up State, assignee, source, unanswered questions, and booking status.
+- [x] An authorized user can reply, take over, pause, resume, assign, reassign, and add a private note.
+- [x] Internal notes can never be sent to a Lead.
+- [x] Admins see all tenant activity; Human Operators see only permitted or assigned records.
+- [x] Every sensitive action is tenant-scoped and recorded in append-only audit history.
+- [x] Inbox labels and attributes can be rebuilt from authoritative product data.
+- [x] Desktop and mobile layouts support the primary operator workflows without overlapping controls or text.
 
 ## Blocked by
 

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import HumanReviewRequestsPanel from './HumanReviewRequestsPanel.vue';
 import KnowledgeItemsPanel from './KnowledgeItemsPanel.vue';
 import BookingsPanel from './BookingsPanel.vue';
+import OperationalDashboardPanel from './OperationalDashboardPanel.vue';
 
 const props = defineProps({
   surface: {
@@ -67,6 +68,10 @@ const description = computed(() => {
       <HumanReviewRequestsPanel v-if="surface === 'REVIEWS'" />
       <KnowledgeItemsPanel v-if="surface === 'KNOWLEDGE'" />
       <BookingsPanel v-if="surface === 'BOOKINGS'" />
+      <OperationalDashboardPanel
+        v-if="['HOT_LEADS', 'LEADS'].includes(surface)"
+        :surface="surface"
+      />
     </section>
   </main>
 </template>
