@@ -145,18 +145,21 @@ onMounted(loadKnowledgeItems);
         />
       </label>
       <div class="flex gap-2">
-        <woot-button type="submit" :is-loading="isSaving">
+        <button
+          type="submit"
+          class="inline-flex h-8 items-center justify-center rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="isSaving"
+        >
           {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SAVE') }}
-        </woot-button>
-        <woot-button
+        </button>
+        <button
           v-if="isEditing"
           type="button"
-          variant="smooth"
-          color-scheme="secondary"
+          class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12"
           @click="resetForm"
         >
           {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.CANCEL') }}
-        </woot-button>
+        </button>
       </div>
     </form>
 
@@ -196,38 +199,34 @@ onMounted(loadKnowledgeItems);
           </span>
           <span>{{ new Date(item.updated_at).toLocaleDateString() }}</span>
           <span class="flex flex-wrap gap-1">
-            <woot-button
-              size="small"
-              variant="smooth"
-              color-scheme="secondary"
+            <button
+              type="button"
+              class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12"
               @click="editKnowledgeItem(item)"
             >
               {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.EDIT') }}
-            </woot-button>
-            <woot-button
-              size="small"
-              variant="smooth"
-              color-scheme="secondary"
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12"
               @click="applyLifecycleAction(item, 'approve')"
             >
               {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.APPROVE') }}
-            </woot-button>
-            <woot-button
-              size="small"
-              variant="smooth"
-              color-scheme="secondary"
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12"
               @click="applyLifecycleAction(item, 'reject')"
             >
               {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.REJECT') }}
-            </woot-button>
-            <woot-button
-              size="small"
-              variant="smooth"
-              color-scheme="secondary"
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12"
               @click="applyLifecycleAction(item, 'deactivate')"
             >
               {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.DEACTIVATE') }}
-            </woot-button>
+            </button>
           </span>
         </div>
       </div>

@@ -116,24 +116,22 @@ const updateAIControl = async action => {
     </div>
 
     <div class="flex gap-2">
-      <woot-button
-        size="small"
-        variant="smooth"
-        color-scheme="secondary"
+      <button
+        type="button"
+        class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
         :disabled="!canUpdateAI || !isAIActive || isUpdating"
         @click="updateAIControl('pauseAI')"
       >
         {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.PAUSE') }}
-      </woot-button>
-      <woot-button
-        size="small"
-        variant="smooth"
-        color-scheme="secondary"
+      </button>
+      <button
+        type="button"
+        class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
         :disabled="!canUpdateAI || isAIActive || isUpdating"
         @click="updateAIControl('resumeAI')"
       >
         {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.RESUME') }}
-      </woot-button>
+      </button>
     </div>
 
     <div class="text-xs text-n-slate-11">

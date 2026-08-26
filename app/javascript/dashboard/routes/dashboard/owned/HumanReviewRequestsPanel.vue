@@ -150,13 +150,13 @@ onMounted(loadReviewRequests);
               </option>
             </select>
           </div>
-          <woot-button
+          <button
             type="submit"
-            size="small"
-            :is-loading="resolvingId === request.id"
+            class="inline-flex h-8 items-center justify-center rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="resolvingId === request.id"
           >
             {{ t('AI_LEAD_EMPLOYEE.REVIEWS.RESOLVE') }}
-          </woot-button>
+          </button>
         </form>
       </div>
     </div>
