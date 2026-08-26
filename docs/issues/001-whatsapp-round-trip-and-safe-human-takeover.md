@@ -26,3 +26,11 @@ AI reply cannot escape after human takeover.
 ## Blocked by
 
 - Ticket 000: Owned Community Edition baseline and access.
+
+## Implementation progress
+
+- Added the owned `/webhooks/meta/whatsapp` callback endpoint for Meta verify-token challenge handling and signed raw-body POST validation.
+- Persisted Meta WhatsApp webhook events before processing, with database-backed idempotency for inbound messages and delivery statuses.
+- Normalized signed inbound text payloads into tenant-scoped Contact, ContactInbox, Conversation, and Message records.
+- Reconciled Meta delivery statuses onto existing outbound Message records.
+- Added Conversation Control State and Control Version fields, plus an outbound text sender that locks and rechecks them immediately before sending to Meta.

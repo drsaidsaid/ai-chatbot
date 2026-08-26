@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_14_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_26_000200) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -881,6 +881,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000000) do
     t.text "cached_label_list"
     t.bigint "assignee_agent_bot_id"
     t.datetime "status_changed_at"
+    t.integer "control_state", default: 0, null: false
+    t.integer "control_version", default: 0, null: false
     t.index ["account_id", "display_id"], name: "index_conversations_on_account_id_and_display_id", unique: true
     t.index ["account_id", "id"], name: "index_conversations_on_id_and_account_id"
     t.index ["account_id", "inbox_id", "status", "assignee_id"], name: "conv_acid_inbid_stat_asgnid_idx"
@@ -1266,6 +1268,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000000) do
     t.index ["source_id"], name: "index_messages_on_source_id"
   end
 
+  create_table "meta_whatsapp_webhook_events", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "inbox_id", null: false
+    t.bigint "channel_whatsapp_id", null: false
+    t.string "provider_event_id", null: false
+    t.string "event_kind", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "processed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_meta_whatsapp_webhook_events_on_account_id"
+    t.index ["channel_whatsapp_id"], name: "index_meta_whatsapp_webhook_events_on_channel_whatsapp_id"
+    t.index ["inbox_id"], name: "index_meta_whatsapp_webhook_events_on_inbox_id"
+    t.index ["provider_event_id"], name: "index_meta_whatsapp_webhook_events_on_provider_event_id", unique: true
+  end
+
   create_table "notes", force: :cascade do |t|
     t.text "content", null: false
     t.bigint "account_id", null: false
@@ -1596,6 +1614,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000000) do
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
   add_foreign_key "inboxes", "portals"
+  add_foreign_key "meta_whatsapp_webhook_events", "accounts"
+  add_foreign_key "meta_whatsapp_webhook_events", "channel_whatsapp"
+  add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
   add_foreign_key "user_sessions", "users"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
