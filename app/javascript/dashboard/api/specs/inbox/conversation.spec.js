@@ -10,6 +10,8 @@ describe('#ConversationAPI', () => {
     expect(conversationAPI).toHaveProperty('update');
     expect(conversationAPI).toHaveProperty('delete');
     expect(conversationAPI).toHaveProperty('toggleStatus');
+    expect(conversationAPI).toHaveProperty('pauseAI');
+    expect(conversationAPI).toHaveProperty('resumeAI');
     expect(conversationAPI).toHaveProperty('assignAgent');
     expect(conversationAPI).toHaveProperty('assignTeam');
     expect(conversationAPI).toHaveProperty('markMessageRead');
@@ -86,6 +88,20 @@ describe('#ConversationAPI', () => {
           status: 'online',
           snoozed_until: null,
         }
+      );
+    });
+
+    it('#pauseAI', () => {
+      conversationAPI.pauseAI({ conversationId: 12 });
+      expect(axiosMock.post).toHaveBeenCalledWith(
+        `/api/v1/conversations/12/pause_ai`
+      );
+    });
+
+    it('#resumeAI', () => {
+      conversationAPI.resumeAI({ conversationId: 12 });
+      expect(axiosMock.post).toHaveBeenCalledWith(
+        `/api/v1/conversations/12/resume_ai`
       );
     });
 

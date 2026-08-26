@@ -469,6 +469,24 @@
       "SHOPIFY_ORDERS": "Shopify Orders",
       "SHARED_FILES": "Attachments"
     },
+    "AI_EMPLOYEE": {
+      "TITLE": "AI Employee",
+      "PAUSE": "Pause",
+      "RESUME": "Resume",
+      "CONTROL_VERSION": "Control version {version}",
+      "RECENT_EVENTS": "Recent Meta Events",
+      "STATE": {
+        "AI_ACTIVE": "AI active",
+        "AI_PAUSED": "AI paused",
+        "HUMAN_ACTIVE": "Human active",
+        "HANDOFF_REQUESTED": "Handoff requested",
+        "CLOSED": "Closed"
+      },
+      "EVENT": {
+        "MESSAGE_TEXT": "Inbound message",
+        "STATUS": "Delivery status"
+      }
+    },
     "SHARED_FILES": {
       "EMPTY": "No attachments yet",
       "DOWNLOAD": "Download file",

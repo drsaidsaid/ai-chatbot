@@ -388,6 +388,8 @@ describe('#actions', () => {
             conversation_id: 1,
             current_status: 'snoozed',
             snoozed_until: null,
+            control_state: 'ai_paused',
+            control_version: 4,
           },
         },
       });
@@ -395,11 +397,65 @@ describe('#actions', () => {
         { commit },
         { conversationId: 1, status: 'snoozed' }
       );
-      expect(commit).toHaveBeenCalledTimes(1);
+      expect(commit).toHaveBeenCalledTimes(2);
       expect(commit.mock.calls).toEqual([
         [
           'CHANGE_CONVERSATION_STATUS',
           { conversationId: 1, status: 'snoozed', snoozedUntil: null },
+        ],
+        [
+          types.CHANGE_CONVERSATION_CONTROL,
+          {
+            conversationId: 1,
+            controlState: 'ai_paused',
+            controlVersion: 4,
+          },
+        ],
+      ]);
+    });
+  });
+
+  describe('#pauseAI', () => {
+    it('sends correct mutations if pause is successful', async () => {
+      axios.post.mockResolvedValue({
+        data: {
+          control_state: 'ai_paused',
+          control_version: 2,
+        },
+      });
+      await actions.pauseAI({ commit }, { conversationId: 1 });
+      expect(commit).toHaveBeenCalledTimes(1);
+      expect(commit.mock.calls).toEqual([
+        [
+          types.CHANGE_CONVERSATION_CONTROL,
+          {
+            conversationId: 1,
+            controlState: 'ai_paused',
+            controlVersion: 2,
+          },
+        ],
+      ]);
+    });
+  });
+
+  describe('#resumeAI', () => {
+    it('sends correct mutations if resume is successful', async () => {
+      axios.post.mockResolvedValue({
+        data: {
+          control_state: 'ai_active',
+          control_version: 3,
+        },
+      });
+      await actions.resumeAI({ commit }, { conversationId: 1 });
+      expect(commit).toHaveBeenCalledTimes(1);
+      expect(commit.mock.calls).toEqual([
+        [
+          types.CHANGE_CONVERSATION_CONTROL,
+          {
+            conversationId: 1,
+            controlState: 'ai_active',
+            controlVersion: 3,
+          },
         ],
       ]);
     });

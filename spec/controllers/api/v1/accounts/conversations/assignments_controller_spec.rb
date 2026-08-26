@@ -55,6 +55,19 @@ RSpec.describe 'Conversation Assignment API', type: :request do
         expect(conversation.reload.assignee).to eq(agent)
       end
 
+      it 'marks the conversation as human controlled when a Human Operator is assigned' do
+        conversation.update!(control_state: :ai_active, control_version: 4)
+
+        post api_v1_account_conversation_assignments_url(account_id: account.id, conversation_id: conversation.display_id),
+             params: { assignee_id: agent.id },
+             headers: agent.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(conversation.reload).to be_human_active
+        expect(conversation.control_version).to eq(5)
+      end
+
       it 'assigns an agent bot to the conversation' do
         params = { assignee_id: agent_bot.id, assignee_type: 'AgentBot' }
 

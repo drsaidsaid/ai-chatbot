@@ -11,6 +11,7 @@ import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 
 import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
 import ContactConversations from './ContactConversations.vue';
+import AIEmployeeControlPanel from './AIEmployeeControlPanel.vue';
 import ConversationAction from './ConversationAction.vue';
 import ConversationParticipant from './ConversationParticipant.vue';
 import ContactInfo from './contact/ContactInfo.vue';
@@ -139,6 +140,13 @@ onMounted(() => {
     />
     <ContactInfo :contact="contact" :channel-type="channelType" />
     <div class="px-2 pb-8 list-group">
+      <AccordionItem
+        :title="$t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.TITLE')"
+        is-open
+        compact
+      >
+        <AIEmployeeControlPanel :current-chat="currentChat" />
+      </AccordionItem>
       <Draggable
         :list="conversationSidebarItems"
         animation="200"

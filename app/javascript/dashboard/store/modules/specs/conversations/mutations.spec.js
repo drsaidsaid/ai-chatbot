@@ -236,6 +236,28 @@ describe('#mutations', () => {
       ]);
     });
 
+    it('updates the conversation AI control state correctly', () => {
+      const state = {
+        allConversations: [
+          {
+            id: 1,
+            messages: [],
+            control_state: 'ai_active',
+            control_version: 1,
+          },
+        ],
+      };
+
+      mutations[types.CHANGE_CONVERSATION_CONTROL](state, {
+        conversationId: '1',
+        controlState: 'ai_paused',
+        controlVersion: 2,
+      });
+
+      expect(state.allConversations[0].control_state).toBe('ai_paused');
+      expect(state.allConversations[0].control_version).toBe(2);
+    });
+
     describe('#UPDATE_CONVERSATION_CUSTOM_ATTRIBUTES', () => {
       it('update conversation custom attributes', () => {
         const custom_attributes = { order_id: 1001 };

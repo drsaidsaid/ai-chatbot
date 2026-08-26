@@ -36,6 +36,34 @@ RSpec.describe 'Conversation Messages API', type: :request do
         expect(conversation.messages.first.content).to eq(params[:content])
       end
 
+      it 'marks the conversation as human controlled when a Human Operator sends a public reply' do
+        conversation.update!(control_state: :ai_active, control_version: 2)
+        params = { content: 'Human reply', private: false }
+
+        post api_v1_account_conversation_messages_url(account_id: account.id, conversation_id: conversation.display_id),
+             params: params,
+             headers: agent.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(conversation.reload).to be_human_active
+        expect(conversation.control_version).to eq(3)
+      end
+
+      it 'does not change control state for private notes' do
+        conversation.update!(control_state: :ai_active, control_version: 2)
+        params = { content: 'Internal note', private: true }
+
+        post api_v1_account_conversation_messages_url(account_id: account.id, conversation_id: conversation.display_id),
+             params: params,
+             headers: agent.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(conversation.reload).to be_ai_active
+        expect(conversation.control_version).to eq(2)
+      end
+
       it 'does not create the message' do
         params = { content: "#{'h' * 150 * 1000}a", private: true }
 

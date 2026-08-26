@@ -15,12 +15,8 @@ class Conversations::AssignmentService
 
   def assign_agent
     conversation.with_lock do
-      if assignee.present? && conversation.assignee_agent_bot_id.present? && conversation.pending?
-        conversation.status = :open
-        conversation.waiting_since = Time.current if conversation.waiting_since.blank?
-      end
-      conversation.assignee = assignee
-      conversation.assignee_agent_bot = nil
+      open_for_human_assignment if should_open_for_human_assignment?
+      apply_human_assignment
       conversation.save!
     end
     assignee
@@ -33,6 +29,8 @@ class Conversations::AssignmentService
       conversation.assignee = nil
       conversation.assignee_agent_bot = agent_bot
       conversation.status = :pending
+      conversation.control_state = :ai_active
+      conversation.control_version += 1
       conversation.save!
     end
     agent_bot
@@ -40,6 +38,24 @@ class Conversations::AssignmentService
 
   def assignee
     @assignee ||= conversation.account.users.find_by(id: assignee_id)
+  end
+
+  def apply_human_assignment
+    conversation.assignee = assignee
+    conversation.assignee_agent_bot = nil
+    return if assignee.blank?
+
+    conversation.control_state = :human_active
+    conversation.control_version += 1
+  end
+
+  def open_for_human_assignment
+    conversation.status = :open
+    conversation.waiting_since = Time.current if conversation.waiting_since.blank?
+  end
+
+  def should_open_for_human_assignment?
+    assignee.present? && conversation.assignee_agent_bot_id.present? && conversation.pending?
   end
 
   def agent_bot

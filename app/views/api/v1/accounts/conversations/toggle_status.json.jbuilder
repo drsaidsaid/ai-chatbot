@@ -6,4 +6,6 @@ json.payload do
   json.conversation_id @conversation.display_id
   json.current_status @conversation.status
   json.snoozed_until @conversation.snoozed_until
+  json.control_state @conversation.control_state
+  json.control_version @conversation.control_version
 end

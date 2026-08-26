@@ -83,14 +83,20 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     # FIXME: move this logic into a service object
     if bot_handoff?
       @conversation.bot_handoff!
+      Conversations::ControlService.new(conversation: @conversation).handoff_requested!
     elsif params[:status].present?
       set_conversation_status
       @status = @conversation.save!
     else
       @status = @conversation.toggle_status
     end
+    Conversations::ControlService.new(conversation: @conversation).close! if @conversation.resolved?
     handle_human_open if @conversation.open? && Current.user.is_a?(User)
   end
+
+  def pause_ai = Conversations::ControlService.new(conversation: @conversation).pause_ai!
+
+  def resume_ai = Conversations::ControlService.new(conversation: @conversation).resume_ai!
 
   def bot_handoff?
     return false unless Current.user.is_a?(AgentBot)
@@ -176,11 +182,8 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def handle_human_open
-    @conversation.with_lock do
-      @conversation.assignee_agent_bot = nil
-      @conversation.assignee = Current.user if Current.user.agent?
-      @conversation.save!
-    end
+    operator = Current.user if Current.user.agent?
+    Conversations::ControlService.new(conversation: @conversation).human_takeover!(operator: operator)
   end
 
   def conversation

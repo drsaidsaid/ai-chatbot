@@ -162,6 +162,17 @@ export const mutations = {
     conversation.status = status;
   },
 
+  [types.CHANGE_CONVERSATION_CONTROL](
+    _state,
+    { conversationId, controlState, controlVersion }
+  ) {
+    const conversation = getters.getConversationById(_state)(conversationId);
+    if (!conversation) return;
+
+    conversation.control_state = controlState;
+    conversation.control_version = controlVersion;
+  },
+
   [types.MUTE_CONVERSATION](_state) {
     const [chat] = getSelectedChatConversation(_state);
     chat.muted = true;

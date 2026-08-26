@@ -128,6 +128,7 @@ class Conversation < ApplicationRecord
   has_many :attachments, through: :messages
   has_many :reporting_events, dependent: :destroy_async
   has_many :automation_rule_pending_executions, dependent: :delete_all
+  has_many :meta_whatsapp_webhook_events, dependent: :nullify
 
   before_save :ensure_snooze_until_reset
   before_save :set_status_changed_at

@@ -49,6 +49,15 @@ json.labels conversation.cached_label_list_array
 json.muted conversation.muted?
 json.snoozed_until conversation.snoozed_until
 json.status conversation.status
+json.control_state conversation.control_state
+json.control_version conversation.control_version
+json.meta_whatsapp_events conversation.meta_whatsapp_webhook_events.order(created_at: :desc).limit(10) do |event|
+  json.id event.id
+  json.event_kind event.event_kind
+  json.provider_event_id event.provider_event_id
+  json.processed_at event.processed_at&.to_i
+  json.created_at event.created_at.to_i
+end
 json.created_at conversation.created_at.to_i
 json.updated_at conversation.updated_at.to_f
 json.timestamp conversation.last_activity_at.to_i

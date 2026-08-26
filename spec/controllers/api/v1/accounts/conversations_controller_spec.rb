@@ -101,6 +101,54 @@ RSpec.describe 'Conversations API', type: :request do
     end
   end
 
+  describe 'POST /api/v1/accounts/{account.id}/conversations/:id/pause_ai' do
+    let(:conversation) { create(:conversation, account: account, control_state: :ai_active, control_version: 7) }
+    let(:agent) { create(:user, account: account, role: :agent) }
+
+    before do
+      create(:inbox_member, user: agent, inbox: conversation.inbox)
+    end
+
+    it 'pauses the AI Employee and invalidates pending automated work' do
+      post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/pause_ai",
+           headers: agent.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(conversation.reload).to be_ai_paused
+      expect(conversation.control_version).to eq(8)
+      expect(response.parsed_body).to include(
+        'control_state' => 'ai_paused',
+        'control_version' => 8
+      )
+    end
+  end
+
+  describe 'POST /api/v1/accounts/{account.id}/conversations/:id/resume_ai' do
+    let(:conversation) { create(:conversation, account: account, control_state: :ai_paused, control_version: 7) }
+    let(:agent) { create(:user, account: account, role: :agent) }
+
+    before do
+      create(:inbox_member, user: agent, inbox: conversation.inbox)
+    end
+
+    it 'manually resumes future AI Employee work without creating a message' do
+      expect do
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/resume_ai",
+             headers: agent.create_new_auth_token,
+             as: :json
+      end.not_to change(Message, :count)
+
+      expect(response).to have_http_status(:success)
+      expect(conversation.reload).to be_ai_active
+      expect(conversation.control_version).to eq(8)
+      expect(response.parsed_body).to include(
+        'control_state' => 'ai_active',
+        'control_version' => 8
+      )
+    end
+  end
+
   describe 'GET /api/v1/accounts/{account.id}/conversations/unread_counts' do
     context 'when it is an unauthenticated user' do
       it 'returns unauthorized' do
@@ -331,6 +379,32 @@ RSpec.describe 'Conversations API', type: :request do
         expect(response).to have_http_status(:success)
         expect(response).to conform_schema(200)
         expect(JSON.parse(response.body, symbolize_names: true)[:id]).to eq(conversation.display_id)
+      end
+
+      it 'shows owned Control State and recent Meta event history' do
+        channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+        whatsapp_conversation = create(:conversation, account: account, inbox: channel.inbox, control_state: :human_active, control_version: 6)
+        create(
+          :meta_whatsapp_webhook_event,
+          account: account,
+          inbox: channel.inbox,
+          channel_whatsapp: channel,
+          conversation: whatsapp_conversation,
+          provider_event_id: 'wamid.EVENT1',
+          event_kind: 'message.text',
+          processed_at: Time.zone.at(1_787_740_800)
+        )
+
+        get "/api/v1/accounts/#{account.id}/conversations/#{whatsapp_conversation.display_id}",
+            headers: administrator.create_new_auth_token,
+            as: :json
+
+        response_data = JSON.parse(response.body, symbolize_names: true)
+        expect(response).to have_http_status(:success)
+        expect(response_data[:control_state]).to eq('human_active')
+        expect(response_data[:control_version]).to eq(6)
+        expect(response_data[:meta_whatsapp_events].first[:event_kind]).to eq('message.text')
+        expect(response_data[:meta_whatsapp_events].first[:provider_event_id]).to eq('wamid.EVENT1')
       end
 
       it 'shows the conversation if you are an agent with access to inbox' do
@@ -566,6 +640,7 @@ RSpec.describe 'Conversations API', type: :request do
 
       it 'toggles the conversation status if status is empty' do
         expect(conversation.status).to eq('open')
+        conversation.update!(control_state: :ai_active, control_version: 3)
 
         post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/toggle_status",
              headers: agent.create_new_auth_token,
@@ -574,6 +649,8 @@ RSpec.describe 'Conversations API', type: :request do
 
         expect(response).to have_http_status(:success)
         expect(conversation.reload.status).to eq('resolved')
+        expect(conversation).to be_closed
+        expect(conversation.control_version).to eq(4)
       end
 
       it 'toggles the conversation status to open from pending' do
@@ -660,6 +737,7 @@ RSpec.describe 'Conversations API', type: :request do
       it 'triggers handoff event when moving from pending to open' do
         create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
         allow(Rails.configuration.dispatcher).to receive(:dispatch)
+        pending_conversation.update!(control_state: :ai_active, control_version: 2)
 
         post "/api/v1/accounts/#{account.id}/conversations/#{pending_conversation.display_id}/toggle_status",
              headers: { api_access_token: agent_bot.access_token.token },
@@ -668,6 +746,8 @@ RSpec.describe 'Conversations API', type: :request do
 
         expect(response).to have_http_status(:success)
         expect(pending_conversation.reload.status).to eq('open')
+        expect(pending_conversation).to be_handoff_requested
+        expect(pending_conversation.control_version).to eq(3)
         expect(Rails.configuration.dispatcher).to have_received(:dispatch)
           .with(Events::Types::CONVERSATION_BOT_HANDOFF, kind_of(Time), conversation: pending_conversation, notifiable_assignee_change: false,
                                                                         changed_attributes: anything, performed_by: anything)

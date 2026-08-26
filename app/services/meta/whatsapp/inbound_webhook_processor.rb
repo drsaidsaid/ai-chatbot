@@ -44,7 +44,7 @@ class Meta::Whatsapp::InboundWebhookProcessor
 
       context = message_context(channel, contacts_by_wa_id, message_payload)
       create_incoming_message!(context, message_payload)
-      event.update!(processed_at: Time.current)
+      event.update!(conversation: context[:conversation], processed_at: Time.current)
     end
   end
 
@@ -56,8 +56,8 @@ class Meta::Whatsapp::InboundWebhookProcessor
       event = create_status_event(channel, status_payload, status)
       next if event.processed_at.present?
 
-      update_message_status(channel, status_payload, status)
-      event.update!(processed_at: Time.current)
+      message = update_message_status(channel, status_payload, status)
+      event.update!(conversation: message&.conversation, processed_at: Time.current)
     end
   end
 
@@ -120,6 +120,7 @@ class Meta::Whatsapp::InboundWebhookProcessor
   def update_message_status(channel, status_payload, status)
     message = Message.find_by(account: channel.account, inbox: channel.inbox, source_id: status_payload[:id])
     message&.update!(status: status)
+    message
   end
 
   def find_or_create_contact(account, contact_payload, message_payload)

@@ -5,6 +5,7 @@ class MetaWhatsappWebhookEvent < ApplicationRecord
   belongs_to :account
   belongs_to :inbox
   belongs_to :channel_whatsapp, class_name: 'Channel::Whatsapp'
+  belongs_to :conversation, optional: true
 
   validates :provider_event_id, presence: true
   validates :event_kind, presence: true

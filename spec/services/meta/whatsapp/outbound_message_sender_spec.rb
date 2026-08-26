@@ -90,4 +90,17 @@ RSpec.describe Meta::Whatsapp::OutboundMessageSender do
     end.to raise_error(described_class::BlockedByControlState)
       .and not_change(Message, :count)
   end
+
+  it 'blocks a delayed AI send after the AI Employee is paused' do
+    conversation.update!(control_state: :ai_paused, control_version: 1)
+
+    expect do
+      described_class.new(
+        conversation: conversation,
+        content: 'Thanks for contacting us.',
+        expected_control_version: 0
+      ).perform
+    end.to raise_error(described_class::BlockedByControlState)
+      .and not_change(Message, :count)
+  end
 end

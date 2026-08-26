@@ -274,6 +274,8 @@ const actions = {
           payload: {
             current_status: updatedStatus,
             snoozed_until: updatedSnoozedUntil,
+            control_state: controlState,
+            control_version: controlVersion,
           } = {},
         } = {},
       } = await ConversationApi.toggleStatus({
@@ -285,6 +287,39 @@ const actions = {
         conversationId,
         status: updatedStatus,
         snoozedUntil: updatedSnoozedUntil,
+      });
+      if (controlState) {
+        commit(types.CHANGE_CONVERSATION_CONTROL, {
+          conversationId,
+          controlState,
+          controlVersion,
+        });
+      }
+    } catch (error) {
+      // Handle error
+    }
+  },
+
+  pauseAI: async ({ commit }, { conversationId }) => {
+    try {
+      const { data } = await ConversationApi.pauseAI({ conversationId });
+      commit(types.CHANGE_CONVERSATION_CONTROL, {
+        conversationId,
+        controlState: data.control_state,
+        controlVersion: data.control_version,
+      });
+    } catch (error) {
+      // Handle error
+    }
+  },
+
+  resumeAI: async ({ commit }, { conversationId }) => {
+    try {
+      const { data } = await ConversationApi.resumeAI({ conversationId });
+      commit(types.CHANGE_CONVERSATION_CONTROL, {
+        conversationId,
+        controlState: data.control_state,
+        controlVersion: data.control_version,
       });
     } catch (error) {
       // Handle error
