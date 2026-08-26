@@ -1,0 +1,203 @@
+# frozen_string_literal: true
+
+class AiLeadEmployee::QualificationService
+  REQUIRED_HIGHLY_QUALIFIED_SIGNALS = %w[problem budget urgency decision_authority].freeze
+  SIGNAL_WEIGHTS = {
+    'business_type' => 10,
+    'problem' => 20,
+    'lead_volume' => 10,
+    'urgency' => 20,
+    'budget' => 20,
+    'decision_authority' => 20,
+    'contact_details' => 10
+  }.freeze
+  DEFAULT_QUESTIONS = [
+    ['business_type', 'What type of business do you run?'],
+    ['problem', 'What problem are you trying to solve right now?'],
+    ['lead_volume', 'How many leads or inquiries do you handle each month?'],
+    ['urgency', 'How soon do you want this solved?'],
+    ['budget', 'What budget range have you set aside for this?'],
+    ['decision_authority', 'Are you the person who decides on this purchase?'],
+    ['contact_details', 'What is the best email or phone number for follow-up?']
+  ].freeze
+
+  Result = Struct.new(:qualification, :next_question, :new_evidence, keyword_init: true)
+
+  def initialize(conversation:, incoming_message: nil)
+    @conversation = conversation
+    @incoming_message = incoming_message
+    @account = conversation.account
+    @contact = conversation.contact
+  end
+
+  def perform
+    new_evidence = incoming_message.present? ? extract_evidence! : []
+    qualification = evaluate!
+
+    Result.new(
+      qualification: qualification,
+      next_question: next_question_for(qualification.evidence_snapshot),
+      new_evidence: new_evidence
+    )
+  end
+
+  def self.record_human_evidence!(contact:, user:, signal:, value:, conversation: nil)
+    evidence = nil
+
+    ActiveRecord::Base.transaction do
+      evidence = QualificationEvidence.create!(
+        account: contact.account,
+        contact: contact,
+        conversation: conversation,
+        user: user,
+        signal: signal,
+        source: :human,
+        value: { 'value' => value.to_s },
+        observed_at: Time.current
+      )
+      supersede_current_evidence!(contact: contact, signal: signal, replacement: evidence)
+    end
+
+    evidence
+  end
+
+  def self.next_question_for(account:, evidence_snapshot:)
+    configured_question_pairs(account).find { |signal, _prompt| evidence_snapshot.exclude?(signal) }&.second
+  end
+
+  def self.configured_question_pairs(account)
+    configured_questions = account.qualification_questions.enabled_in_order
+    return configured_questions.map { |question| [question.signal, question.prompt] } if configured_questions.exists?
+
+    DEFAULT_QUESTIONS
+  end
+
+  def self.supersede_current_evidence!(contact:, signal:, replacement:)
+    QualificationEvidence.current
+                         .where(account: contact.account, contact: contact, signal: signal)
+                         .where.not(id: replacement.id)
+                         .find_each { |evidence| evidence.update!(superseded_at: Time.current, superseded_by: replacement) }
+  end
+
+  private
+
+  attr_reader :account, :contact, :conversation, :incoming_message
+
+  def extract_evidence!
+    evidence = extracted_values.filter_map do |signal, extracted_value|
+      existing_evidence = current_evidence[signal]
+      next if existing_evidence&.fetch('source') == 'human'
+      next if existing_evidence&.fetch('value') == extracted_value
+
+      QualificationEvidence.create!(
+        account: account,
+        contact: contact,
+        conversation: conversation,
+        message: incoming_message,
+        signal: signal,
+        source: :extracted,
+        value: { 'value' => extracted_value },
+        observed_at: incoming_message.created_at || Time.current
+      ).tap do |new_evidence|
+        self.class.supersede_current_evidence!(contact: contact, signal: signal, replacement: new_evidence)
+      end
+    end
+    @current_evidence = nil if evidence.present?
+    evidence
+  end
+
+  def extracted_values
+    AiLeadEmployee::QualificationEvidenceExtractor.new(incoming_message.content).evidence
+  end
+
+  def evaluate!
+    snapshot = current_evidence
+    missing = missing_signals(snapshot)
+    score = score_for(snapshot)
+    quality = quality_for(snapshot, missing, score)
+
+    LeadQualification.find_or_initialize_by(account: account, contact: contact).tap do |qualification|
+      qualification.assign_attributes(
+        quality: quality,
+        follow_up_state: follow_up_state_for(quality),
+        score: score,
+        reasons: reasons_for(snapshot, missing, quality),
+        missing_signals: missing,
+        evidence_snapshot: snapshot,
+        configuration_version: configuration_version,
+        last_evaluated_at: Time.current
+      )
+      qualification.save!
+      qualification.record_decision!
+    end
+  end
+
+  def current_evidence
+    @current_evidence ||= QualificationEvidence.current
+                                               .where(account: account, contact: contact)
+                                               .order(:created_at)
+                                               .each_with_object({}) do |evidence, result|
+      result[evidence.signal] = {
+        'value' => evidence.value['value'],
+        'source' => evidence.source,
+        'evidence_id' => evidence.id,
+        'conversation_id' => evidence.conversation_id,
+        'message_id' => evidence.message_id,
+        'observed_at' => evidence.observed_at.iso8601
+      }
+    end
+  end
+
+  def missing_signals(snapshot)
+    questions.map(&:first).reject { |signal| snapshot.key?(signal) }
+  end
+
+  def score_for(snapshot)
+    snapshot.keys.sum { |signal| SIGNAL_WEIGHTS.fetch(signal, 0) }
+  end
+
+  def quality_for(snapshot, missing, score)
+    return :unqualified if unqualified?(snapshot)
+    return :highly_qualified if (REQUIRED_HIGHLY_QUALIFIED_SIGNALS - snapshot.keys).empty?
+    return :unknown if snapshot.empty?
+    return :qualified if score >= 60 && missing.exclude?('budget')
+
+    :low_qualified
+  end
+
+  def follow_up_state_for(quality)
+    return :human_review if quality.to_s == 'highly_qualified'
+    return :nurture if %w[low_qualified qualified].include?(quality.to_s)
+
+    :no_follow_up
+  end
+
+  def reasons_for(snapshot, missing, quality)
+    reasons = snapshot.map { |signal, evidence| "#{signal.humanize}: #{evidence['value']}" }
+    reasons << 'Required highly qualified signals are present' if quality.to_s == 'highly_qualified'
+    reasons << "Missing #{missing.map(&:humanize).join(', ')}" if missing.present?
+    reasons
+  end
+
+  def next_question_for(snapshot)
+    self.class.next_question_for(account: account, evidence_snapshot: snapshot)
+  end
+
+  def questions
+    self.class.configured_question_pairs(account)
+  end
+
+  def configuration_version
+    account.settings.fetch('qualification_config_version', 1).to_i
+  end
+
+  def unqualified?(snapshot)
+    authority_value = snapshot.dig('decision_authority', 'value').to_s
+    return true if authority_value == 'not decision maker'
+
+    AiLeadEmployee::QualificationBudgetClassifier.out_of_range?(
+      account: account,
+      budget_value: snapshot.dig('budget', 'value').to_s
+    )
+  end
+end

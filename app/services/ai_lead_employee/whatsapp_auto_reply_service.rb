@@ -11,11 +11,12 @@ class AiLeadEmployee::WhatsappAutoReplyService
 
   def perform
     result = ai_employee_result
-    record_ai_employee_decision!(result)
+    qualification_result = qualification_result_for_supported_message
+    record_ai_employee_decision!(result, qualification_result)
 
     Meta::Whatsapp::OutboundMessageSender.new(
       conversation: conversation,
-      content: result.answer,
+      content: reply_content(result, qualification_result),
       expected_control_version: conversation.control_version
     ).perform
   rescue Meta::Whatsapp::OutboundMessageSender::BlockedByControlState
@@ -46,16 +47,45 @@ class AiLeadEmployee::WhatsappAutoReplyService
     )
   end
 
-  def record_ai_employee_decision!(result)
+  def qualification_result_for_supported_message
+    return if provider_message_payload[:type] != 'text'
+
+    AiLeadEmployee::QualificationService.new(
+      conversation: conversation,
+      incoming_message: incoming_message
+    ).perform
+  end
+
+  def reply_content(result, qualification_result)
+    return result.answer if result.refused?
+    return result.answer if qualification_result&.next_question.blank?
+
+    [result.answer, qualification_result.next_question].join("\n\n")
+  end
+
+  def record_ai_employee_decision!(result, qualification_result)
     conversation.update!(
       additional_attributes: conversation.additional_attributes.merge(
         'ai_employee_last_decision' => {
           'status' => result.answered? && result.sources.present? ? 'answered' : 'refused',
           'refusal_reason' => result.refusal_reason,
-          'sources' => result.sources.map(&:stringify_keys)
+          'sources' => result.sources.map(&:stringify_keys),
+          'qualification' => qualification_result_payload(qualification_result)
         }
       )
     )
+  end
+
+  def qualification_result_payload(qualification_result)
+    return nil if qualification_result.blank?
+
+    {
+      'quality' => qualification_result.qualification.quality,
+      'score' => qualification_result.qualification.score,
+      'missing_signals' => qualification_result.qualification.missing_signals,
+      'next_question' => qualification_result.next_question,
+      'configuration_version' => qualification_result.qualification.configuration_version
+    }
   end
 
   def record_send_failure!(error)

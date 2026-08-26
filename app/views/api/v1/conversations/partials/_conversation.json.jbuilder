@@ -52,6 +52,22 @@ json.status conversation.status
 json.control_state conversation.control_state
 json.control_version conversation.control_version
 json.ai_employee_decision conversation.additional_attributes&.dig('ai_employee_last_decision')
+if conversation.contact&.lead_qualification.present?
+  qualification = conversation.contact.lead_qualification
+  json.lead_qualification do
+    json.quality qualification.quality
+    json.follow_up_state qualification.follow_up_state
+    json.score qualification.score
+    json.reasons qualification.reasons
+    json.missing_signals qualification.missing_signals
+    json.evidence qualification.evidence_snapshot
+    json.configuration_version qualification.configuration_version
+    json.next_question AiLeadEmployee::QualificationService.next_question_for(
+      account: conversation.account,
+      evidence_snapshot: qualification.evidence_snapshot
+    )
+  end
+end
 json.meta_whatsapp_events conversation.meta_whatsapp_webhook_events.order(created_at: :desc).limit(10) do |event|
   json.id event.id
   json.event_kind event.event_kind

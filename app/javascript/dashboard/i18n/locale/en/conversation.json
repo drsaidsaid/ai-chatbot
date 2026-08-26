@@ -477,6 +477,14 @@
       "LAST_DECISION": "Last AI Decision",
       "REFUSAL_REASON": "Refused: {reason}",
       "RECENT_EVENTS": "Recent Meta Events",
+      "QUALIFICATION": {
+        "TITLE": "Qualification",
+        "QUALITY": "Quality",
+        "SCORE": "Score",
+        "NEXT_QUESTION": "Next question",
+        "FACTS": "Facts",
+        "REASONS": "Reasons"
+      },
       "STATE": {
         "AI_ACTIVE": "AI active",
         "AI_PAUSED": "AI paused",

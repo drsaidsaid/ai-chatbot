@@ -161,6 +161,10 @@ Rails.application.routes.draw do
               post :deactivate
             end
           end
+          resource :qualification_configuration, only: [:show, :update]
+          resources :lead_qualifications, only: [:show] do
+            post :evidence, on: :member
+          end
           namespace :channels do
             resource :twilio_channel, only: [:create]
           end

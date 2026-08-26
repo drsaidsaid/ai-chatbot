@@ -24,6 +24,12 @@ const metaWhatsappEvents = computed(
 const aiEmployeeDecision = computed(
   () => props.currentChat.ai_employee_decision || null
 );
+const leadQualification = computed(
+  () => props.currentChat.lead_qualification || null
+);
+const qualificationEvidence = computed(
+  () => leadQualification.value?.evidence || {}
+);
 const decisionSources = computed(() => aiEmployeeDecision.value?.sources || []);
 const isAIActive = computed(() => controlState.value === 'ai_active');
 const canUpdateAI = computed(
@@ -150,6 +156,69 @@ const updateAIControl = async action => {
           })
         }}
       </span>
+    </div>
+
+    <div
+      v-if="leadQualification"
+      class="flex flex-col gap-2 border-t border-n-weak pt-3 text-xs"
+    >
+      <div class="font-medium uppercase text-n-slate-11">
+        {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.TITLE') }}
+      </div>
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-n-slate-11">
+          {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.QUALITY') }}
+        </span>
+        <span class="font-medium text-n-slate-12">
+          {{ leadQualification.quality }}
+        </span>
+      </div>
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-n-slate-11">
+          {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.SCORE') }}
+        </span>
+        <span class="font-medium text-n-slate-12">
+          {{ leadQualification.score }}
+        </span>
+      </div>
+      <div v-if="leadQualification.next_question" class="flex flex-col gap-1">
+        <span class="text-n-slate-11">
+          {{
+            $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.NEXT_QUESTION')
+          }}
+        </span>
+        <span class="text-n-slate-12">
+          {{ leadQualification.next_question }}
+        </span>
+      </div>
+      <div
+        v-if="Object.keys(qualificationEvidence).length"
+        class="flex flex-col gap-1"
+      >
+        <span class="text-n-slate-11">
+          {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.FACTS') }}
+        </span>
+        <span
+          v-for="(evidence, signal) in qualificationEvidence"
+          :key="signal"
+          class="text-n-slate-12"
+        >
+          <span>{{ signal }}</span>
+          <span class="text-n-slate-11">{{ evidence.value }}</span>
+        </span>
+      </div>
+      <div v-if="leadQualification.reasons?.length" class="flex flex-col gap-1">
+        <span class="text-n-slate-11">
+          {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.REASONS') }}
+        </span>
+        <span
+          v-for="reason in leadQualification.reasons"
+          :key="reason"
+          class="text-n-slate-12"
+        >
+          {{ reason }}
+        </span>
+      </div>
     </div>
 
     <div v-if="metaWhatsappEvents.length" class="flex flex-col gap-2">

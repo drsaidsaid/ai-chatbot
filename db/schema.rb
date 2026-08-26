@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_26_000400) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_26_000600) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1179,6 +1179,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000400) do
     t.jsonb "settings", default: {}
   end
 
+  create_table "knowledge_items", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "title", null: false
+    t.text "question", null: false
+    t.text "answer", null: false
+    t.integer "source_kind", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "approved_at"
+    t.datetime "rejected_at"
+    t.datetime "deactivated_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status", "source_kind"], name: "index_knowledge_items_on_account_id_and_status_and_source_kind"
+    t.index ["account_id"], name: "index_knowledge_items_on_account_id"
+  end
+
   create_table "labels", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -1189,6 +1206,45 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000400) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_labels_on_account_id"
     t.index ["title", "account_id"], name: "index_labels_on_title_and_account_id", unique: true
+  end
+
+  create_table "lead_qualification_decisions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "lead_qualification_id", null: false
+    t.integer "quality", null: false
+    t.integer "follow_up_state", null: false
+    t.integer "score", null: false
+    t.jsonb "reasons", default: [], null: false
+    t.jsonb "missing_signals", default: [], null: false
+    t.jsonb "evidence_snapshot", default: {}, null: false
+    t.integer "configuration_version", null: false
+    t.datetime "decided_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "contact_id", "decided_at"], name: "idx_lead_qualification_decisions_on_lead"
+    t.index ["account_id"], name: "index_lead_qualification_decisions_on_account_id"
+    t.index ["contact_id"], name: "index_lead_qualification_decisions_on_contact_id"
+    t.index ["lead_qualification_id"], name: "index_lead_qualification_decisions_on_lead_qualification_id"
+  end
+
+  create_table "lead_qualifications", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.integer "quality", default: 0, null: false
+    t.integer "follow_up_state", default: 0, null: false
+    t.integer "score", default: 0, null: false
+    t.jsonb "reasons", default: [], null: false
+    t.jsonb "missing_signals", default: [], null: false
+    t.jsonb "evidence_snapshot", default: {}, null: false
+    t.integer "configuration_version", default: 1, null: false
+    t.datetime "last_evaluated_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "contact_id"], name: "index_lead_qualifications_on_account_id_and_contact_id", unique: true
+    t.index ["account_id", "quality"], name: "index_lead_qualifications_on_account_id_and_quality"
+    t.index ["account_id"], name: "index_lead_qualifications_on_account_id"
+    t.index ["contact_id"], name: "index_lead_qualifications_on_contact_id"
   end
 
   create_table "leaves", force: :cascade do |t|
@@ -1284,23 +1340,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000400) do
     t.index ["conversation_id"], name: "index_meta_whatsapp_webhook_events_on_conversation_id"
     t.index ["inbox_id"], name: "index_meta_whatsapp_webhook_events_on_inbox_id"
     t.index ["provider_event_id"], name: "index_meta_whatsapp_webhook_events_on_provider_event_id", unique: true
-  end
-
-  create_table "knowledge_items", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.string "title", null: false
-    t.text "question", null: false
-    t.text "answer", null: false
-    t.integer "source_kind", default: 0, null: false
-    t.integer "status", default: 0, null: false
-    t.datetime "approved_at"
-    t.datetime "rejected_at"
-    t.datetime "deactivated_at"
-    t.jsonb "metadata", default: {}, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id", "status", "source_kind"], name: "index_knowledge_items_on_account_id_and_status_and_source_kind"
-    t.index ["account_id"], name: "index_knowledge_items_on_account_id"
   end
 
   create_table "notes", force: :cascade do |t|
@@ -1409,6 +1448,56 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000400) do
     t.index ["portal_id", "user_id"], name: "index_portals_members_on_portal_id_and_user_id", unique: true
     t.index ["portal_id"], name: "index_portals_members_on_portal_id"
     t.index ["user_id"], name: "index_portals_members_on_user_id"
+  end
+
+  create_table "qualification_budget_ranges", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "label", null: false
+    t.integer "min_cents"
+    t.integer "max_cents"
+    t.integer "position", default: 0, null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "enabled", "position"], name: "idx_on_account_id_enabled_position_19e6784019"
+    t.index ["account_id"], name: "index_qualification_budget_ranges_on_account_id"
+  end
+
+  create_table "qualification_evidences", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "conversation_id"
+    t.bigint "message_id"
+    t.bigint "user_id"
+    t.bigint "superseded_by_id"
+    t.integer "signal", null: false
+    t.jsonb "value", default: {}, null: false
+    t.integer "source", null: false
+    t.datetime "observed_at", null: false
+    t.datetime "superseded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "contact_id", "signal", "superseded_at"], name: "idx_qualification_evidence_current_lookup"
+    t.index ["account_id"], name: "index_qualification_evidences_on_account_id"
+    t.index ["contact_id"], name: "index_qualification_evidences_on_contact_id"
+    t.index ["conversation_id"], name: "index_qualification_evidences_on_conversation_id"
+    t.index ["message_id"], name: "index_qualification_evidences_on_message_id"
+    t.index ["superseded_by_id"], name: "index_qualification_evidences_on_superseded_by_id"
+    t.index ["user_id"], name: "index_qualification_evidences_on_user_id"
+  end
+
+  create_table "qualification_questions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "signal", null: false
+    t.text "prompt", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "enabled", default: true, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "enabled", "position"], name: "idx_on_account_id_enabled_position_81d2a5e994"
+    t.index ["account_id", "signal"], name: "index_qualification_questions_on_account_id_and_signal", unique: true
+    t.index ["account_id"], name: "index_qualification_questions_on_account_id"
   end
 
   create_table "related_categories", force: :cascade do |t|
@@ -1634,10 +1723,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000400) do
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
   add_foreign_key "inboxes", "portals"
   add_foreign_key "knowledge_items", "accounts"
+  add_foreign_key "lead_qualification_decisions", "accounts"
+  add_foreign_key "lead_qualification_decisions", "contacts"
+  add_foreign_key "lead_qualification_decisions", "lead_qualifications"
+  add_foreign_key "lead_qualifications", "accounts"
+  add_foreign_key "lead_qualifications", "contacts"
   add_foreign_key "meta_whatsapp_webhook_events", "accounts"
   add_foreign_key "meta_whatsapp_webhook_events", "channel_whatsapp"
   add_foreign_key "meta_whatsapp_webhook_events", "conversations"
   add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
+  add_foreign_key "qualification_budget_ranges", "accounts"
+  add_foreign_key "qualification_evidences", "accounts"
+  add_foreign_key "qualification_evidences", "contacts"
+  add_foreign_key "qualification_evidences", "conversations"
+  add_foreign_key "qualification_evidences", "messages"
+  add_foreign_key "qualification_evidences", "qualification_evidences", column: "superseded_by_id"
+  add_foreign_key "qualification_evidences", "users"
+  add_foreign_key "qualification_questions", "accounts"
   add_foreign_key "user_sessions", "users"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").

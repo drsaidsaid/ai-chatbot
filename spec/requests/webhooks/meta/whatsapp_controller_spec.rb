@@ -171,8 +171,13 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
     expect(conversation.additional_attributes['channel']).to eq('meta_whatsapp')
     expect(conversation.reload.additional_attributes['ai_employee_last_decision']).to include(
       'status' => 'answered',
-      'sources' => [include('id' => knowledge_item.id, 'source_kind' => 'faq')]
+      'sources' => [include('id' => knowledge_item.id, 'source_kind' => 'faq')],
+      'qualification' => include(
+        'quality' => 'low_qualified',
+        'next_question' => 'What budget range have you set aside for this?'
+      )
     )
+    expect(conversation.contact.lead_qualification.evidence_snapshot).to include('business_type', 'problem')
   end
 
   def expect_owned_incoming_message(message, conversation, contact)
@@ -181,14 +186,17 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
       inbox: channel.inbox,
       conversation: conversation,
       sender: contact,
-      content: 'Do you offer consulting?',
+      content: 'Do you offer consulting? I need help getting more leads for my agency.',
       source_id: 'wamid.HBgLMjU1NzEyMzQ1Njc4FQIAEhggMTIz'
     )
     expect(message).to be_incoming
   end
 
   def expect_owned_auto_reply(reply)
-    expect(reply).to have_attributes(content: 'Yes, we offer consulting for qualified businesses.', source_id: 'wamid.AUTO_REPLY')
+    expect(reply).to have_attributes(
+      content: "Yes, we offer consulting for qualified businesses.\n\nWhat budget range have you set aside for this?",
+      source_id: 'wamid.AUTO_REPLY'
+    )
   end
 
   around do |example|
@@ -243,7 +251,9 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
         question: 'Do you offer consulting?',
         answer: 'Yes, we offer consulting for qualified businesses.'
       )
-      body = inbound_text_payload.to_json
+      create(:qualification_question, account: account, signal: :problem, prompt: 'What problem are you trying to solve?', position: 1)
+      create(:qualification_question, account: account, signal: :budget, prompt: 'What budget range have you set aside for this?', position: 2)
+      body = inbound_text_payload(text: 'Do you offer consulting? I need help getting more leads for my agency.').to_json
       counts_before = {
         events: MetaWhatsappWebhookEvent.count,
         contacts: Contact.count,
@@ -313,7 +323,27 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
       expect(Message.outgoing.last.content).to eq(AiLeadEmployee::WhatsappAutoReplyService::VOICE_NOTE_TEXT_REQUEST)
       expect(Conversation.last.additional_attributes['ai_employee_last_decision']).to include(
         'status' => 'refused',
-        'refusal_reason' => 'unsupported_voice_note'
+        'refusal_reason' => 'unsupported_voice_note',
+        'qualification' => nil
+      )
+    end
+
+    it 'does not append a qualification question when the AI Employee cannot answer from approved knowledge' do
+      create(:qualification_question, account: account, signal: :problem, prompt: 'What problem are you trying to solve?', position: 1)
+      body = inbound_text_payload(text: 'Can you help with something unknown? I need help getting more leads.').to_json
+
+      post '/webhooks/meta/whatsapp',
+           params: body,
+           headers: {
+             'CONTENT_TYPE' => 'application/json',
+             'X-Hub-Signature-256' => signature_for(body)
+           }
+
+      expect(response).to have_http_status(:ok)
+      expect(Message.outgoing.last.content).to eq(AiLeadEmployee::KnowledgeAnswerService::BOUNDARY_RESPONSE)
+      expect(Conversation.last.additional_attributes['ai_employee_last_decision']).to include(
+        'status' => 'refused',
+        'qualification' => include('quality' => 'low_qualified')
       )
     end
 

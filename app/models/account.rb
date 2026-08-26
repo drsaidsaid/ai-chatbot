@@ -87,6 +87,8 @@ class Account < ApplicationRecord
   has_many :hooks, dependent: :destroy_async, class_name: 'Integrations::Hook'
   has_many :inboxes, dependent: :destroy_async
   has_many :knowledge_items, dependent: :destroy_async
+  has_many :lead_qualification_decisions, dependent: :destroy_async
+  has_many :lead_qualifications, dependent: :destroy_async
   has_many :labels, dependent: :destroy_async
   has_many :line_channels, dependent: :destroy_async, class_name: '::Channel::Line'
   has_many :mentions, dependent: :destroy_async
@@ -104,6 +106,9 @@ class Account < ApplicationRecord
   has_many :web_widgets, dependent: :destroy_async, class_name: '::Channel::WebWidget'
   has_many :webhooks, dependent: :destroy_async
   has_many :whatsapp_channels, dependent: :destroy_async, class_name: '::Channel::Whatsapp'
+  has_many :qualification_budget_ranges, dependent: :destroy_async
+  has_many :qualification_evidences, dependent: :destroy_async
+  has_many :qualification_questions, dependent: :destroy_async
   has_many :working_hours, dependent: :destroy_async
 
   has_one_attached :contacts_export
