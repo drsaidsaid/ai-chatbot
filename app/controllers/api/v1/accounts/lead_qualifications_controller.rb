@@ -51,8 +51,19 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
       next_question: AiLeadEmployee::QualificationService.next_question_for(
         account: current_account,
         evidence_snapshot: qualification.evidence_snapshot
-      )
+      ),
+      follow_ups: qualification.lead_follow_ups.order(created_at: :desc).limit(10).map { |follow_up| follow_up_payload(follow_up) },
+      follow_up_opted_out: LeadFollowUpOptOut.exists?(account: current_account, contact: contact)
     }
+  end
+
+  def follow_up_payload(follow_up)
+    follow_up.as_json(
+      only: [
+        :id, :status, :stage, :attempt_number, :question_text, :content, :scheduled_at, :sent_at,
+        :cancelled_at, :failed_at, :cancellation_reason, :failure_reason
+      ]
+    )
   end
 
   def ensure_latest_conversation!

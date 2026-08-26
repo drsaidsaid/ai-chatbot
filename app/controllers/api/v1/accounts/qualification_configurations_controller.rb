@@ -11,6 +11,7 @@ class Api::V1::Accounts::QualificationConfigurationsController < Api::V1::Accoun
     ActiveRecord::Base.transaction do
       update_questions!
       update_budget_ranges!
+      update_follow_up!
       bump_configuration_version!
     end
 
@@ -46,8 +47,25 @@ class Api::V1::Accounts::QualificationConfigurationsController < Api::V1::Accoun
       questions: current_account.qualification_questions.order(:position, :id).as_json(only: [:id, :signal, :prompt, :position, :enabled, :metadata]),
       budget_ranges: current_account.qualification_budget_ranges.order(:position, :id).as_json(
         only: [:id, :label, :min_cents, :max_cents, :position, :enabled]
-      )
+      ),
+      follow_up: AiLeadEmployee::FollowUpConfig.new(current_account).payload
     }
+  end
+
+  def update_follow_up!
+    return unless params.key?(:follow_up)
+
+    attributes = params.require(:follow_up).permit(
+      :enabled,
+      :delay_minutes,
+      :max_attempts,
+      :qualified_second_follow_up_enabled,
+      :message_template,
+      stage_rules: {}
+    ).to_h
+    current_account.update!(
+      settings: current_account.settings.merge('ai_lead_employee_follow_up' => attributes)
+    )
   end
 
   def qualification_question_for(id)

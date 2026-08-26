@@ -485,6 +485,11 @@
         "FACTS": "Facts",
         "REASONS": "Reasons"
       },
+      "FOLLOW_UP": {
+        "TITLE": "Follow-ups",
+        "OPTED_OUT": "Follow-up opted out",
+        "ATTEMPT": "{status} - {stage} - attempt {attempt}"
+      },
       "STATE": {
         "AI_ACTIVE": "AI active",
         "AI_PAUSED": "AI paused",

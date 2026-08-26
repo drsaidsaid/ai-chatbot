@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_26_000900) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_26_001000) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -1140,7 +1140,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_000900) do
     t.bigint "lead_message_id", null: false
     t.bigint "human_answer_message_id"
     t.bigint "knowledge_item_id"
-    t.integer "reason", null: false
+    t.integer "reason", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.string "proposed_source_kind"
     t.text "question", null: false
@@ -1265,6 +1265,54 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_000900) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_labels_on_account_id"
     t.index ["title", "account_id"], name: "index_labels_on_title_and_account_id", unique: true
+  end
+
+  create_table "lead_follow_up_opt_outs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "conversation_id"
+    t.bigint "message_id"
+    t.string "reason", null: false
+    t.datetime "opted_out_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "contact_id"], name: "index_lead_follow_up_opt_outs_on_account_id_and_contact_id", unique: true
+    t.index ["account_id"], name: "index_lead_follow_up_opt_outs_on_account_id"
+    t.index ["contact_id"], name: "index_lead_follow_up_opt_outs_on_contact_id"
+    t.index ["conversation_id"], name: "index_lead_follow_up_opt_outs_on_conversation_id"
+    t.index ["message_id"], name: "index_lead_follow_up_opt_outs_on_message_id"
+  end
+
+  create_table "lead_follow_ups", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "lead_qualification_id", null: false
+    t.bigint "qualification_question_id"
+    t.bigint "message_id"
+    t.integer "status", default: 0, null: false
+    t.integer "attempt_number", null: false
+    t.integer "stage", null: false
+    t.text "question_text", null: false
+    t.text "content"
+    t.string "cancellation_reason"
+    t.string "failure_reason"
+    t.integer "control_version", null: false
+    t.datetime "scheduled_at", null: false
+    t.datetime "sent_at"
+    t.datetime "cancelled_at"
+    t.datetime "failed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "contact_id", "stage", "attempt_number"], name: "idx_lead_follow_ups_on_logical_attempt", unique: true
+    t.index ["account_id", "conversation_id", "status"], name: "idx_on_account_id_conversation_id_status_0550f295fb"
+    t.index ["account_id"], name: "index_lead_follow_ups_on_account_id"
+    t.index ["contact_id"], name: "index_lead_follow_ups_on_contact_id"
+    t.index ["conversation_id"], name: "index_lead_follow_ups_on_conversation_id"
+    t.index ["lead_qualification_id"], name: "index_lead_follow_ups_on_lead_qualification_id"
+    t.index ["message_id"], name: "index_lead_follow_ups_on_message_id"
+    t.index ["qualification_question_id"], name: "index_lead_follow_ups_on_qualification_question_id"
+    t.index ["status", "scheduled_at"], name: "index_lead_follow_ups_on_status_and_scheduled_at"
   end
 
   create_table "lead_handoffs", force: :cascade do |t|
@@ -1814,6 +1862,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_000900) do
   add_foreign_key "human_review_requests", "messages", column: "lead_message_id"
   add_foreign_key "inboxes", "portals"
   add_foreign_key "knowledge_items", "accounts"
+  add_foreign_key "lead_follow_up_opt_outs", "accounts"
+  add_foreign_key "lead_follow_up_opt_outs", "contacts"
+  add_foreign_key "lead_follow_up_opt_outs", "conversations"
+  add_foreign_key "lead_follow_up_opt_outs", "messages"
+  add_foreign_key "lead_follow_ups", "accounts"
+  add_foreign_key "lead_follow_ups", "contacts"
+  add_foreign_key "lead_follow_ups", "conversations"
+  add_foreign_key "lead_follow_ups", "lead_qualifications"
+  add_foreign_key "lead_follow_ups", "messages"
+  add_foreign_key "lead_follow_ups", "qualification_questions"
   add_foreign_key "lead_handoffs", "accounts"
   add_foreign_key "lead_handoffs", "contacts"
   add_foreign_key "lead_handoffs", "conversations"

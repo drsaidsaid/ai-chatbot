@@ -21,6 +21,7 @@ class Conversations::AssignmentService
       conversation.save!
       audit_human_reassignment!(previous_assignee_id) if previous_assignee_id != conversation.assignee_id
     end
+    AiLeadEmployee::FollowUpScheduler.cancel_pending_for!(conversation: conversation, reason: 'control_state_human_active') if assignee.present?
     assignee
   end
 

@@ -10,6 +10,8 @@ class AiLeadEmployee::WhatsappAutoReplyService
   end
 
   def perform
+    return if opt_out_recorded?
+
     result = ai_employee_result
     qualification_result = qualification_result_for_supported_message
     return if highly_qualified_handoff_created?(qualification_result)
@@ -25,6 +27,12 @@ class AiLeadEmployee::WhatsappAutoReplyService
   private
 
   attr_reader :conversation, :incoming_message, :provider_message_payload
+
+  def opt_out_recorded?
+    return false if provider_message_payload[:type] != 'text'
+
+    AiLeadEmployee::OptOutService.new(conversation: conversation, message: incoming_message).perform.present?
+  end
 
   def ai_employee_result
     return voice_note_result if provider_message_payload[:type] != 'text'
@@ -93,6 +101,7 @@ class AiLeadEmployee::WhatsappAutoReplyService
     record_ai_employee_decision!(result, qualification_result, review_request_result)
 
     sent_message = send_reply!(result, qualification_result)
+    schedule_follow_up!(qualification_result)
     Conversations::ControlService.new(conversation: conversation).handoff_requested! if review_request_result&.request&.open?
     sent_message
   end
@@ -130,6 +139,15 @@ class AiLeadEmployee::WhatsappAutoReplyService
         }
       )
     )
+  end
+
+  def schedule_follow_up!(qualification_result)
+    return if qualification_result.blank?
+
+    AiLeadEmployee::FollowUpScheduler.new(
+      conversation: conversation,
+      qualification_result: qualification_result
+    ).perform
   end
 
   def qualification_result_payload(qualification_result)

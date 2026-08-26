@@ -27,6 +27,10 @@ const aiEmployeeDecision = computed(
 const leadQualification = computed(
   () => props.currentChat.lead_qualification || null
 );
+const leadFollowUps = computed(() => leadQualification.value?.follow_ups || []);
+const leadFollowUpOptedOut = computed(
+  () => leadQualification.value?.follow_up_opted_out || false
+);
 const qualificationEvidence = computed(
   () => leadQualification.value?.evidence || {}
 );
@@ -76,6 +80,14 @@ const formatTime = timestamp => {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(timestamp * 1000));
+};
+
+const formatDateTime = timestamp => {
+  if (!timestamp) return '';
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(timestamp));
 };
 
 const updateAIControl = async action => {
@@ -217,6 +229,43 @@ const updateAIControl = async action => {
           class="text-n-slate-12"
         >
           {{ reason }}
+        </span>
+      </div>
+      <div v-if="leadFollowUpOptedOut" class="text-n-slate-12">
+        {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.FOLLOW_UP.OPTED_OUT') }}
+      </div>
+      <div v-if="leadFollowUps.length" class="flex flex-col gap-1">
+        <span class="text-n-slate-11">
+          {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.FOLLOW_UP.TITLE') }}
+        </span>
+        <span
+          v-for="followUp in leadFollowUps"
+          :key="followUp.id"
+          class="text-n-slate-12"
+        >
+          {{
+            $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.FOLLOW_UP.ATTEMPT', {
+              status: followUp.status,
+              stage: followUp.stage,
+              attempt: followUp.attempt_number,
+            })
+          }}
+          <span class="text-n-slate-11">
+            {{
+              formatDateTime(
+                followUp.sent_at ||
+                  followUp.cancelled_at ||
+                  followUp.failed_at ||
+                  followUp.scheduled_at
+              )
+            }}
+          </span>
+          <span
+            v-if="followUp.cancellation_reason || followUp.failure_reason"
+            class="text-n-slate-11"
+          >
+            {{ followUp.cancellation_reason || followUp.failure_reason }}
+          </span>
         </span>
       </div>
     </div>

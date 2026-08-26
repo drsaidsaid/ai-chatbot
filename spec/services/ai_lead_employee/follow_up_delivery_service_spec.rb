@@ -1,0 +1,94 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe AiLeadEmployee::FollowUpDeliveryService do
+  let(:account) { create(:account) }
+  let!(:channel) do
+    create(
+      :channel_whatsapp,
+      account: account,
+      provider: 'whatsapp_cloud',
+      sync_templates: false,
+      validate_provider_config: false,
+      provider_config: {
+        'api_key' => 'test-key',
+        'phone_number_id' => '111222333',
+        'business_account_id' => '444555666',
+        'source' => 'embedded_signup'
+      }
+    )
+  end
+  let(:contact) { create(:contact, account: account, phone_number: '+255712345678') }
+  let(:contact_inbox) { create(:contact_inbox, inbox: channel.inbox, contact: contact, source_id: '255712345678') }
+  let(:conversation) do
+    create(
+      :conversation,
+      account: account,
+      inbox: channel.inbox,
+      contact: contact,
+      contact_inbox: contact_inbox,
+      control_state: :ai_active,
+      control_version: 4
+    )
+  end
+  let(:qualification) { create(:lead_qualification, account: account, contact: contact, quality: :low_qualified) }
+  let(:follow_up) do
+    create(
+      :lead_follow_up,
+      account: account,
+      contact: contact,
+      conversation: conversation,
+      lead_qualification: qualification,
+      content: 'Can you share your budget?',
+      control_version: 4
+    )
+  end
+
+  before do
+    stub_request(:post, 'https://graph.facebook.com/v23.0/123456789/messages')
+      .to_return(
+        status: 200,
+        body: { messages: [{ id: 'wamid.FOLLOW_UP' }] }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+  end
+
+  it 'sends a pending follow-up once and records the sent message' do
+    described_class.new(follow_up: follow_up).perform
+    described_class.new(follow_up: follow_up.reload).perform
+
+    expect(follow_up.reload).to be_sent
+    expect(follow_up.message.content).to eq('Can you share your budget?')
+    expect(Message.outgoing.where(conversation: conversation).count).to eq(1)
+  end
+
+  it 'cancels a late job after control state changes' do
+    conversation.update!(control_state: :human_active, control_version: 5)
+
+    described_class.new(follow_up: follow_up).perform
+
+    expect(follow_up.reload).to be_cancelled
+    expect(follow_up.cancellation_reason).to eq('incompatible_control_state')
+    expect(Message.outgoing.where(conversation: conversation)).to be_empty
+  end
+
+  it 'cancels a late job after the conversation is resolved' do
+    conversation.update!(status: :resolved)
+
+    described_class.new(follow_up: follow_up).perform
+
+    expect(follow_up.reload).to be_cancelled
+    expect(follow_up.cancellation_reason).to eq('incompatible_control_state')
+    expect(Message.outgoing.where(conversation: conversation)).to be_empty
+  end
+
+  it 'cancels a late job after opt-out' do
+    create(:lead_follow_up_opt_out, account: account, contact: contact, conversation: conversation)
+
+    described_class.new(follow_up: follow_up).perform
+
+    expect(follow_up.reload).to be_cancelled
+    expect(follow_up.cancellation_reason).to eq('follow_up_opted_out')
+  end
+end

@@ -35,6 +35,7 @@ class LeadQualification < ApplicationRecord
   belongs_to :contact
   has_many :bookings, dependent: :destroy_async
   has_many :lead_qualification_decisions, dependent: :destroy_async
+  has_many :lead_follow_ups, dependent: :destroy_async
 
   enum quality: {
     unknown: 0,
@@ -55,6 +56,8 @@ class LeadQualification < ApplicationRecord
   validates :contact_id, uniqueness: { scope: :account_id }
   validate :validate_account_scope
 
+  after_update_commit :cancel_incompatible_follow_ups
+
   def record_decision!
     lead_qualification_decisions.create!(
       account: account,
@@ -71,6 +74,12 @@ class LeadQualification < ApplicationRecord
   end
 
   private
+
+  def cancel_incompatible_follow_ups
+    return unless saved_change_to_follow_up_state? && follow_up_state.in?(%w[human_review call_booked closed])
+
+    lead_follow_ups.pending.find_each { |follow_up| follow_up.cancel!("follow_up_state_#{follow_up_state}") }
+  end
 
   def validate_account_scope
     errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id

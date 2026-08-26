@@ -19,7 +19,16 @@ RSpec.describe 'Qualification Configuration API', type: :request do
             ],
             budget_ranges: [
               { label: '$500 - $1,500', min_cents: 50_000, max_cents: 150_000, position: 1, enabled: true }
-            ]
+            ],
+            follow_up: {
+              enabled: true,
+              delay_minutes: 120,
+              max_attempts: 2,
+              qualified_second_follow_up_enabled: true,
+              stage_rules: {
+                budget: { enabled: false }
+              }
+            }
           },
           as: :json
 
@@ -28,6 +37,8 @@ RSpec.describe 'Qualification Configuration API', type: :request do
     expect(response.parsed_body['questions'].pluck('prompt')).to eq(['What budget range works?', 'What is the main blocker?'])
     expect(question.reload.enabled).to be(false)
     expect(account.qualification_budget_ranges.first.label).to eq('$500 - $1,500')
+    expect(response.parsed_body.dig('follow_up', 'delay_minutes')).to eq(120)
+    expect(response.parsed_body.dig('follow_up', 'stage_rules', 'budget', 'enabled')).to be(false)
   end
 
   it 'prevents a Human Operator without admin access from changing configuration' do

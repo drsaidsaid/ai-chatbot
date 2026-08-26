@@ -66,6 +66,20 @@ if conversation.contact&.lead_qualification.present?
       account: conversation.account,
       evidence_snapshot: qualification.evidence_snapshot
     )
+    json.follow_up_opted_out LeadFollowUpOptOut.exists?(account: conversation.account, contact: conversation.contact)
+    json.follow_ups qualification.lead_follow_ups.order(created_at: :desc).limit(5) do |follow_up|
+      json.id follow_up.id
+      json.status follow_up.status
+      json.stage follow_up.stage
+      json.attempt_number follow_up.attempt_number
+      json.question_text follow_up.question_text
+      json.scheduled_at follow_up.scheduled_at&.iso8601
+      json.sent_at follow_up.sent_at&.iso8601
+      json.cancelled_at follow_up.cancelled_at&.iso8601
+      json.failed_at follow_up.failed_at&.iso8601
+      json.cancellation_reason follow_up.cancellation_reason
+      json.failure_reason follow_up.failure_reason
+    end
   end
 end
 json.meta_whatsapp_events conversation.meta_whatsapp_webhook_events.order(created_at: :desc).limit(10) do |event|

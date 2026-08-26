@@ -37,5 +37,15 @@ class Conversations::ControlService
       conversation.control_version += 1
       conversation.save!
     end
+    cancel_follow_ups!(attributes[:control_state])
+  end
+
+  def cancel_follow_ups!(control_state)
+    return if control_state.to_s == 'ai_active'
+
+    AiLeadEmployee::FollowUpScheduler.cancel_pending_for!(
+      conversation: conversation,
+      reason: "control_state_#{conversation.control_state}"
+    )
   end
 end
