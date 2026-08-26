@@ -168,6 +168,10 @@ Rails.application.routes.draw do
           resources :lead_qualifications, only: [:show] do
             post :evidence, on: :member
           end
+          resource :booking_configuration, only: [:show, :update]
+          resources :bookings, only: [:index, :create] do
+            get :available_slots, on: :collection
+          end
           namespace :channels do
             resource :twilio_channel, only: [:create]
           end

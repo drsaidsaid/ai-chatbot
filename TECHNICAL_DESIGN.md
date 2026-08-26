@@ -250,6 +250,17 @@ Conversation before sending.
 
 #### Current owned-fork implementation
 
+- Conflict-free call bookings are persisted as `bookings`, scoped by account,
+  contact, Conversation, Lead Qualification, assignee, calendar, confirmation,
+  calendar event, invitation, alert-delivery, and retry idempotency metadata.
+- Active bookings cannot overlap for the same account calendar. The service
+  checks availability transactionally, the model rejects overlaps, and
+  PostgreSQL enforces the invariant with a GiST exclusion constraint.
+- V1 stores booking configuration in account settings under
+  `ai_lead_employee.booking` until calendar connections and availability rules
+  are promoted to first-class records.
+- The owned dashboard Bookings surface exposes configuration, available slots,
+  confirmed booking state, and Human Operator preparation-alert visibility.
 - Highly Qualified sales handoffs are persisted as `lead_handoffs`, scoped by
   account, contact, Conversation, qualification, assignee, alert type,
   qualification snapshot, alert recipients, and delivery attempts.

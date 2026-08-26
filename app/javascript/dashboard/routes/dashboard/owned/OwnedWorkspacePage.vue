@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import HumanReviewRequestsPanel from './HumanReviewRequestsPanel.vue';
 import KnowledgeItemsPanel from './KnowledgeItemsPanel.vue';
+import BookingsPanel from './BookingsPanel.vue';
 
 const props = defineProps({
   surface: {
@@ -65,6 +66,7 @@ const description = computed(() => {
       </div>
       <HumanReviewRequestsPanel v-if="surface === 'REVIEWS'" />
       <KnowledgeItemsPanel v-if="surface === 'KNOWLEDGE'" />
+      <BookingsPanel v-if="surface === 'BOOKINGS'" />
     </section>
   </main>
 </template>

@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_26_000800) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_26_000900) do
   # These extensions should be enabled to support this database
+  enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
   enable_extension "pgcrypto"
@@ -315,6 +316,40 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_000800) do
     t.boolean "active", default: true, null: false
     t.integer "execution_delay"
     t.index ["account_id"], name: "index_automation_rules_on_account_id"
+  end
+
+  create_table "bookings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "lead_qualification_id", null: false
+    t.bigint "assignee_id"
+    t.string "calendar_id", null: false
+    t.string "provider", null: false
+    t.string "provider_event_id"
+    t.string "idempotency_key"
+    t.integer "status", default: 0, null: false
+    t.datetime "starts_at", null: false
+    t.datetime "ends_at", null: false
+    t.string "timezone", null: false
+    t.jsonb "qualification_evidence_ids", default: [], null: false
+    t.jsonb "qualification_snapshot", default: {}, null: false
+    t.jsonb "calendar_event_payload", default: {}, null: false
+    t.string "confirmation_message_id"
+    t.datetime "confirmed_at"
+    t.datetime "calendar_invitation_sent_at"
+    t.jsonb "preparation_alert_recipients", default: [], null: false
+    t.jsonb "preparation_alert_deliveries", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "calendar_id", "starts_at"], name: "index_bookings_on_active_slot", unique: true, where: "(status = 0)"
+    t.index ["account_id", "idempotency_key"], name: "index_bookings_on_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
+    t.index ["account_id"], name: "index_bookings_on_account_id"
+    t.index ["assignee_id"], name: "index_bookings_on_assignee_id"
+    t.index ["contact_id"], name: "index_bookings_on_contact_id"
+    t.index ["conversation_id"], name: "index_bookings_on_conversation_id"
+    t.index ["lead_qualification_id"], name: "index_bookings_on_lead_qualification_id"
+    t.exclusion_constraint "account_id WITH =, calendar_id WITH =, tsrange(starts_at, ends_at, '[)'::text) WITH &&", where: "status = 0", using: :gist, name: "index_bookings_on_active_slot_overlap"
   end
 
   create_table "calls", force: :cascade do |t|
@@ -1763,6 +1798,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_000800) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "bookings", "accounts"
+  add_foreign_key "bookings", "contacts"
+  add_foreign_key "bookings", "conversations"
+  add_foreign_key "bookings", "lead_qualifications"
+  add_foreign_key "bookings", "users", column: "assignee_id"
   add_foreign_key "campaign_recipients", "accounts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade

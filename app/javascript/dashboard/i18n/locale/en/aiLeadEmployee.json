@@ -31,6 +31,52 @@
         "DESCRIPTION": "Confirmed and upcoming calls for highly qualified leads."
       }
     },
+    "BOOKINGS": {
+      "UPCOMING": "Upcoming bookings",
+      "LOADING": "Loading bookings",
+      "EMPTY": "No calls booked yet",
+      "SETTINGS": "Booking settings",
+      "CREATE": "Create booking",
+      "SAVE_SETTINGS": "Save settings",
+      "SAVING": "Saving...",
+      "SETTINGS_SAVED": "Booking settings saved",
+      "CALENDAR_CONNECTED": "Calendar connected",
+      "CONFIRM_CALL": "Confirm call",
+      "CONFIRMED_FOR": "Confirmed for {time}",
+      "SLOT_UNAVAILABLE": "Selected slot is unavailable",
+      "CREATE_ERROR": "Booking could not be created",
+      "WHATSAPP_SENT": "WhatsApp sent",
+      "PENDING": "Pending",
+      "INVITE_SENT": "Sent",
+      "NO_EMAIL": "No email",
+      "NONE": "None",
+      "LEAD_NUMBER": "#{id}",
+      "FIELD": {
+        "LEAD": "Lead",
+        "WHEN": "When",
+        "CONFIRMATION": "Confirmation",
+        "PREP_ALERT": "Prep alert",
+        "TIMEZONE": "Timezone",
+        "START": "Start",
+        "END": "End",
+        "DURATION": "Duration",
+        "MINIMUM_NOTICE": "Minimum notice",
+        "BUFFER_BEFORE": "Buffer before",
+        "BUFFER_AFTER": "Buffer after",
+        "AVAILABLE_SLOT": "Available slot",
+        "CONVERSATION_ID": "Conversation ID",
+        "RETRY_KEY": "Retry key"
+      },
+      "WEEKDAY": {
+        "MON": "Mon",
+        "TUE": "Tue",
+        "WED": "Wed",
+        "THU": "Thu",
+        "FRI": "Fri",
+        "SAT": "Sat",
+        "SUN": "Sun"
+      }
+    },
     "REVIEWS": {
       "LOADING": "Loading review requests",
       "EMPTY": "No review requests are waiting",
