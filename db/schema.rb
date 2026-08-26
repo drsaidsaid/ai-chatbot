@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_26_000300) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_26_000400) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1286,6 +1286,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000300) do
     t.index ["provider_event_id"], name: "index_meta_whatsapp_webhook_events_on_provider_event_id", unique: true
   end
 
+  create_table "knowledge_items", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "title", null: false
+    t.text "question", null: false
+    t.text "answer", null: false
+    t.integer "source_kind", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "approved_at"
+    t.datetime "rejected_at"
+    t.datetime "deactivated_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status", "source_kind"], name: "index_knowledge_items_on_account_id_and_status_and_source_kind"
+    t.index ["account_id"], name: "index_knowledge_items_on_account_id"
+  end
+
   create_table "notes", force: :cascade do |t|
     t.text "content", null: false
     t.bigint "account_id", null: false
@@ -1616,6 +1633,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000300) do
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
   add_foreign_key "inboxes", "portals"
+  add_foreign_key "knowledge_items", "accounts"
   add_foreign_key "meta_whatsapp_webhook_events", "accounts"
   add_foreign_key "meta_whatsapp_webhook_events", "channel_whatsapp"
   add_foreign_key "meta_whatsapp_webhook_events", "conversations"

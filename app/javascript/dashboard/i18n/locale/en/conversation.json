@@ -474,6 +474,8 @@
       "PAUSE": "Pause",
       "RESUME": "Resume",
       "CONTROL_VERSION": "Control version {version}",
+      "LAST_DECISION": "Last AI Decision",
+      "REFUSAL_REASON": "Refused: {reason}",
       "RECENT_EVENTS": "Recent Meta Events",
       "STATE": {
         "AI_ACTIVE": "AI active",
@@ -484,6 +486,7 @@
       },
       "EVENT": {
         "MESSAGE_TEXT": "Inbound message",
+        "MESSAGE_VOICE": "Unsupported voice note",
         "STATUS": "Delivery status"
       }
     },

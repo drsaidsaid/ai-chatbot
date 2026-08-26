@@ -51,6 +51,7 @@ json.snoozed_until conversation.snoozed_until
 json.status conversation.status
 json.control_state conversation.control_state
 json.control_version conversation.control_version
+json.ai_employee_decision conversation.additional_attributes&.dig('ai_employee_last_decision')
 json.meta_whatsapp_events conversation.meta_whatsapp_webhook_events.order(created_at: :desc).limit(10) do |event|
   json.id event.id
   json.event_kind event.event_kind

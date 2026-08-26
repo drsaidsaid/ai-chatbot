@@ -21,6 +21,10 @@ const controlVersion = computed(() => props.currentChat.control_version || 0);
 const metaWhatsappEvents = computed(
   () => props.currentChat.meta_whatsapp_events || []
 );
+const aiEmployeeDecision = computed(
+  () => props.currentChat.ai_employee_decision || null
+);
+const decisionSources = computed(() => aiEmployeeDecision.value?.sources || []);
 const isAIActive = computed(() => controlState.value === 'ai_active');
 const canUpdateAI = computed(
   () => !['human_active', 'closed'].includes(controlState.value)
@@ -43,9 +47,16 @@ const stateLabel = computed(() => {
 });
 
 const latestEventLabel = event => {
+  if (event.event_kind?.startsWith('status.')) {
+    return t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.EVENT.STATUS');
+  }
+
   switch (event.event_kind) {
     case 'message.text':
       return t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.EVENT.MESSAGE_TEXT');
+    case 'message.audio':
+    case 'message.voice':
+      return t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.EVENT.MESSAGE_VOICE');
     case 'status':
       return t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.EVENT.STATUS');
     default:
@@ -113,6 +124,32 @@ const updateAIControl = async action => {
           version: controlVersion,
         })
       }}
+    </div>
+
+    <div
+      v-if="aiEmployeeDecision"
+      class="flex flex-col gap-2 border-t border-n-weak pt-3 text-xs"
+    >
+      <div class="font-medium uppercase text-n-slate-11">
+        {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.LAST_DECISION') }}
+      </div>
+      <div v-if="decisionSources.length" class="flex flex-col gap-1">
+        <span
+          v-for="source in decisionSources"
+          :key="source.id"
+          class="text-n-slate-12"
+        >
+          {{ source.title }}
+          <span class="text-n-slate-11">{{ source.source_kind }}</span>
+        </span>
+      </div>
+      <span v-else class="text-n-slate-11">
+        {{
+          $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.REFUSAL_REASON', {
+            reason: aiEmployeeDecision.refusal_reason,
+          })
+        }}
+      </span>
     </div>
 
     <div v-if="metaWhatsappEvents.length" class="flex flex-col gap-2">

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import KnowledgeItemsPanel from './KnowledgeItemsPanel.vue';
 
 const props = defineProps({
   surface: {
@@ -61,6 +62,7 @@ const description = computed(() => {
           {{ t('AI_LEAD_EMPLOYEE.BASELINE_NOTICE') }}
         </p>
       </div>
+      <KnowledgeItemsPanel v-if="surface === 'KNOWLEDGE'" />
     </section>
   </main>
 </template>

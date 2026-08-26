@@ -154,6 +154,13 @@ Rails.application.routes.draw do
             end
           end
           resources :dashboard_apps, only: [:index, :show, :create, :update, :destroy]
+          resources :knowledge_items, only: [:index, :show, :create, :update, :destroy] do
+            member do
+              post :approve
+              post :reject
+              post :deactivate
+            end
+          end
           namespace :channels do
             resource :twilio_channel, only: [:create]
           end

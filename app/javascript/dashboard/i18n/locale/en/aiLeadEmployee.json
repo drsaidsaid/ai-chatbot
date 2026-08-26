@@ -30,6 +30,41 @@
         "TITLE": "Bookings",
         "DESCRIPTION": "Confirmed and upcoming calls for highly qualified leads."
       }
+    },
+    "KNOWLEDGE": {
+      "NEW_TITLE": "New Knowledge Item",
+      "EDIT_TITLE": "Edit Knowledge Item",
+      "SAVE": "Save",
+      "SAVED": "Knowledge item saved",
+      "SAVE_ERROR": "Could not save the knowledge item",
+      "CANCEL": "Cancel",
+      "EDIT": "Edit",
+      "APPROVE": "Approve",
+      "REJECT": "Reject",
+      "DEACTIVATE": "Deactivate",
+      "LOADING": "Loading knowledge items",
+      "EMPTY": "No knowledge items yet",
+      "FIELD": {
+        "TITLE": "Title",
+        "SOURCE": "Source",
+        "QUESTION": "Question",
+        "ANSWER": "Answer",
+        "STATUS": "Status",
+        "UPDATED": "Updated",
+        "ACTIONS": "Actions"
+      },
+      "SOURCE": {
+        "FAQ": "FAQ",
+        "OFFER": "Offer",
+        "PRICING": "Pricing",
+        "SUPPORTING_DOCUMENT": "Supporting document"
+      },
+      "STATUS": {
+        "DRAFT": "Draft",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "INACTIVE": "Inactive"
+      }
     }
   }
 }

@@ -36,16 +36,20 @@ class Meta::Whatsapp::InboundWebhookProcessor
   end
 
   def process_message(channel, contacts_by_wa_id, message_payload)
-    return unless message_payload[:type] == 'text'
+    return unless %w[text audio voice].include?(message_payload[:type].to_s)
 
+    reply_context = nil
     MetaWhatsappWebhookEvent.transaction do
       event = create_message_event(channel, message_payload)
       next if event.processed_at.present?
 
       context = message_context(channel, contacts_by_wa_id, message_payload)
-      create_incoming_message!(context, message_payload)
+      incoming_message = create_incoming_message!(context, message_payload)
+      reply_context = [context[:conversation], incoming_message, message_payload]
       event.update!(conversation: context[:conversation], processed_at: Time.current)
     end
+
+    send_ai_employee_reply!(*reply_context) if reply_context.present?
   end
 
   def process_status(channel, status_payload)
@@ -71,7 +75,7 @@ class Meta::Whatsapp::InboundWebhookProcessor
   def create_message_event(channel, message_payload)
     MetaWhatsappWebhookEvent.create_or_find_by!(provider_event_id: message_payload[:id]) do |record|
       assign_event_context(record, channel)
-      record.event_kind = 'message.text'
+      record.event_kind = "message.#{message_payload[:type]}"
       record.payload = message_payload
     end
   end
@@ -111,10 +115,39 @@ class Meta::Whatsapp::InboundWebhookProcessor
       sender: context[:contact],
       message_type: :incoming,
       content_type: :text,
-      content: message_payload.dig(:text, :body),
+      content: incoming_message_content(message_payload),
+      content_attributes: incoming_message_content_attributes(message_payload),
       source_id: message_payload[:id],
       created_at: Time.zone.at(message_payload[:timestamp].to_i)
     )
+  end
+
+  def incoming_message_content(message_payload)
+    return message_payload.dig(:text, :body) if message_payload[:type] == 'text'
+
+    'Unsupported WhatsApp voice note received.'
+  end
+
+  def incoming_message_content_attributes(message_payload)
+    return {} if message_payload[:type] == 'text'
+
+    {
+      is_unsupported: true,
+      data: {
+        provider: 'meta_whatsapp',
+        provider_media_type: message_payload[:type],
+        provider_media_id: message_payload.dig(message_payload[:type], :id),
+        v1_handling: 'request_text'
+      }
+    }
+  end
+
+  def send_ai_employee_reply!(conversation, incoming_message, message_payload)
+    AiLeadEmployee::WhatsappAutoReplyService.new(
+      conversation: conversation,
+      incoming_message: incoming_message,
+      provider_message_payload: message_payload
+    ).perform
   end
 
   def update_message_status(channel, status_payload, status)

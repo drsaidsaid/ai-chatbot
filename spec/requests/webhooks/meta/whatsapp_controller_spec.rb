@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
-  # rubocop:disable Metrics/MethodLength, RSpec/MultipleExpectations
+  # rubocop:disable Metrics/MethodLength
   let(:verify_token) { 'owned-verify-token' }
   let(:app_secret) { 'owned-app-secret' }
   let(:account) { create(:account) }
@@ -96,6 +96,101 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
     }
   end
 
+  def inbound_voice_payload(message_id: 'wamid.HBgLMjU1NzEyMzQ1Njc4FQIAEhggVOICE')
+    {
+      object: 'whatsapp_business_account',
+      entry: [
+        {
+          id: '444555666',
+          changes: [
+            {
+              field: 'messages',
+              value: {
+                messaging_product: 'whatsapp',
+                metadata: {
+                  display_phone_number: '15551234567',
+                  phone_number_id: channel.provider_config['phone_number_id']
+                },
+                contacts: [
+                  {
+                    profile: { name: 'Jane Lead' },
+                    wa_id: '255712345678'
+                  }
+                ],
+                messages: [
+                  {
+                    from: '255712345678',
+                    id: message_id,
+                    timestamp: '1787740800',
+                    audio: { id: 'audio-media-id', mime_type: 'audio/ogg' },
+                    type: 'audio'
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  end
+
+  def expect_created_owned_records(counts_before)
+    expect(
+      events: MetaWhatsappWebhookEvent.count,
+      contacts: Contact.count,
+      contact_inboxes: ContactInbox.count,
+      conversations: Conversation.count,
+      messages: Message.count
+    ).to eq(counts_before.merge(
+              events: counts_before[:events] + 1,
+              contacts: counts_before[:contacts] + 1,
+              contact_inboxes: counts_before[:contact_inboxes] + 1,
+              conversations: counts_before[:conversations] + 1,
+              messages: counts_before[:messages] + 2
+            ))
+  end
+
+  def expect_inbound_text_conversation(knowledge_item)
+    contact = Contact.last
+    conversation = Conversation.last
+    message = Message.incoming.last
+    reply = Message.outgoing.last
+
+    expect_owned_contact(contact)
+    expect_owned_conversation(conversation, contact, knowledge_item)
+    expect_owned_incoming_message(message, conversation, contact)
+    expect_owned_auto_reply(reply)
+  end
+
+  def expect_owned_contact(contact)
+    expect(contact).to have_attributes(account: account, name: 'Jane Lead', phone_number: '+255712345678')
+  end
+
+  def expect_owned_conversation(conversation, contact, knowledge_item)
+    expect(conversation).to have_attributes(account: account, inbox: channel.inbox, contact: contact)
+    expect(conversation.additional_attributes['channel']).to eq('meta_whatsapp')
+    expect(conversation.reload.additional_attributes['ai_employee_last_decision']).to include(
+      'status' => 'answered',
+      'sources' => [include('id' => knowledge_item.id, 'source_kind' => 'faq')]
+    )
+  end
+
+  def expect_owned_incoming_message(message, conversation, contact)
+    expect(message).to have_attributes(
+      account: account,
+      inbox: channel.inbox,
+      conversation: conversation,
+      sender: contact,
+      content: 'Do you offer consulting?',
+      source_id: 'wamid.HBgLMjU1NzEyMzQ1Njc4FQIAEhggMTIz'
+    )
+    expect(message).to be_incoming
+  end
+
+  def expect_owned_auto_reply(reply)
+    expect(reply).to have_attributes(content: 'Yes, we offer consulting for qualified businesses.', source_id: 'wamid.AUTO_REPLY')
+  end
+
   around do |example|
     with_modified_env(
       META_WEBHOOK_VERIFY_TOKEN: verify_token,
@@ -107,6 +202,12 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
   before do
     InstallationConfig.where(name: %w[META_WEBHOOK_VERIFY_TOKEN META_APP_SECRET]).delete_all
     GlobalConfig.clear_cache
+    stub_request(:post, "https://graph.facebook.com/v23.0/#{channel.provider_config['phone_number_id']}/messages")
+      .to_return(
+        status: 200,
+        body: { messages: [{ id: 'wamid.AUTO_REPLY' }] }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
   end
 
   describe 'GET /webhooks/meta/whatsapp' do
@@ -136,6 +237,12 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
 
   describe 'POST /webhooks/meta/whatsapp' do
     it 'persists a signed inbound Meta text message in the owned inbox' do
+      knowledge_item = create(
+        :knowledge_item,
+        account: account,
+        question: 'Do you offer consulting?',
+        answer: 'Yes, we offer consulting for qualified businesses.'
+      )
       body = inbound_text_payload.to_json
       counts_before = {
         events: MetaWhatsappWebhookEvent.count,
@@ -152,35 +259,10 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
              'X-Hub-Signature-256' => signature_for(body)
            }
 
-      expect(
-        events: MetaWhatsappWebhookEvent.count,
-        contacts: Contact.count,
-        contact_inboxes: ContactInbox.count,
-        conversations: Conversation.count,
-        messages: Message.count
-      ).to eq(counts_before.transform_values { |count| count + 1 })
+      expect_created_owned_records(counts_before)
 
       expect(response).to have_http_status(:ok)
-
-      contact = Contact.last
-      expect(contact.account).to eq(account)
-      expect(contact.name).to eq('Jane Lead')
-      expect(contact.phone_number).to eq('+255712345678')
-
-      conversation = Conversation.last
-      expect(conversation.account).to eq(account)
-      expect(conversation.inbox).to eq(channel.inbox)
-      expect(conversation.contact).to eq(contact)
-      expect(conversation.additional_attributes['channel']).to eq('meta_whatsapp')
-
-      message = Message.last
-      expect(message.account).to eq(account)
-      expect(message.inbox).to eq(channel.inbox)
-      expect(message.conversation).to eq(conversation)
-      expect(message.sender).to eq(contact)
-      expect(message).to be_incoming
-      expect(message.content).to eq('Do you offer consulting?')
-      expect(message.source_id).to eq('wamid.HBgLMjU1NzEyMzQ1Njc4FQIAEhggMTIz')
+      expect_inbound_text_conversation(knowledge_item)
     end
 
     it 'does not duplicate records when Meta replays the same message event' do
@@ -200,10 +282,39 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(MetaWhatsappWebhookEvent.count).to eq(1)
-      expect(Message.count).to eq(1)
+      expect(Message.count).to eq(2)
       expect(Conversation.count).to eq(1)
       expect(Contact.last.name).to eq('Jane Lead')
-      expect(Message.last.content).to eq('Do you offer consulting?')
+      expect(Message.incoming.last.content).to eq('Do you offer consulting?')
+      expect(Message.outgoing.count).to eq(1)
+    end
+
+    it 'keeps a voice note as unsupported metadata and asks the lead to send text' do
+      body = inbound_voice_payload.to_json
+
+      post '/webhooks/meta/whatsapp',
+           params: body,
+           headers: {
+             'CONTENT_TYPE' => 'application/json',
+             'X-Hub-Signature-256' => signature_for(body)
+           }
+
+      expect(response).to have_http_status(:ok)
+      incoming = Message.incoming.last
+      expect(incoming.content).to eq('Unsupported WhatsApp voice note received.')
+      expect(incoming.content_attributes).to include(
+        'is_unsupported' => true,
+        'data' => include(
+          'provider_media_type' => 'audio',
+          'provider_media_id' => 'audio-media-id',
+          'v1_handling' => 'request_text'
+        )
+      )
+      expect(Message.outgoing.last.content).to eq(AiLeadEmployee::WhatsappAutoReplyService::VOICE_NOTE_TEXT_REQUEST)
+      expect(Conversation.last.additional_attributes['ai_employee_last_decision']).to include(
+        'status' => 'refused',
+        'refusal_reason' => 'unsupported_voice_note'
+      )
     end
 
     it 'rejects unsigned payloads before persistence' do
@@ -244,5 +355,5 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
       expect(message.reload).to be_delivered
     end
   end
-  # rubocop:enable Metrics/MethodLength, RSpec/MultipleExpectations
+  # rubocop:enable Metrics/MethodLength
 end
