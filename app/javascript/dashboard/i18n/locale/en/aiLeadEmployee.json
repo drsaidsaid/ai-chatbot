@@ -1,14 +1,89 @@
 {
   "AI_LEAD_EMPLOYEE": {
+    "MARK": "AI",
     "PRODUCT_NAME": "AI Lead Employee",
     "NAV": {
+      "INBOX": "Inbox",
       "HOT_LEADS": "Hot Leads",
       "LEADS": "Leads",
       "REVIEWS": "Reviews",
       "KNOWLEDGE": "Knowledge",
       "BOOKINGS": "Bookings",
       "TEST_CENTER": "Test Center",
-      "AI_PROVIDER": "AI Provider"
+      "SETTINGS": "Settings",
+      "AI_PROVIDER": "AI Provider",
+      "PRIMARY": "AI Lead Employee primary navigation",
+      "MOBILE_PRIMARY": "AI Lead Employee mobile navigation",
+      "MORE": "More",
+      "NOTIFICATIONS": "Notifications"
+    },
+    "INBOX_QUEUE": {
+      "LABEL": "Inbox quick queues",
+      "HOT": "Hot",
+      "REVIEW": "Review",
+      "BOOKED": "Booked",
+      "ARIA": "{label} queue, {count} items"
+    },
+    "SETTINGS": {
+      "TITLE": "Settings",
+      "DESCRIPTION": "How AI Lead Employee works for your business",
+      "SECTION_NAV": "AI Lead Employee settings sections",
+      "SAVE": "Save changes",
+      "SAVED": "Saved",
+      "UNSAVED": "Unsaved changes",
+      "CONFIGURE": "Configure",
+      "PREVIEW_TITLE": "Live example",
+      "PREVIEW_DESCRIPTION": "See how the AI evaluates a lead using the selected rules.",
+      "SAMPLE_LEAD": "Sample lead",
+      "SAMPLE_SCORE": "86",
+      "SAMPLE_RESULT": "Highly Qualified. Ready for sales.",
+      "SECTIONS": {
+        "AI_PROVIDER": "AI Provider",
+        "OFFERS_QUALIFICATION": "Offers & qualification",
+        "BOOKING_BUSINESS_HOURS": "Booking & business hours",
+        "TEAM_ASSIGNMENT": "Team & assignment",
+        "FOLLOW_UPS": "Follow-ups",
+        "ALERTS": "Alerts",
+        "WHATSAPP_CONNECTION": "WhatsApp connection"
+      },
+      "PLACEHOLDER": {
+        "offers_qualification": {
+          "DESCRIPTION": "Define what you sell and how leads should be assessed.",
+          "ROW_1": "Offer details",
+          "ROW_2": "Qualification questions",
+          "ROW_3": "Lead quality rules"
+        },
+        "booking_business_hours": {
+          "DESCRIPTION": "Control booking types, calendars, and business hours.",
+          "ROW_1": "Calendar connection",
+          "ROW_2": "Weekly availability",
+          "ROW_3": "Booking rules"
+        },
+        "team_assignment": {
+          "DESCRIPTION": "Route leads, reviews, and bookings to the right Human Operator.",
+          "ROW_1": "Assignment method",
+          "ROW_2": "Team member capacity",
+          "ROW_3": "Routing rules"
+        },
+        "follow_ups": {
+          "DESCRIPTION": "Manage automatic follow-up plans for incomplete leads.",
+          "ROW_1": "Plan state",
+          "ROW_2": "Sequence timing",
+          "ROW_3": "Stop conditions"
+        },
+        "alerts": {
+          "DESCRIPTION": "Choose who is notified about hot leads, reviews, and bookings.",
+          "ROW_1": "Event routing",
+          "ROW_2": "Quiet hours",
+          "ROW_3": "Notification preview"
+        },
+        "whatsapp_connection": {
+          "DESCRIPTION": "Manage the direct Meta WhatsApp connection.",
+          "ROW_1": "Connected number",
+          "ROW_2": "Health checks",
+          "ROW_3": "Safety controls"
+        }
+      }
     },
     "AI_PROVIDER": {
       "TITLE": "AI Provider",

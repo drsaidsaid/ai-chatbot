@@ -1,52 +1,38 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { provideSidebarContext, useSidebarResize } from './provider';
+import { useSidebarResize } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
-import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
-import { vOnClickOutside } from '@vueuse/components';
 import { useWindowSize, useEventListener } from '@vueuse/core';
+import { useRoute, useRouter } from 'vue-router';
 
-import Button from 'dashboard/components-next/button/Button.vue';
-import SidebarGroup from './SidebarGroup.vue';
+import Icon from 'next/icon/Icon.vue';
+import Policy from 'dashboard/components/policy.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
-import SidebarChangelogCard from './SidebarChangelogCard.vue';
-import SidebarChangelogButton from './SidebarChangelogButton.vue';
-import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
-import Logo from 'next/icon/Logo.vue';
-import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 import { buildAILeadEmployeeMenuItems } from './aiLeadEmployeeNavigation';
 
-const props = defineProps({
+defineProps({
   isMobileSidebarOpen: {
     type: Boolean,
     default: false,
   },
 });
 
-const emit = defineEmits([
-  'closeKeyShortcutModal',
-  'openKeyShortcutModal',
-  'showCreateAccountModal',
-  'closeMobileSidebar',
-]);
+const emit = defineEmits(['closeKeyShortcutModal', 'openKeyShortcutModal']);
 
-const { accountScopedRoute, isOnChatwootCloud } = useAccount();
+const { accountScopedRoute } = useAccount();
 const store = useStore();
-
-const searchShortcut = useKbd([`$mod`, 'k']);
+const route = useRoute();
+const router = useRouter();
 const { t } = useI18n();
 
-const isACustomBrandedInstance = useMapGetter(
-  'globalConfig/isACustomBrandedInstance'
-);
 const isRTL = useMapGetter('accounts/isRTL');
 
 const { width: windowWidth } = useWindowSize();
-const isMobile = computed(() => windowWidth.value < 768);
+const isMobile = computed(() => windowWidth.value < 1024);
 
 const toggleShortcutModalFn = show => {
   if (show) {
@@ -57,12 +43,6 @@ const toggleShortcutModalFn = show => {
 };
 
 useSidebarKeyboardShortcuts(toggleShortcutModalFn);
-
-const expandedItem = ref(null);
-
-const setExpandedItem = name => {
-  expandedItem.value = expandedItem.value === name ? null : name;
-};
 
 const {
   sidebarWidth,
@@ -83,14 +63,6 @@ const isEffectivelyCollapsed = computed(
 const isResizing = ref(false);
 const startX = ref(0);
 const startWidth = ref(0);
-
-provideSidebarContext({
-  expandedItem,
-  setExpandedItem,
-  isCollapsed: isEffectivelyCollapsed,
-  sidebarWidth,
-  isResizing,
-});
 
 // Get clientX from mouse or touch event
 const getClientX = event =>
@@ -146,11 +118,6 @@ onMounted(() => {
   store.dispatch('notifications/unReadCount');
 });
 
-const closeMobileSidebar = () => {
-  if (!props.isMobileSidebarOpen) return;
-  emit('closeMobileSidebar');
-};
-
 const menuItems = computed(() =>
   buildAILeadEmployeeMenuItems({
     t,
@@ -158,141 +125,82 @@ const menuItems = computed(() =>
     isAdmin: store.getters.getCurrentRole === 'administrator',
   })
 );
+
+const resolvedMeta = item => router.resolve(item.to)?.meta || {};
+
+const isItemActive = item => {
+  const resolved = router.resolve(item.to);
+  return (
+    route.path === resolved.path ||
+    route.path.startsWith(`${resolved.path}/`) ||
+    item.activeOn?.includes(route.name)
+  );
+};
 </script>
 
 <template>
   <aside
-    v-on-click-outside="[
-      closeMobileSidebar,
-      {
-        ignore: [
-          '#mobile-sidebar-launcher',
-          '[data-popover-content]',
-          '[data-popover-backdrop]',
-        ],
-      },
-    ]"
-    class="bg-n-background flex flex-col text-sm pb-px fixed top-0 ltr:left-0 rtl:right-0 h-full z-40 w-[200px] md:w-auto md:relative md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:translate-x-0 ltr:border-r rtl:border-l border-n-weak"
+    class="hidden bg-n-background lg:flex flex-col text-sm pb-px fixed top-0 ltr:left-0 rtl:right-0 h-full z-40 lg:w-auto lg:relative lg:flex-shrink-0 lg:ltr:translate-x-0 lg:rtl:translate-x-0 ltr:border-r rtl:border-l border-n-weak"
     :class="[
       {
-        'shadow-lg md:shadow-none': isMobileSidebarOpen,
+        'shadow-lg lg:shadow-none': isMobileSidebarOpen,
         'ltr:-translate-x-full rtl:translate-x-full': !isMobileSidebarOpen,
-        'transition-transform duration-200 ease-out md:transition-[width]':
+        'transition-transform duration-200 ease-out lg:transition-[width]':
           !isResizing,
       },
     ]"
     :style="isMobile ? undefined : { width: `${sidebarWidth}px` }"
   >
-    <section
-      class="grid"
-      :class="isEffectivelyCollapsed ? 'mt-3 mb-6 gap-4' : 'mt-1 mb-4 gap-2'"
-    >
-      <div
-        class="flex gap-2 items-center min-w-0"
-        :class="{
-          'justify-center px-1': isEffectivelyCollapsed,
-          'px-2': !isEffectivelyCollapsed,
-        }"
+    <section class="flex justify-center px-3 pt-5 pb-6">
+      <RouterLink
+        :to="accountScopedRoute('home')"
+        class="grid place-items-center size-9 rounded-lg bg-n-brand text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
+        :aria-label="t('AI_LEAD_EMPLOYEE.PRODUCT_NAME')"
       >
-        <template v-if="isEffectivelyCollapsed">
-          <SidebarAccountSwitcher
-            is-collapsed
-            @show-create-account-modal="emit('showCreateAccountModal')"
-          />
-        </template>
-        <template v-else>
-          <div class="grid flex-shrink-0 place-content-center size-6">
-            <Logo class="size-4" />
-          </div>
-          <div class="flex-shrink-0 w-px h-3 bg-n-strong" />
-          <SidebarAccountSwitcher
-            class="flex-grow -mx-1 min-w-0"
-            @show-create-account-modal="emit('showCreateAccountModal')"
-          />
-        </template>
-      </div>
-      <div
-        class="flex gap-2"
-        :class="isEffectivelyCollapsed ? 'flex-col items-center' : 'px-2'"
-      >
-        <RouterLink
-          v-if="!isEffectivelyCollapsed"
-          :to="{ name: 'search' }"
-          class="flex gap-2 items-center px-2 py-1 w-full h-7 rounded-lg outline outline-1 outline-n-weak bg-n-button-color transition-all duration-100 ease-out"
-        >
-          <span class="flex-shrink-0 i-lucide-search size-4 text-n-slate-10" />
-          <span class="flex-grow text-start text-n-slate-10">
-            {{ t('COMBOBOX.SEARCH_PLACEHOLDER') }}
-          </span>
-          <span
-            class="hidden tracking-wide pointer-events-none select-none text-n-slate-10"
-          >
-            {{ searchShortcut }}
-          </span>
-        </RouterLink>
-        <RouterLink
-          v-else
-          :to="{ name: 'search' }"
-          class="flex items-center justify-center size-8 rounded-lg outline outline-1 outline-n-weak bg-n-button-color transition-all duration-100 ease-out hover:bg-n-alpha-2 dark:hover:bg-n-slate-9/30"
-          :title="t('COMBOBOX.SEARCH_PLACEHOLDER')"
-        >
-          <span class="i-lucide-search size-4 text-n-slate-11" />
-        </RouterLink>
-        <ComposeConversation align="start">
-          <template #trigger="{ isOpen }">
-            <Button
-              icon="i-lucide-pen-line"
-              color="slate"
-              size="sm"
-              class="dark:hover:!bg-n-slate-9/30"
-              :class="[
-                isEffectivelyCollapsed
-                  ? '!size-8 !outline-n-weak !text-n-slate-11'
-                  : '!h-7 !outline-n-weak !text-n-slate-11',
-                { '!bg-n-alpha-2 dark:!bg-n-slate-9/30': isOpen },
-              ]"
-            />
-          </template>
-        </ComposeConversation>
-      </div>
+        {{ t('AI_LEAD_EMPLOYEE.MARK') }}
+      </RouterLink>
     </section>
     <nav
-      class="grid overflow-y-scroll flex-grow gap-2 pb-5 no-scrollbar min-w-0"
-      :class="isEffectivelyCollapsed ? 'px-1' : 'px-2'"
+      class="flex flex-col items-center gap-2 overflow-y-auto flex-grow px-2 pb-5 no-scrollbar min-w-0"
+      :aria-label="t('AI_LEAD_EMPLOYEE.NAV.PRIMARY')"
     >
-      <ul
-        class="flex flex-col gap-1 m-0 list-none min-w-0"
-        :class="{ 'items-center': isEffectivelyCollapsed }"
-      >
-        <SidebarGroup
+      <ul class="flex w-full flex-col items-center gap-2 m-0 list-none min-w-0">
+        <Policy
           v-for="item in menuItems"
           :key="item.name"
-          v-bind="item"
-        />
+          :permissions="resolvedMeta(item).permissions"
+          :feature-flag="resolvedMeta(item).featureFlag"
+          as="li"
+          class="w-full min-w-0"
+        >
+          <RouterLink
+            :to="item.to"
+            class="group flex min-h-14 w-full items-center justify-center rounded-lg px-1.5 py-2 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
+            :class="[
+              isEffectivelyCollapsed ? 'min-h-10' : 'flex-col gap-1',
+              isItemActive(item)
+                ? 'bg-n-blue-2 text-n-blue-11'
+                : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12',
+            ]"
+            :aria-current="isItemActive(item) ? 'page' : undefined"
+            :title="item.label"
+          >
+            <Icon :icon="item.icon" class="size-5 shrink-0" />
+            <span
+              v-if="!isEffectivelyCollapsed"
+              class="max-w-full truncate text-xs font-medium leading-4"
+            >
+              {{ item.label }}
+            </span>
+          </RouterLink>
+        </Policy>
       </ul>
     </nav>
     <section
       class="flex relative flex-col flex-shrink-0 gap-1 justify-between items-center"
     >
       <div
-        class="pointer-events-none absolute inset-x-0 -top-[1.938rem] h-8 bg-gradient-to-t from-n-background to-transparent"
-      />
-      <SidebarChangelogCard
-        v-if="
-          isOnChatwootCloud &&
-          !isACustomBrandedInstance &&
-          !isEffectivelyCollapsed
-        "
-      />
-      <SidebarChangelogButton
-        v-if="
-          isOnChatwootCloud &&
-          !isACustomBrandedInstance &&
-          isEffectivelyCollapsed
-        "
-      />
-      <div
-        class="px-1 py-1.5 flex-shrink-0 flex w-full z-50 gap-2 items-center border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)]"
+        class="px-2 py-3 flex-shrink-0 flex w-full z-50 gap-2 items-center border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)]"
         :class="isEffectivelyCollapsed ? 'justify-center' : 'justify-between'"
       >
         <SidebarProfileMenu
@@ -303,7 +211,7 @@ const menuItems = computed(() =>
     </section>
     <!-- Resize Handle (desktop only) -->
     <div
-      class="hidden md:block absolute top-0 h-full w-1 cursor-col-resize z-40 ltr:right-0 rtl:left-0 group"
+      class="hidden lg:block absolute top-0 h-full w-1 cursor-col-resize z-40 ltr:right-0 rtl:left-0 group"
       @mousedown="onResizeStart"
       @touchstart="onResizeStart"
       @dblclick="onResizeHandleDoubleClick"

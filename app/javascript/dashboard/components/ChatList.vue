@@ -17,6 +17,11 @@ import DeleteCustomViews from 'dashboard/routes/dashboard/customviews/DeleteCust
 import ConversationBulkActions from './widgets/conversation/conversationBulkActions/Index.vue';
 import TeleportWithDirection from 'dashboard/components-next/TeleportWithDirection.vue';
 import ConversationResolveAttributesModal from 'dashboard/components-next/ConversationWorkflow/ConversationResolveAttributesModal.vue';
+import ConversationCockpitQueueChips from 'dashboard/components-next/sidebar/ConversationCockpitQueueChips.vue';
+import {
+  conversationMatchesCockpitQueue,
+  isConversationCockpitQueue,
+} from 'dashboard/components-next/sidebar/aiLeadEmployeeNavigation';
 
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAlert } from 'dashboard/composables';
@@ -76,6 +81,8 @@ const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ME);
 const activeStatus = ref(wootConstants.STATUS_TYPE.OPEN);
 const activeSortBy = ref(wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC);
 const showAdvancedFilters = ref(false);
+const activeQueueConversationIds = ref([]);
+const isQueueLoading = ref(false);
 // chatsOnView is to store the chats that are currently visible on the screen,
 // which mirrors the conversationList.
 const chatsOnView = ref([]);
@@ -353,6 +360,23 @@ const conversationList = computed(() => {
     localConversationList = sortByUnreadStatus(localConversationList);
   }
 
+  if (isConversationCockpitQueue(route.query.queue)) {
+    if (isQueueLoading.value) {
+      return localConversationList.filter(conversation =>
+        conversationMatchesCockpitQueue(conversation, route.query.queue)
+      );
+    }
+
+    const queueConversationIdSet = new Set(
+      activeQueueConversationIds.value.map(Number)
+    );
+    return localConversationList.filter(conversation =>
+      queueConversationIdSet.has(
+        Number(conversation.display_id || conversation.id)
+      )
+    );
+  }
+
   return localConversationList;
 });
 
@@ -616,6 +640,13 @@ function updateAssigneeTab(selectedTab) {
       fetchConversations();
     }
   }
+}
+
+function onQueueData({ queue, conversationIds, isLoading }) {
+  if (queue && queue !== route.query.queue) return;
+
+  activeQueueConversationIds.value = conversationIds;
+  isQueueLoading.value = isLoading;
 }
 
 function onBasicFilterChange(value, type) {
@@ -908,6 +939,10 @@ watch(conversationFilters, (newVal, oldVal) => {
       @filters-modal="onToggleAdvanceFiltersModal"
       @reset-filters="resetAndFetchData"
       @basic-filter-change="onBasicFilterChange"
+    />
+    <ConversationCockpitQueueChips
+      class="hidden lg:flex"
+      @queue-data="onQueueData"
     />
 
     <TeleportWithDirection

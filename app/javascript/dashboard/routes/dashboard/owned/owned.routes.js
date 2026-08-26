@@ -13,22 +13,28 @@ const ownedSurfaceRoute = ({ path, name, surface }) => ({
   },
 });
 
+const redirectToInboxQueue = queue => to => ({
+  name: 'home',
+  params: to.params,
+  query: { ...to.query, queue },
+});
+
 export const routes = [
-  ownedSurfaceRoute({
-    path: 'hot-leads',
+  {
+    path: frontendURL('accounts/:accountId/hot-leads'),
     name: 'owned_hot_leads_index',
-    surface: 'HOT_LEADS',
-  }),
+    redirect: redirectToInboxQueue('hot'),
+  },
   ownedSurfaceRoute({
     path: 'leads',
     name: 'owned_leads_index',
     surface: 'LEADS',
   }),
-  ownedSurfaceRoute({
-    path: 'reviews',
+  {
+    path: frontendURL('accounts/:accountId/reviews'),
     name: 'owned_reviews_index',
-    surface: 'REVIEWS',
-  }),
+    redirect: redirectToInboxQueue('review'),
+  },
   ownedSurfaceRoute({
     path: 'knowledge',
     name: 'owned_knowledge_index',

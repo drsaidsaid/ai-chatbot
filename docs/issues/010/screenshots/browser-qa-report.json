@@ -1,0 +1,769 @@
+{
+  "screenshots": {
+    "desktopInbox1487": "/Users/ghalyasaid/.codex/worktrees/fd00/AI Chatbot/docs/issues/010/screenshots/desktop-inbox-1487x1058.png",
+    "desktopSettings1536": "/Users/ghalyasaid/.codex/worktrees/fd00/AI Chatbot/docs/issues/010/screenshots/desktop-settings-1536x1024.png",
+    "mobileInbox852": "/Users/ghalyasaid/.codex/worktrees/fd00/AI Chatbot/docs/issues/010/screenshots/mobile-inbox-852x1846.png",
+    "mobileNarrow390": "/Users/ghalyasaid/.codex/worktrees/fd00/AI Chatbot/docs/issues/010/screenshots/mobile-inbox-390x844.png"
+  },
+  "states": {
+    "desktopInbox1487": {
+      "bodyStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nJ\nJohn\njohn@acme.inc\nConversations\nOpen\nHot\n2\nReview\n1\nBooked\n2\nMine\n2\nUnassigned\n3\nAll\n6\nMD\nMeta Demo Lead\ncool\n14h • 10h\nJ\nJane\nPlease rate the support\n14h • 14h\n\nAll conversations loaded 🎉\n\n👋 Good eve",
+      "clipping": [],
+      "desktopNav": [
+        {
+          "ariaCurrent": "page",
+          "bg": "rgb(245, 249, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 80
+          },
+          "text": "Inbox"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/leads",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 144
+          },
+          "text": "Leads"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/bookings",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 208
+          },
+          "text": "Bookings"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/knowledge",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 272
+          },
+          "text": "Knowledge"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/test-center",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 336
+          },
+          "text": "Test Center"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 400
+          },
+          "text": "Settings"
+        }
+      ],
+      "documentOverflowX": 0,
+      "mobileButtons": [],
+      "mobileNav": [],
+      "morePanelLinks": [
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/knowledge",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 272
+          },
+          "text": "Knowledge"
+        },
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/test-center",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 336
+          },
+          "text": "Test Center"
+        },
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 400
+          },
+          "text": "Settings"
+        }
+      ],
+      "profiler": 0,
+      "queueLinks": [
+        {
+          "ariaLabel": "Hot queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=hot",
+          "rect": {
+            "height": 32,
+            "width": 83,
+            "x": 124,
+            "y": 52
+          },
+          "text": "Hot 2"
+        },
+        {
+          "ariaLabel": "Review queue, 1 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=review",
+          "rect": {
+            "height": 32,
+            "width": 107,
+            "x": 215,
+            "y": 52
+          },
+          "text": "Review 1"
+        },
+        {
+          "ariaLabel": "Booked queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=booked",
+          "rect": {
+            "height": 32,
+            "width": 110,
+            "x": 330,
+            "y": 52
+          },
+          "text": "Booked 2"
+        }
+      ],
+      "settingsLinks": [],
+      "url": "http://localhost:3000/app/accounts/1/dashboard?pp=disable",
+      "viewport": {
+        "height": 1058,
+        "width": 1487
+      }
+    },
+    "desktopSettings1536": {
+      "bodyStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nJ\nJohn\njohn@acme.inc\nOffers & qualification\nBooking & business hours\nTeam & assignment\nFollow-ups\nAlerts\nWhatsApp connection\nSettings\n\nHow AI Lead Employee works for your business\n\nUnsaved changes\nSave cha",
+      "clipping": [],
+      "desktopNav": [
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 80
+          },
+          "text": "Inbox"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/leads",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 144
+          },
+          "text": "Leads"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/bookings",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 208
+          },
+          "text": "Bookings"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/knowledge",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 272
+          },
+          "text": "Knowledge"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/test-center",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 336
+          },
+          "text": "Test Center"
+        },
+        {
+          "ariaCurrent": "page",
+          "bg": "rgb(245, 249, 255)",
+          "href": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 400
+          },
+          "text": "Settings"
+        }
+      ],
+      "documentOverflowX": 0,
+      "mobileButtons": [],
+      "mobileNav": [],
+      "morePanelLinks": [
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/knowledge",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 272
+          },
+          "text": "Knowledge"
+        },
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/test-center",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 336
+          },
+          "text": "Test Center"
+        },
+        {
+          "bg": "rgb(245, 249, 255)",
+          "href": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+          "rect": {
+            "height": 56,
+            "width": 95,
+            "x": 8,
+            "y": 400
+          },
+          "text": "Settings"
+        }
+      ],
+      "profiler": 0,
+      "queueLinks": [],
+      "settingsLinks": [],
+      "url": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification?pp=disable",
+      "viewport": {
+        "height": 1024,
+        "width": 1536
+      }
+    },
+    "mobileInbox852": {
+      "bodyStart": "Conversations\nOpen\nMine\n2\nUnassigned\n3\nAll\n6\nMD\nMeta Demo Lead\ncool\n14h • 10h\nJ\nJane\nPlease rate the support\n14h • 14h\n\nAll conversations loaded 🎉\n\n👋 Good evening, John. Welcome to AI Lead Employee.\n\nThanks for signing up. We want you to get the most out of ",
+      "clipping": [],
+      "desktopNav": [],
+      "documentOverflowX": 0,
+      "mobileButtons": [
+        {
+          "ariaLabel": "More",
+          "bg": "rgba(0, 0, 0, 0)",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 639,
+            "y": 1766
+          },
+          "text": "More"
+        }
+      ],
+      "mobileNav": [
+        {
+          "ariaCurrent": "page",
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 0,
+            "y": 1766
+          },
+          "text": "Inbox"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/leads",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 213,
+            "y": 1766
+          },
+          "text": "Leads"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/bookings",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 426,
+            "y": 1766
+          },
+          "text": "Bookings"
+        }
+      ],
+      "morePanelLinks": [],
+      "profiler": 0,
+      "queueLinks": [
+        {
+          "ariaLabel": "Hot queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=hot",
+          "rect": {
+            "height": 40,
+            "width": 268,
+            "x": 16,
+            "y": 76
+          },
+          "text": "Hot 2"
+        },
+        {
+          "ariaLabel": "Review queue, 1 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=review",
+          "rect": {
+            "height": 40,
+            "width": 268,
+            "x": 292,
+            "y": 76
+          },
+          "text": "Review 1"
+        },
+        {
+          "ariaLabel": "Booked queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=booked",
+          "rect": {
+            "height": 40,
+            "width": 268,
+            "x": 568,
+            "y": 76
+          },
+          "text": "Booked 2"
+        }
+      ],
+      "settingsLinks": [],
+      "url": "http://localhost:3000/app/accounts/1/dashboard?pp=disable",
+      "viewport": {
+        "height": 1846,
+        "width": 852
+      }
+    },
+    "mobileMore852": {
+      "bodyStart": "Conversations\nOpen\nHot\n2\nReview\n1\nBooked\n2\nMine\n2\nUnassigned\n3\nAll\n6\nMD\nMeta Demo Lead\ncool\n14h • 10h\nJ\nJane\nPlease rate the support\n14h • 14h\n\nAll conversations loaded 🎉\n\n👋 Good evening, John. Welcome to AI Lead Employee.\n\nThanks for signing up. We want you",
+      "clipping": [],
+      "desktopNav": [],
+      "documentOverflowX": 0,
+      "heading": "Conversations",
+      "mobileButtons": [
+        {
+          "ariaLabel": "More",
+          "bg": "rgba(0, 0, 0, 0)",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 639,
+            "y": 1766
+          },
+          "text": "More"
+        }
+      ],
+      "mobileNav": [
+        {
+          "ariaCurrent": "page",
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 0,
+            "y": 1766
+          },
+          "text": "Inbox"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/leads",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 213,
+            "y": 1766
+          },
+          "text": "Leads"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/bookings",
+          "rect": {
+            "height": 80,
+            "width": 213,
+            "x": 426,
+            "y": 1766
+          },
+          "text": "Bookings"
+        }
+      ],
+      "morePanelLinks": [
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/knowledge",
+          "rect": {
+            "height": 48,
+            "width": 802,
+            "x": 25,
+            "y": 1597
+          },
+          "text": "Knowledge"
+        },
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/test-center",
+          "rect": {
+            "height": 48,
+            "width": 802,
+            "x": 25,
+            "y": 1645
+          },
+          "text": "Test Center"
+        },
+        {
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+          "rect": {
+            "height": 48,
+            "width": 802,
+            "x": 25,
+            "y": 1693
+          },
+          "text": "Settings"
+        }
+      ],
+      "queueLinks": [
+        {
+          "ariaLabel": "Hot queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=hot",
+          "rect": {
+            "height": 32,
+            "width": 83,
+            "x": 12,
+            "y": 180
+          },
+          "text": "Hot 2"
+        },
+        {
+          "ariaLabel": "Review queue, 1 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=review",
+          "rect": {
+            "height": 32,
+            "width": 107,
+            "x": 103,
+            "y": 180
+          },
+          "text": "Review 1"
+        },
+        {
+          "ariaLabel": "Booked queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=booked",
+          "rect": {
+            "height": 32,
+            "width": 110,
+            "x": 218,
+            "y": 180
+          },
+          "text": "Booked 2"
+        },
+        {
+          "ariaLabel": "Hot queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=hot",
+          "rect": {
+            "height": 40,
+            "width": 268,
+            "x": 16,
+            "y": 76
+          },
+          "text": "Hot 2"
+        },
+        {
+          "ariaLabel": "Review queue, 1 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=review",
+          "rect": {
+            "height": 40,
+            "width": 268,
+            "x": 292,
+            "y": 76
+          },
+          "text": "Review 1"
+        },
+        {
+          "ariaLabel": "Booked queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=booked",
+          "rect": {
+            "height": 40,
+            "width": 268,
+            "x": 568,
+            "y": 76
+          },
+          "text": "Booked 2"
+        }
+      ],
+      "settingsLinks": [],
+      "title": "AI Lead Employee",
+      "url": "http://localhost:3000/app/accounts/1/dashboard",
+      "viewport": {
+        "height": 1846,
+        "width": 852
+      }
+    },
+    "history": {
+      "beforeBack": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+      "afterBack": "http://localhost:3000/app/accounts/1/dashboard",
+      "afterForward": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification"
+    },
+    "mobileNarrow390": {
+      "bodyStart": "Conversations\nOpen\nMine\n2\nUnassigned\n3\nAll\n6\nMD\nMeta Demo Lead\ncool\n14h • 10h\nJ\nJane\nPlease rate the support\n14h • 14h\n\nAll conversations loaded 🎉\n\nAI\nAI Lead Employee\nJ\nHot\n2\nReview\n1\nBooked\n2\nInbox\nLeads\nBookings\nMore",
+      "clipping": [],
+      "desktopNav": [],
+      "documentOverflowX": 0,
+      "mobileButtons": [
+        {
+          "ariaLabel": "More",
+          "bg": "rgba(0, 0, 0, 0)",
+          "rect": {
+            "height": 80,
+            "width": 98,
+            "x": 293,
+            "y": 764
+          },
+          "text": "More"
+        }
+      ],
+      "mobileNav": [
+        {
+          "ariaCurrent": "page",
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard",
+          "rect": {
+            "height": 80,
+            "width": 98,
+            "x": 0,
+            "y": 764
+          },
+          "text": "Inbox"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/leads",
+          "rect": {
+            "height": 80,
+            "width": 98,
+            "x": 98,
+            "y": 764
+          },
+          "text": "Leads"
+        },
+        {
+          "ariaCurrent": null,
+          "bg": "rgba(0, 0, 0, 0)",
+          "href": "http://localhost:3000/app/accounts/1/bookings",
+          "rect": {
+            "height": 80,
+            "width": 98,
+            "x": 195,
+            "y": 764
+          },
+          "text": "Bookings"
+        }
+      ],
+      "morePanelLinks": [],
+      "profiler": 0,
+      "queueLinks": [
+        {
+          "ariaLabel": "Hot queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=hot",
+          "rect": {
+            "height": 40,
+            "width": 102,
+            "x": 16,
+            "y": 76
+          },
+          "text": "Hot 2"
+        },
+        {
+          "ariaLabel": "Review queue, 1 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=review",
+          "rect": {
+            "height": 40,
+            "width": 119,
+            "x": 126,
+            "y": 76
+          },
+          "text": "Review 1"
+        },
+        {
+          "ariaLabel": "Booked queue, 2 items",
+          "bg": "rgb(255, 255, 255)",
+          "href": "http://localhost:3000/app/accounts/1/dashboard?queue=booked",
+          "rect": {
+            "height": 40,
+            "width": 122,
+            "x": 252,
+            "y": 76
+          },
+          "text": "Booked 2"
+        }
+      ],
+      "settingsLinks": [],
+      "url": "http://localhost:3000/app/accounts/1/dashboard?pp=disable",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    }
+  },
+  "navigation": [
+    {
+      "type": "desktop-primary",
+      "label": "Inbox",
+      "url": "http://localhost:3000/app/accounts/1/dashboard",
+      "heading": "Conversations"
+    },
+    {
+      "type": "desktop-primary",
+      "label": "Leads",
+      "url": "http://localhost:3000/app/accounts/1/leads",
+      "heading": "Leads"
+    },
+    {
+      "type": "desktop-primary",
+      "label": "Bookings",
+      "url": "http://localhost:3000/app/accounts/1/bookings",
+      "heading": "Bookings"
+    },
+    {
+      "type": "desktop-primary",
+      "label": "Knowledge",
+      "url": "http://localhost:3000/app/accounts/1/knowledge",
+      "heading": "Knowledge"
+    },
+    {
+      "type": "desktop-primary",
+      "label": "Test Center",
+      "url": "http://localhost:3000/app/accounts/1/test-center",
+      "heading": "Test Center"
+    },
+    {
+      "type": "desktop-primary",
+      "label": "Settings",
+      "url": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+      "heading": "Settings"
+    },
+    {
+      "type": "mobile-primary",
+      "label": "Inbox",
+      "url": "http://localhost:3000/app/accounts/1/dashboard",
+      "heading": "Conversations"
+    },
+    {
+      "type": "mobile-primary",
+      "label": "Leads",
+      "url": "http://localhost:3000/app/accounts/1/leads",
+      "heading": "Leads"
+    },
+    {
+      "type": "mobile-primary",
+      "label": "Bookings",
+      "url": "http://localhost:3000/app/accounts/1/bookings",
+      "heading": "Bookings"
+    },
+    {
+      "type": "mobile-more",
+      "label": "Knowledge",
+      "url": "http://localhost:3000/app/accounts/1/knowledge",
+      "heading": "Knowledge"
+    },
+    {
+      "type": "mobile-more",
+      "label": "Test Center",
+      "url": "http://localhost:3000/app/accounts/1/test-center",
+      "heading": "Test Center"
+    },
+    {
+      "type": "mobile-more",
+      "label": "Settings",
+      "url": "http://localhost:3000/app/accounts/1/settings/ai-lead-employee/offers-qualification",
+      "heading": "Settings"
+    }
+  ],
+  "queueClicks": [
+    {
+      "label": "Hot",
+      "url": "http://localhost:3000/app/accounts/1/dashboard?queue=hot"
+    },
+    {
+      "label": "Review",
+      "url": "http://localhost:3000/app/accounts/1/dashboard?queue=review"
+    },
+    {
+      "label": "Booked",
+      "url": "http://localhost:3000/app/accounts/1/dashboard?queue=booked"
+    }
+  ],
+  "consoleErrors": []
+}
