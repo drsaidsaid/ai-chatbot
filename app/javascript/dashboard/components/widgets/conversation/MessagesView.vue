@@ -548,6 +548,7 @@ export default {
           />
         </div>
       </div>
+      <slot name="beforeComposer" />
       <ResizableEditorWrapper
         ref="resizableEditorWrapperRef"
         :container-height="Math.max(0, containerHeight - topBannerHeight)"

@@ -44,14 +44,34 @@ class AiLeadEmployee::OperationalDashboardRow
   end
 
   def conversation_payload
+    conversation_identity_payload
+      .merge(conversation_state_payload)
+      .merge(conversation_activity_payload)
+  end
+
+  def conversation_identity_payload
     {
       assignee: user_payload(conversation&.assignee),
       source: source_payload(conversation&.inbox),
-      control_state: conversation&.control_state,
       conversation_id: conversation&.id,
-      conversation_display_id: conversation&.display_id,
+      conversation_display_id: conversation&.display_id
+    }
+  end
+
+  def conversation_state_payload
+    {
+      control_state: conversation&.control_state,
+      conversation_status: conversation&.status,
       unanswered_questions_count: open_reviews.count,
-      last_activity_at: conversation&.last_activity_at
+      unread_count: unread_count
+    }
+  end
+
+  def conversation_activity_payload
+    {
+      last_message_preview: last_message_preview,
+      last_activity_at: conversation&.last_activity_at,
+      location: location
     }
   end
 
@@ -84,6 +104,29 @@ class AiLeadEmployee::OperationalDashboardRow
 
   def booking_state
     qualification.call_booked? ? 'booked' : 'not_booked'
+  end
+
+  def last_message_preview
+    return nil if conversation.blank?
+
+    conversation.messages.non_activity_messages.last&.content
+  end
+
+  def unread_count
+    return 0 if conversation.blank?
+
+    conversation.unread_incoming_messages.count
+  end
+
+  def location
+    [contact_attributes['city'], contact_attributes['country']]
+      .compact_blank
+      .join(', ')
+      .presence || contact_attributes['location']
+  end
+
+  def contact_attributes
+    @contact_attributes ||= contact.additional_attributes || {}
   end
 
   def authoritative_labels

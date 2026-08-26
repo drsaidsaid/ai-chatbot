@@ -14,8 +14,30 @@ RSpec.describe 'Operational Dashboard API', type: :request do
     end
 
     it 'returns the owned dashboard payload for an authenticated Human Operator' do
-      contact = create(:contact, account: account)
-      conversation = create(:conversation, account: account, contact: contact)
+      contact = create(
+        :contact,
+        account: account,
+        additional_attributes: {
+          'city' => 'Dar es Salaam',
+          'country' => 'Tanzania'
+        }
+      )
+      conversation = create(
+        :conversation,
+        account: account,
+        contact: contact,
+        agent_last_seen_at: 2.hours.ago,
+        status: :open,
+        control_state: :ai_active
+      )
+      create(
+        :message,
+        account: account,
+        inbox: conversation.inbox,
+        conversation: conversation,
+        content: 'I need help qualifying WhatsApp leads.',
+        created_at: 1.hour.ago
+      )
       create(:inbox_member, user: agent, inbox: conversation.inbox)
       create(:lead_qualification, account: account, contact: contact, quality: :qualified)
 
@@ -28,7 +50,12 @@ RSpec.describe 'Operational Dashboard API', type: :request do
       expect(response.parsed_body['leads'].first).to include(
         'id' => contact.id,
         'quality' => 'qualified',
-        'conversation_display_id' => conversation.display_id
+        'conversation_display_id' => conversation.display_id,
+        'conversation_status' => 'open',
+        'control_state' => 'ai_active',
+        'last_message_preview' => 'I need help qualifying WhatsApp leads.',
+        'location' => 'Dar es Salaam, Tanzania',
+        'unread_count' => 1
       )
       expect(response.parsed_body['queues']).to be_present
       expect(response.parsed_body['performance']).to be_present

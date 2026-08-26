@@ -2,6 +2,7 @@
 import { frontendURL } from '../../../helper/URLHelper';
 import store from '../../../store';
 import ConversationView from './ConversationView.vue';
+import InboxConversationCockpit from './InboxConversationCockpit.vue';
 
 const CONVERSATION_PERMISSIONS = [
   'administrator',
@@ -50,7 +51,7 @@ export default {
       meta: {
         permissions: CONVERSATION_PERMISSIONS,
       },
-      component: ConversationView,
+      component: InboxConversationCockpit,
       props: () => {
         return { inboxId: 0 };
       },
@@ -61,7 +62,7 @@ export default {
       meta: {
         permissions: CONVERSATION_PERMISSIONS,
       },
-      component: ConversationView,
+      component: InboxConversationCockpit,
       props: route => {
         return { inboxId: 0, conversationId: route.params.conversation_id };
       },
@@ -72,7 +73,7 @@ export default {
       meta: {
         permissions: CONVERSATION_PERMISSIONS,
       },
-      component: ConversationView,
+      component: InboxConversationCockpit,
       props: route => {
         return { inboxId: route.params.inbox_id };
       },
@@ -85,7 +86,7 @@ export default {
       meta: {
         permissions: CONVERSATION_PERMISSIONS,
       },
-      component: ConversationView,
+      component: InboxConversationCockpit,
       props: route => {
         return {
           conversationId: route.params.conversation_id,

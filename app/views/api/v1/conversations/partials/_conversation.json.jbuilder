@@ -1,6 +1,7 @@
 # TODO: Move this into models jbuilder
 # Currently the file there is used only for search endpoint.
 # Everywhere else we use conversation builder in partials folder
+include_cockpit = local_assigns.fetch(:include_cockpit, false)
 
 json.meta do
   json.sender do
@@ -126,6 +127,9 @@ if local_assigns[:include_control_events]
     json.actor_name event.user&.try(:name)
     json.created_at event.created_at.to_i
   end
+end
+if local_assigns[:include_cockpit]
+  json.cockpit AiLeadEmployee::ConversationCockpitPresenter.new(conversation: conversation).to_h
 end
 json.created_at conversation.created_at.to_i
 json.updated_at conversation.updated_at.to_f

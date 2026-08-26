@@ -502,6 +502,197 @@ RSpec.describe 'Conversations API', type: :request do
         expect(response_data[:meta_whatsapp_events].first[:provider_event_id]).to eq('wamid.EVENT1')
       end
 
+      it 'shows the Inbox Conversation Cockpit detail payload' do
+        whatsapp_conversation = create_cockpit_conversation(account, administrator)
+
+        get "/api/v1/accounts/#{account.id}/conversations/#{whatsapp_conversation.display_id}",
+            headers: administrator.create_new_auth_token,
+            as: :json
+
+        response_data = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(:success)
+        expect(response_data[:cockpit]).to match(
+          summary: hash_including(
+            why: array_including(
+              hash_including(label: 'Role fit', value: 'Clinic owner'),
+              hash_including(label: 'Goal', value: 'Manual WhatsApp follow-up is too slow')
+            )
+          ),
+          evidence: array_including(
+            hash_including(
+              signal: 'budget',
+              value: 'USD 1,000 monthly',
+              source_message: 'Can you automate WhatsApp leads for my clinic?',
+              user_name: administrator.name
+            )
+          ),
+          booking: hash_including(
+            status: 'confirmed',
+            assignee: hash_including(id: administrator.id, name: administrator.name)
+          ),
+          handoff: hash_including(
+            status: 'open',
+            assignee: hash_including(id: administrator.id, name: administrator.name)
+          ),
+          open_reviews: array_including(
+            hash_including(question: 'Can we send the pricing answer?', status: 'open')
+          ),
+          next_action: hash_including(kind: 'confirm_booking', label: 'Confirm call time'),
+          activity: array_including(
+            hash_including(kind: 'booking'),
+            hash_including(kind: 'review'),
+            hash_including(kind: 'handoff'),
+            hash_including(kind: 'delivery'),
+            hash_including(kind: 'ai_decision')
+          )
+        )
+      end
+
+      def create_cockpit_conversation(account, administrator)
+        channel = cockpit_whatsapp_channel(account)
+        contact = cockpit_contact(account)
+        conversation = cockpit_conversation_record(account, channel, contact, administrator)
+        lead_message = cockpit_lead_message(account, channel, contact, conversation)
+        qualification = cockpit_qualification(account, contact)
+
+        create_cockpit_evidence(account, contact, conversation, lead_message, administrator)
+        create_cockpit_review(account, conversation, lead_message)
+        create_cockpit_booking(account, contact, conversation, qualification, administrator)
+        create_cockpit_handoff(account, contact, conversation, qualification, administrator)
+        create_cockpit_whatsapp_event(account, channel, conversation)
+
+        conversation
+      end
+
+      def cockpit_whatsapp_channel(account)
+        create(
+          :channel_whatsapp,
+          account: account,
+          provider: 'whatsapp_cloud',
+          sync_templates: false,
+          validate_provider_config: false
+        )
+      end
+
+      def cockpit_contact(account)
+        create(
+          :contact,
+          :with_phone_number,
+          account: account,
+          name: 'Asha Mushi',
+          additional_attributes: {
+            'city' => 'Dar es Salaam',
+            'country' => 'Tanzania',
+            'company_name' => 'Asha Clinics'
+          }
+        )
+      end
+
+      def cockpit_conversation_record(account, channel, contact, administrator)
+        create(
+          :conversation,
+          account: account,
+          inbox: channel.inbox,
+          contact: contact,
+          assignee: administrator,
+          control_state: :human_active,
+          additional_attributes: {
+            'ai_employee_last_decision' => {
+              'refusal_reason' => 'no_approved_knowledge'
+            }
+          }
+        )
+      end
+
+      def cockpit_lead_message(account, channel, contact, conversation)
+        create(
+          :message,
+          account: account,
+          inbox: channel.inbox,
+          conversation: conversation,
+          sender: contact,
+          content: 'Can you automate WhatsApp leads for my clinic?'
+        )
+      end
+
+      def cockpit_qualification(account, contact)
+        create(
+          :lead_qualification,
+          account: account,
+          contact: contact,
+          quality: :highly_qualified,
+          follow_up_state: :call_booked,
+          score: 92,
+          reasons: ['Clinic owner asked for WhatsApp automation', 'Budget is available'],
+          missing_signals: ['preferred_demo_time'],
+          evidence_snapshot: {
+            'role' => { 'value' => 'Clinic owner' },
+            'problem' => { 'value' => 'Manual WhatsApp follow-up is too slow' }
+          }
+        )
+      end
+
+      def create_cockpit_evidence(account, contact, conversation, lead_message, administrator)
+        create(
+          :qualification_evidence,
+          account: account,
+          contact: contact,
+          conversation: conversation,
+          message: lead_message,
+          user: administrator,
+          signal: :budget,
+          value: { 'value' => 'USD 1,000 monthly' }
+        )
+      end
+
+      def create_cockpit_review(account, conversation, lead_message)
+        create(
+          :human_review_request,
+          account: account,
+          conversation: conversation,
+          lead_message: lead_message,
+          question: 'Can we send the pricing answer?'
+        )
+      end
+
+      def create_cockpit_booking(account, contact, conversation, qualification, administrator)
+        create(
+          :booking,
+          account: account,
+          contact: contact,
+          conversation: conversation,
+          lead_qualification: qualification,
+          assignee: administrator,
+          starts_at: Time.zone.parse('2026-08-27 14:00:00 UTC'),
+          ends_at: Time.zone.parse('2026-08-27 14:30:00 UTC')
+        )
+      end
+
+      def create_cockpit_handoff(account, contact, conversation, qualification, administrator)
+        create(
+          :lead_handoff,
+          account: account,
+          contact: contact,
+          conversation: conversation,
+          lead_qualification: qualification,
+          assignee: administrator
+        )
+      end
+
+      def create_cockpit_whatsapp_event(account, channel, conversation)
+        create(
+          :meta_whatsapp_webhook_event,
+          account: account,
+          inbox: channel.inbox,
+          channel_whatsapp: channel,
+          conversation: conversation,
+          provider_event_id: 'wamid.DELIVERED',
+          event_kind: 'message.status',
+          processed_at: Time.zone.parse('2026-08-26 09:00:00 UTC')
+        )
+      end
+
       it 'shows the conversation if you are an agent with access to inbox' do
         create(:inbox_member, user: agent, inbox: conversation.inbox)
         get "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}",
