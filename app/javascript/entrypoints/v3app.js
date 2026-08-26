@@ -61,6 +61,30 @@ initializeChatwootEvents();
 initializeAnalyticsEvents();
 initalizeRouter();
 
-window.onload = () => {
+let isMounted = false;
+
+const mountApp = attempts => {
+  if (isMounted) {
+    return;
+  }
+
+  if (!document.getElementById('app')) {
+    if (attempts > 0) {
+      window.setTimeout(() => mountApp(attempts - 1), 50);
+    }
+    return;
+  }
+
   app.mount('#app');
+  isMounted = true;
 };
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => mountApp(20), {
+    once: true,
+  });
+} else {
+  mountApp(20);
+}
+
+window.setTimeout(() => mountApp(20), 0);
