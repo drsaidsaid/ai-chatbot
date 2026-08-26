@@ -1,3 +1,15 @@
+# AI Lead Employee
+
+AI Lead Employee is an owned WhatsApp lead-operations workspace built from the
+pinned Chatwoot Community Edition `v4.17.0` Rails and Vue source. The product
+uses application-owned configuration, invite-only Human Operator access, and
+direct Meta WhatsApp connectivity planned inside this repository. It does not
+depend on a Chatwoot cloud account, Chatwoot API token, or Chatwoot webhook
+secret.
+
+The upstream Community Edition MIT notice is retained below. Enterprise source
+is not imported into this owned product.
+
 <img src="./.github/screenshots/header.png#gh-light-mode-only" width="100%" alt="Header light mode"/>
 <img src="./.github/screenshots/header-dark.png#gh-dark-mode-only" width="100%" alt="Header dark mode"/>
 
