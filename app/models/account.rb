@@ -86,6 +86,7 @@ class Account < ApplicationRecord
   has_many :tiktok_channels, dependent: :destroy_async, class_name: '::Channel::Tiktok'
   has_many :hooks, dependent: :destroy_async, class_name: 'Integrations::Hook'
   has_many :inboxes, dependent: :destroy_async
+  has_many :human_review_requests, dependent: :destroy_async
   has_many :knowledge_items, dependent: :destroy_async
   has_many :lead_qualification_decisions, dependent: :destroy_async
   has_many :lead_qualifications, dependent: :destroy_async

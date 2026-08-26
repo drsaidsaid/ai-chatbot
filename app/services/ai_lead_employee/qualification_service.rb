@@ -21,7 +21,7 @@ class AiLeadEmployee::QualificationService
     ['contact_details', 'What is the best email or phone number for follow-up?']
   ].freeze
 
-  Result = Struct.new(:qualification, :next_question, :new_evidence, keyword_init: true)
+  Result = Struct.new(:qualification, :next_question, :new_evidence, :review_request_reason, keyword_init: true)
 
   def initialize(conversation:, incoming_message: nil)
     @conversation = conversation
@@ -37,7 +37,8 @@ class AiLeadEmployee::QualificationService
     Result.new(
       qualification: qualification,
       next_question: next_question_for(qualification.evidence_snapshot),
-      new_evidence: new_evidence
+      new_evidence: new_evidence,
+      review_request_reason: review_request_reason_for(qualification)
     )
   end
 
@@ -170,6 +171,10 @@ class AiLeadEmployee::QualificationService
     return :nurture if %w[low_qualified qualified].include?(quality.to_s)
 
     :no_follow_up
+  end
+
+  def review_request_reason_for(qualification)
+    'qualification_blocker' if qualification.unqualified?
   end
 
   def reasons_for(snapshot, missing, quality)

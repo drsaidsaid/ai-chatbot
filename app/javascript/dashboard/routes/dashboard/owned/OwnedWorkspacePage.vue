@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import HumanReviewRequestsPanel from './HumanReviewRequestsPanel.vue';
 import KnowledgeItemsPanel from './KnowledgeItemsPanel.vue';
 
 const props = defineProps({
@@ -62,6 +63,7 @@ const description = computed(() => {
           {{ t('AI_LEAD_EMPLOYEE.BASELINE_NOTICE') }}
         </p>
       </div>
+      <HumanReviewRequestsPanel v-if="surface === 'REVIEWS'" />
       <KnowledgeItemsPanel v-if="surface === 'KNOWLEDGE'" />
     </section>
   </main>

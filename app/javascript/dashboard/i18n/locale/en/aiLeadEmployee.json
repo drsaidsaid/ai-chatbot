@@ -31,6 +31,29 @@
         "DESCRIPTION": "Confirmed and upcoming calls for highly qualified leads."
       }
     },
+    "REVIEWS": {
+      "LOADING": "Loading review requests",
+      "EMPTY": "No review requests are waiting",
+      "RESOLVE": "Resolve",
+      "RESOLVED": "Review request resolved",
+      "RESOLVE_ERROR": "Could not resolve the review request",
+      "PROPOSE_KNOWLEDGE": "Propose this answer as reusable knowledge",
+      "FIELD": {
+        "QUESTION": "Question",
+        "REASON": "Reason",
+        "CONVERSATION": "Conversation",
+        "CONVERSATION_NUMBER": "#{id}",
+        "RESOLUTION": "Resolution",
+        "ANSWER_MESSAGE_ID": "Human answer message ID"
+      },
+      "REASON": {
+        "NO_APPROVED_KNOWLEDGE": "No approved knowledge",
+        "CONFLICTING_KNOWLEDGE": "Conflicting knowledge",
+        "SENSITIVE_QUESTION": "Sensitive question",
+        "QUALIFICATION_BLOCKER": "Qualification blocker",
+        "ANGRY_QUESTION": "Angry lead"
+      }
+    },
     "KNOWLEDGE": {
       "NEW_TITLE": "New Knowledge Item",
       "EDIT_TITLE": "Edit Knowledge Item",

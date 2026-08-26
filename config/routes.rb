@@ -161,6 +161,9 @@ Rails.application.routes.draw do
               post :deactivate
             end
           end
+          resources :human_review_requests, only: [:index, :show] do
+            post :resolve, on: :member
+          end
           resource :qualification_configuration, only: [:show, :update]
           resources :lead_qualifications, only: [:show] do
             post :evidence, on: :member

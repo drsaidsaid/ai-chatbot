@@ -89,6 +89,10 @@ any time.
 - The AI Employee retrieves only approved Knowledge Items. FAQ and Offer
   content override supporting documents. Unknown, conflicting, sensitive,
   angry, and qualified-blocking questions create Review Requests.
+- Review Requests are tenant-scoped operator work items linked to the lead
+  message, Conversation, alert delivery attempts, the Human Operator answer, and
+  any draft Knowledge Item proposed from that answer. Proposed knowledge remains
+  unavailable to the AI Employee until the existing approval flow approves it.
 - Qualification uses hard rules plus scoring. Lead Quality is only Unknown,
   Unqualified, Low Qualified, Qualified, or Highly Qualified. Highly Qualified
   requires current evidence for pain, urgency, budget, and decision authority.

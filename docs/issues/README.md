@@ -10,7 +10,7 @@ interface, and automated verification where those layers are relevant.
 | 001 | Direct Meta WhatsApp round trip and safe human takeover | 000 | Blocked |
 | 002 | Approved answers and unsupported media | 001 | Blocked |
 | 003 | One-question-at-a-time lead qualification | 002 | Blocked |
-| 004 | Unanswered-question review and knowledge approval | 002 | Blocked |
+| 004 | Unanswered-question review and knowledge approval | 002 | Done |
 | 005 | Highly Qualified handoff and WhatsApp alert | 003 | Blocked |
 | 006 | Conflict-free call booking | 005 | Blocked |
 | 007 | Incomplete-lead follow-up and opt-out | 003 | Blocked |

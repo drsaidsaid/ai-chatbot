@@ -42,4 +42,31 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.sources).to be_empty
     expect(result.refusal_reason).to eq('no_approved_knowledge')
   end
+
+  it 'refuses conflicting approved knowledge instead of choosing an answer' do
+    create(:knowledge_item, account: account, source_kind: :faq, question: 'Do you offer audits?', answer: 'Yes.')
+    create(:knowledge_item, account: account, source_kind: :faq, question: 'Do you offer audits?', answer: 'No.')
+
+    result = described_class.new(account: account, question: 'Do you offer audits?').perform
+
+    expect(result).to be_refused
+    expect(result.answer).to eq(described_class::BOUNDARY_RESPONSE)
+    expect(result.refusal_reason).to eq('conflicting_knowledge')
+  end
+
+  it 'refuses sensitive questions for Human Operator review' do
+    result = described_class.new(account: account, question: 'Can you give legal advice about our contract?').perform
+
+    expect(result).to be_refused
+    expect(result.answer).to eq(described_class::BOUNDARY_RESPONSE)
+    expect(result.refusal_reason).to eq('sensitive_question')
+  end
+
+  it 'refuses angry questions for Human Operator review' do
+    result = described_class.new(account: account, question: 'I am furious about this terrible service').perform
+
+    expect(result).to be_refused
+    expect(result.answer).to eq(described_class::BOUNDARY_RESPONSE)
+    expect(result.refusal_reason).to eq('angry_question')
+  end
 end

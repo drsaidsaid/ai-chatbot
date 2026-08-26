@@ -347,6 +347,74 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
       )
     end
 
+    it 'creates one review request alerts the recipient and hands off when the AI Employee cannot answer safely', :aggregate_failures do
+      account.update!(settings: account.settings.merge('ai_review_alert_recipients' => ['255700000001']))
+      body = inbound_text_payload(text: 'Can you help with a custom request?').to_json
+
+      expect do
+        post '/webhooks/meta/whatsapp',
+             params: body,
+             headers: {
+               'CONTENT_TYPE' => 'application/json',
+               'X-Hub-Signature-256' => signature_for(body)
+             }
+      end.to change(HumanReviewRequest, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+      conversation = Conversation.last
+      review_request = HumanReviewRequest.last
+      expect(Message.outgoing.last.content).to eq(AiLeadEmployee::KnowledgeAnswerService::BOUNDARY_RESPONSE)
+      expect(conversation.reload).to be_handoff_requested
+      expect(conversation.additional_attributes['ai_employee_last_decision']).to include(
+        'status' => 'refused',
+        'refusal_reason' => 'no_approved_knowledge',
+        'human_review_request_id' => review_request.id
+      )
+      expect(review_request).to have_attributes(
+        account: account,
+        conversation: conversation,
+        lead_message: Message.incoming.last,
+        question: 'Can you help with a custom request?'
+      )
+      expect(review_request.alert_deliveries).to contain_exactly(
+        include('recipient' => '255700000001', 'status' => 'sent')
+      )
+
+      expect do
+        post '/webhooks/meta/whatsapp',
+             params: body,
+             headers: {
+               'CONTENT_TYPE' => 'application/json',
+               'X-Hub-Signature-256' => signature_for(body)
+             }
+      end.not_to change(HumanReviewRequest, :count)
+    end
+
+    it 'creates a review request when qualification becomes blocking after an approved answer', :aggregate_failures do
+      create(:knowledge_item, account: account, question: 'Do you offer consulting?', answer: 'Yes, we offer consulting.')
+      create(:qualification_budget_range, account: account, min_cents: 100_000, max_cents: nil)
+      body = inbound_text_payload(text: 'Do you offer consulting? My budget is $50.').to_json
+
+      expect do
+        post '/webhooks/meta/whatsapp',
+             params: body,
+             headers: {
+               'CONTENT_TYPE' => 'application/json',
+               'X-Hub-Signature-256' => signature_for(body)
+             }
+      end.to change(HumanReviewRequest, :count).by(1)
+
+      conversation = Conversation.last
+      review_request = HumanReviewRequest.last
+      expect(response).to have_http_status(:ok)
+      expect(review_request.reason).to eq('qualification_blocker')
+      expect(conversation.reload).to be_handoff_requested
+      expect(conversation.additional_attributes['ai_employee_last_decision']).to include(
+        'status' => 'answered',
+        'human_review_request_id' => review_request.id
+      )
+    end
+
     it 'rejects unsigned payloads before persistence' do
       body = inbound_text_payload.to_json
 

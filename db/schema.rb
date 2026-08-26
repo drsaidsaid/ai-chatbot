@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_26_000600) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_26_000700) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -502,8 +502,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000600) do
     t.integer "status", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_captain_faq_suggestions_on_account_id"
     t.index ["account_id", "assistant_id", "status", "language"], name: "idx_cap_faq_suggestions_on_account_assistant_status_language"
+    t.index ["account_id"], name: "index_captain_faq_suggestions_on_account_id"
     t.index ["assistant_id"], name: "index_captain_faq_suggestions_on_assistant_id"
     t.index ["embedding"], name: "vector_idx_captain_faq_suggestions_embedding", opclass: :vector_cosine_ops, using: :ivfflat
   end
@@ -743,8 +743,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000600) do
     t.jsonb "phone_number_health", default: {}, null: false
     t.datetime "phone_number_health_checked_at"
     t.string "phone_number_health_error", limit: 500
-    t.index ["phone_number_health_checked_at"], name: "index_channel_whatsapp_on_phone_number_health_checked_at"
     t.index ["phone_number"], name: "index_channel_whatsapp_on_phone_number", unique: true
+    t.index ["phone_number_health_checked_at"], name: "index_channel_whatsapp_on_phone_number_health_checked_at"
   end
 
   create_table "companies", force: :cascade do |t|
@@ -1085,10 +1085,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000600) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "inbox_id"
-    t.index ["account_id", "name", "template_type", "locale"], name: "index_email_templates_on_account_scope", unique: true, where: "(account_id IS NOT NULL) AND (inbox_id IS NULL)"
+    t.index ["account_id", "name", "template_type", "locale"], name: "index_email_templates_on_account_scope", unique: true, where: "((account_id IS NOT NULL) AND (inbox_id IS NULL))"
     t.index ["inbox_id", "name", "template_type", "locale"], name: "index_email_templates_on_inbox_scope", unique: true, where: "(inbox_id IS NOT NULL)"
     t.index ["inbox_id"], name: "index_email_templates_on_inbox_id"
-    t.index ["name", "template_type", "locale"], name: "index_email_templates_on_installation_scope", unique: true, where: "(account_id IS NULL) AND (inbox_id IS NULL)"
+    t.index ["name", "template_type", "locale"], name: "index_email_templates_on_installation_scope", unique: true, where: "((account_id IS NULL) AND (inbox_id IS NULL))"
   end
 
   create_table "folders", force: :cascade do |t|
@@ -1097,6 +1097,30 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000600) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "human_review_requests", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "lead_message_id", null: false
+    t.bigint "human_answer_message_id"
+    t.bigint "knowledge_item_id"
+    t.integer "reason", null: false
+    t.integer "status", default: 0, null: false
+    t.string "proposed_source_kind"
+    t.text "question", null: false
+    t.jsonb "alert_recipients", default: [], null: false
+    t.jsonb "alert_deliveries", default: [], null: false
+    t.datetime "resolved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "conversation_id", "lead_message_id", "reason"], name: "index_human_review_requests_on_deduplication_key", unique: true
+    t.index ["account_id", "status", "created_at"], name: "idx_on_account_id_status_created_at_2f522df2ef"
+    t.index ["account_id"], name: "index_human_review_requests_on_account_id"
+    t.index ["conversation_id"], name: "index_human_review_requests_on_conversation_id"
+    t.index ["human_answer_message_id"], name: "index_human_review_requests_on_human_answer_message_id"
+    t.index ["knowledge_item_id"], name: "index_human_review_requests_on_knowledge_item_id"
+    t.index ["lead_message_id"], name: "index_human_review_requests_on_lead_message_id"
   end
 
   create_table "inbox_assignment_policies", force: :cascade do |t|
@@ -1721,6 +1745,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_26_000600) do
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
+  add_foreign_key "human_review_requests", "accounts"
+  add_foreign_key "human_review_requests", "conversations"
+  add_foreign_key "human_review_requests", "knowledge_items"
+  add_foreign_key "human_review_requests", "messages", column: "human_answer_message_id"
+  add_foreign_key "human_review_requests", "messages", column: "lead_message_id"
   add_foreign_key "inboxes", "portals"
   add_foreign_key "knowledge_items", "accounts"
   add_foreign_key "lead_qualification_decisions", "accounts"

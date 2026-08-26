@@ -26,7 +26,14 @@ class AiLeadEmployee::KnowledgeAnswerService
   end
 
   def perform
-    item = matching_items.first
+    return unanswered_result('angry_question') if angry_question?
+    return unanswered_result('sensitive_question') if sensitive_question?
+
+    matches = matching_items
+    return unanswered_result if matches.blank?
+    return unanswered_result('conflicting_knowledge') if conflicting?(matches)
+
+    item = matches.first
     return unanswered_result if item.blank?
 
     Result.new(
@@ -44,6 +51,26 @@ class AiLeadEmployee::KnowledgeAnswerService
     account.knowledge_items.usable_by_ai_employee
            .select { |item| matches?(item) }
            .sort_by { |item| [SOURCE_PRIORITY.fetch(item.source_kind), -match_score(item), item.created_at] }
+  end
+
+  def conflicting?(matches)
+    top_match = matches.first
+    matches.any? do |item|
+      item.id != top_match.id &&
+        SOURCE_PRIORITY.fetch(item.source_kind) == SOURCE_PRIORITY.fetch(top_match.source_kind) &&
+        match_score(item) == match_score(top_match) &&
+        normalize(item.answer) != normalize(top_match.answer)
+    end
+  end
+
+  def sensitive_question?
+    sensitive_tokens = %w[legal lawsuit contract medical health refund guarantee liability]
+    tokens(normalize(question)).intersect?(sensitive_tokens)
+  end
+
+  def angry_question?
+    angry_tokens = %w[angry furious upset scam terrible unacceptable complaint]
+    tokens(normalize(question)).intersect?(angry_tokens)
   end
 
   def matches?(item)
@@ -75,7 +102,7 @@ class AiLeadEmployee::KnowledgeAnswerService
     }
   end
 
-  def unanswered_result
-    Result.new(answer: BOUNDARY_RESPONSE, sources: [], refusal_reason: 'no_approved_knowledge')
+  def unanswered_result(reason = 'no_approved_knowledge')
+    Result.new(answer: BOUNDARY_RESPONSE, sources: [], refusal_reason: reason)
   end
 end
