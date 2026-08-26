@@ -62,6 +62,21 @@ describe Conversations::AssignmentService do
         expect(conversation.reload.status).to eq('resolved')
       end
 
+      it 'audits human reassignment' do
+        previous_agent = create(:user, account: account)
+        conversation.update!(assignee_agent_bot: nil, assignee: previous_agent)
+
+        expect do
+          described_class.new(conversation: conversation, assignee_id: agent.id).perform
+        end.to change(Audited::Audit, :count).by(1)
+
+        expect(Audited::Audit.last).to have_attributes(
+          auditable: conversation,
+          associated: account,
+          audited_changes: { 'assignee_id' => [previous_agent.id, agent.id] }
+        )
+      end
+
       it 'preserves status when taking over a bot-owned non-pending conversation' do
         conversation.update!(assignee_agent_bot: agent_bot, status: :resolved)
 

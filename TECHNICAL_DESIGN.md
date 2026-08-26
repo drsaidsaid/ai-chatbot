@@ -248,6 +248,18 @@ Conversation before sending.
 - `business_account_id`, route ID, related entity type and ID, rendered summary, delivery state, external message ID, attempts, and timestamps.
 - One logical alert uses one stable idempotency key even when delivery is retried.
 
+#### Current owned-fork implementation
+
+- Highly Qualified sales handoffs are persisted as `lead_handoffs`, scoped by
+  account, contact, Conversation, qualification, assignee, alert type,
+  qualification snapshot, alert recipients, and delivery attempts.
+- `lead_handoffs` uses a unique logical-handoff key across Business Account,
+  Conversation, Qualification, and alert type so replayed events do not create a
+  second handoff or resend routed alerts.
+- V1 stores sales handoff alert routes in account settings under
+  `ai_lead_employee.alert_routes` until the admin alert-route UI promotes them
+  to first-class records.
+
 ### Reliability, Audit, and Evaluation
 
 #### `webhook_events`
@@ -300,7 +312,8 @@ Owned labels initially include `hot-lead`, `needs-review`, `follow-up-due`, and
 5. Persist the AI decision, outbound message intent, and outbox event in one database transaction.
 6. Send through Meta using an idempotency key where supported and reconcile the external message ID.
 7. A handoff request, human assignment, human reply, manual pause, or resolution invalidates pending AI reply jobs. Human activity, pause, and resolution also invalidate automatic follow-up jobs.
-8. Booking and alert creation are idempotent and retryable.
+8. Booking and alert creation are idempotent and retryable; Highly Qualified
+   sales handoff alert idempotency is enforced by `lead_handoffs`.
 9. Every Lead Quality transition records evidence, reasons, configuration version, and actor.
 10. No cross-tenant query may execute without Business Account scope.
 11. A duplicate Meta event has no second logical effect, even when it arrives after the first event has been processed.

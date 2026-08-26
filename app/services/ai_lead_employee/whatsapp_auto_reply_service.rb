@@ -12,16 +12,9 @@ class AiLeadEmployee::WhatsappAutoReplyService
   def perform
     result = ai_employee_result
     qualification_result = qualification_result_for_supported_message
-    review_request_result = create_review_request(result, qualification_result)
-    record_ai_employee_decision!(result, qualification_result, review_request_result)
+    return if highly_qualified_handoff_created?(qualification_result)
 
-    sent_message = Meta::Whatsapp::OutboundMessageSender.new(
-      conversation: conversation,
-      content: reply_content(result, qualification_result),
-      expected_control_version: conversation.control_version
-    ).perform
-    Conversations::ControlService.new(conversation: conversation).handoff_requested! if review_request_result&.request&.open?
-    sent_message
+    reply_with_ai_employee_result(result, qualification_result)
   rescue Meta::Whatsapp::OutboundMessageSender::BlockedByControlState
     nil
   rescue Meta::Whatsapp::OutboundMessageSender::MetaSendFailed => e
@@ -70,15 +63,59 @@ class AiLeadEmployee::WhatsappAutoReplyService
     ).perform
   end
 
+  def create_highly_qualified_handoff(qualification_result)
+    return if qualification_result.blank?
+
+    AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification_result.qualification
+    ).perform
+  end
+
+  def highly_qualified_handoff_created?(qualification_result)
+    create_highly_qualified_handoff(qualification_result)&.handoff.present?
+  end
+
   def review_request_reason?(reason)
     reason.in?(%w[no_approved_knowledge conflicting_knowledge sensitive_question qualification_blocker angry_question])
   end
 
+  def send_reply!(result, qualification_result)
+    Meta::Whatsapp::OutboundMessageSender.new(
+      conversation: conversation,
+      content: reply_content(result, qualification_result),
+      expected_control_version: conversation.control_version
+    ).perform
+  end
+
+  def reply_with_ai_employee_result(result, qualification_result)
+    review_request_result = create_review_request(result, qualification_result) unless unsupported_human_request?(qualification_result)
+    record_ai_employee_decision!(result, qualification_result, review_request_result)
+
+    sent_message = send_reply!(result, qualification_result)
+    Conversations::ControlService.new(conversation: conversation).handoff_requested! if review_request_result&.request&.open?
+    sent_message
+  end
+
   def reply_content(result, qualification_result)
+    return human_request_explanation(qualification_result) if unsupported_human_request?(qualification_result)
     return result.answer if result.refused?
     return result.answer if qualification_result&.next_question.blank?
 
     [result.answer, qualification_result.next_question].join("\n\n")
+  end
+
+  def unsupported_human_request?(qualification_result)
+    qualification_result.present? &&
+      qualification_result.qualification&.highly_qualified? == false &&
+      incoming_message.content.to_s.match?(/\b(human|person|operator|agent|sales|representative)\b/i)
+  end
+
+  def human_request_explanation(qualification_result)
+    [
+      AiLeadEmployee::HighlyQualifiedHandoffService.unqualified_human_request_explanation(conversation.account),
+      qualification_result.next_question
+    ].compact_blank.join("\n\n")
   end
 
   def record_ai_employee_decision!(result, qualification_result, review_request_result)

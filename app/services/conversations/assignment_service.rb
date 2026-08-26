@@ -15,9 +15,11 @@ class Conversations::AssignmentService
 
   def assign_agent
     conversation.with_lock do
+      previous_assignee_id = conversation.assignee_id
       open_for_human_assignment if should_open_for_human_assignment?
       apply_human_assignment
       conversation.save!
+      audit_human_reassignment!(previous_assignee_id) if previous_assignee_id != conversation.assignee_id
     end
     assignee
   end
@@ -64,5 +66,23 @@ class Conversations::AssignmentService
 
   def agent_bot_assignment?
     assignee_type.to_s == 'AgentBot'
+  end
+
+  def audit_human_reassignment!(previous_assignee_id)
+    return unless conversation.persisted?
+
+    Audited::Audit.create!(
+      auditable: conversation,
+      associated: conversation.account,
+      user: Current.user,
+      action: 'update',
+      audited_changes: { 'assignee_id' => [previous_assignee_id, conversation.assignee_id] },
+      version: next_audit_version,
+      created_at: Time.current
+    )
+  end
+
+  def next_audit_version
+    Audited::Audit.where(auditable: conversation).maximum(:version).to_i + 1
   end
 end

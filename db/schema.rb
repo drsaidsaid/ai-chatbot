@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_26_000700) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_26_000800) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1232,6 +1232,28 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_000700) do
     t.index ["title", "account_id"], name: "index_labels_on_title_and_account_id", unique: true
   end
 
+  create_table "lead_handoffs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "lead_qualification_id", null: false
+    t.bigint "assignee_id"
+    t.string "alert_type", null: false
+    t.integer "status", default: 0, null: false
+    t.jsonb "qualification_snapshot", default: {}, null: false
+    t.jsonb "alert_recipients", default: [], null: false
+    t.jsonb "alert_deliveries", default: [], null: false
+    t.datetime "handed_off_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "conversation_id", "lead_qualification_id", "alert_type"], name: "index_lead_handoffs_on_logical_handoff", unique: true
+    t.index ["account_id"], name: "index_lead_handoffs_on_account_id"
+    t.index ["assignee_id"], name: "index_lead_handoffs_on_assignee_id"
+    t.index ["contact_id"], name: "index_lead_handoffs_on_contact_id"
+    t.index ["conversation_id"], name: "index_lead_handoffs_on_conversation_id"
+    t.index ["lead_qualification_id"], name: "index_lead_handoffs_on_lead_qualification_id"
+  end
+
   create_table "lead_qualification_decisions", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "contact_id", null: false
@@ -1752,6 +1774,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_000700) do
   add_foreign_key "human_review_requests", "messages", column: "lead_message_id"
   add_foreign_key "inboxes", "portals"
   add_foreign_key "knowledge_items", "accounts"
+  add_foreign_key "lead_handoffs", "accounts"
+  add_foreign_key "lead_handoffs", "contacts"
+  add_foreign_key "lead_handoffs", "conversations"
+  add_foreign_key "lead_handoffs", "lead_qualifications"
+  add_foreign_key "lead_handoffs", "users", column: "assignee_id"
   add_foreign_key "lead_qualification_decisions", "accounts"
   add_foreign_key "lead_qualification_decisions", "contacts"
   add_foreign_key "lead_qualification_decisions", "lead_qualifications"
