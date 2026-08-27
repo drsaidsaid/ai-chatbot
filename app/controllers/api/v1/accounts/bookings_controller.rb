@@ -4,17 +4,28 @@ class Api::V1::Accounts::BookingsController < Api::V1::Accounts::BaseController
   before_action :check_authorization
 
   def index
-    render json: Booking.where(account: current_account).order(starts_at: :asc).map { |booking| booking_payload(booking) }
+    render json: AiLeadEmployee::BookingsWorkspaceService.new(
+      account: current_account,
+      user: current_user,
+      params: params.permit(:from, :days, :status, :assignee_id, :offer, :timezone, :booking_id)
+    ).perform
   end
 
   def available_slots
-    slots = AiLeadEmployee::BookingAvailabilityService.new(
+    service = AiLeadEmployee::BookingAvailabilityService.new(
       account: current_account,
       from: availability_from,
       days: params.fetch(:days, 7)
-    ).perform.slots
+    ).perform
 
-    render json: { slots: slots.map(&:iso8601) }
+    render json: {
+      slots: service.slots.map(&:iso8601),
+      availability: AiLeadEmployee::BookingsWorkspaceService.new(
+        account: current_account,
+        user: current_user,
+        params: params.permit(:from, :days)
+      ).perform.fetch(:availability)
+    }
   end
 
   def create
@@ -32,6 +43,18 @@ class Api::V1::Accounts::BookingsController < Api::V1::Accounts::BaseController
     render json: { error: 'Lead must be Highly Qualified before booking' }, status: :unprocessable_entity
   end
 
+  def reschedule
+    booking = mutate_booking('reschedule', reschedule_params)
+    render json: booking_payload(booking)
+  rescue AiLeadEmployee::BookingMutationService::SlotUnavailable
+    render json: { error: 'Selected slot is unavailable' }, status: :conflict
+  end
+
+  def cancel
+    booking = mutate_booking('cancel', cancel_params)
+    render json: booking_payload(booking)
+  end
+
   private
 
   def conversation
@@ -47,24 +70,37 @@ class Api::V1::Accounts::BookingsController < Api::V1::Accounts::BaseController
     params[:from].present? ? Time.zone.parse(params[:from]) : Time.current
   end
 
+  def mutate_booking(action, attributes)
+    AiLeadEmployee::BookingMutationService.new(
+      account: current_account,
+      user: current_user,
+      booking: visible_booking_scope.find(params.require(:id)),
+      action: action,
+      attributes: attributes,
+      idempotency_key: params[:idempotency_key]
+    ).perform
+  end
+
+  def visible_booking_scope
+    scope = Booking.where(account: current_account)
+    return scope if current_user.administrator?
+
+    scope.where(assignee: current_user)
+  end
+
+  def reschedule_params
+    params.permit(:starts_at)
+  end
+
+  def cancel_params
+    params.permit(:reason)
+  end
+
   def booking_payload(booking)
-    {
-      id: booking.id,
-      contact_id: booking.contact_id,
-      conversation_id: booking.conversation_id,
-      lead_qualification_id: booking.lead_qualification_id,
-      assignee_id: booking.assignee_id,
-      status: booking.status,
-      calendar_id: booking.calendar_id,
-      provider: booking.provider,
-      provider_event_id: booking.provider_event_id,
-      starts_at: booking.starts_at.iso8601,
-      ends_at: booking.ends_at.iso8601,
-      timezone: booking.timezone,
-      qualification_evidence_ids: booking.qualification_evidence_ids,
-      confirmation_message_id: booking.confirmation_message_id,
-      calendar_invitation_sent_at: booking.calendar_invitation_sent_at&.iso8601,
-      preparation_alert_recipients: booking.preparation_alert_recipients
-    }
+    AiLeadEmployee::BookingsWorkspaceService.new(
+      account: current_account,
+      user: current_user,
+      params: { booking_id: booking.id }
+    ).payload_for(booking)
   end
 end

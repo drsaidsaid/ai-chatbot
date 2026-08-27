@@ -1,0 +1,242 @@
+{
+  "startedAt": "2026-08-27T01:38:50.584Z",
+  "viewport": "1487x1058",
+  "steps": [
+    {
+      "action": "agenda initial",
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "agenda initial",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 24 - Aug 30, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nMon · Mon, 24 Aug 2026\n1\n16:41 - 17:11\nGN\nGrace Naliaka 57\nNaliaka Events 57\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTue · Tue, 25 Aug 2026\n1\n11:41 - 12:11\nMS\nMariam Salum 38\nSalum Logistics 38\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nWed · Wed, 26 Aug 2026\n2\n6:41 - 7:11\nDO\nDaniel Okello 19\nOkello Academy 19\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n2:41 - 3:11\nVO\nVincent Otieno\nOtieno Solar\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nToday · Thu, 27 Aug 2026\n3\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n18:41 - 19:11\nGN\nGrace Naliaka 17\nNaliaka Events 17\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n3\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts"
+      }
+    },
+    {
+      "action": "calendar tab",
+      "hasDayHeading": true,
+      "hasTime": true,
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "calendar",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 24 - Aug 30, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nMon 24 Aug\n16:41 - 17:11\nGrace Naliaka 57\nNo invite\nTue 25 Aug\n11:41 - 12:11\nMariam Salum 38\nNo invite\nWed 26 Aug\n6:41 - 7:11\nDaniel Okello 19\nNo invite2:41 - 3:11\nVincent Otieno\nNo invite\nThu 27 Aug\n12:41 - 13:11\nVincent Otieno 11\nNo invite18:41 - 19:11\nGrace Naliaka 17\nNo invite23:41 - 0:11\nAsha Mushi 22\nNo invite\nFri 28 Aug\n10:41 - 11:11\nBrian Kato 33\nNo invite11:41 - 12:11\nNeema Said 34\nNo invite21:41 - 22:11\nNeema Said 44\nNo invite\nSat 29 Aug\n4:41 - 5:11\nVincent Otieno 51\nNo invite19:41 - 20:11\nRehema John 66\nNo invite21:41 - 22:11\nMariam Salum 68\nNo invite\nSun 30 Aug\n6:41 - 7:11\nGrace Naliaka 77\nNo invite17:41 - 18:11\nMariam Salum 88\nNo invite\nShowing 15 of 15 bookings\n1\nGN\nGrace Naliaka 57\n\n+255710000057\n\nEldoret, KE\n\nBooking details\nWhen\n16:41 - 17:11\nOffer\nProduct Demo\nBooking status\nCompleted\nBooked via\nWhatsApp\nBooking created\n27 Aug, 1:41\nAssigned to\nReassign\n\nAH\nAmina Hassan\n\nMeeting link\nWhatsApp call\nJoin call\n\nCall starts at 16:41\n\nCalendar invite\n\nNo invite · local_calendar\n\nOpen in Google Calendar\nPreparation brief\n\nLead requested product demo for Product D"
+      }
+    },
+    {
+      "action": "availability tab",
+      "hasRules": true,
+      "hasSlots": true,
+      "hasProviderState": true,
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "availability",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 24 - Aug 30, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nAvailability rules\nCALENDAR\nlocal_calendar · default\nTIMEZONE\nUTC\nBUFFERS\n0 / 0 min\nMINIMUM NOTICE\n120 min\nAvailable slots\nFailed provider load\nNo available slots match these rules\nShowing 15 of 15 bookings\n1\nGN\nGrace Naliaka 57\n\n+255710000057\n\nEldoret, KE\n\nBooking details\nWhen\n16:41 - 17:11\nOffer\nProduct Demo\nBooking status\nCompleted\nBooked via\nWhatsApp\nBooking created\n27 Aug, 1:41\nAssigned to\nReassign\n\nAH\nAmina Hassan\n\nMeeting link\nWhatsApp call\nJoin call\n\nCall starts at 16:41\n\nCalendar invite\n\nNo invite · local_calendar\n\nOpen in Google Calendar\nPreparation brief\n\nLead requested product demo for Product Demo. Review the latest conversation before joining.\n\nSTRONGEST EVIDENCE\nLIKELY OBJECTION\n\nMay need clarity on timing or budget.\n\nSUGGESTED OPENING QUESTION\n\nWhat would a successful demo and pricing conversation look like for your team?\n\nOpen conversation\nReschedule\nCancel booking"
+      }
+    },
+    {
+      "action": "status filter confirmed",
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "status confirmed",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 24 - Aug 30, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nThu · Thu, 27 Aug 2026\n1\n2:41 - 3:11\nVO\nVincent Otieno\nOtieno Solar\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nToday · Thu, 27 Aug 2026\n2\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n2\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n1\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSun · Sun, 30 Aug 2026\n2\n6:41 - 7:11\nGN\nGrace Naliaka 77\nNaliaka Events 77\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n17:41 - 18:11\nMS\nMariam Salum 88\nSalum Logistic"
+      }
+    },
+    {
+      "action": "team offer timezone filters",
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "team offer timezone",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 24 - Aug 30, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nThu · Thu, 27 Aug 2026\n1\n2:41 - 3:11\nVO\nVincent Otieno\nOtieno Solar\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nToday · Thu, 27 Aug 2026\n2\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n2\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n1\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSun · Sun, 30 Aug 2026\n2\n6:41 - 7:11\nGN\nGrace Naliaka 77\nNaliaka Events 77\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n17:41 - 18:11\nMS\nMariam Salum 88\nSalum Logistic"
+      }
+    },
+    {
+      "action": "more filters",
+      "clearVisible": true,
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "more filters",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 24 - Aug 30, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nClear filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nThu · Thu, 27 Aug 2026\n1\n2:41 - 3:11\nVO\nVincent Otieno\nOtieno Solar\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nToday · Thu, 27 Aug 2026\n2\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n2\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n1\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSun · Sun, 30 Aug 2026\n2\n6:41 - 7:11\nGN\nGrace Naliaka 77\nNaliaka Events 77\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n17:41 - 18:11\nMS\nMariam Salum 88\n"
+      }
+    },
+    {
+      "action": "next date range",
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "next date",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n0 / 20 booked\n\nToday\nSep 3 - Sep 10, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nClear filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nNo calls booked yet\nShowing 0 of 0 bookings\n1"
+      }
+    },
+    {
+      "action": "previous today date controls",
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "today restored",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 27 - Sep 3, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nClear filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nToday · Thu, 27 Aug 2026\n2\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n2\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n1\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSun · Sun, 30 Aug 2026\n2\n6:41 - 7:11\nGN\nGrace Naliaka 77\nNaliaka Events 77\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n17:41 - 18:11\nMS\nMariam Salum 88\nSalum Logistics 88\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nMon · Mon, 31 Aug 2026\n1\n4:41 - 5:11\nDO\nDaniel Oke"
+      }
+    },
+    {
+      "action": "clear filters",
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "clear filters",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 27 - Sep 3, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nClear filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nToday · Thu, 27 Aug 2026\n3\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n18:41 - 19:11\nGN\nGrace Naliaka 17\nNaliaka Events 17\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n3\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n11:41 - 12:11\nNS\nNeema Said 34\nZanzibar Retreats 34\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n3\n4:41 - 5:11\nVO\nVincent Otieno 51\nOtieno Solar 51\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct "
+      }
+    },
+    {
+      "action": "select booking detail",
+      "hasPrep": true,
+      "hasEvidence": false,
+      "hasConversation": true,
+      "hasMeeting": true,
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "detail selected",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 27 - Sep 3, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nClear filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nToday · Thu, 27 Aug 2026\n3\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n18:41 - 19:11\nGN\nGrace Naliaka 17\nNaliaka Events 17\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n3\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n11:41 - 12:11\nNS\nNeema Said 34\nZanzibar Retreats 34\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n3\n4:41 - 5:11\nVO\nVincent Otieno 51\nOtieno Solar 51\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct "
+      }
+    },
+    {
+      "action": "links",
+      "conversationHref": "/app/accounts/7/conversations/11",
+      "meetingHref": "https://wa.me/255710000011"
+    },
+    {
+      "action": "reschedule dialog",
+      "visible": true,
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "reschedule dialog",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 27 - Sep 3, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nClear filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nToday · Thu, 27 Aug 2026\n3\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n18:41 - 19:11\nGN\nGrace Naliaka 17\nNaliaka Events 17\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n3\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n11:41 - 12:11\nNS\nNeema Said 34\nZanzibar Retreats 34\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n3\n4:41 - 5:11\nVO\nVincent Otieno 51\nOtieno Solar 51\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct "
+      }
+    },
+    {
+      "action": "cancel dialog",
+      "visible": true,
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "cancel dialog",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n8 / 20 booked\n\nToday\nAug 27 - Sep 3, 2026\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nClear filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nToday · Thu, 27 Aug 2026\n3\n12:41 - 13:11\nVO\nVincent Otieno 11\nOtieno Solar 11\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n18:41 - 19:11\nGN\nGrace Naliaka 17\nNaliaka Events 17\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n23:41 - 0:11\nAM\nAsha Mushi 22\nMoshi Learning Hub 22\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nTomorrow · Fri, 28 Aug 2026\n3\n10:41 - 11:11\nBK\nBrian Kato 33\nKato Auto Parts 33\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n11:41 - 12:11\nNS\nNeema Said 34\nZanzibar Retreats 34\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n21:41 - 22:11\nNS\nNeema Said 44\nZanzibar Retreats 44\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\nSat · Sat, 29 Aug 2026\n3\n4:41 - 5:11\nVO\nVincent Otieno 51\nOtieno Solar 51\nAH\nAmina Hassan\nProduct Demo\n30 min\n Awaiting\n No invite\n Not started\n19:41 - 20:11\nRJ\nRehema John 66\nDar Beauty Studio 66\nAH\nAmina Hassan\nProduct "
+      }
+    },
+    {
+      "action": "keyboard focus",
+      "active": {
+        "aria": null,
+        "tag": "BODY",
+        "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBoo"
+      }
+    },
+    {
+      "action": "empty future date range",
+      "hasEmpty": true,
+      "geometry": {
+        "bodyWidth": 1487,
+        "docHeight": 1058,
+        "docWidth": 1487,
+        "fixedClipping": [],
+        "innerHeight": 1058,
+        "innerWidth": 1487,
+        "label": "empty future",
+        "overflowX": false,
+        "overflows": [],
+        "scrollWidth": 1487,
+        "textStart": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nBookings\nAgenda\nCalendar\nAvailability\nTeam capacity · 27 Aug 2026\n\n0 / 20 booked\n\nToday\nJan 1 - Jan 7, 2035\nTeam member\nTeam member\nAmina Hassan\nCodex QA Admin\nBooking status\nBooking status\nConfirmed\nCanceled\nCompleted\nOffer\nOffer\nProduct Demo\nTimezone: EAT\nTimezone: EAT\nAfrica/Dar_es_Salaam\nUTC\nMore filters\nDate & time\nLead\nBusiness\nAssigned to\nCall type\nWhatsApp\nCalendar\nPrep\nNo calls booked yet\nShowing 0 of 0 bookings\n1"
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "endedAt": "2026-08-27T01:39:45.758Z"
+}

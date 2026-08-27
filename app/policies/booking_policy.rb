@@ -13,6 +13,14 @@ class BookingPolicy < ApplicationPolicy
     index?
   end
 
+  def reschedule?
+    index?
+  end
+
+  def cancel?
+    index?
+  end
+
   class Scope < Scope
     def resolve
       return scope.none if account_user.blank?

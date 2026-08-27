@@ -190,6 +190,8 @@ Rails.application.routes.draw do
           resource :booking_configuration, only: [:show, :update]
           resources :bookings, only: [:index, :create] do
             get :available_slots, on: :collection
+            patch :reschedule, on: :member
+            post :cancel, on: :member
           end
           namespace :channels do
             resource :twilio_channel, only: [:create]

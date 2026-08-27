@@ -410,6 +410,50 @@
       }
     },
     "BOOKINGS": {
+      "TITLE": "Bookings",
+      "TAB_LABEL": "Bookings workspace tabs",
+      "LOAD_ERROR": "Bookings could not be loaded",
+      "SAVE_ERROR": "Booking could not be updated",
+      "EMPTY_VALUE": "Not captured",
+      "TODAY": "Today",
+      "TOMORROW": "Tomorrow",
+      "THIS_WEEK": "This week",
+      "TEAM_CAPACITY": "Team capacity",
+      "BOOKED": "booked",
+      "MORE_ACTIONS": "More actions",
+      "PREVIOUS_RANGE": "Previous range",
+      "NEXT_RANGE": "Next range",
+      "CLEAR_FILTERS": "Clear filters",
+      "DETAIL_LABEL": "Selected Booking detail",
+      "CLOSE_DETAIL": "Close booking detail",
+      "UNASSIGNED": "Unassigned",
+      "REASSIGN": "Reassign",
+      "CALL": "call",
+      "JOIN_CALL": "Join call",
+      "CALL_STARTS": "Call starts at {time}",
+      "OPEN_CALENDAR": "Open in Google Calendar",
+      "OPEN_CONVERSATION": "Open conversation",
+      "RESCHEDULE": "Reschedule",
+      "CANCEL_BOOKING": "Cancel booking",
+      "NEW_TIME": "New time",
+      "CANCEL_REASON": "Reason",
+      "ACTION_CONSEQUENCES": "This updates the Booking, calendar state, WhatsApp notice, Follow-up State, alerts, and audit history once for this action.",
+      "DISMISS": "Cancel",
+      "CONFIRM_ACTION": "Confirm",
+      "RESCHEDULED": "Booking rescheduled",
+      "CANCELED": "Booking canceled",
+      "PAGINATION": "Showing {count} of {total} bookings",
+      "PAGE_NUMBER": "{page}",
+      "MINUTES": "{count} min",
+      "BUFFER_PAIR": "{before} / {after} min",
+      "CAPACITY_COUNT": "{booked} / {limit}",
+      "JOINED_LABEL": "{left} · {right}",
+      "PREVIOUS_PAGE": "Previous page",
+      "NEXT_PAGE": "Next page",
+      "AVAILABILITY_RULES": "Availability rules",
+      "AVAILABLE_SLOTS": "Available slots",
+      "NO_SLOTS": "No available slots match these rules",
+      "SLOT_SOURCE": "Calendar availability, business hours, buffers, notice, and assignment rules",
       "UPCOMING": "Upcoming bookings",
       "LOADING": "Loading bookings",
       "EMPTY": "No calls booked yet",
@@ -429,9 +473,33 @@
       "NO_EMAIL": "No email",
       "NONE": "None",
       "LEAD_NUMBER": "#{id}",
+      "TABS": {
+        "AGENDA": "Agenda",
+        "CALENDAR": "Calendar",
+        "AVAILABILITY": "Availability"
+      },
+      "FILTER": {
+        "TEAM_MEMBER": "Team member",
+        "STATUS": "Booking status",
+        "OFFER": "Offer",
+        "TIMEZONE": "Timezone: EAT",
+        "MORE": "More filters"
+      },
       "FIELD": {
         "LEAD": "Lead",
+        "DATE_TIME": "Date & time",
+        "BUSINESS": "Business",
+        "ASSIGNED_TO": "Assigned to",
+        "CALL_TYPE": "Call type",
+        "WHATSAPP": "WhatsApp",
+        "CALENDAR": "Calendar",
+        "PREP": "Prep",
+        "STATUS": "Booking status",
+        "OFFER": "Offer",
+        "BOOKED_VIA": "Booked via",
+        "CREATED": "Booking created",
         "WHEN": "When",
+        "BUFFERS": "Buffers",
         "CONFIRMATION": "Confirmation",
         "PREP_ALERT": "Prep alert",
         "TIMEZONE": "Timezone",
@@ -444,6 +512,48 @@
         "AVAILABLE_SLOT": "Available slot",
         "CONVERSATION_ID": "Conversation ID",
         "RETRY_KEY": "Retry key"
+      },
+      "DETAIL": {
+        "BOOKING_DETAILS": "Booking details",
+        "ASSIGNED_TO": "Assigned to",
+        "MEETING_LINK": "Meeting link",
+        "CALENDAR_INVITE": "Calendar invite",
+        "PREPARATION_BRIEF": "Preparation brief",
+        "STRONGEST_EVIDENCE": "Strongest evidence",
+        "LIKELY_OBJECTION": "Likely objection",
+        "OPENING_QUESTION": "Suggested opening question"
+      },
+      "STATUS": {
+        "CONFIRMED": "Confirmed",
+        "CANCELED": "Canceled",
+        "COMPLETED": "Completed"
+      },
+      "CALL_TYPE": {
+        "PRODUCT_DEMO": "Product Demo",
+        "NURTURE_CALL": "Nurture Call",
+        "FOLLOW_UP": "Follow up",
+        "SEND_PROPOSAL": "Send proposal"
+      },
+      "WHATSAPP_STATE": {
+        "CONFIRMED": "Confirmed",
+        "AWAITING": "Awaiting"
+      },
+      "CALENDAR_STATE": {
+        "CONFIRMED": "Confirmed",
+        "INVITED": "Invited",
+        "CONFLICT": "Conflict",
+        "NO_INVITE": "No invite",
+        "CANCELED": "Canceled"
+      },
+      "PREPARATION_STATE": {
+        "READY": "Ready",
+        "IN_PROGRESS": "In progress",
+        "NOT_STARTED": "Not started",
+        "NEEDS_ATTENTION": "Needs attention"
+      },
+      "PROVIDER_STATE": {
+        "CONNECTED": "Connected",
+        "FAILED": "Failed provider load"
       },
       "WEEKDAY": {
         "MON": "Mon",
