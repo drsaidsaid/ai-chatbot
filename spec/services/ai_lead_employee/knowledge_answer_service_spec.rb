@@ -29,6 +29,46 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.sources.first[:source_kind]).to eq('pricing')
   end
 
+  it 'answers general business context from a published Knowledge Document' do
+    document = create(
+      :knowledge_document,
+      account: account,
+      title: 'Everything about Online Profits',
+      body: 'Online Profits helps service businesses with CRM automation and marketing systems.'
+    )
+
+    result = described_class.new(account: account, question: 'Do you help with CRM automation?').perform
+
+    expect(result).to be_answered
+    expect(result.answer).to include('CRM automation')
+    expect(result.sources).to contain_exactly(
+      include(id: document.id, title: document.title, source_kind: 'document', status: 'verified')
+    )
+  end
+
+  it 'does not use Documents for exact sensitive claims without an Approved Answer' do
+    create(
+      :knowledge_document,
+      account: account,
+      body: 'Refunds are available for 30 days and setup pricing starts at $20.'
+    )
+
+    result = described_class.new(account: account, question: 'What is your refund policy?').perform
+
+    expect(result).to be_refused
+    expect(result.refusal_reason).to eq('sensitive_question')
+  end
+
+  it 'uses Approved Answers over Documents for exact sensitive claims' do
+    create(:knowledge_document, account: account, body: 'Setup pricing starts at $10.')
+    create(:knowledge_item, account: account, source_kind: :pricing, question: 'What is your setup price?', answer: 'Setup starts at $20.')
+
+    result = described_class.new(account: account, question: 'What is your setup price?').perform
+
+    expect(result.answer).to eq('Setup starts at $20.')
+    expect(result.sources.first[:source_kind]).to eq('pricing')
+  end
+
   it 'does not use unapproved rejected inactive or cross-tenant knowledge' do
     other_account = create(:account)
     create(:knowledge_item, account: account, status: :draft, question: 'Do you offer audits?', answer: 'Draft answer')

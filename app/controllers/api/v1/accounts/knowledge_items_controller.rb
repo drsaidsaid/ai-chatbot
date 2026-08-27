@@ -5,21 +5,26 @@ class Api::V1::Accounts::KnowledgeItemsController < Api::V1::Accounts::BaseContr
   before_action :knowledge_item, only: [:show, :update, :destroy, :approve, :reject, :deactivate]
 
   def index
-    render json: current_account.knowledge_items.order(created_at: :desc)
+    items = current_account.knowledge_items.order(updated_at: :desc)
+    render json: items.map { |item| payload(item, items: items) }
   end
 
   def show
-    render json: @knowledge_item
+    render json: payload(@knowledge_item, items: current_account.knowledge_items)
   end
 
   def create
     item = current_account.knowledge_items.create!(knowledge_item_params)
-    render json: item, status: :created
+    render json: payload(item, items: current_account.knowledge_items), status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def update
     @knowledge_item.update!(knowledge_item_params)
-    render json: @knowledge_item
+    render json: payload(@knowledge_item, items: current_account.knowledge_items)
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def destroy
@@ -29,17 +34,19 @@ class Api::V1::Accounts::KnowledgeItemsController < Api::V1::Accounts::BaseContr
 
   def approve
     @knowledge_item.approve!
-    render json: @knowledge_item
+    render json: payload(@knowledge_item, items: current_account.knowledge_items)
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :conflict
   end
 
   def reject
     @knowledge_item.reject!
-    render json: @knowledge_item
+    render json: payload(@knowledge_item, items: current_account.knowledge_items)
   end
 
   def deactivate
     @knowledge_item.deactivate!
-    render json: @knowledge_item
+    render json: payload(@knowledge_item, items: current_account.knowledge_items)
   end
 
   private
@@ -50,5 +57,20 @@ class Api::V1::Accounts::KnowledgeItemsController < Api::V1::Accounts::BaseContr
 
   def knowledge_item_params
     params.permit(:title, :question, :answer, :source_kind, metadata: {})
+  end
+
+  def payload(item, items:)
+    conflicts = items.select do |candidate|
+      candidate.id != item.id &&
+        candidate.status == item.status &&
+        candidate.source_kind == item.source_kind &&
+        candidate.conflict_key == item.conflict_key &&
+        candidate.answer.to_s.squish != item.answer.to_s.squish
+    end
+
+    item.as_json.merge(
+      'conflict_count' => conflicts.size,
+      'conflict_ids' => conflicts.map(&:id)
+    )
   end
 end

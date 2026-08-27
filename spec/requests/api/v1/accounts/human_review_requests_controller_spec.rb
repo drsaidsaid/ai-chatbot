@@ -87,4 +87,43 @@ RSpec.describe 'Human Review Requests API', type: :request do
     ).perform
     expect(result_after_approval.answer).to eq('Yes, VIP onboarding is available after approval.')
   end
+
+  it 'creates the outgoing answer while resolving and proposing an Approved Answer', :aggregate_failures do
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/resolve",
+         headers: agent.create_new_auth_token,
+         params: {
+           answer: 'VIP onboarding is available for qualified leads.',
+           send_to_lead: true,
+           propose_knowledge: true,
+           source_kind: 'eligibility',
+           title: 'VIP onboarding eligibility'
+         },
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(request_record.reload).to be_resolved
+    expect(request_record.human_answer_message.content).to eq('VIP onboarding is available for qualified leads.')
+    expect(request_record.human_answer_message).not_to be_private
+    expect(request_record.knowledge_item).to be_draft
+    expect(request_record.knowledge_item.source_kind).to eq('eligibility')
+  end
+
+  it 'supports assignment and rejection from the Review workspace', :aggregate_failures do
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/assign",
+         headers: agent.create_new_auth_token,
+         params: { assigned_user_id: agent.id },
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(request_record.reload.assigned_user).to eq(agent)
+
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/reject",
+         headers: agent.create_new_auth_token,
+         params: { operator_answer: 'Do not use this request as knowledge.' },
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(request_record.reload).to be_rejected
+    expect(request_record.operator_answer).to eq('Do not use this request as knowledge.')
+  end
 end

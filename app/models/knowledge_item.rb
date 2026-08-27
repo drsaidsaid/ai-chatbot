@@ -1,5 +1,32 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: knowledge_items
+#
+#  id             :bigint           not null, primary key
+#  answer         :text             not null
+#  approved_at    :datetime
+#  deactivated_at :datetime
+#  metadata       :jsonb            not null
+#  question       :text             not null
+#  rejected_at    :datetime
+#  source_kind    :integer          default("faq"), not null
+#  status         :integer          default("draft"), not null
+#  title          :string           not null
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  account_id     :bigint           not null
+#
+# Indexes
+#
+#  index_knowledge_items_on_account_id                             (account_id)
+#  index_knowledge_items_on_account_id_and_status_and_source_kind  (account_id,status,source_kind)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#
 class KnowledgeItem < ApplicationRecord
   belongs_to :account
 
@@ -9,7 +36,10 @@ class KnowledgeItem < ApplicationRecord
     pricing: 2,
     supporting_document: 3,
     objection: 4,
-    policy: 5
+    policy: 5,
+    refund: 6,
+    guarantee: 7,
+    eligibility: 8
   }
   enum status: {
     draft: 0,
@@ -21,6 +51,7 @@ class KnowledgeItem < ApplicationRecord
   validates :title, :question, :answer, :source_kind, :status, presence: true
 
   scope :usable_by_ai_employee, -> { approved.where(deactivated_at: nil) }
+  scope :sensitive_claims, -> { where(source_kind: [:pricing, :refund, :guarantee, :eligibility, :policy]) }
 
   def source_reference
     metadata['source_reference'].presence
@@ -56,6 +87,10 @@ class KnowledgeItem < ApplicationRecord
 
   def deactivate!
     update!(status: :inactive, deactivated_at: Time.current)
+  end
+
+  def conflict_key
+    question.to_s.downcase.gsub(/[^a-z0-9\s]/, ' ').squish
   end
 
   private

@@ -7,14 +7,18 @@
 #  id                      :bigint           not null, primary key
 #  alert_deliveries        :jsonb            not null
 #  alert_recipients        :jsonb            not null
+#  operator_answer         :text
 #  proposed_source_kind    :string
 #  question                :text             not null
-#  reason                  :integer          not null
+#  reason                  :integer          default("no_approved_knowledge"), not null
+#  rejected_at             :datetime
+#  resolution_kind         :string
 #  resolved_at             :datetime
 #  status                  :integer          default("open"), not null
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
 #  account_id              :bigint           not null
+#  assigned_user_id        :bigint
 #  conversation_id         :bigint           not null
 #  human_answer_message_id :bigint
 #  knowledge_item_id       :bigint
@@ -24,6 +28,7 @@
 #
 #  idx_on_account_id_status_created_at_2f522df2ef          (account_id,status,created_at)
 #  index_human_review_requests_on_account_id               (account_id)
+#  index_human_review_requests_on_assigned_user_id         (assigned_user_id)
 #  index_human_review_requests_on_conversation_id          (conversation_id)
 #  index_human_review_requests_on_deduplication_key        (account_id,conversation_id,lead_message_id,reason) UNIQUE
 #  index_human_review_requests_on_human_answer_message_id  (human_answer_message_id)
@@ -33,6 +38,7 @@
 # Foreign Keys
 #
 #  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (assigned_user_id => users.id)
 #  fk_rails_...  (conversation_id => conversations.id)
 #  fk_rails_...  (human_answer_message_id => messages.id)
 #  fk_rails_...  (knowledge_item_id => knowledge_items.id)
@@ -44,6 +50,7 @@ class HumanReviewRequest < ApplicationRecord
   belongs_to :lead_message, class_name: 'Message'
   belongs_to :human_answer_message, class_name: 'Message', optional: true
   belongs_to :knowledge_item, optional: true
+  belongs_to :assigned_user, class_name: 'User', optional: true
 
   enum reason: {
     no_approved_knowledge: 0,
@@ -58,7 +65,8 @@ class HumanReviewRequest < ApplicationRecord
   }
   enum status: {
     open: 0,
-    resolved: 1
+    resolved: 1,
+    rejected: 2
   }
 
   validates :question, :reason, :status, presence: true
@@ -68,31 +76,61 @@ class HumanReviewRequest < ApplicationRecord
 
   scope :operator_queue, -> { open.order(created_at: :asc) }
 
+  def assign_to!(user)
+    update!(assigned_user: user)
+  end
+
+  def reject!(operator_answer:)
+    update!(status: :rejected, operator_answer: operator_answer, resolution_kind: 'rejected', rejected_at: Time.current)
+  end
+
   def resolve!(human_answer_message:, proposer:, propose_knowledge:, source_kind:, title:)
     validate_human_answer!(human_answer_message)
 
     transaction do
-      item = nil
-      if ActiveModel::Type::Boolean.new.cast(propose_knowledge)
-        item = propose_knowledge_item(
-          proposer: proposer,
-          source_kind: source_kind,
-          title: title,
-          answer: human_answer_message.content
-        )
-      end
+      item = proposed_knowledge_item(
+        human_answer_message: human_answer_message,
+        proposer: proposer,
+        propose_knowledge: propose_knowledge,
+        source_kind: source_kind,
+        title: title
+      )
 
       update!(
-        human_answer_message: human_answer_message,
-        knowledge_item: item,
-        proposed_source_kind: item&.source_kind || source_kind,
-        status: :resolved,
-        resolved_at: Time.current
+        resolution_attributes(
+          human_answer_message: human_answer_message,
+          knowledge_item: item,
+          source_kind: source_kind,
+          propose_knowledge: propose_knowledge
+        )
       )
     end
   end
 
   private
+
+  def proposed_knowledge_item(human_answer_message:, proposer:, propose_knowledge:, source_kind:, title:)
+    return unless ActiveModel::Type::Boolean.new.cast(propose_knowledge)
+
+    propose_knowledge_item(
+      proposer: proposer,
+      source_kind: source_kind,
+      title: title,
+      answer: human_answer_message.content
+    )
+  end
+
+  def resolution_attributes(human_answer_message:, knowledge_item:, source_kind:, propose_knowledge:)
+    {
+      human_answer_message: human_answer_message,
+      knowledge_item: knowledge_item,
+      proposed_source_kind: knowledge_item&.source_kind || source_kind,
+      operator_answer: human_answer_message.content,
+      resolution_kind: ActiveModel::Type::Boolean.new.cast(propose_knowledge) ? 'approved_answer_proposed' : 'answered',
+      status: :resolved,
+      resolved_at: Time.current
+    }
+  end
 
   def validate_human_answer!(human_answer_message)
     return if human_answer_message.sender.is_a?(User)

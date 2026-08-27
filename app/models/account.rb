@@ -88,6 +88,7 @@ class Account < ApplicationRecord
   has_many :inboxes, dependent: :destroy_async
   has_many :human_review_requests, dependent: :destroy_async
   has_many :knowledge_items, dependent: :destroy_async
+  has_many :knowledge_documents, dependent: :destroy_async
   has_many :lead_handoffs, dependent: :destroy_async
   has_many :lead_qualification_decisions, dependent: :destroy_async
   has_many :lead_qualifications, dependent: :destroy_async

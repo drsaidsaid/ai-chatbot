@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_30_000300) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_31_000100) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -1241,9 +1241,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000300) do
     t.datetime "resolved_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "assigned_user_id"
+    t.text "operator_answer"
+    t.string "resolution_kind"
+    t.datetime "rejected_at"
     t.index ["account_id", "conversation_id", "lead_message_id", "reason"], name: "index_human_review_requests_on_deduplication_key", unique: true
     t.index ["account_id", "status", "created_at"], name: "idx_on_account_id_status_created_at_2f522df2ef"
     t.index ["account_id"], name: "index_human_review_requests_on_account_id"
+    t.index ["assigned_user_id"], name: "index_human_review_requests_on_assigned_user_id"
     t.index ["conversation_id"], name: "index_human_review_requests_on_conversation_id"
     t.index ["human_answer_message_id"], name: "index_human_review_requests_on_human_answer_message_id"
     t.index ["knowledge_item_id"], name: "index_human_review_requests_on_knowledge_item_id"
@@ -1328,6 +1333,28 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000300) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.jsonb "settings", default: {}
+  end
+
+  create_table "knowledge_documents", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "last_editor_id"
+    t.string "title", null: false
+    t.text "body", default: "", null: false
+    t.integer "status", default: 0, null: false
+    t.boolean "used_by_ai_employee", default: true, null: false
+    t.boolean "general_question_access", default: true, null: false
+    t.jsonb "offer_ids", default: [], null: false
+    t.jsonb "sensitive_topics", default: [], null: false
+    t.jsonb "import_metadata", default: {}, null: false
+    t.jsonb "revisions", default: [], null: false
+    t.datetime "published_at"
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "published_content_digest"
+    t.index ["account_id", "status", "updated_at"], name: "idx_on_account_id_status_updated_at_092c73be75"
+    t.index ["account_id"], name: "index_knowledge_documents_on_account_id"
+    t.index ["last_editor_id"], name: "index_knowledge_documents_on_last_editor_id"
   end
 
   create_table "knowledge_items", force: :cascade do |t|
@@ -1983,7 +2010,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000300) do
   add_foreign_key "human_review_requests", "knowledge_items"
   add_foreign_key "human_review_requests", "messages", column: "human_answer_message_id"
   add_foreign_key "human_review_requests", "messages", column: "lead_message_id"
+  add_foreign_key "human_review_requests", "users", column: "assigned_user_id"
   add_foreign_key "inboxes", "portals"
+  add_foreign_key "knowledge_documents", "accounts"
+  add_foreign_key "knowledge_documents", "users", column: "last_editor_id"
   add_foreign_key "knowledge_items", "accounts"
   add_foreign_key "lead_follow_up_opt_outs", "accounts"
   add_foreign_key "lead_follow_up_opt_outs", "contacts"

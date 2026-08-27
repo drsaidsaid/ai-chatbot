@@ -168,8 +168,20 @@ Rails.application.routes.draw do
               post :deactivate
             end
           end
+          resources :knowledge_documents, only: [:index, :show, :create, :update, :destroy] do
+            post :import, on: :collection
+            member do
+              post :publish
+              post :archive
+              post :test
+            end
+          end
           resources :human_review_requests, only: [:index, :show] do
-            post :resolve, on: :member
+            member do
+              post :assign
+              post :reject
+              post :resolve
+            end
           end
           resource :evaluation_sandbox, only: [:show] do
             get :scenarios
