@@ -161,6 +161,17 @@ Rails.application.routes.draw do
               post :export
             end
           end
+          resource :evaluation_sandbox, only: [:show], controller: :evaluation_sandboxes do
+            get :scenarios
+            get :runs
+            post :runs, action: :create_run
+            post 'runs/:run_id/grade', action: :grade_run
+            patch 'runs/:run_id/grade', action: :grade_run
+            post 'runs/:run_id/propose_knowledge', action: :propose_knowledge
+            get :launch_gate
+            patch :launch_gate, action: :update_launch_gate
+            post :approve_launch
+          end
           resources :knowledge_items, only: [:index, :show, :create, :update, :destroy] do
             member do
               post :approve
@@ -182,18 +193,6 @@ Rails.application.routes.draw do
               post :reject
               post :resolve
             end
-          end
-          resource :evaluation_sandbox, only: [:show] do
-            get :scenarios
-            get :runs
-            post :runs, action: :create_run
-            post 'runs/:run_id/grade', action: :grade_run
-            get :launch_gate
-            patch :launch_gate, action: :update_launch_gate
-            post :approve_launch
-          end
-          resource :ai_provider_connection, only: [:show, :update, :destroy] do
-            post :health_check
           end
           resource :qualification_configuration, only: [:show, :update]
           resources :lead_qualifications, only: [:show] do
@@ -233,7 +232,6 @@ Rails.application.routes.draw do
               post :unmute
               post :transcript
               post :toggle_status
-              post :handoff_ai
               post :pause_ai
               post :resume_ai
               post :toggle_priority

@@ -25,8 +25,8 @@ durable AI Orchestration boundary.
 | 011 | Inbox Conversation Cockpit                                | 006-010    | Integrated    |
 | 012 | Leads Directory and Detail                                | 008, 010   | Integrated    |
 | 013 | Team Bookings Agenda, Calendar, and Availability          | 006, 010   | Integrated    |
-| 014 | Documents-First Knowledge Workspace                       | 004, 010   | In verification |
-| 015 | Test Center Simulation and Release Check                  | 009, 010   | Planned       |
+| 014 | Documents-First Knowledge Workspace                       | 004, 010   | Integrated    |
+| 015 | Test Center Simulation and Release Check                  | 009, 010   | In verification |
 | 016 | Settings Offers and Qualification                         | 003, 010   | Planned       |
 | 017 | Settings Booking Hours and Team Assignment                | 006, 008, 010 | Planned     |
 | 018 | Settings Follow-Ups, Alerts, and WhatsApp Connection      | 001, 005, 007, 010 | Planned |

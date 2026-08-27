@@ -56,7 +56,7 @@ const description = computed(() => {
 const containerClass = computed(() => {
   if (props.surface === 'BOOKINGS') return 'max-w-none';
   if (props.surface === 'KNOWLEDGE') return 'max-w-none';
-  if (props.surface === 'TEST_CENTER') return 'max-w-7xl';
+  if (props.surface === 'TEST_CENTER') return 'max-w-none';
 
   return 'max-w-5xl';
 });
@@ -65,7 +65,9 @@ const containerClass = computed(() => {
 <template>
   <main class="min-w-0 flex-1 bg-n-background p-4 sm:p-6">
     <section class="mx-auto" :class="containerClass">
-      <template v-if="!['BOOKINGS', 'KNOWLEDGE'].includes(surface)">
+      <template
+        v-if="!['BOOKINGS', 'KNOWLEDGE', 'TEST_CENTER'].includes(surface)"
+      >
         <p
           class="text-xs font-medium uppercase text-n-slate-11 tracking-normal"
         >
