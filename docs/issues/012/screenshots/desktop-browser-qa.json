@@ -1,0 +1,936 @@
+{
+  "steps": [
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:base",
+      "rowCount": 0,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&quality=all&page=1",
+      "innerWidth": 1487,
+      "label": "quality:all",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "VO Vincent Otieno 111 +255710000111 Otieno Solar 111 / Nairobi, KE Qualification Lead Quality Highly Qualified Score 92 / 100 Why this lead matters Otieno Solar 111 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: install WhatsApp booking automation for field technicians Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 18:10 We nee",
+      "docWidth": 1487,
+      "firstRow": "VO Vincent Otieno 111 +255710000111 Otieno Solar 111 Nairobi, KE Highly Qualified 92 WhatsApp inbound U Unassigned 18:10 25 Aug Book demo Not captured Demo",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&quality=highly_qualified&page=1",
+      "innerWidth": 1487,
+      "label": "quality:highly_qualified",
+      "rowCount": 23,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&quality=qualified&page=1",
+      "innerWidth": 1487,
+      "label": "quality:qualified",
+      "rowCount": 23,
+      "visibleDialog": false
+    },
+    {
+      "detail": "MS Mariam Salum 108 +255710000108 Salum Logistics 108 / Arusha, TZ Qualification Lead Quality Low Qualified Score 40 / 100 Why this lead matters Salum Logistics 108 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: needs confirmation Problem: confirm budgets before dispatch calls Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 19:01 We need to confi",
+      "docWidth": 1487,
+      "firstRow": "MS Mariam Salum 108 +255710000108 Salum Logistics 108 Arusha, TZ Low Qualified 40 Meta ads source U Unassigned 19:01 25 Aug Follow up 31 Aug, 13:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&quality=low_qualified&page=1",
+      "innerWidth": 1487,
+      "label": "quality:low_qualified",
+      "rowCount": 22,
+      "visibleDialog": false
+    },
+    {
+      "detail": "DO Daniel Okello 109 +255710000109 Okello Academy 109 / Kisumu, KE Qualification Lead Quality Unqualified Score 18 / 100 Why this lead matters Okello Academy 109 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: owner Urgency: this week Budget: approved Problem: sort admissions leads by urgency Missing signals No missing signals Conversation summary Last message 25 Aug, 18:44 We need to sort admissions leads by urgency. L",
+      "docWidth": 1487,
+      "firstRow": "DO Daniel Okello 109 +255710000109 Okello Academy 109 Kisumu, KE Unqualified 18 WhatsApp inbound AH Amina Hassan 18:44 25 Aug Closed Not captured No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&quality=unqualified&page=1",
+      "innerWidth": 1487,
+      "label": "quality:unqualified",
+      "rowCount": 22,
+      "visibleDialog": false
+    },
+    {
+      "detail": "HY Halima Yusuf 110 +255710000110 Yusuf Interiors 110 / Dodoma, TZ Qualification Lead Quality Unknown Score 0 / 100 Why this lead matters No qualification reasons captured yet. Strongest evidence Not captured Missing signals No missing signals Conversation summary Last message 25 Aug, 18:27 We need to assign qualified projects to sales. Lead 110 asks about pricing, source, owner, and next action. Total messages: 1 Owner & follow-up Assignee Unassigned Follow-up state No Follow Up Next action Cap",
+      "docWidth": 1487,
+      "firstRow": "HY Halima Yusuf 110 +255710000110 Yusuf Interiors 110 Dodoma, TZ Unknown 0 Meta ads source U Unassigned 18:27 25 Aug Capture missing signals Not captured No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&quality=unknown&page=1",
+      "innerWidth": 1487,
+      "label": "quality:unknown",
+      "rowCount": 22,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:base",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing&page=1",
+      "innerWidth": 1487,
+      "label": "search:pricing",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "No leads match these filters",
+      "hasEmpty": true,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=zzzz-no-ticket012-lead&page=1",
+      "innerWidth": 1487,
+      "label": "search:empty-state",
+      "rowCount": 1,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:base",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "VO Vincent Otieno 111 +255710000111 Otieno Solar 111 / Nairobi, KE Qualification Lead Quality Highly Qualified Score 92 / 100 Why this lead matters Otieno Solar 111 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: install WhatsApp booking automation for field technicians Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 18:10 We nee",
+      "docWidth": 1487,
+      "firstRow": "VO Vincent Otieno 111 +255710000111 Otieno Solar 111 Nairobi, KE Highly Qualified 92 WhatsApp inbound U Unassigned 18:10 25 Aug Book demo Not captured Demo",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&assignee_id=unassigned&page=1",
+      "innerWidth": 1487,
+      "label": "filter:assignee:unassigned",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "HY Halima Yusuf 110 +255710000110 Yusuf Interiors 110 / Dodoma, TZ Qualification Lead Quality Unknown Score 0 / 100 Why this lead matters No qualification reasons captured yet. Strongest evidence Not captured Missing signals No missing signals Conversation summary Last message 25 Aug, 18:27 We need to assign qualified projects to sales. Lead 110 asks about pricing, source, owner, and next action. Total messages: 1 Owner & follow-up Assignee Unassigned Follow-up state No Follow Up Next action Cap",
+      "docWidth": 1487,
+      "firstRow": "HY Halima Yusuf 110 +255710000110 Yusuf Interiors 110 Dodoma, TZ Unknown 0 Meta ads source U Unassigned 18:27 25 Aug Capture missing signals Not captured No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&assignee_id=unassigned&page=1&source_id=23",
+      "innerWidth": 1487,
+      "label": "filter:source:meta-ads",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 102 +255710000102 Moshi Learning Hub 102 / Moshi, TZ Qualification Lead Quality Qualified Score 77 / 100 Why this lead matters Moshi Learning Hub 102 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 20:43 We need to compar",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 102 +255710000102 Moshi Learning Hub 102 Moshi, TZ Qualified 77 Meta ads source U Unassigned 20:43 25 Aug Send proposal Not captured Canceled 31 Aug, 7:41",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&assignee_id=unassigned&page=1&source_id=23&follow_up_state=nurture",
+      "innerWidth": 1487,
+      "label": "filter:follow-up:nurture",
+      "rowCount": 8,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "No leads match these filters",
+      "hasEmpty": true,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&assignee_id=unassigned&page=1&source_id=23&follow_up_state=nurture&booking_status=booked",
+      "innerWidth": 1487,
+      "label": "filter:booking:booked",
+      "rowCount": 1,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "No leads match these filters",
+      "hasEmpty": true,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&assignee_id=unassigned&page=1&source_id=23&follow_up_state=nurture&booking_status=booked",
+      "innerWidth": 1487,
+      "label": "filter:more-open",
+      "rowCount": 1,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "No leads match these filters",
+      "hasEmpty": true,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&assignee_id=unassigned&page=1&source_id=23&follow_up_state=nurture&booking_status=booked&per_page=50",
+      "innerWidth": 1487,
+      "label": "filter:per-page:50",
+      "rowCount": 1,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&page=1&per_page=50",
+      "innerWidth": 1487,
+      "label": "filter:clear",
+      "rowCount": 50,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:base",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": true,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&sort=name&direction=desc&page=1",
+      "innerWidth": 1487,
+      "label": "sort:Lead",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": true,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&sort=business&direction=desc&page=1",
+      "innerWidth": 1487,
+      "label": "sort:Business",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": true,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&sort=quality&direction=desc&page=1",
+      "innerWidth": 1487,
+      "label": "sort:Lead Quality",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": true,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&sort=score&direction=desc&page=1",
+      "innerWidth": 1487,
+      "label": "sort:Score",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&sort=last_contact&direction=desc&page=1",
+      "innerWidth": 1487,
+      "label": "sort:Last contact",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:base",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "GN Grace Naliaka 87 +255710000087 Naliaka Events 87 / Eldoret, KE Qualification Lead Quality Qualified Score 76 / 100 Why this lead matters Naliaka Events 87 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: book consultations from Facebook ads Missing signals Decision Authority Timeline Conversation summary Last message 26 Aug, 0:58 We need to book consultations from ",
+      "docWidth": 1487,
+      "firstRow": "GN Grace Naliaka 87 +255710000087 Naliaka Events 87 Eldoret, KE Qualified 76 WhatsApp inbound U Unassigned 0:58 26 Aug Send proposal Not captured No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&page=2",
+      "innerWidth": 1487,
+      "label": "pagination:next",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&page=1",
+      "innerWidth": 1487,
+      "label": "pagination:previous",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "VO Vincent Otieno 111 +255710000111 Otieno Solar 111 / Nairobi, KE Qualification Lead Quality Highly Qualified Score 92 / 100 Why this lead matters Otieno Solar 111 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: install WhatsApp booking automation for field technicians Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 18:10 We nee",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&page=1&lead_id=140",
+      "innerWidth": 1487,
+      "label": "row-select:booked-vincent",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "label": "detail:related-links",
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&page=1&lead_id=140",
+      "bookingLinks": [],
+      "conversationLinks": [
+        {
+          "href": "http://127.0.0.1:3000/app/accounts/7/conversations/111",
+          "text": "#111 25 Aug, 18:10"
+        },
+        {
+          "href": "http://127.0.0.1:3000/app/accounts/7/conversations/111",
+          "text": "Open conversation"
+        }
+      ],
+      "detailEnd": " matters Otieno Solar 111 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: install WhatsApp booking automation for field technicians Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 18:10 We need to install WhatsApp booking automation for field technicians. Lead 111 asks about pricing, source, owner, and next action. Total messages: 1 Owner & follow-up Assignee Unassigned Follow-up state Call Booked Next action Book demo Due Not captured Related #111 25 Aug, 18:10 BOOKINGS No related bookings Actions Open conversation Edit lead"
+    },
+    {
+      "detail": "Urgent Hot 0 Review 0 Booked 0 Search name, phone, or message All quality All states All assignees Me Unassigned All sources All bookings Clear Loading conversations 0 conversations",
+      "docWidth": 1487,
+      "firstRow": "",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/conversations/111?queue=hot",
+      "innerWidth": 1487,
+      "label": "link:conversation-opened",
+      "rowCount": 0,
+      "visibleDialog": false
+    },
+    {
+      "detail": "DO Daniel Okello 99 +255710000099 Okello Academy 99 / Kisumu, KE Qualification Lead Quality Unqualified Score 16 / 100 Why this lead matters Okello Academy 99 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: sort admissions leads by urgency Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 21:34 We need to sort admissions leads by u",
+      "docWidth": 1487,
+      "firstRow": "DO Daniel Okello 99 +255710000099 Okello Academy 99 Kisumu, KE Unqualified 16 WhatsApp inbound U Unassigned 21:34 25 Aug Prepare booked demo 31 Aug, 4:41 Demo 31 Aug, 4:41",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&booking_status=booked",
+      "innerWidth": 1487,
+      "label": "go:booking_status=booked",
+      "rowCount": 9,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "#105 23 Aug 2026, 21:41 23 Aug 2026, 22:11 Pending No email None",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/bookings?booking_id=19",
+      "innerWidth": 1487,
+      "label": "link:booking-opened",
+      "rowCount": 18,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "Loading leads",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": true,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:base",
+      "rowCount": 1,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "modal:edit-visible",
+      "rowCount": 25,
+      "visibleDialog": true
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "modal:edit-closed",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:real-booking-check",
+      "rowCount": 0,
+      "visibleDialog": false
+    },
+    {
+      "detail": "DO Daniel Okello 99 +255710000099 Okello Academy 99 / Kisumu, KE Qualification Lead Quality Unqualified Score 16 / 100 Why this lead matters Okello Academy 99 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: sort admissions leads by urgency Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 21:34 We need to sort admissions leads by u",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&lead_id=128",
+      "innerWidth": 1487,
+      "label": "row-select:daniel-real-booking",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "label": "detail:real-booking-link",
+      "bookingLinks": [
+        {
+          "href": "http://127.0.0.1:3000/app/accounts/7/bookings?booking_id=19",
+          "text": "Booking #19 Confirmed - 31 Aug, 4:41"
+        }
+      ],
+      "detailEnd": "Daniel Okello 99 +255710000099 Okello Academy 99 / Kisumu, KE Qualification Lead Quality Unqualified Score 16 / 100 Why this lead matters Okello Academy 99 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this month Budget: approved Problem: sort admissions leads by urgency Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 21:34 We need to sort admissions leads by urgency. Lead 99 asks about pricing, source, owner, and next action. Total messages: 1 Owner & follow-up Assignee Unassigned Follow-up state Closed Next action Prepare booked demo Due 31 Aug, 4:41 Related #99 25 Aug, 21:34 BOOKINGS Booking #19 Confirmed - 31 Aug, 4:41 Actions Open conversation Edit lead",
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&lead_id=128"
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "#105 23 Aug 2026, 21:41 23 Aug 2026, 22:11 Pending No email None",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/bookings?booking_id=19",
+      "innerWidth": 1487,
+      "label": "link:real-booking-opened",
+      "rowCount": 18,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerWidth": 1487,
+      "label": "go:loading-probe",
+      "rowCount": 25,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "No leads match these filters",
+      "hasEmpty": true,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+a&page=1",
+      "innerWidth": 1487,
+      "label": "loading-probe:pricing a",
+      "rowCount": 1,
+      "visibleDialog": false
+    },
+    {
+      "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+      "docWidth": 1487,
+      "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+      "hasEmpty": false,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+b&page=1",
+      "innerWidth": 1487,
+      "label": "loading-probe:pricing b",
+      "rowCount": 12,
+      "visibleDialog": false
+    },
+    {
+      "detail": "",
+      "docWidth": 1487,
+      "firstRow": "No leads match these filters",
+      "hasEmpty": true,
+      "hasErrorCopy": false,
+      "hasLoading": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+c&page=1",
+      "innerWidth": 1487,
+      "label": "loading-probe:pricing c",
+      "rowCount": 1,
+      "visibleDialog": false
+    },
+    {
+      "label": "state:loading-console-layout",
+      "loadingSamples": [
+        {
+          "value": "pricing a",
+          "immediate": {
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+            "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n112\nHighly Qualified\n23\nQualified\n23\nLow Qualified\n22\nUnqualified\n22\nUnknown\n22\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\n\t\nAM\nAsha Mushi 112\n+255710000112\n\t\nMoshi Learning Hub 112\nMos"
+          },
+          "after120": {
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+            "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n112\nHighly Qualified\n23\nQualified\n23\nLow Qualified\n22\nUnqualified\n22\nUnknown\n22\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\n\t\nAM\nAsha Mushi 112\n+255710000112\n\t\nMoshi Learning Hub 112\nMos"
+          },
+          "settled": {
+            "detail": "",
+            "docWidth": 1487,
+            "firstRow": "No leads match these filters",
+            "hasEmpty": true,
+            "hasErrorCopy": false,
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+a&page=1",
+            "innerWidth": 1487,
+            "label": "loading-probe:pricing a",
+            "rowCount": 1,
+            "visibleDialog": false
+          }
+        },
+        {
+          "value": "pricing b",
+          "immediate": {
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+a&page=1",
+            "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n0\nHighly Qualified\n0\nQualified\n0\nLow Qualified\n0\nUnqualified\n0\nUnknown\n0\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\nNo leads match these filters\nShowing 0-0 of 0 leads\n1"
+          },
+          "after120": {
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+a&page=1",
+            "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n0\nHighly Qualified\n0\nQualified\n0\nLow Qualified\n0\nUnqualified\n0\nUnknown\n0\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\nNo leads match these filters\nShowing 0-0 of 0 leads\n1"
+          },
+          "settled": {
+            "detail": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 / Moshi, TZ Qualification Lead Quality Qualified Score 75 / 100 Why this lead matters Moshi Learning Hub 112 has a concrete WhatsApp workflow Budget and timing were discussed in the conversation Strongest evidence Decision Authority: manager Urgency: this week Budget: needs confirmation Problem: compare pricing before a demo booking Missing signals Decision Authority Timeline Conversation summary Last message 25 Aug, 17:53 We need to compare",
+            "docWidth": 1487,
+            "firstRow": "AM Asha Mushi 112 +255710000112 Moshi Learning Hub 112 Moshi, TZ Qualified 75 Meta ads source AH Amina Hassan 17:53 25 Aug Follow up 31 Aug, 17:41 No booking",
+            "hasEmpty": false,
+            "hasErrorCopy": false,
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+b&page=1",
+            "innerWidth": 1487,
+            "label": "loading-probe:pricing b",
+            "rowCount": 12,
+            "visibleDialog": false
+          }
+        },
+        {
+          "value": "pricing c",
+          "immediate": {
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+b&page=1",
+            "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n12\nHighly Qualified\n0\nQualified\n12\nLow Qualified\n0\nUnqualified\n0\nUnknown\n0\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\n\t\nAM\nAsha Mushi 112\n+255710000112\n\t\nMoshi Learning Hub 112\nMoshi, T"
+          },
+          "after120": {
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+b&page=1",
+            "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n12\nHighly Qualified\n0\nQualified\n12\nLow Qualified\n0\nUnqualified\n0\nUnknown\n0\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\n\t\nAM\nAsha Mushi 112\n+255710000112\n\t\nMoshi Learning Hub 112\nMoshi, T"
+          },
+          "settled": {
+            "detail": "",
+            "docWidth": 1487,
+            "firstRow": "No leads match these filters",
+            "hasEmpty": true,
+            "hasErrorCopy": false,
+            "hasLoading": false,
+            "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=pricing+c&page=1",
+            "innerWidth": 1487,
+            "label": "loading-probe:pricing c",
+            "rowCount": 1,
+            "visibleDialog": false
+          }
+        }
+      ],
+      "relevantLogs": [
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "[DEPRECATED] The 'onClose' prop is deprecated. Please use the 'close' event instead.",
+          "url": "http://127.0.0.1:3000/vite-dev/dashboard/components/Modal.vue"
+        },
+        {
+          "level": "warn",
+          "message": "Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.",
+          "url": "http://127.0.0.1:3000/vite-dev/@fs/Users/ghalyasaid/.codex/worktrees/8e28/AI%20Chatbot/node_modules/.vite/deps/@chatwoot_ninja-keys.js?v=eff630a3"
+        }
+      ],
+      "layoutAudit": {
+        "cellCount": 11,
+        "overflow": 0,
+        "overlaps": 0
+      }
+    },
+    {
+      "label": "state:error-rails-stopped",
+      "errorLines": [
+        "Leads could not be loaded"
+      ],
+      "hasLoadError": true,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&q=server-offline-check&page=1",
+      "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n0\nHighly Qualified\n0\nQualified\n0\nLow Qualified\n0\nUnqualified\n0\nUnknown\n0\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\nLeads could not be loaded\n\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\nNo leads match these filters\nShowing 0-0 of 0 leads\n1\nOffline"
+    },
+    {
+      "label": "actions:import-export-visible",
+      "hasExport": true,
+      "hasImport": true,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "text": "AI\nInbox\nLeads\nBookings\nKnowledge\nTest Center\nSettings\nCQ\nCodex QA\ncodex-ticket-012@example.test\nLeads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n112\nHighly Qualified\n23\nQualified\n23\nLow Qualified\n22\nUnqualified\n22\nUnknown\n22\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\n\tLead\tBusiness\tLead Quality\tScore\tSource\tAssignee\tLast contact\n\tNext action\tBooking\n\t\nAM\nAsha Mushi 112\n+255710000112\n\t\nMoshi Learning Hub 112\nMoshi, TZ\n\tQualified\t75\t\nMeta ads source\n\t\nAH\nAmina Hassan\n\t\n17:53\n25 Aug\n\t\nFollow up\n31 Aug, 17:41\n\tNo booking\n\t\nVO\nVincent Otieno 111\n+255710000111\n\t\nOtieno Solar 111\nNairobi, KE\n\tHighly Qualified\t92\t\nWhatsApp inbound\n\t\nU\nUnassigned\n\t\n18:10\n25 Aug\n\t\nBook demo\nNot captured\n\tDemo\n\t\nHY\nHalima Yusuf 110\n+255710000110\n\t\nYusuf Interiors 110\nDodoma, TZ\n\tUnknown\t0\t\nMeta ads source\n\t\nU\nUnassigned\n\t\n18:27\n25",
+      "width": 1487
+    },
+    {
+      "label": "actions:export-clicked",
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "ok": true,
+      "requestObservedInRailsLog": true,
+      "railsLogLine": "log/development.log:169011 POST /api/v1/accounts/7/leads/export",
+      "note": "Clicked Export in Codex in-app browser; browser wrapper did not expose a download event, Rails development log confirmed the export endpoint request."
+    },
+    {
+      "label": "actions:import-filechooser",
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "ok": true,
+      "chooserType": "[object Object]"
+    }
+  ],
+  "errors": []
+}

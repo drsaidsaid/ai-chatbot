@@ -1,6 +1,7 @@
 import { frontendURL } from 'dashboard/helper/URLHelper';
 import OwnedWorkspacePage from './OwnedWorkspacePage.vue';
 import AiProviderSettingsPage from './AiProviderSettingsPage.vue';
+import LeadsDirectoryPage from './LeadsDirectoryPage.vue';
 import { ROLES } from 'dashboard/constants/permissions.js';
 
 const ownedSurfaceRoute = ({ path, name, surface }) => ({
@@ -25,11 +26,14 @@ export const routes = [
     name: 'owned_hot_leads_index',
     redirect: redirectToInboxQueue('hot'),
   },
-  ownedSurfaceRoute({
-    path: 'leads',
+  {
+    path: frontendURL('accounts/:accountId/leads'),
     name: 'owned_leads_index',
-    surface: 'LEADS',
-  }),
+    component: LeadsDirectoryPage,
+    meta: {
+      permissions: ROLES,
+    },
+  },
   {
     path: frontendURL('accounts/:accountId/reviews'),
     name: 'owned_reviews_index',

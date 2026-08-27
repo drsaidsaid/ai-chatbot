@@ -22,8 +22,8 @@ durable AI Orchestration boundary.
 | 008 | Recover booking, follow-up, and operator queues           | 007        | Done          |
 | 009 | Evaluation sandbox and controlled pilot gate              | 008        | Implemented   |
 | 010 | Conversation Cockpit navigation and responsive shell      | 008        | Integrated    |
-| 011 | Inbox Conversation Cockpit                                | 006-010    | In progress   |
-| 012 | Leads Directory and Detail                                | 008, 010   | Planned       |
+| 011 | Inbox Conversation Cockpit                                | 006-010    | Integrated    |
+| 012 | Leads Directory and Detail                                | 008, 010   | In verification |
 | 013 | Team Bookings Agenda, Calendar, and Availability          | 006, 010   | Planned       |
 | 014 | Documents-First Knowledge Workspace                       | 004, 010   | Planned       |
 | 015 | Test Center Simulation and Release Check                  | 009, 010   | Planned       |

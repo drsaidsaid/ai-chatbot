@@ -1,0 +1,36 @@
+{
+  "startedAt": "2026-08-26T23:24:27.240Z",
+  "viewport": "852x1846",
+  "steps": [
+    {
+      "cardCount": 25,
+      "docWidth": 852,
+      "firstCard": "AM Asha Mushi 112 Moshi Learning Hub 112 Qualified Score: 75 Follow up Meta ads source No booking",
+      "hasBack": false,
+      "hasDetail": false,
+      "hasFilters": true,
+      "hasListCard": true,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable",
+      "innerHeight": 1846,
+      "innerWidth": 852,
+      "overflows": [],
+      "textStart": "Leads\nSearch leads by name, phone, or business\nImport\nExport\nAll\n112\nHighly Qualified\n23\nQualified\n23\nLow Qualified\n22\nUnqualified\n22\nUnknown\n22\nAssignee\nMine\nUnassigned\nAmina Hassan\nSource\nMeta ads source\nWhatsApp inbound\nFollow-up state\nNo Follow Up\nNurture\nHuman Review\nCall Booked\nClosed\nBooking status\nBooked\nNo Booking\nCanceled\nCompleted\nMore filters\nAM\nAsha Mushi 112\nMoshi Learning Hub 112\nQualified\nScore: 75\nFollow up\nMeta ads source\nNo booking\nVO\nVincent Otieno 111\nOtieno Solar 111\nHighly Qualified\nScore: 92\nBook demo\nWhatsApp inbound\nDemo\nHY\nHalima Yusuf 110\nYusuf Interiors 110\nUnknown\nScore: 0\nCapture missing signals\nMeta ads source\nNo booking\nDO\nDaniel Okello 109\nOkello Academy 109\nUnqualified\nScore: 18\nClosed\nWhatsApp inbound\nNo booking\nMS\nMariam Salum 108\nSalum Logistics 108\nLow Qualified\nScore: 40\nFollow up\nMeta ads source\nNo booking\nGN\nGrace Naliaka 107\nNaliaka Events 107\nQualified\nScore: 76\nSend proposal\nWhatsApp inbound\nNo booking\nRJ\nRehema John 106\nDar Beauty Studio 106\nHighly Qualified\nScore: 93\nBook demo\nMeta ads source\nDemo\nJM\nJoseph Mwangi 105\nMwangi Clinics 105\nUnknown\nScore: 0\nCapture missing signals\nWhatsApp inbound\nNo booking\nNS\nNeema Said 104\nZanzibar Retr"
+    },
+    {
+      "cardCount": 0,
+      "docWidth": 852,
+      "firstCard": "",
+      "hasBack": true,
+      "hasDetail": true,
+      "hasFilters": false,
+      "hasListCard": false,
+      "href": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&quality=unqualified&page=1&lead_id=128",
+      "innerHeight": 1846,
+      "innerWidth": 852,
+      "overflows": [],
+      "textStart": "Leads\nSearch leads by name, phone, or business\nImport\nExport\nBack to leads\nDO\nDaniel Okello 99\n\n+255710000099\n\nOkello Academy 99 / Kisumu, KE\n\nQualification\nLead Quality\nUnqualified\nScore\n16 / 100\nWhy this lead matters\n\nOkello Academy 99 has a concrete WhatsApp workflow\n\nBudget and timing were discussed in the conversation\n\nStrongest evidence\n\nDecision Authority: manager\n\nUrgency: this month\n\nBudget: approved\n\nProblem: sort admissions leads by urgency\n\nMissing signals\n\nDecision Authority\n\nTimeline\n\nConversation summary\n\nLast message 25 Aug, 21:34\n\nWe need to sort admissions leads by urgency. Lead 99 asks about pricing, source, owner, and next action.\n\nTotal messages: 1\n\nOwner & follow-up\nAssignee\nUnassigned\nFollow-up state\nClosed\nNext action\nPrepare booked demo\nDue\n31 Aug, 4:41\nRelated\n#99\n25 Aug, 21:34\nBOOKINGS\nBooking #19\nConfirmed - 31 Aug, 4:41\nActions\nOpen conversation\nEdit lead\nAI\nAI Lead Employee\nCQ\nInbox\nLeads\nBookings\nMore"
+    }
+  ],
+  "errors": [],
+  "endedAt": "2026-08-26T23:24:44.605Z"
+}

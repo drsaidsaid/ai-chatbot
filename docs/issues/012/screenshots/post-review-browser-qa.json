@@ -1,0 +1,81 @@
+{
+  "generated_at": "2026-08-27T03:01:47+03:00",
+  "browser": "Codex in-app browser",
+  "runtime": {
+    "redis": "127.0.0.1:6379 PONG",
+    "rails": "127.0.0.1:3000 with POSTGRES_USERNAME=ghalyasaid",
+    "vite": "VITE_RUBY_HOST=127.0.0.1"
+  },
+  "seed": {
+    "account_id": 7,
+    "email": "codex-ticket-012@example.test",
+    "lead_count": 112,
+    "live_detail_lead_id": 131
+  },
+  "checks": [
+    {
+      "viewport": "1487x1058",
+      "url": "http://127.0.0.1:3000/app/accounts/7/leads?pp=disable&lead_id=131",
+      "result": "passed",
+      "assertions": {
+        "page_bulk_selection": "25 of 25 visible rows selected from the header checkbox",
+        "row_selection": "clicking the first row added lead_id=141 to the URL",
+        "contact_channels_visible": true,
+        "conversation_status_visible": true,
+        "control_state_visible": true,
+        "conversation_link_visible": true,
+        "booking_link_href": "http://127.0.0.1:3000/app/accounts/7/bookings?booking_id=20",
+        "horizontal_overflow": false
+      },
+      "screenshot": "docs/issues/012/screenshots/desktop-leads-1487x1058.png"
+    },
+    {
+      "viewport": "390x844",
+      "url": "http://127.0.0.1:3000/app/accounts/7/leads?lead_id=131&pp=disable",
+      "result": "passed",
+      "assertions": {
+        "mobile_cards_visible": true,
+        "desktop_table_header_hidden": true,
+        "quality_tabs_visible": true,
+        "contact_channels_visible": true,
+        "conversation_status_visible": true,
+        "control_state_visible": true,
+        "conversation_link_href": "http://127.0.0.1:3000/app/accounts/7/conversations/102",
+        "booking_link_href": "http://127.0.0.1:3000/app/accounts/7/bookings?booking_id=20",
+        "raw_enum_labels_visible": false,
+        "horizontal_overflow": false
+      },
+      "screenshots": [
+        "docs/issues/012/screenshots/mobile-leads-390x844.png",
+        "docs/issues/012/screenshots/mobile-lead-detail-390x844.png"
+      ]
+    },
+    {
+      "viewport": "852x1846",
+      "url": "http://127.0.0.1:3000/app/accounts/7/leads?lead_id=131&pp=disable",
+      "result": "passed",
+      "assertions": {
+        "responsive_table_visible": true,
+        "filters_visible": true,
+        "contact_channels_visible": true,
+        "conversation_status_visible": true,
+        "control_state_visible": true,
+        "conversation_link_visible": true,
+        "booking_link_visible": true,
+        "raw_enum_labels_visible": false,
+        "horizontal_overflow": false
+      },
+      "screenshots": [
+        "docs/issues/012/screenshots/mobile-leads-852x1846.png",
+        "docs/issues/012/screenshots/mobile-lead-detail-852x1846.png"
+      ]
+    }
+  ],
+  "console": {
+    "errors": [],
+    "existing_warnings": [
+      "shared Modal onClose deprecation",
+      "Lit dev-mode notice"
+    ]
+  }
+}

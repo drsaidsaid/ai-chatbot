@@ -155,6 +155,12 @@ Rails.application.routes.draw do
           end
           resources :dashboard_apps, only: [:index, :show, :create, :update, :destroy]
           resource :operational_dashboard, only: [:show]
+          resources :leads, only: [:index, :show, :update] do
+            collection do
+              post :import
+              post :export
+            end
+          end
           resources :knowledge_items, only: [:index, :show, :create, :update, :destroy] do
             member do
               post :approve
