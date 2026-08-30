@@ -108,9 +108,10 @@ Planning must treat the following as blockers before feature recovery:
   messages through the message-template hook. V1 must coordinate this greeting
   with AI Orchestration rather than replacing it or hiding it.
 - Current knowledge and qualification services are deterministic experiments.
-  The production AI provider boundary, encrypted admin configuration,
-  OpenRouter-compatible calls, Source References, and provider failure
-  classification remain unimplemented blockers.
+  Ticket 003 adds the production AI provider boundary, encrypted admin
+  configuration, OpenRouter-compatible calls, provider health checks, and
+  provider failure classification. Source References and grounded answer
+  generation remain ticket 004 blockers.
 - Ticket 002 adds the durable `ai_orchestration_intents` and `outbox_events`
   boundary. Until the grounded-answer slice supplies verified Source References,
   the worker records a private outbound intent placeholder and does not create a
@@ -179,8 +180,27 @@ membership before any account selection or query.
 #### `integration_connections`
 
 - `business_account_id`, `provider`, `status`, external account identifiers, encrypted secret reference, scopes, expiry, and health metadata.
-- Provider categories initially: `meta_whatsapp`, `ai_model`, and `calendar`; the concrete AI and calendar providers remain replaceable.
+- Provider categories initially: `meta_whatsapp` and `calendar`; the concrete calendar provider remains replaceable.
 - Raw secrets must never be returned to the browser or written to logs.
+
+#### `ai_provider_connections`
+
+- `business_account_id`, provider, model, encrypted API key, status,
+  disabled timestamp, last health-check status, redacted failure class, and last
+  health-check timestamp.
+- Unique: `business_account_id`, so one Business Account owns one active or
+  disabled OpenAI-compatible model-provider connection in V1.
+- Raw credentials are encrypted with Rails Active Record encryption, rejected
+  when encryption is not configured, never stored in `Account.settings`, and
+  never returned from API serializers.
+- Only admins can configure, rotate, disable, or health-check the connection.
+  Team members receive the same authorization failure whether a connection
+  exists or not.
+- Domain services use the provider-neutral AI Provider boundary. The
+  OpenRouter adapter owns OpenRouter URL, headers, privacy-safe routing options,
+  request shape, and response parsing. Provider failures are classified as
+  timeout, authentication, rate limit, invalid response, safety refusal,
+  disabled, or transport errors.
 
 #### `ai_orchestration_intents`
 

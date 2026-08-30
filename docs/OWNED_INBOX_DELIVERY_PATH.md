@@ -40,6 +40,10 @@ product. It follows the Ask Matt multi-session flow.
    Done when the AI Employee can answer from approved sources and refuses or
    requests review without fabricated fallback on missing, conflicting,
    unverified, sensitive, angry, or provider-failed cases.
+   Ticket 003 establishes only the secure AI Provider Connection boundary:
+   Business Account-owned encrypted credentials, admin-only configuration,
+   redacted health checks, provider-neutral adapter failures, and no
+   orchestration-time model call with Lead content before source verification.
 
 7. **Recover later V1 workflows selectively:** implement qualification,
    handoff, alerts, booking, follow-up, dashboards, and launch proof only after

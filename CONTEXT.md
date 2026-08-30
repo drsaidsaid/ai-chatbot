@@ -69,6 +69,10 @@ The durable work of deciding whether and how the AI Employee may answer an Inbou
 The ticket-002 boundary records durable intent and source-reference placeholders; grounded lead-facing answers require the later approved-knowledge slice.
 _Avoid_: Inline reply, webhook response, model call
 
+**AI Provider Connection**:
+The Business Account-owned, server-side OpenAI-compatible model connection used by AI Orchestration and grounded answer work. It stores encrypted credentials outside `Account.settings`, exposes only redacted status to admins, and keeps provider-specific request details inside adapters.
+_Avoid_: OpenRouter settings, browser API key, account settings secret
+
 **Handoff**:
 The controlled transfer of a Conversation from the AI Employee to a Human Operator.
 _Avoid_: Escalation, assignment

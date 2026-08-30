@@ -320,6 +320,12 @@ OpenRouter is the initial provider, but the product must store encrypted
 server-side credentials, expose provider configuration only to admins, classify
 provider failures, and avoid fabricated fallback answers.
 
+Administrators can configure one Business Account-owned AI provider connection.
+The setup stores the provider, model, credential, status, and redacted health
+metadata on the server. Admins can rotate the credential, disable the
+connection, and run a health check. Team members cannot view or infer credential
+presence, and the browser never receives the raw API key.
+
 ## 10. Booking
 
 Only highly qualified leads are automatically offered a call in v1.

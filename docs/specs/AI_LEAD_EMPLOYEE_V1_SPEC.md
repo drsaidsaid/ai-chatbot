@@ -53,6 +53,16 @@ complete until this seam works against the owned Rails/Vue application.
   is the first provider, with encrypted server-side credentials, admin-only
   configuration, approved relevant Knowledge Items, verified Source References,
   failure classification, and no fabricated fallback.
+- AI Provider Connections are Business Account-owned records, not plaintext
+  `Account.settings`. Admin APIs may configure, rotate, disable, and health-check
+  a connection, but browsers never receive raw credentials and team members
+  cannot infer whether credentials exist.
+- Provider-specific request routing, privacy options, and headers belong inside
+  provider adapters. Domain services depend on the OpenAI-compatible boundary
+  and classified failures, not on OpenRouter constants.
+- The ticket-003 provider configuration slice may health-check the configured
+  provider, but ticket-002 placeholder orchestration must not send Lead content
+  or depend on a model call before the grounded-answer slice verifies sources.
 - Review Request behavior is safe: the Lead receives only an approved boundary
   response or human-authored response, proposed knowledge stays unavailable
   until approved, and all work remains tenant-scoped.
@@ -101,6 +111,10 @@ These current additions are donor/reference only until reconciled:
   opt-out, and stale control version all block automated sending.
 - Explicit resume allows future eligible work only.
 - Provider credentials never reach the browser or logs.
+- Provider credentials are rejected unless Active Record encryption is
+  configured; there is no plaintext fallback for AI Provider Connections.
+- A missing or disabled AI Provider Connection is configuration state, not a
+  reason to fabricate Lead-facing text.
 - Lead-facing AI answers require approved Knowledge Items and verified Source
   References.
 - Provider failures, missing knowledge, conflicting knowledge, unsupported media,

@@ -30,6 +30,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       create_outbox_event!(outbound_message)
       complete_intent!(outbound_message)
     end
+  rescue AiLeadEmployee::AiProvider::ProviderFailure => e
+    AiLeadEmployee::Orchestration::ProviderFailureHandler.new(intent: intent, failure: e).perform
   end
 
   private

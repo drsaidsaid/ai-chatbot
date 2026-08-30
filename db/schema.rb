@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_30_000100) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_30_000200) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -175,6 +175,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000100) do
     t.index ["document_ids"], name: "index_agent_sessions_on_document_ids", using: :gin
     t.index ["used_faq_ids"], name: "index_agent_sessions_on_used_faq_ids", using: :gin
     t.index ["user_id"], name: "index_agent_sessions_on_user_id"
+  end
+
+  create_table "ai_provider_connections", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "provider", default: "openrouter", null: false
+    t.string "model", null: false
+    t.text "api_key"
+    t.integer "status", default: 0, null: false
+    t.datetime "disabled_at"
+    t.datetime "last_health_checked_at"
+    t.string "last_health_status"
+    t.string "last_health_failure_class"
+    t.jsonb "last_health_response", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_ai_provider_connections_on_account_id", unique: true
   end
 
   create_table "ai_orchestration_intents", force: :cascade do |t|
@@ -1901,6 +1917,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000100) do
   add_foreign_key "ai_orchestration_intents", "human_review_requests", column: "review_request_id"
   add_foreign_key "ai_orchestration_intents", "messages", column: "outbound_message_id"
   add_foreign_key "ai_orchestration_intents", "messages", column: "triggering_message_id"
+  add_foreign_key "ai_provider_connections", "accounts"
   add_foreign_key "bookings", "accounts"
   add_foreign_key "bookings", "contacts"
   add_foreign_key "bookings", "conversations"

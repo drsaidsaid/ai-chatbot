@@ -8,6 +8,7 @@ module AiLeadEmployee::Orchestration::DecisionPlaceholder
     incompatible_control_state: 'incompatible_control_state',
     ineligible_inbox_status: 'ineligible_inbox_status',
     opted_out: 'opted_out',
+    provider_failure: 'provider_failure',
     stale_control_version: 'stale_control_version',
     tenant_scope_mismatch: 'tenant_scope_mismatch'
   }.freeze
