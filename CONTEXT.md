@@ -66,6 +66,7 @@ _Avoid_: Conversation status, bot status
 
 **AI Orchestration**:
 The durable work of deciding whether and how the AI Employee may answer an Inbound Message, using current Control State and approved knowledge.
+The ticket-002 boundary records durable intent and source-reference placeholders; grounded lead-facing answers require the later approved-knowledge slice.
 _Avoid_: Inline reply, webhook response, model call
 
 **Handoff**:

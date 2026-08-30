@@ -453,8 +453,21 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
   end
 
   def expect_replayed_greeting_messages(conversation, messages)
-    expect(messages.map(&:content)).to eq(['Can you qualify my WhatsApp leads?', 'Welcome to AI Lead Employee.'])
-    expect(messages.map(&:message_type)).to eq(%w[incoming template])
+    expect_replayed_greeting_sequence(messages)
     expect(conversation.messages.template.first.source_id).to eq('wamid.GREETING.ROUNDTRIP.SENT')
+    expect_orchestration_outbox(conversation)
+  end
+
+  def expect_replayed_greeting_sequence(messages)
+    expect(messages.map(&:content)).to eq([
+                                            'Can you qualify my WhatsApp leads?',
+                                            'Welcome to AI Lead Employee.'
+                                          ])
+    expect(messages.map(&:message_type)).to eq(%w[incoming template])
+  end
+
+  def expect_orchestration_outbox(conversation)
+    expect(conversation.messages.outgoing.where(private: true).count).to eq(1)
+    expect(OutboxEvent.where(event_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE).count).to eq(1)
   end
 end

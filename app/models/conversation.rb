@@ -133,6 +133,7 @@ class Conversation < ApplicationRecord
   has_many :automation_rule_pending_executions, dependent: :delete_all
   has_many :meta_whatsapp_webhook_events, dependent: :nullify
   has_many :human_review_requests, dependent: :destroy_async
+  has_many :ai_orchestration_intents, class_name: 'AiLeadEmployee::OrchestrationIntent', dependent: :destroy_async
   has_many :bookings, dependent: :destroy_async
   has_many :lead_handoffs, dependent: :destroy_async
   has_many :lead_follow_ups, dependent: :destroy_async

@@ -111,6 +111,10 @@ Planning must treat the following as blockers before feature recovery:
   The production AI provider boundary, encrypted admin configuration,
   OpenRouter-compatible calls, Source References, and provider failure
   classification remain unimplemented blockers.
+- Ticket 002 adds the durable `ai_orchestration_intents` and `outbox_events`
+  boundary. Until the grounded-answer slice supplies verified Source References,
+  the worker records a private outbound intent placeholder and does not create a
+  lead-facing AI answer.
 
 ## 5. State Mapping
 
@@ -291,6 +295,11 @@ Conversation before sending.
 
 #### Current owned-fork implementation
 
+- AI Orchestration intents are persisted after an eligible WhatsApp Inbound
+  Message and any Channel Greeting commit. The processor locks the intent and
+  Conversation, re-checks current control authority, records a source-reference
+  placeholder, creates a private outbound intent message, and commits an outbox
+  event atomically. Grounded lead-facing answer generation remains deferred.
 - Conflict-free call bookings are persisted as `bookings`, scoped by account,
   contact, Conversation, Lead Qualification, assignee, calendar, confirmation,
   calendar event, invitation, alert-delivery, and retry idempotency metadata.

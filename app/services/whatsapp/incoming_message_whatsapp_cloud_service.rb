@@ -2,6 +2,11 @@
 # https://developers.facebook.com/docs/whatsapp/api/media/
 
 class Whatsapp::IncomingMessageWhatsappCloudService < Whatsapp::IncomingMessageBaseService
+  def perform
+    super
+    AiLeadEmployee::OrchestrationIntentRecorder.new(message: @message).perform
+  end
+
   private
 
   def processed_params

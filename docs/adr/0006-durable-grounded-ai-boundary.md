@@ -6,6 +6,10 @@ status: accepted
 
 AI Lead Employee will not make lead-facing AI decisions inline inside webhook processing. After an Inbound Message commits, the application records a durable AI Orchestration intent and a worker re-checks tenant scope, Control State, Inbox Conversation Status, assignment, opt-out, source references, and the observed control version before creating any Outbound Message.
 
+The first durable-boundary slice may record a private outbound intent and
+source-reference placeholder only. A lead-facing AI answer requires a later
+grounded decision with verified Source References.
+
 ## Consequences
 
 - A stale AI job, duplicate Meta event, human reply, WhatsApp coexistence echo, assignment, pause, or resolution must prevent automated sending.

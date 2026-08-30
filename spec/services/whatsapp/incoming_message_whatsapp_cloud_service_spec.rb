@@ -68,12 +68,12 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
           name: 'Sojan Jose',
           contact_type: 'lead'
         )
-        expect(messages.map(&:content)).to eq(['Can you help qualify my leads?', 'Welcome to AI Lead Employee.'])
-        expect(messages.map(&:message_type)).to eq(%w[incoming template])
+        expect_orchestration_message_sequence(messages)
         expect(Message.where(source_id: text_message_id).count).to eq(1)
         greeting = conversation.messages.template.find_by!(content: 'Welcome to AI Lead Employee.')
         expect(greeting.source_id).to eq('wamid.GREETING.SENT')
         expect(conversation.messages.template.where(content: 'Welcome to AI Lead Employee.').count).to eq(1)
+        expect_orchestration_outbox(conversation)
         expect(a_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')).to have_been_made.once
       end
     end
@@ -651,5 +651,18 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
         }]
       }]
     }.with_indifferent_access
+  end
+
+  def expect_orchestration_message_sequence(messages)
+    expect(messages.map(&:content)).to eq([
+                                            'Can you help qualify my leads?',
+                                            'Welcome to AI Lead Employee.'
+                                          ])
+    expect(messages.map(&:message_type)).to eq(%w[incoming template])
+  end
+
+  def expect_orchestration_outbox(conversation)
+    expect(conversation.messages.outgoing.where(private: true).count).to eq(1)
+    expect(OutboxEvent.where(event_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE).count).to eq(1)
   end
 end

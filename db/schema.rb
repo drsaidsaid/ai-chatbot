@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_26_001000) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_30_000100) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -175,6 +175,36 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_001000) do
     t.index ["document_ids"], name: "index_agent_sessions_on_document_ids", using: :gin
     t.index ["used_faq_ids"], name: "index_agent_sessions_on_used_faq_ids", using: :gin
     t.index ["user_id"], name: "index_agent_sessions_on_user_id"
+  end
+
+  create_table "ai_orchestration_intents", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "triggering_message_id", null: false
+    t.bigint "review_request_id"
+    t.bigint "outbound_message_id"
+    t.integer "observed_control_version", null: false
+    t.integer "state", default: 0, null: false
+    t.string "idempotency_key", null: false
+    t.string "selected_provider"
+    t.string "model"
+    t.string "failure_class"
+    t.string "blocked_reason"
+    t.jsonb "source_references", default: [], null: false
+    t.jsonb "decision", default: {}, null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "completed_at"
+    t.datetime "blocked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "conversation_id", "state"], name: "idx_on_account_id_conversation_id_state_b83b69ea47"
+    t.index ["account_id", "conversation_id", "triggering_message_id", "observed_control_version"], name: "idx_ai_orchestration_intents_on_logical_trigger", unique: true
+    t.index ["account_id", "idempotency_key"], name: "idx_on_account_id_idempotency_key_c7b0a1d67b", unique: true
+    t.index ["account_id"], name: "index_ai_orchestration_intents_on_account_id"
+    t.index ["conversation_id"], name: "index_ai_orchestration_intents_on_conversation_id"
+    t.index ["outbound_message_id"], name: "index_ai_orchestration_intents_on_outbound_message_id"
+    t.index ["review_request_id"], name: "index_ai_orchestration_intents_on_review_request_id"
+    t.index ["triggering_message_id"], name: "index_ai_orchestration_intents_on_triggering_message_id"
   end
 
   create_table "applied_slas", force: :cascade do |t|
@@ -1526,6 +1556,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_001000) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
+  create_table "outbox_events", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "aggregate_type", null: false
+    t.bigint "aggregate_id", null: false
+    t.string "event_type", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "idempotency_key", null: false
+    t.integer "state", default: 0, null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "delivered_at"
+    t.datetime "failed_at"
+    t.string "failure_class"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "event_type", "state"], name: "index_outbox_events_on_account_id_and_event_type_and_state"
+    t.index ["account_id", "idempotency_key"], name: "index_outbox_events_on_account_id_and_idempotency_key", unique: true
+    t.index ["account_id"], name: "index_outbox_events_on_account_id"
+    t.index ["aggregate_type", "aggregate_id"], name: "index_outbox_events_on_aggregate"
+  end
+
   create_table "platform_app_permissibles", force: :cascade do |t|
     t.bigint "platform_app_id", null: false
     t.string "permissible_type", null: false
@@ -1846,6 +1896,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_001000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_orchestration_intents", "accounts"
+  add_foreign_key "ai_orchestration_intents", "conversations"
+  add_foreign_key "ai_orchestration_intents", "human_review_requests", column: "review_request_id"
+  add_foreign_key "ai_orchestration_intents", "messages", column: "outbound_message_id"
+  add_foreign_key "ai_orchestration_intents", "messages", column: "triggering_message_id"
   add_foreign_key "bookings", "accounts"
   add_foreign_key "bookings", "contacts"
   add_foreign_key "bookings", "conversations"
@@ -1886,6 +1941,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_26_001000) do
   add_foreign_key "meta_whatsapp_webhook_events", "channel_whatsapp"
   add_foreign_key "meta_whatsapp_webhook_events", "conversations"
   add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
+  add_foreign_key "outbox_events", "accounts"
   add_foreign_key "qualification_budget_ranges", "accounts"
   add_foreign_key "qualification_evidences", "accounts"
   add_foreign_key "qualification_evidences", "contacts"

@@ -94,6 +94,9 @@ These current additions are donor/reference only until reconciled:
 - AI Orchestration is created after commit and is idempotent by Business Account,
   Conversation, triggering Message, and observed control version.
 - AI Orchestration locks and re-reads the Conversation before sending.
+- The ticket-002 boundary records source-reference and outbound-intent
+  placeholders as non-deliverable internal state; lead-facing AI answer content
+  requires verified Source References from the grounded-answer slice.
 - Human Operator reply, assignment, pause, resolution, WhatsApp coexistence echo,
   opt-out, and stale control version all block automated sending.
 - Explicit resume allows future eligible work only.

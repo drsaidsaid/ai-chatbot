@@ -81,6 +81,11 @@ The canonical WhatsApp path is:
 6. The existing WhatsApp outbound sender delivers the reply through Meta and
    delivery status webhooks reconcile the Message.
 
+Current ticket 002 implementation records the durable intent, source-reference
+placeholder, private outbound intent record, and outbox event only. It does not
+create lead-facing AI answer text until the approved-knowledge and verified
+Source Reference slice is implemented.
+
 The parallel custom `/webhooks/meta/whatsapp` controller and processor that
 exist in the current code are an unsafe experiment, not the production path.
 They must be retired or quarantined before later AI behavior is treated as
