@@ -17,12 +17,21 @@ const form = ref({
   source_kind: 'faq',
 });
 
-const sourceOptions = ['faq', 'offer', 'pricing', 'supporting_document'];
+const sourceOptions = [
+  'faq',
+  'offer',
+  'pricing',
+  'objection',
+  'policy',
+  'supporting_document',
+];
 const isEditing = computed(() => editingItemId.value !== null);
 const sourceLabels = computed(() => ({
   faq: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.FAQ'),
   offer: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.OFFER'),
   pricing: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.PRICING'),
+  objection: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.OBJECTION'),
+  policy: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.POLICY'),
   supporting_document: t(
     'AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.SUPPORTING_DOCUMENT'
   ),

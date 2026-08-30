@@ -662,7 +662,9 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
   end
 
   def expect_orchestration_outbox(conversation)
-    expect(conversation.messages.outgoing.where(private: true).count).to eq(1)
-    expect(OutboxEvent.where(event_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE).count).to eq(1)
+    lead_message = conversation.messages.incoming.find_by!(source_id: text_message_id)
+    expect(conversation.messages.outgoing.count).to eq(0)
+    expect(OutboxEvent.where(event_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE).count).to eq(0)
+    expect(HumanReviewRequest.where(conversation: conversation, lead_message: lead_message, reason: :no_approved_knowledge).count).to eq(1)
   end
 end

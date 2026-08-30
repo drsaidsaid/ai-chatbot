@@ -21,7 +21,7 @@ WhatsApp message
   -> visible persisted Conversation and Inbound Message
   -> configured Channel Greeting, when enabled
   -> durable grounded AI Orchestration job
-  -> persisted Outbound Message intent with verified Source References
+  -> persisted Outbound Message with verified Source References
   -> existing WhatsApp outbound sender
   -> Meta delivery status reconciliation
 ```
@@ -61,8 +61,8 @@ complete until this seam works against the owned Rails/Vue application.
   provider adapters. Domain services depend on the OpenAI-compatible boundary
   and classified failures, not on OpenRouter constants.
 - The ticket-003 provider configuration slice may health-check the configured
-  provider, but ticket-002 placeholder orchestration must not send Lead content
-  or depend on a model call before the grounded-answer slice verifies sources.
+  provider, but AI Orchestration must not send Lead content to a model provider
+  until the grounded-answer slice verifies approved relevant sources.
 - Review Request behavior is safe: the Lead receives only an approved boundary
   response or human-authored response, proposed knowledge stays unavailable
   until approved, and all work remains tenant-scoped.
@@ -104,9 +104,9 @@ These current additions are donor/reference only until reconciled:
 - AI Orchestration is created after commit and is idempotent by Business Account,
   Conversation, triggering Message, and observed control version.
 - AI Orchestration locks and re-reads the Conversation before sending.
-- The ticket-002 boundary records source-reference and outbound-intent
-  placeholders as non-deliverable internal state; lead-facing AI answer content
-  requires verified Source References from the grounded-answer slice.
+- The ticket-004 boundary records Lead-facing AI answer content only after
+  approved relevant Knowledge Items produce verified fresh Source References and
+  the final sending authority check still passes.
 - Human Operator reply, assignment, pause, resolution, WhatsApp coexistence echo,
   opt-out, and stale control version all block automated sending.
 - Explicit resume allows future eligible work only.
@@ -118,8 +118,8 @@ These current additions are donor/reference only until reconciled:
 - Lead-facing AI answers require approved Knowledge Items and verified Source
   References.
 - Provider failures, missing knowledge, conflicting knowledge, unsupported media,
-  sensitive questions, angry Leads, and source verification failures do not
-  fabricate answers.
+  sensitive questions, angry Leads, stale knowledge, and source verification
+  failures do not fabricate answers.
 - Internal notes are never sent to Leads.
 - Delivery status reconciliation updates the persisted Message and does not
   trigger a second AI decision.

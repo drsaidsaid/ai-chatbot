@@ -9,6 +9,6 @@ FactoryBot.define do
     source_kind { :faq }
     status { :approved }
     approved_at { Time.current }
-    metadata { {} }
+    sequence(:metadata) { |n| { source_reference: "factory-source-reference-#{n}" } }
   end
 end

@@ -15,10 +15,10 @@ class AiLeadEmployee::KnowledgeAnswerService
     'faq' => 0,
     'offer' => 1,
     'pricing' => 2,
-    'supporting_document' => 3
+    'objection' => 3,
+    'policy' => 4,
+    'supporting_document' => 5
   }.freeze
-
-  BOUNDARY_RESPONSE = 'I can only answer questions covered by our approved business information. Please send a business or offer question in text.'
 
   def initialize(account:, question:)
     @account = account
@@ -31,11 +31,12 @@ class AiLeadEmployee::KnowledgeAnswerService
 
     matches = matching_items
     return unanswered_result if matches.blank?
-    return unanswered_result('conflicting_knowledge') if conflicting?(matches)
 
-    item = matches.first
-    return unanswered_result if item.blank?
+    verified_matches = matches.select(&:verified_source_reference?)
+    return unanswered_result(unverified_refusal_reason(matches)) if verified_matches.blank?
+    return unanswered_result('conflicting_knowledge') if conflicting?(verified_matches)
 
+    item = verified_matches.first
     Result.new(
       answer: item.answer,
       sources: [source_payload(item)],
@@ -51,6 +52,10 @@ class AiLeadEmployee::KnowledgeAnswerService
     account.knowledge_items.usable_by_ai_employee
            .select { |item| matches?(item) }
            .sort_by { |item| [SOURCE_PRIORITY.fetch(item.source_kind), -match_score(item), item.created_at] }
+  end
+
+  def unverified_refusal_reason(matches)
+    matches.any?(&:stale?) ? 'stale_knowledge' : 'source_unverified'
   end
 
   def conflicting?(matches)
@@ -98,11 +103,15 @@ class AiLeadEmployee::KnowledgeAnswerService
     {
       id: item.id,
       title: item.title,
-      source_kind: item.source_kind
+      source_kind: item.source_kind,
+      type: 'knowledge_item',
+      status: 'verified',
+      approved_at: item.approved_at.iso8601,
+      source_reference: item.source_reference
     }
   end
 
   def unanswered_result(reason = 'no_approved_knowledge')
-    Result.new(answer: BOUNDARY_RESPONSE, sources: [], refusal_reason: reason)
+    Result.new(answer: nil, sources: [], refusal_reason: reason)
   end
 end

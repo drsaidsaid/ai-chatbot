@@ -6,6 +6,7 @@ class AiLeadEmployee::OrchestrationIntentRecorder
   end
 
   def perform
+    return create_unsupported_media_review if unsupported_media_message?
     return unless eligible_message?
 
     intent = find_or_create_intent
@@ -34,6 +35,17 @@ class AiLeadEmployee::OrchestrationIntentRecorder
     message.content.present? && message.content_attributes['is_unsupported'] != true
   end
 
+  def unsupported_media_message?
+    persisted_incoming_whatsapp? && message.content_attributes['is_unsupported'] == true
+  end
+
+  def persisted_incoming_whatsapp?
+    message&.persisted? &&
+      message.incoming? &&
+      message.inbox.channel.is_a?(Channel::Whatsapp) &&
+      account_scope_consistent?
+  end
+
   def account_scope_consistent?
     message.account_id == message.conversation.account_id
   end
@@ -57,6 +69,15 @@ class AiLeadEmployee::OrchestrationIntentRecorder
 
   def enqueue_intent(intent)
     AiLeadEmployee::OrchestrationIntentJob.perform_later(intent.id)
+  end
+
+  def create_unsupported_media_review
+    AiLeadEmployee::HumanReviewRequestService.new(
+      conversation: message.conversation,
+      lead_message: message,
+      reason: 'unsupported_media'
+    ).perform
+    nil
   end
 
   def idempotency_key

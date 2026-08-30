@@ -12,12 +12,21 @@ const reviewRequests = ref([]);
 const isLoading = ref(false);
 const resolvingId = ref(null);
 const resolutionForms = ref({});
-const sourceOptions = ['faq', 'offer', 'pricing', 'supporting_document'];
+const sourceOptions = [
+  'faq',
+  'offer',
+  'pricing',
+  'objection',
+  'policy',
+  'supporting_document',
+];
 
 const sourceLabels = computed(() => ({
   faq: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.FAQ'),
   offer: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.OFFER'),
   pricing: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.PRICING'),
+  objection: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.OBJECTION'),
+  policy: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.POLICY'),
   supporting_document: t(
     'AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.SUPPORTING_DOCUMENT'
   ),
@@ -34,6 +43,10 @@ const reasonLabels = computed(() => ({
     'AI_LEAD_EMPLOYEE.REVIEWS.REASON.QUALIFICATION_BLOCKER'
   ),
   angry_question: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.ANGRY_QUESTION'),
+  unsupported_media: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.UNSUPPORTED_MEDIA'),
+  source_unverified: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.SOURCE_UNVERIFIED'),
+  provider_failed: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.PROVIDER_FAILED'),
+  stale_knowledge: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.STALE_KNOWLEDGE'),
 }));
 
 const loadReviewRequests = async () => {

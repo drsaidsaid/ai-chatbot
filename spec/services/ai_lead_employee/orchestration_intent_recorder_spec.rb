@@ -80,7 +80,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     expect(enqueued_jobs.map { |job| job[:job] }).to include(AiLeadEmployee::OrchestrationIntentJob)
   end
 
-  it 'does not record an intent for unsupported media' do
+  it 'creates a Review Request without orchestration intent for unsupported media' do
     unsupported_params = params.deep_dup
     message = unsupported_params.dig(:entry, 0, :changes, 0, :value, :messages, 0)
     message.delete(:text)
@@ -90,6 +90,9 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     Whatsapp::IncomingMessageWhatsappCloudService.new(inbox: whatsapp_channel.inbox, params: unsupported_params).perform
 
     expect(AiLeadEmployee::OrchestrationIntent.count).to eq(0)
+    review_request = HumanReviewRequest.find_by!(reason: :unsupported_media)
+    expect(review_request.question).to eq(I18n.t('conversations.messages.whatsapp.unsupported_message'))
+    expect(review_request.conversation).to eq(whatsapp_channel.inbox.conversations.first)
   end
 
   def described_service

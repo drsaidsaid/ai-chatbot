@@ -66,7 +66,7 @@ _Avoid_: Conversation status, bot status
 
 **AI Orchestration**:
 The durable work of deciding whether and how the AI Employee may answer an Inbound Message, using current Control State and approved knowledge.
-The ticket-002 boundary records durable intent and source-reference placeholders; grounded lead-facing answers require the later approved-knowledge slice.
+The ticket-004 boundary retrieves approved relevant Knowledge Items, verifies Source References, calls the provider-neutral AI Provider adapter, re-checks authority, and records outbound delivery only when every source and authority check succeeds.
 _Avoid_: Inline reply, webhook response, model call
 
 **AI Provider Connection**:

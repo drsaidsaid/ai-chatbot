@@ -11,16 +11,7 @@ class AiLeadEmployee::Orchestration::ProviderFailureHandler
     intent.with_lock do
       next intent if intent.terminal?
 
-      intent.update!(
-        state: :blocked,
-        blocked_reason: block_reasons[:provider_failure],
-        failure_class: failure.failure_class,
-        decision: {
-          status: 'provider_failed',
-          failure_class: failure.failure_class
-        },
-        blocked_at: Time.current
-      )
+      intent.update!(blocked_attributes)
     end
     intent
   end
@@ -31,5 +22,27 @@ class AiLeadEmployee::Orchestration::ProviderFailureHandler
 
   def block_reasons
     AiLeadEmployee::Orchestration::DecisionPlaceholder::BLOCK_REASONS
+  end
+
+  def blocked_attributes
+    {
+      state: :blocked,
+      blocked_reason: block_reasons[:provider_failure],
+      failure_class: failure.failure_class,
+      review_request: review_result.request,
+      decision: {
+        status: 'provider_failed',
+        failure_class: failure.failure_class
+      },
+      blocked_at: Time.current
+    }
+  end
+
+  def review_result
+    @review_result ||= AiLeadEmployee::HumanReviewRequestService.new(
+      conversation: intent.conversation,
+      lead_message: intent.triggering_message,
+      reason: 'provider_failed'
+    ).perform
   end
 end

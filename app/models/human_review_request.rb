@@ -50,7 +50,11 @@ class HumanReviewRequest < ApplicationRecord
     conflicting_knowledge: 1,
     sensitive_question: 2,
     qualification_blocker: 3,
-    angry_question: 4
+    angry_question: 4,
+    unsupported_media: 5,
+    source_unverified: 6,
+    provider_failed: 7,
+    stale_knowledge: 8
   }
   enum status: {
     open: 0,

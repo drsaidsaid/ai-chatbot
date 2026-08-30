@@ -97,7 +97,11 @@
         "CONFLICTING_KNOWLEDGE": "Conflicting knowledge",
         "SENSITIVE_QUESTION": "Sensitive question",
         "QUALIFICATION_BLOCKER": "Qualification blocker",
-        "ANGRY_QUESTION": "Angry lead"
+        "ANGRY_QUESTION": "Angry lead",
+        "UNSUPPORTED_MEDIA": "Unsupported media",
+        "SOURCE_UNVERIFIED": "Source unverified",
+        "PROVIDER_FAILED": "Provider failed",
+        "STALE_KNOWLEDGE": "Stale knowledge"
       }
     },
     "KNOWLEDGE": {
@@ -126,6 +130,8 @@
         "FAQ": "FAQ",
         "OFFER": "Offer",
         "PRICING": "Pricing",
+        "OBJECTION": "Objection",
+        "POLICY": "Policy",
         "SUPPORTING_DOCUMENT": "Supporting document"
       },
       "STATUS": {

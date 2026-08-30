@@ -39,6 +39,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
   before do
     intent
     allow(SendReplyJob).to receive(:perform_later)
+    allow(AiLeadEmployee::AiProvider::ClientFactory).to receive(:for).and_return(provider_client)
   end
 
   it 'blocks a delayed worker after human takeover without creating outbound side effects' do
@@ -131,7 +132,17 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     expect(OutboxEvent.count).to eq(0)
   end
 
-  it 'atomically records the AI decision placeholder, outbound message intent, and outbox event once under retry' do
+  it 'atomically records a grounded AI answer, verified Source References, and outbox event once under retry' do
+    knowledge_item = create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'provider-response-1',
+        model: 'openai/gpt-5.2',
+        content: 'Yes, we build AI employees for qualified businesses.',
+        finish_reason: 'stop'
+      )
+    )
+
     described_class.perform_now(intent.id)
     described_class.perform_now(intent.id)
 
@@ -141,9 +152,17 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
 
     expect(intent).to have_attributes(
       state: 'completed',
-      source_references: [{ 'status' => 'pending_grounded_sources' }],
+      source_references: [
+        include(
+          'type' => 'knowledge_item',
+          'id' => knowledge_item.id,
+          'title' => knowledge_item.title,
+          'source_kind' => 'faq',
+          'status' => 'verified'
+        )
+      ],
       decision: include(
-        'status' => 'awaiting_grounded_answer',
+        'status' => 'grounded_answer',
         'triggering_message_id' => triggering_message.id
       )
     )
@@ -152,13 +171,146 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       inbox_id: whatsapp_channel.inbox.id,
       conversation_id: conversation.id,
       message_type: 'outgoing',
-      content: nil,
-      private: true
+      content: 'Yes, we build AI employees for qualified businesses.',
+      private: false
     )
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'orchestration_intent_id')).to eq(intent.id)
-    expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'outbound_intent_status')).to eq('awaiting_grounded_answer')
+    expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'outbound_intent_status')).to eq('grounded_answer')
+    expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'source_references').first['id']).to eq(knowledge_item.id)
     expect_outbox_state(outbox_event, outbound_message)
-    expect(SendReplyJob).not_to have_received(:perform_later).with(outbound_message.id)
+    expect(SendReplyJob).to have_received(:perform_later).with(outbound_message.id).once
+  end
+
+  it 'creates one Review Request for unknown questions and never creates fallback answer content' do
+    expect do
+      described_class.perform_now(intent.id)
+      intent.update!(state: :pending, blocked_reason: nil, blocked_at: nil, review_request: nil)
+      described_class.perform_now(intent.id)
+    end.to change(HumanReviewRequest, :count).by(1)
+
+    review_request = intent.reload.review_request
+    expect(review_request).to have_attributes(
+      account_id: account.id,
+      conversation_id: conversation.id,
+      lead_message_id: triggering_message.id,
+      reason: 'no_approved_knowledge',
+      status: 'open'
+    )
+    expect(intent).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(conversation.messages.outgoing.count).to eq(0)
+    expect(OutboxEvent.count).to eq(0)
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+  end
+
+  it 'creates Review Requests for conflicting, sensitive, angry, source-unverified, and stale questions without provider calls' do
+    examples = {
+      conflicting_knowledge: lambda {
+        create(:knowledge_item, account: account, source_kind: :faq, question: triggering_message.content, answer: 'Yes.')
+        create(:knowledge_item, account: account, source_kind: :faq, question: triggering_message.content, answer: 'No.')
+      },
+      sensitive_question: -> { triggering_message.update!(content: 'Can you give legal advice about a contract?') },
+      angry_question: -> { triggering_message.update!(content: 'I am furious about this terrible service') },
+      source_unverified: lambda {
+        create(
+          :knowledge_item,
+          account: account,
+          question: triggering_message.content,
+          answer: 'Yes, we build AI employees.',
+          metadata: { source_reference: '' }
+        )
+      },
+      stale_knowledge: lambda {
+        create(
+          :knowledge_item,
+          account: account,
+          question: triggering_message.content,
+          answer: 'Yes, we build AI employees.',
+          metadata: {
+            source_reference: 'expired-ai-employee-faq',
+            expires_at: 1.day.ago.iso8601
+          }
+        )
+      }
+    }
+
+    examples.each do |reason, setup|
+      intent.update!(state: :pending, blocked_reason: nil, blocked_at: nil, review_request: nil)
+      HumanReviewRequest.delete_all
+      KnowledgeItem.where(account: account).delete_all
+      triggering_message.update!(content: 'Do you offer AI employees?')
+      setup.call
+
+      expect do
+        described_class.perform_now(intent.id)
+        intent.update!(state: :pending, blocked_reason: nil, blocked_at: nil, review_request: nil)
+        described_class.perform_now(intent.id)
+      end.to change(HumanReviewRequest.where(reason: reason), :count).by(1)
+
+      expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: reason.to_s)
+      expect(conversation.messages.outgoing.count).to eq(0)
+      expect(OutboxEvent.count).to eq(0)
+    end
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+  end
+
+  it 'creates a Review Request when the provider declines to answer from the supplied source' do
+    create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'provider-response-review',
+        model: 'openai/gpt-5.2',
+        content: 'REVIEW_REQUIRED',
+        finish_reason: 'stop'
+      )
+    )
+
+    described_class.perform_now(intent.id)
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'source_unverified')
+    expect(intent.review_request).to have_attributes(reason: 'source_unverified', status: 'open')
+    expect(conversation.messages.outgoing.count).to eq(0)
+    expect(OutboxEvent.count).to eq(0)
+  end
+
+  it 're-runs the sending boundary after provider completion before creating the outbound message' do
+    create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
+    allow(provider_client).to receive(:complete) do
+      create(:message,
+             account: account,
+             inbox: whatsapp_channel.inbox,
+             conversation: conversation,
+             sender: create(:user, account: account),
+             message_type: :outgoing,
+             content: 'A human answered while the provider was running.')
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'provider-response-late',
+        model: 'openai/gpt-5.2',
+        content: 'Yes, we build AI employees for qualified businesses.',
+        finish_reason: 'stop'
+      )
+    end
+
+    described_class.perform_now(intent.id)
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'human_reply_after_trigger')
+    expect(conversation.messages.outgoing.where.not(content: 'A human answered while the provider was running.').count).to eq(0)
+    expect(OutboxEvent.count).to eq(0)
+  end
+
+  it 'creates a Review Request when the provider fails after source verification' do
+    create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
+    allow(provider_client).to receive(:complete).and_raise(AiLeadEmployee::AiProvider::TimeoutFailure.new)
+
+    described_class.perform_now(intent.id)
+
+    expect(intent.reload).to have_attributes(
+      state: 'blocked',
+      blocked_reason: 'provider_failure',
+      failure_class: 'timeout'
+    )
+    expect(intent.review_request).to have_attributes(reason: 'provider_failed', status: 'open')
+    expect(conversation.messages.outgoing.count).to eq(0)
+    expect(OutboxEvent.count).to eq(0)
   end
 
   def expect_outbox_state(outbox_event, outbound_message)
@@ -167,8 +319,12 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       event_type: 'ai_employee.outbound_intent_recorded',
       state: 'pending'
     )
-    expect(conversation.messages.outgoing.where(private: true).count).to eq(1)
+    expect(conversation.messages.outgoing.where(private: false).count).to eq(1)
     expect(OutboxEvent.where(idempotency_key: "ai-outbound/#{intent.id}").count).to eq(1)
     expect(outbox_event.aggregate).to eq(outbound_message)
+  end
+
+  def provider_client
+    @provider_client ||= instance_double(AiLeadEmployee::AiProvider::OpenRouterAdapter)
   end
 end

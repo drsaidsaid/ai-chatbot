@@ -12,11 +12,15 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
 
     expect(result).to be_answered
     expect(result.answer).to eq('Yes, we offer consulting.')
-    expect(result.sources).to contain_exactly(id: item.id, title: item.title, source_kind: 'faq')
+    expect(result.sources).to contain_exactly(
+      include(id: item.id, title: item.title, source_kind: 'faq', status: 'verified')
+    )
   end
 
-  it 'prefers FAQ, offer, and pricing knowledge over conflicting supporting documents' do
+  it 'prefers FAQ, offer, pricing, objection, and policy knowledge over supporting documents' do
     create(:knowledge_item, account: account, source_kind: :supporting_document, question: 'What is your setup price?', answer: 'Setup is $10.')
+    create(:knowledge_item, account: account, source_kind: :policy, question: 'What is your setup price?', answer: 'Setup is $15.')
+    create(:knowledge_item, account: account, source_kind: :objection, question: 'What is your setup price?', answer: 'Setup is $18.')
     create(:knowledge_item, account: account, source_kind: :pricing, question: 'What is your setup price?', answer: 'Setup is $20.')
 
     result = described_class.new(account: account, question: 'What is your setup price?').perform
@@ -38,9 +42,69 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     result = described_class.new(account: account, question: 'Do you offer audits?').perform
 
     expect(result).to be_refused
-    expect(result.answer).to eq(described_class::BOUNDARY_RESPONSE)
+    expect(result.answer).to be_nil
     expect(result.sources).to be_empty
     expect(result.refusal_reason).to eq('no_approved_knowledge')
+  end
+
+  it 'does not use approved knowledge without a verified Source Reference' do
+    create(
+      :knowledge_item,
+      account: account,
+      question: 'Do you offer audits?',
+      answer: 'Yes, audits are available.',
+      metadata: { source_reference: '' }
+    )
+
+    result = described_class.new(account: account, question: 'Do you offer audits?').perform
+
+    expect(result).to be_refused
+    expect(result.answer).to be_nil
+    expect(result.sources).to be_empty
+    expect(result.refusal_reason).to eq('source_unverified')
+  end
+
+  it 'does not use knowledge changed after approval' do
+    item = create(:knowledge_item, account: account, question: 'Do you offer audits?', answer: 'Yes, audits are available.')
+    item.update!(answer: 'Changed after approval', approved_at: 5.minutes.ago)
+
+    result = described_class.new(account: account, question: 'Do you offer audits?').perform
+
+    expect(result).to be_refused
+    expect(result.answer).to be_nil
+    expect(result.refusal_reason).to eq('source_unverified')
+  end
+
+  it 'uses changed knowledge only after a fresh admin approval' do
+    item = create(:knowledge_item, account: account, question: 'Do you offer audits?', answer: 'Yes, audits are available.', metadata: {})
+    original_source_reference = item.source_reference
+    item.update!(answer: 'Changed after approval', approved_at: 5.minutes.ago)
+    item.approve!
+
+    result = described_class.new(account: account, question: 'Do you offer audits?').perform
+
+    expect(result).to be_answered
+    expect(result.answer).to eq('Changed after approval')
+    expect(result.sources.first[:source_reference]).not_to eq(original_source_reference)
+  end
+
+  it 'does not use stale approved knowledge' do
+    create(
+      :knowledge_item,
+      account: account,
+      question: 'Do you offer audits?',
+      answer: 'Yes, audits are available.',
+      metadata: {
+        source_reference: 'policy-handbook-audits',
+        expires_at: 1.day.ago.iso8601
+      }
+    )
+
+    result = described_class.new(account: account, question: 'Do you offer audits?').perform
+
+    expect(result).to be_refused
+    expect(result.answer).to be_nil
+    expect(result.refusal_reason).to eq('stale_knowledge')
   end
 
   it 'refuses conflicting approved knowledge instead of choosing an answer' do
@@ -50,7 +114,7 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     result = described_class.new(account: account, question: 'Do you offer audits?').perform
 
     expect(result).to be_refused
-    expect(result.answer).to eq(described_class::BOUNDARY_RESPONSE)
+    expect(result.answer).to be_nil
     expect(result.refusal_reason).to eq('conflicting_knowledge')
   end
 
@@ -58,7 +122,7 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     result = described_class.new(account: account, question: 'Can you give legal advice about our contract?').perform
 
     expect(result).to be_refused
-    expect(result.answer).to eq(described_class::BOUNDARY_RESPONSE)
+    expect(result.answer).to be_nil
     expect(result.refusal_reason).to eq('sensitive_question')
   end
 
@@ -66,7 +130,7 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     result = described_class.new(account: account, question: 'I am furious about this terrible service').perform
 
     expect(result).to be_refused
-    expect(result.answer).to eq(described_class::BOUNDARY_RESPONSE)
+    expect(result.answer).to be_nil
     expect(result.refusal_reason).to eq('angry_question')
   end
 end

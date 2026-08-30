@@ -15,7 +15,7 @@ durable AI Orchestration boundary.
 | 001 | Canonical WhatsApp round trip with Channel Greeting       | 000        | Blocked       |
 | 002 | Durable AI Orchestration intent and outbound boundary     | 001        | Blocked       |
 | 003 | Secure OpenAI-compatible provider configuration           | 002        | Implemented   |
-| 004 | Grounded answer and Review Request tracer bullet          | 003        | Blocked       |
+| 004 | Grounded answer and Review Request tracer bullet          | 003        | Implemented   |
 | 005 | Control State, takeover, coexistence, and explicit resume | 002, 004   | Blocked       |
 | 006 | End-to-end canonical launch proof                         | 001-005    | Blocked       |
 | 007 | Recover qualification, handoff, and alerting              | 006        | Blocked       |
