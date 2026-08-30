@@ -39,14 +39,34 @@ class AiLeadEmployee::FollowUpScheduler
       stage: stage,
       attempt_number: attempt_number
     )
-    return unless follow_up.new_record?
+    return update_pending_attempt!(follow_up, attempt_number) unless follow_up.new_record?
 
     follow_up.assign_attributes(follow_up_attributes(attempt_number))
     follow_up.save!
-    AiLeadEmployee::FollowUpDeliveryJob.set(wait_until: follow_up.scheduled_at).perform_later(follow_up)
+    enqueue_delivery(follow_up)
     follow_up
   rescue ActiveRecord::RecordNotUnique
     retry
+  end
+
+  def update_pending_attempt!(follow_up, attempt_number)
+    return unless follow_up.pending?
+    return follow_up if pending_attempt_current?(follow_up)
+
+    follow_up.update!(follow_up_attributes(attempt_number))
+    enqueue_delivery(follow_up)
+    follow_up
+  end
+
+  def pending_attempt_current?(follow_up)
+    follow_up.question_text == question_text &&
+      follow_up.content == rendered_content &&
+      follow_up.control_version == conversation.control_version &&
+      follow_up.qualification_question_id == qualification_question&.id
+  end
+
+  def enqueue_delivery(follow_up)
+    AiLeadEmployee::FollowUpDeliveryJob.set(wait_until: follow_up.scheduled_at).perform_later(follow_up)
   end
 
   def follow_up_attributes(attempt_number)
@@ -55,10 +75,14 @@ class AiLeadEmployee::FollowUpScheduler
       lead_qualification: qualification,
       qualification_question: qualification_question,
       question_text: question_text,
-      content: config.render_message(question_text),
+      content: rendered_content,
       control_version: conversation.control_version,
       scheduled_at: scheduled_at_for(attempt_number)
     }
+  end
+
+  def rendered_content
+    @rendered_content ||= config.render_message(question_text)
   end
 
   def scheduled_at_for(attempt_number)

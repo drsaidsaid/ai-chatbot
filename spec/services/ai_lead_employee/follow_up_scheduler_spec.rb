@@ -90,6 +90,38 @@ RSpec.describe AiLeadEmployee::FollowUpScheduler do
     expect(LeadFollowUp.where(account: account, contact: conversation.contact, stage: :incomplete_qualification).count).to eq(1)
   end
 
+  it 'updates a pending follow-up when the last unanswered useful question changes' do
+    next_question = create(:qualification_question, account: account, signal: :contact_details, prompt: 'What is the best phone number?', position: 2)
+    qualification = create(
+      :lead_qualification,
+      account: account,
+      contact: conversation.contact,
+      quality: :low_qualified,
+      follow_up_state: :nurture,
+      missing_signals: %w[budget contact_details]
+    )
+    described_class.new(
+      conversation: conversation,
+      qualification_result: AiLeadEmployee::QualificationService::Result.new(qualification: qualification, next_question: question.prompt)
+    ).perform
+    follow_up = LeadFollowUp.last
+
+    expect do
+      described_class.new(
+        conversation: conversation,
+        qualification_result: AiLeadEmployee::QualificationService::Result.new(
+          qualification: qualification.reload,
+          next_question: next_question.prompt
+        )
+      ).perform
+    end.to have_enqueued_job(AiLeadEmployee::FollowUpDeliveryJob)
+
+    expect(LeadFollowUp.pending.count).to eq(1)
+    expect(follow_up.reload.question_text).to eq(next_question.prompt)
+    expect(follow_up.qualification_question).to eq(next_question)
+    expect(follow_up.content).to include(next_question.prompt)
+  end
+
   it 'cancels pending follow-ups when the conversation is resolved' do
     qualification = create(:lead_qualification, account: account, contact: conversation.contact, quality: :low_qualified)
     follow_up = create(
@@ -104,6 +136,39 @@ RSpec.describe AiLeadEmployee::FollowUpScheduler do
 
     expect(follow_up.reload).to be_cancelled
     expect(follow_up.cancellation_reason).to eq('conversation_resolved')
+  end
+
+  it 'cancels pending follow-ups when the conversation is paused' do
+    qualification = create(:lead_qualification, account: account, contact: conversation.contact, quality: :low_qualified)
+    follow_up = create(
+      :lead_follow_up,
+      account: account,
+      contact: conversation.contact,
+      conversation: conversation,
+      lead_qualification: qualification
+    )
+
+    Conversations::ControlService.new(conversation: conversation).pause_ai!
+
+    expect(follow_up.reload).to be_cancelled
+    expect(follow_up.cancellation_reason).to eq('control_state_ai_paused')
+  end
+
+  it 'cancels pending follow-ups when a Human Operator takes over' do
+    operator = create(:user, account: account, role: :agent)
+    qualification = create(:lead_qualification, account: account, contact: conversation.contact, quality: :low_qualified)
+    follow_up = create(
+      :lead_follow_up,
+      account: account,
+      contact: conversation.contact,
+      conversation: conversation,
+      lead_qualification: qualification
+    )
+
+    Conversations::ControlService.new(conversation: conversation).human_takeover!(operator: operator)
+
+    expect(follow_up.reload).to be_cancelled
+    expect(follow_up.cancellation_reason).to eq('control_state_human_active')
   end
 
   it 'cancels pending follow-ups when booking closes the lead follow-up state' do

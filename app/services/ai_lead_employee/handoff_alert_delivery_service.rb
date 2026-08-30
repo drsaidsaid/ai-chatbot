@@ -92,48 +92,12 @@ class AiLeadEmployee::HandoffAlertDeliveryService
   end
 
   def alert_conversation_for(recipient)
-    contact_inbox = alert_contact_inbox_for(recipient)
-    contact_inbox.conversations.where(account: account, inbox: whatsapp_channel.inbox).order(id: :desc).first ||
-      account.conversations.create!(
-        inbox: whatsapp_channel.inbox,
-        contact: contact_inbox.contact,
-        contact_inbox: contact_inbox,
-        status: :open,
-        control_state: :human_active,
-        additional_attributes: {
-          ai_lead_employee_alert_conversation: true,
-          alert_type: AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE
-        }
-      )
-  end
-
-  def alert_contact_inbox_for(recipient)
-    whatsapp_channel.inbox.contact_inboxes.find_by(source_id: recipient) ||
-      whatsapp_channel.inbox.contact_inboxes.create!(
-        contact: alert_contact_for(recipient),
-        source_id: recipient
-      )
-  end
-
-  def alert_contact_for(recipient)
-    return alert_bsuid_contact_for(recipient) if recipient.match?(RegexHelper::WHATSAPP_BSUID_REGEX)
-
-    account.contacts.find_or_create_by!(phone_number: normalized_phone_number(recipient)) do |contact|
-      contact.name = "WhatsApp Alert #{recipient}"
-    end
-  end
-
-  def alert_bsuid_contact_for(recipient)
-    account.contacts.find_or_create_by!(identifier: "whatsapp-alert-#{recipient}") do |contact|
-      contact.name = "WhatsApp Alert #{recipient}"
-    end
-  end
-
-  def normalized_phone_number(recipient)
-    phone = recipient.to_s.delete('^+0-9')
-    return phone if phone.start_with?('+')
-
-    "+#{phone}"
+    AiLeadEmployee::WhatsappAlertConversation.new(
+      account: account,
+      whatsapp_channel: whatsapp_channel,
+      recipient: recipient,
+      alert_type: AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE
+    ).perform
   end
 
   def account

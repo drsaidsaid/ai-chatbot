@@ -23,6 +23,9 @@ const filterOptions = ref({
   assignees: [],
   sources: [],
   booking_statuses: [],
+  review_statuses: [],
+  follow_up_statuses: [],
+  control_states: [],
 });
 const builtInQueues = ref([]);
 const metrics = computed(() => [
@@ -61,9 +64,14 @@ const queueLabels = computed(() => ({
   unanswered_questions: t(
     'AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.UNANSWERED_QUESTIONS'
   ),
+  reviews: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.REVIEWS'),
   knowledge_approval: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.KNOWLEDGE_APPROVAL'),
   booked_calls: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.BOOKED_CALLS'),
+  follow_up: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.FOLLOW_UP'),
+  unassigned: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.UNASSIGNED'),
   my_queue: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.MY_QUEUE'),
+  ai_active: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.AI_ACTIVE'),
+  human_active: t('AI_LEAD_EMPLOYEE.DASHBOARD.QUEUE.HUMAN_ACTIVE'),
 }));
 const isLoading = ref(false);
 const savedQueues = ref([]);
@@ -74,12 +82,16 @@ const filters = ref({
   assignee_id: '',
   source_id: '',
   unanswered: false,
+  review_status: '',
+  follow_up_status: '',
   knowledge_approval: false,
   booking_status: '',
+  control_state: '',
 });
 
 const surfaceFilters = computed(() => {
   if (props.surface === 'HOT_LEADS') return { quality: 'highly_qualified' };
+  if (props.surface === 'REVIEWS') return { review_status: 'open' };
   if (props.surface === 'BOOKINGS') return { booking_status: 'booked' };
   return {};
 });
@@ -149,8 +161,11 @@ const clearFilters = () => {
     assignee_id: '',
     source_id: '',
     unanswered: false,
+    review_status: '',
+    follow_up_status: '',
     knowledge_approval: false,
     booking_status: '',
+    control_state: '',
   };
 };
 
@@ -197,12 +212,12 @@ onMounted(() => {
     </div>
 
     <form
-      class="grid gap-3 border border-n-weak bg-n-solid-1 p-4 md:grid-cols-2 xl:grid-cols-6"
+      class="grid gap-3 border border-n-weak bg-n-solid-1 p-4 md:grid-cols-2 xl:grid-cols-9"
       @submit.prevent="saveQueue"
     >
       <div
         v-if="builtInQueues.length"
-        class="flex flex-wrap gap-2 md:col-span-2 xl:col-span-6"
+        class="flex flex-wrap gap-2 md:col-span-2 xl:col-span-9"
       >
         <button
           v-for="queue in builtInQueues"
@@ -295,6 +310,51 @@ onMounted(() => {
           {{ humanize(status) }}
         </option>
       </select>
+      <select
+        v-model="filters.review_status"
+        class="min-w-0 rounded-md border border-n-weak bg-n-background px-3 py-2 text-sm"
+      >
+        <option value="">
+          {{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FILTER.REVIEW') }}
+        </option>
+        <option
+          v-for="status in filterOptions.review_statuses"
+          :key="status"
+          :value="status"
+        >
+          {{ humanize(status) }}
+        </option>
+      </select>
+      <select
+        v-model="filters.follow_up_status"
+        class="min-w-0 rounded-md border border-n-weak bg-n-background px-3 py-2 text-sm"
+      >
+        <option value="">
+          {{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FILTER.FOLLOW_UP_STATUS') }}
+        </option>
+        <option
+          v-for="status in filterOptions.follow_up_statuses"
+          :key="status"
+          :value="status"
+        >
+          {{ humanize(status) }}
+        </option>
+      </select>
+      <select
+        v-model="filters.control_state"
+        class="min-w-0 rounded-md border border-n-weak bg-n-background px-3 py-2 text-sm"
+      >
+        <option value="">
+          {{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FILTER.CONTROL_STATE') }}
+        </option>
+        <option
+          v-for="state in filterOptions.control_states"
+          :key="state"
+          :value="state"
+        >
+          {{ humanize(state) }}
+        </option>
+      </select>
       <label class="flex min-w-0 items-center gap-2 text-sm text-n-slate-12">
         <input
           v-model="filters.unanswered"
@@ -311,7 +371,7 @@ onMounted(() => {
         />
         {{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FILTER.KNOWLEDGE_APPROVAL') }}
       </label>
-      <div class="flex gap-2 md:col-span-2 xl:col-span-6">
+      <div class="flex gap-2 md:col-span-2 xl:col-span-9">
         <input
           v-model="queueName"
           class="min-w-0 flex-1 rounded-md border border-n-weak bg-n-background px-3 py-2 text-sm"
@@ -333,7 +393,7 @@ onMounted(() => {
       </div>
       <div
         v-if="savedQueues.length"
-        class="flex flex-wrap gap-2 md:col-span-2 xl:col-span-6"
+        class="flex flex-wrap gap-2 md:col-span-2 xl:col-span-9"
       >
         <button
           v-for="queue in savedQueues"
@@ -348,9 +408,9 @@ onMounted(() => {
     </form>
 
     <section class="overflow-x-auto border border-n-weak bg-n-solid-1">
-      <div class="min-w-[1040px]">
+      <div class="min-w-[1240px]">
         <div
-          class="grid grid-cols-[1.1fr_1fr_0.8fr_1.2fr_0.8fr_0.9fr_0.9fr] gap-3 border-b border-n-weak px-4 py-3 text-xs font-medium uppercase text-n-slate-11"
+          class="grid grid-cols-[1.1fr_1fr_0.8fr_1.2fr_0.8fr_0.9fr_0.8fr_0.8fr_0.9fr] gap-3 border-b border-n-weak px-4 py-3 text-xs font-medium uppercase text-n-slate-11"
         >
           <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.LEAD') }}</span>
           <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.CONTACT') }}</span>
@@ -358,6 +418,8 @@ onMounted(() => {
           <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.REASONS') }}</span>
           <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.ASSIGNEE') }}</span>
           <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.SOURCE') }}</span>
+          <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.FOLLOW_UP') }}</span>
+          <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.CONTROL') }}</span>
           <span>{{ t('AI_LEAD_EMPLOYEE.DASHBOARD.FIELD.BOOKING') }}</span>
         </div>
         <div v-if="isLoading" class="px-4 py-6 text-sm text-n-slate-11">
@@ -373,7 +435,7 @@ onMounted(() => {
           <a
             v-for="lead in leads"
             :key="lead.id"
-            class="grid grid-cols-[1.1fr_1fr_0.8fr_1.2fr_0.8fr_0.9fr_0.9fr] gap-3 border-b border-n-weak px-4 py-3 text-sm text-n-slate-12 hover:bg-n-alpha-2"
+            class="grid grid-cols-[1.1fr_1fr_0.8fr_1.2fr_0.8fr_0.9fr_0.8fr_0.8fr_0.9fr] gap-3 border-b border-n-weak px-4 py-3 text-sm text-n-slate-12 hover:bg-n-alpha-2"
             :href="conversationPath(lead)"
           >
             <span class="min-w-0">
@@ -405,6 +467,8 @@ onMounted(() => {
               }}
             </span>
             <span class="min-w-0 truncate">{{ lead.source?.name }}</span>
+            <span>{{ humanize(lead.follow_up_state) }}</span>
+            <span>{{ humanize(lead.control_state) }}</span>
             <span>{{ humanize(lead.booking_state) }}</span>
           </a>
         </template>

@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::HandoffAlertTemplateParams
-  def initialize(account:, conversation:, qualification:, alert_type:)
+  def initialize(account:, conversation:, qualification:, alert_type:, booking: nil)
     @account = account
     @conversation = conversation
     @qualification = qualification
     @alert_type = alert_type
+    @booking = booking
   end
 
   def to_h
@@ -18,7 +19,7 @@ class AiLeadEmployee::HandoffAlertTemplateParams
 
   private
 
-  attr_reader :account, :conversation, :qualification, :alert_type
+  attr_reader :account, :conversation, :qualification, :alert_type, :booking
 
   def template
     @template ||= account.settings&.dig('ai_lead_employee', 'alert_templates', alert_type)
@@ -37,6 +38,16 @@ class AiLeadEmployee::HandoffAlertTemplateParams
       'budget' => value_for(evidence, 'budget'),
       'decision_authority' => value_for(evidence, 'decision_authority'),
       'qualification_reasons' => qualification.reasons.join('; ')
+    }.merge(booking_template_context)
+  end
+
+  def booking_template_context
+    return {} if booking.blank?
+
+    {
+      'booking_time' => booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z'),
+      'booking_timezone' => booking.timezone,
+      'booking_calendar_id' => booking.calendar_id
     }
   end
 

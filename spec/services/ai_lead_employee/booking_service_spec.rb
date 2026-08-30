@@ -86,16 +86,22 @@ RSpec.describe AiLeadEmployee::BookingService do
       )
   end
 
-  it 'creates a durable booking, confirms the lead, sends one optional calendar invite, and alerts the operator' do # rubocop:disable RSpec/MultipleExpectations
+  it 'creates a durable booking, confirms the lead through the CE sender path, sends one optional calendar invite, and alerts the operator' do # rubocop:disable RSpec/MultipleExpectations
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      result = described_class.new(
-        conversation: conversation,
-        qualification: qualification,
-        starts_at: starts_at,
-        idempotency_key: 'booking-key-1'
-      ).perform
+      result = nil
+      perform_enqueued_jobs(only: SendReplyJob) do
+        result = described_class.new(
+          conversation: conversation,
+          qualification: qualification,
+          starts_at: starts_at,
+          idempotency_key: 'booking-key-1'
+        ).perform
+      end
 
       booking = result.booking
+      confirmation_message = Message.find(booking.confirmation_message_id)
+      preparation_delivery = booking.preparation_alert_deliveries.first
+      preparation_message = Message.find(preparation_delivery['message_id'])
 
       expect(result.created).to be(true)
       expect(booking).to have_attributes(
@@ -112,11 +118,15 @@ RSpec.describe AiLeadEmployee::BookingService do
       expect(booking.provider_event_id).to eq("booking-#{booking.id}")
       expect(booking.confirmation_message_id).to be_present
       expect(booking.preparation_alert_recipients).to eq(['255700000001'])
-      expect(booking.preparation_alert_deliveries).to all(include('status' => 'sent'))
+      expect(booking.preparation_alert_deliveries).to all(include('status' => 'queued'))
       expect(qualification.reload).to be_call_booked
       expect(conversation.reload).to have_attributes(control_state: 'human_active', control_version: 4)
-      expect(Message.outgoing.last.content).to include('Your call is booked for Monday, August 31 at 9:00 AM EAT')
-      expect(WebMock).to have_requested(:post, 'https://graph.facebook.com/v23.0/123456789/messages').twice
+      expect(confirmation_message).to have_attributes(conversation: conversation, private: false, message_type: 'outgoing')
+      expect(confirmation_message.content).to include('Your call is booked for Monday, August 31 at 9:00 AM EAT')
+      expect(confirmation_message.additional_attributes.dig('ai_lead_employee', 'delivery_boundary')).to eq('outbox')
+      expect(preparation_message.additional_attributes.dig('ai_lead_employee', 'delivery_boundary')).to eq('outbox')
+      expect(preparation_message.additional_attributes.dig('ai_lead_employee', 'booking_id')).to eq(booking.id)
+      expect(performed_jobs.pluck(:job)).to include(SendReplyJob)
     end
   end
 
@@ -138,21 +148,109 @@ RSpec.describe AiLeadEmployee::BookingService do
 
   it 'deduplicates retries without duplicating calendar events, confirmations, or alerts' do
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at, idempotency_key: 'retry-key').perform
+      perform_enqueued_jobs(only: SendReplyJob) do
+        described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at, idempotency_key: 'retry-key').perform
+      end
 
       expect do
-        result = described_class.new(
+        perform_enqueued_jobs(only: SendReplyJob) do
+          result = described_class.new(
+            conversation: conversation.reload,
+            qualification: qualification.reload,
+            starts_at: starts_at,
+            idempotency_key: 'retry-key'
+          ).perform
+          expect(result.created).to be(false)
+        end
+      end.not_to change(Booking, :count)
+
+      expect(Message.outgoing.count).to eq(2)
+      expect(Booking.last.preparation_alert_deliveries.count).to eq(1)
+    end
+  end
+
+  it 'recovers a legacy provider confirmation id through a durable local message' do
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      booking = described_class.new(
+        conversation: conversation,
+        qualification: qualification,
+        starts_at: starts_at,
+        idempotency_key: 'legacy-confirmation-key'
+      ).perform.booking
+      booking.update!(confirmation_message_id: 'wamid.legacy-provider-id')
+
+      expect do
+        described_class.new(
           conversation: conversation.reload,
           qualification: qualification.reload,
           starts_at: starts_at,
-          idempotency_key: 'retry-key'
+          idempotency_key: 'legacy-confirmation-key'
         ).perform
-        expect(result.created).to be(false)
-      end.not_to change(Booking, :count)
+      end.to change(Message.outgoing, :count).by(1)
 
-      expect(Message.outgoing.count).to eq(1)
-      expect(WebMock).to have_requested(:post, 'https://graph.facebook.com/v23.0/123456789/messages').twice
+      expect(booking.reload.confirmation_message_id).to match(/\A\d+\z/)
     end
+  end
+
+  it 'adds configured WhatsApp template params to preparation alert messages' do
+    channel.update!(
+      message_templates: [
+        {
+          'name' => 'booking_preparation',
+          'status' => 'APPROVED',
+          'category' => 'UTILITY',
+          'language' => 'en',
+          'parameter_format' => 'NAMED',
+          'components' => [
+            {
+              'type' => 'BODY',
+              'text' => 'Booking prep {{contact}} {{booking_time}} {{problem}} {{budget}}'
+            }
+          ]
+        }
+      ]
+    )
+    account.update!(
+      settings: account.settings.deep_merge(
+        'ai_lead_employee' => {
+          'alert_templates' => {
+            described_class::PREPARATION_ALERT_TYPE => {
+              'name' => 'booking_preparation',
+              'language' => 'en',
+              'processed_params' => {}
+            }
+          }
+        }
+      )
+    )
+
+    booking = nil
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      booking = described_class.new(
+        conversation: conversation,
+        qualification: qualification,
+        starts_at: starts_at,
+        idempotency_key: 'booking-template-key'
+      ).perform.booking
+    end
+
+    preparation_message = Message.find(booking.preparation_alert_deliveries.first['message_id'])
+    template_params = preparation_message.additional_attributes['template_params']
+    expect(template_params).to include('name' => 'booking_preparation', 'language' => 'en')
+    expect(template_params.dig('processed_params', 'body')).to include(
+      'contact' => 'Jane Lead +255712345678 jane@example.test',
+      'booking_time' => 'Monday, August 31 at 9:00 AM EAT',
+      'problem' => 'need more leads',
+      'budget' => '$2500'
+    )
+  end
+
+  it 'rejects concurrent overlapping attempts at the database boundary' do
+    create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at + 15.minutes, ends_at: starts_at + 45.minutes)
+
+    expect do
+      create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at, ends_at: starts_at + 30.minutes)
+    end.to raise_error(ActiveRecord::RecordInvalid, /overlaps an active booking/)
   end
 
   it 'rejects a slot already held by another active booking' do
@@ -161,6 +259,30 @@ RSpec.describe AiLeadEmployee::BookingService do
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
       expect do
         described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at, idempotency_key: 'conflict-key').perform
+      end.to raise_error(described_class::SlotUnavailable)
+    end
+  end
+
+  it 'rejects a buffer-adjacent active booking through serialized availability checks' do
+    account.update!(
+      settings: account.settings.deep_merge(
+        'ai_lead_employee' => {
+          'booking' => {
+            'buffer_after_minutes' => 15
+          }
+        }
+      )
+    )
+    create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at, ends_at: starts_at + 30.minutes)
+
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      expect do
+        described_class.new(
+          conversation: conversation,
+          qualification: qualification,
+          starts_at: starts_at + 30.minutes,
+          idempotency_key: 'buffer-conflict-key'
+        ).perform
       end.to raise_error(described_class::SlotUnavailable)
     end
   end

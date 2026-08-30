@@ -69,7 +69,7 @@ const description = computed(() => {
       <KnowledgeItemsPanel v-if="surface === 'KNOWLEDGE'" />
       <BookingsPanel v-if="surface === 'BOOKINGS'" />
       <OperationalDashboardPanel
-        v-if="['HOT_LEADS', 'LEADS'].includes(surface)"
+        v-if="['HOT_LEADS', 'LEADS', 'REVIEWS'].includes(surface)"
         :surface="surface"
       />
     </section>

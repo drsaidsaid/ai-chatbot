@@ -12,6 +12,17 @@ class Api::V1::Accounts::OperationalDashboardsController < Api::V1::Accounts::Ba
   private
 
   def dashboard_params
-    params.permit(:quality, :follow_up_state, :assignee_id, :source_id, :unanswered, :booking_status, :knowledge_approval)
+    params.permit(
+      :quality,
+      :follow_up_state,
+      :follow_up_status,
+      :assignee_id,
+      :source_id,
+      :unanswered,
+      :review_status,
+      :booking_status,
+      :knowledge_approval,
+      :control_state
+    )
   end
 end

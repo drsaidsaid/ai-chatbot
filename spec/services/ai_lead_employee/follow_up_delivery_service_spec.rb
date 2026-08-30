@@ -41,7 +41,8 @@ RSpec.describe AiLeadEmployee::FollowUpDeliveryService do
       conversation: conversation,
       lead_qualification: qualification,
       content: 'Can you share your budget?',
-      control_version: 4
+      control_version: 4,
+      scheduled_at: Time.current
     )
   end
 
@@ -54,13 +55,19 @@ RSpec.describe AiLeadEmployee::FollowUpDeliveryService do
       )
   end
 
-  it 'sends a pending follow-up once and records the sent message' do
-    described_class.new(follow_up: follow_up).perform
+  it 'queues a pending follow-up once through the durable CE outbox path' do
+    expect do
+      described_class.new(follow_up: follow_up).perform
+    end.to have_enqueued_job(SendReplyJob)
+
     described_class.new(follow_up: follow_up.reload).perform
 
     expect(follow_up.reload).to be_sent
     expect(follow_up.message.content).to eq('Can you share your budget?')
+    expect(follow_up.message.additional_attributes.dig('ai_lead_employee', 'delivery_boundary')).to eq('outbox')
+    expect(follow_up.message.additional_attributes.dig('ai_lead_employee', 'delivery_type')).to eq('qualification_follow_up')
     expect(Message.outgoing.where(conversation: conversation).count).to eq(1)
+    expect(WebMock).not_to have_requested(:post, 'https://graph.facebook.com/v23.0/123456789/messages')
   end
 
   it 'cancels a late job after control state changes' do
@@ -90,5 +97,27 @@ RSpec.describe AiLeadEmployee::FollowUpDeliveryService do
 
     expect(follow_up.reload).to be_cancelled
     expect(follow_up.cancellation_reason).to eq('follow_up_opted_out')
+  end
+
+  it 'does not send internal notes as follow-ups' do
+    internal_note = create(:message, account: account, conversation: conversation, inbox: channel.inbox, message_type: :outgoing, private: true)
+    follow_up.update!(message: internal_note)
+
+    described_class.new(follow_up: follow_up.reload).perform
+
+    expect(follow_up.reload).to be_cancelled
+    expect(follow_up.cancellation_reason).to eq('internal_note')
+    expect(WebMock).not_to have_requested(:post, 'https://graph.facebook.com/v23.0/123456789/messages')
+  end
+
+  it 'reschedules an early delivery job without creating a message' do
+    follow_up.update!(scheduled_at: 1.hour.from_now)
+
+    expect do
+      described_class.new(follow_up: follow_up).perform
+    end.to have_enqueued_job(AiLeadEmployee::FollowUpDeliveryJob)
+
+    expect(follow_up.reload).to be_pending
+    expect(Message.outgoing.where(conversation: conversation)).to be_empty
   end
 end

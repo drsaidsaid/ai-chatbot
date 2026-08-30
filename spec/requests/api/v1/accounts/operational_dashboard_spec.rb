@@ -33,5 +33,28 @@ RSpec.describe 'Operational Dashboard API', type: :request do
       expect(response.parsed_body['queues']).to be_present
       expect(response.parsed_body['performance']).to be_present
     end
+
+    it 'keeps queue rows tenant-scoped and limited to the operator visible conversations' do
+      other_account = create(:account)
+      visible_contact = create(:contact, account: account)
+      hidden_contact = create(:contact, account: account)
+      other_contact = create(:contact, account: other_account)
+      visible_conversation = create(:conversation, account: account, contact: visible_contact)
+      create(:conversation, account: account, contact: hidden_contact)
+      other_conversation = create(:conversation, account: other_account, contact: other_contact)
+      create(:inbox_member, user: agent, inbox: visible_conversation.inbox)
+      create(:lead_qualification, account: account, contact: visible_contact, quality: :qualified)
+      create(:lead_qualification, account: account, contact: hidden_contact, quality: :highly_qualified)
+      create(:lead_qualification, account: other_account, contact: other_contact, quality: :qualified)
+
+      get "/api/v1/accounts/#{account.id}/operational_dashboard",
+          headers: agent.create_new_auth_token,
+          as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['leads'].pluck('id')).to eq([visible_contact.id])
+      expect(response.parsed_body['leads'].pluck('id')).not_to include(hidden_contact.id, other_contact.id)
+      expect(other_conversation.account_id).to eq(other_account.id)
+    end
   end
 end

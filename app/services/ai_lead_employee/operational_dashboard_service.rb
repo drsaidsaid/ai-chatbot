@@ -1,13 +1,18 @@
 # frozen_string_literal: true
 
-class AiLeadEmployee::OperationalDashboardService
+class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/ClassLength
   QUEUES = [
     { key: 'all_leads', filters: {} },
     { key: 'hot_leads', filters: { quality: 'highly_qualified' } },
-    { key: 'unanswered_questions', filters: { unanswered: 'true' } },
+    { key: 'reviews', filters: { review_status: 'open' } },
+    { key: 'unanswered_questions', filters: { review_status: 'open' } },
     { key: 'knowledge_approval', filters: { knowledge_approval: 'true' } },
     { key: 'booked_calls', filters: { booking_status: 'booked' } },
-    { key: 'my_queue', filters: { assignee_id: 'me' } }
+    { key: 'follow_up', filters: { follow_up_status: 'pending' } },
+    { key: 'unassigned', filters: { assignee_id: 'unassigned' } },
+    { key: 'my_queue', filters: { assignee_id: 'me' } },
+    { key: 'ai_active', filters: { control_state: 'ai_active' } },
+    { key: 'human_active', filters: { control_state: 'human_active' } }
   ].freeze
 
   def initialize(account:, user:, filters:)
@@ -61,10 +66,7 @@ class AiLeadEmployee::OperationalDashboardService
     [
       method(:apply_quality_filter),
       method(:apply_follow_up_filter),
-      method(:apply_assignee_filter),
-      method(:apply_source_filter),
-      method(:apply_unanswered_filter),
-      method(:apply_knowledge_approval_filter),
+      method(:apply_conversation_filter),
       method(:apply_booking_filter)
     ].reduce(scope) { |filtered_scope, filter| filter.call(filtered_scope) }
   end
@@ -81,28 +83,51 @@ class AiLeadEmployee::OperationalDashboardService
     scope.where(follow_up_state: filters[:follow_up_state])
   end
 
-  def apply_assignee_filter(scope)
+  def apply_conversation_filter(scope)
+    return scope unless conversation_filters?
+
+    scope.where(contact_id: filtered_visible_conversations.select(:contact_id))
+  end
+
+  def conversation_filters?
+    filters[:assignee_id].present? ||
+      filters[:source_id].present? ||
+      filters[:review_status].present? ||
+      truthy?(filters[:unanswered]) ||
+      truthy?(filters[:knowledge_approval]) ||
+      filters[:follow_up_status].present? ||
+      filters[:control_state].present?
+  end
+
+  def filtered_visible_conversations
+    @filtered_visible_conversations ||= begin
+      scope = visible_conversations
+      scope = filter_conversations_by_assignee(scope)
+      scope = filter_conversations_by_source(scope)
+      scope = filter_conversations_by_review(scope)
+      scope = filter_conversations_by_knowledge_approval(scope)
+      scope = filter_conversations_by_follow_up_status(scope)
+      scope = filter_conversations_by_control_state(scope)
+      scope
+    end
+  end
+
+  def filter_conversations_by_assignee(scope)
     return scope if filters[:assignee_id].blank?
 
-    scope.where(contact_id: contacts_for_assignee(filters[:assignee_id]))
+    if filters[:assignee_id] == 'unassigned'
+      scope.where(assignee_id: nil)
+    elsif filters[:assignee_id] == 'me'
+      scope.where(assignee_id: user.id)
+    else
+      scope.where(assignee_id: filters[:assignee_id])
+    end
   end
 
-  def apply_source_filter(scope)
+  def filter_conversations_by_source(scope)
     return scope if filters[:source_id].blank?
 
-    scope.where(contact_id: contacts_for_source(filters[:source_id]))
-  end
-
-  def apply_unanswered_filter(scope)
-    return scope unless truthy?(filters[:unanswered])
-
-    scope.where(contact_id: contacts_with_open_reviews)
-  end
-
-  def apply_knowledge_approval_filter(scope)
-    return scope unless truthy?(filters[:knowledge_approval])
-
-    scope.where(contact_id: contacts_with_knowledge_approval)
+    scope.where(inbox_id: filters[:source_id])
   end
 
   def visible_contact_ids
@@ -120,38 +145,49 @@ class AiLeadEmployee::OperationalDashboardService
          .or(scope.where(team_id: team_ids))
   end
 
+  def row_conversation_scope
+    conversation_filters? ? filtered_visible_conversations : visible_conversations
+  end
+
   def latest_visible_conversation(contact)
-    visible_conversations
+    row_conversation_scope
       .where(contact: contact)
       .includes(:assignee, :inbox, :human_review_requests)
       .order(last_activity_at: :desc, id: :desc)
       .first
   end
 
-  def contacts_for_assignee(assignee_id)
-    return visible_conversations.where(assignee_id: nil).select(:contact_id) if assignee_id == 'unassigned'
-    return visible_conversations.where(assignee_id: user.id).select(:contact_id) if assignee_id == 'me'
+  def filter_conversations_by_review(scope)
+    status = truthy?(filters[:unanswered]) ? 'open' : filters[:review_status]
+    return scope if status.blank?
 
-    visible_conversations.where(assignee_id: assignee_id).select(:contact_id)
+    review_scope = HumanReviewRequest.where(account: account, conversation_id: scope.select(:id))
+    review_scope = review_scope.public_send(status) if HumanReviewRequest.statuses.key?(status.to_s)
+    scope.where(id: review_scope.select(:conversation_id))
   end
 
-  def contacts_for_source(source_id)
-    visible_conversations.where(inbox_id: source_id).select(:contact_id)
-  end
+  def filter_conversations_by_knowledge_approval(scope)
+    return scope unless truthy?(filters[:knowledge_approval])
 
-  def contacts_with_open_reviews
     review_conversation_ids = HumanReviewRequest.open
-                                                .where(account: account, conversation_id: visible_conversations.select(:id))
-                                                .select(:conversation_id)
-    visible_conversations.where(id: review_conversation_ids).select(:contact_id)
-  end
-
-  def contacts_with_knowledge_approval
-    review_conversation_ids = HumanReviewRequest.open
-                                                .where(account: account, conversation_id: visible_conversations.select(:id))
+                                                .where(account: account, conversation_id: scope.select(:id))
                                                 .where.not(knowledge_item_id: nil)
                                                 .select(:conversation_id)
-    visible_conversations.where(id: review_conversation_ids).select(:contact_id)
+    scope.where(id: review_conversation_ids)
+  end
+
+  def filter_conversations_by_follow_up_status(scope)
+    return scope if filters[:follow_up_status].blank?
+
+    follow_up_scope = LeadFollowUp.where(account: account, conversation_id: scope.select(:id))
+    follow_up_scope = follow_up_scope.public_send(filters[:follow_up_status]) if LeadFollowUp.statuses.key?(filters[:follow_up_status].to_s)
+    scope.where(id: follow_up_scope.select(:conversation_id))
+  end
+
+  def filter_conversations_by_control_state(scope)
+    return scope if filters[:control_state].blank?
+
+    scope.where(control_state: filters[:control_state])
   end
 
   def apply_booking_filter(scope)
@@ -185,6 +221,9 @@ class AiLeadEmployee::OperationalDashboardService
       qualities: LeadQualification.qualities.keys,
       follow_up_states: LeadQualification.follow_up_states.keys,
       booking_statuses: %w[booked not_booked],
+      review_statuses: HumanReviewRequest.statuses.keys,
+      follow_up_statuses: LeadFollowUp.statuses.keys,
+      control_states: Conversation.control_states.keys,
       assignees: visible_conversations.includes(:assignee).filter_map { |conversation| user_payload(conversation.assignee) }.uniq,
       sources: visible_conversations.includes(:inbox).filter_map { |conversation| source_payload(conversation.inbox) }.uniq
     }

@@ -167,16 +167,24 @@
         "UNASSIGNED": "Unassigned",
         "SOURCE": "Source",
         "BOOKING": "Booking",
+        "REVIEW": "Review",
+        "FOLLOW_UP_STATUS": "Follow-up status",
+        "CONTROL_STATE": "Control State",
         "UNANSWERED": "Unanswered questions",
         "KNOWLEDGE_APPROVAL": "Knowledge approval"
       },
       "QUEUE": {
         "ALL_LEADS": "All leads",
         "HOT_LEADS": "Hot leads",
+        "REVIEWS": "Reviews",
         "UNANSWERED_QUESTIONS": "Unanswered",
         "KNOWLEDGE_APPROVAL": "Knowledge approval",
         "BOOKED_CALLS": "Booked calls",
-        "MY_QUEUE": "My queue"
+        "FOLLOW_UP": "Follow-up",
+        "UNASSIGNED": "Unassigned",
+        "MY_QUEUE": "My queue",
+        "AI_ACTIVE": "AI active",
+        "HUMAN_ACTIVE": "Human active"
       },
       "FIELD": {
         "LEAD": "Lead",
@@ -185,6 +193,8 @@
         "REASONS": "Reasons",
         "ASSIGNEE": "Assignee",
         "SOURCE": "Source",
+        "FOLLOW_UP": "Follow-up",
+        "CONTROL": "Control",
         "BOOKING": "Booking"
       }
     }

@@ -45,6 +45,7 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
     created = false
 
     Booking.transaction(requires_new: true) do
+      account.lock!
       booking = Booking.find_by(account: account, idempotency_key: idempotency_key) if idempotency_key.present?
       unless booking
         raise SlotUnavailable unless slot_available?
@@ -103,9 +104,16 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
   end
 
   def deliver_missing_side_effects!(booking)
-    create_calendar_event!(booking) if booking.provider_event_id.blank?
-    send_confirmation!(booking) if booking.confirmation_message_id.blank?
-    send_preparation_alerts!(booking) if booking.preparation_alert_deliveries.blank?
+    message_ids_to_deliver = []
+
+    booking.with_lock do
+      booking.reload
+      create_calendar_event!(booking) if booking.provider_event_id.blank?
+      message_ids_to_deliver << deliver_confirmation!(booking)
+      message_ids_to_deliver.concat(deliver_preparation_alerts!(booking))
+    end
+
+    message_ids_to_deliver.compact.each { |message_id| SendReplyJob.perform_later(message_id) }
   end
 
   def create_calendar_event!(booking)
@@ -117,42 +125,129 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
     )
   end
 
-  def send_confirmation!(booking)
-    provider_message_id = text_message_client.send_text!(
-      recipient: conversation.contact_inbox.source_id,
-      content: confirmation_text(booking)
-    )
-    Message.create!(
+  def deliver_confirmation!(booking)
+    message = confirmation_message(booking)
+    return message.id if message&.failed?
+    return if message.present?
+
+    message = conversation.messages.create!(
       account: account,
       inbox: conversation.inbox,
-      conversation: conversation,
       message_type: :outgoing,
       content_type: :text,
       content: confirmation_text(booking),
-      status: :sent,
-      source_id: provider_message_id
+      private: false,
+      additional_attributes: confirmation_message_attributes(booking)
     )
-    booking.update!(confirmation_message_id: provider_message_id)
+    booking.update!(confirmation_message_id: message.id.to_s)
+    message.id
   end
 
-  def send_preparation_alerts!(booking)
+  def confirmation_message_attributes(booking)
+    {
+      ai_lead_employee: {
+        delivery_boundary: 'outbox',
+        booking_id: booking.id,
+        delivery_type: 'booking_confirmation'
+      }
+    }
+  end
+
+  def confirmation_message(booking)
+    message_id = Integer(booking.confirmation_message_id, exception: false)
+    return if message_id.blank?
+
+    account.messages.find_by(id: message_id)
+  end
+
+  def retry_message!(message)
+    message.id
+  end
+
+  def deliver_preparation_alerts!(booking)
     recipients = alert_recipients
-    deliveries = recipients.map { |recipient| deliver_preparation_alert(recipient, booking) }
+    previous_deliveries = booking.preparation_alert_deliveries.index_by { |delivery| delivery['recipient'] }
+    message_ids_to_deliver = []
+    deliveries = recipients.map do |recipient|
+      preparation_alert_delivery_for(recipient, booking, previous_deliveries[recipient], message_ids_to_deliver)
+    end
     booking.update!(preparation_alert_recipients: recipients, preparation_alert_deliveries: deliveries)
+    message_ids_to_deliver
   end
 
-  def deliver_preparation_alert(recipient, booking)
+  def preparation_alert_delivery_for(recipient, booking, previous_delivery, message_ids_to_deliver)
+    message = preparation_alert_message_from(previous_delivery)
+    created = false
+    unless message
+      message = create_preparation_alert_message!(recipient, booking)
+      created = true
+    end
+    message_ids_to_deliver << retry_message!(message) if created || message.failed?
+
     {
       recipient: recipient,
-      status: 'sent',
-      provider_message_id: text_message_client.send_text!(recipient: recipient, content: preparation_alert_text(booking))
-    }
-  rescue StandardError => e
-    {
+      status: alert_delivery_status(message),
+      message_id: message.id,
+      conversation_id: message.conversation_id,
+      provider_message_id: message.source_id,
+      error: message.external_error
+    }.compact
+  end
+
+  def preparation_alert_message_from(delivery)
+    return if delivery.blank?
+
+    message_id = Integer(delivery['message_id'], exception: false)
+    return if message_id.blank?
+
+    account.messages.find_by(id: message_id)
+  end
+
+  def create_preparation_alert_message!(recipient, booking)
+    alert_conversation = AiLeadEmployee::WhatsappAlertConversation.new(
+      account: account,
+      whatsapp_channel: conversation.inbox.channel,
       recipient: recipient,
-      status: 'failed',
-      error: e.message
-    }
+      alert_type: PREPARATION_ALERT_TYPE
+    ).perform
+    alert_conversation.messages.create!(
+      account: account,
+      inbox: conversation.inbox,
+      message_type: :outgoing,
+      content_type: :text,
+      content: preparation_alert_text(booking),
+      private: false,
+      additional_attributes: preparation_alert_attributes(recipient, booking)
+    )
+  end
+
+  def preparation_alert_attributes(recipient, booking)
+    {
+      ai_lead_employee: {
+        delivery_boundary: 'outbox',
+        booking_id: booking.id,
+        alert_type: PREPARATION_ALERT_TYPE,
+        alert_recipient: recipient
+      },
+      template_params: preparation_alert_template_params(booking)
+    }.compact
+  end
+
+  def preparation_alert_template_params(booking)
+    AiLeadEmployee::HandoffAlertTemplateParams.new(
+      account: account,
+      conversation: conversation,
+      qualification: qualification,
+      alert_type: PREPARATION_ALERT_TYPE,
+      booking: booking
+    ).to_h
+  end
+
+  def alert_delivery_status(message)
+    return 'sent' if message.source_id.present?
+    return 'failed' if message.failed?
+
+    'queued'
   end
 
   def alert_recipients
@@ -211,10 +306,6 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
 
   def duration
     configuration.fetch('duration_minutes').to_i.minutes
-  end
-
-  def text_message_client
-    @text_message_client ||= Meta::Whatsapp::TextMessageClient.new(whatsapp_channel: conversation.inbox.channel)
   end
 
   def calendar_client

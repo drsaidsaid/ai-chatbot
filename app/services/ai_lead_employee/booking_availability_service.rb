@@ -54,7 +54,7 @@ class AiLeadEmployee::BookingAvailabilityService
   def booked_slot?(starts_at, ends_at)
     Booking.active
            .where(account: account, calendar_id: calendar_id)
-           .exists?(['starts_at < ? AND ends_at > ?', ends_at + buffer_after, starts_at - buffer_before])
+           .exists?(['starts_at < ? AND ends_at > ?', ends_at + buffer_before, starts_at - buffer_after])
   end
 
   def overlaps?(starts_at, ends_at, busy_starts_at, busy_ends_at)

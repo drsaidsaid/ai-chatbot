@@ -70,15 +70,22 @@ RSpec.describe AiLeadEmployee::OperationalDashboardService do
       expect(payload[:visibility]).to eq(:operator)
     end
 
-    it 'applies queue filters for quality, follow-up state, assignee, source, unanswered questions, and booking status' do
+    it 'applies queue filters for quality, follow-up state, assignee, source, review status, follow-up status, control state, and booking status' do
       booked_contact = create(:contact, account: account)
       review_contact = create(:contact, account: account)
-      create(:conversation, account: account, inbox: inbox, contact: booked_contact, assignee: operator)
-      review_conversation = create(:conversation, account: account, inbox: inbox, contact: review_contact)
+      create(:conversation, account: account, inbox: inbox, contact: booked_contact, assignee: operator, control_state: :human_active)
+      review_conversation = create(:conversation, account: account, inbox: inbox, contact: review_contact, control_state: :ai_active)
       create(:lead_qualification, account: account, contact: booked_contact, quality: :highly_qualified, follow_up_state: :call_booked)
-      create(:lead_qualification, account: account, contact: review_contact, quality: :qualified, follow_up_state: :human_review)
+      review_qualification = create(
+        :lead_qualification,
+        account: account,
+        contact: review_contact,
+        quality: :qualified,
+        follow_up_state: :human_review
+      )
       lead_message = create(:message, account: account, conversation: review_conversation, inbox: inbox)
       create(:human_review_request, account: account, conversation: review_conversation, lead_message: lead_message)
+      create(:lead_follow_up, account: account, contact: review_contact, conversation: review_conversation, lead_qualification: review_qualification)
 
       payload = described_class.new(
         account: account,
@@ -86,14 +93,68 @@ RSpec.describe AiLeadEmployee::OperationalDashboardService do
         filters: {
           quality: 'qualified',
           follow_up_state: 'human_review',
+          follow_up_status: 'pending',
           assignee_id: 'unassigned',
           source_id: inbox.id.to_s,
-          unanswered: 'true',
+          review_status: 'open',
+          control_state: 'ai_active',
           booking_status: 'not_booked'
         }
       ).perform
 
       expect(payload[:leads].pluck(:id)).to eq([review_contact.id])
+    end
+
+    it 'renders the conversation that matched conversation-scoped queue filters' do
+      contact = create(:contact, account: account)
+      matched_conversation = create(
+        :conversation,
+        account: account,
+        inbox: inbox,
+        contact: contact,
+        control_state: :ai_active,
+        last_activity_at: 2.days.ago
+      )
+      create(
+        :conversation,
+        account: account,
+        inbox: inbox,
+        contact: contact,
+        control_state: :human_active,
+        last_activity_at: 1.hour.ago
+      )
+      qualification = create(:lead_qualification, account: account, contact: contact, quality: :qualified)
+      create(:lead_follow_up, account: account, contact: contact, conversation: matched_conversation, lead_qualification: qualification)
+
+      payload = described_class.new(account: account, user: admin, filters: { follow_up_status: 'pending' }).perform
+      row = payload[:leads].first
+
+      expect(row).to include(
+        id: contact.id,
+        conversation_display_id: matched_conversation.display_id,
+        control_state: 'ai_active'
+      )
+    end
+
+    it 'exposes built-in queues for leads, hot leads, reviews, bookings, follow-up, assignments, and control state' do
+      payload = described_class.new(account: account, user: admin, filters: {}).perform
+
+      expect(payload[:queues].pluck(:key)).to include(
+        'all_leads',
+        'hot_leads',
+        'reviews',
+        'booked_calls',
+        'follow_up',
+        'unassigned',
+        'my_queue',
+        'ai_active',
+        'human_active'
+      )
+      expect(payload[:filter_options]).to include(
+        control_states: contain_exactly('ai_active', 'handoff_requested', 'human_active', 'ai_paused', 'closed'),
+        follow_up_statuses: contain_exactly('pending', 'sent', 'cancelled', 'failed'),
+        review_statuses: contain_exactly('open', 'resolved')
+      )
     end
 
     it 'applies the knowledge approval queue filter from open review requests' do
