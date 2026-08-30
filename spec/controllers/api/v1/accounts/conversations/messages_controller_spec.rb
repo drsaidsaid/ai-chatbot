@@ -38,6 +38,12 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
       it 'marks the conversation as human controlled when a Human Operator sends a public reply' do
         conversation.update!(control_state: :ai_active, control_version: 2)
+        lead_message = create(:message, account: account, conversation: conversation, inbox: conversation.inbox, message_type: :incoming)
+        intent = create(:ai_orchestration_intent,
+                        account: account,
+                        conversation: conversation,
+                        triggering_message: lead_message,
+                        observed_control_version: 2)
         params = { content: 'Human reply', private: false }
 
         post api_v1_account_conversation_messages_url(account_id: account.id, conversation_id: conversation.display_id),
@@ -48,10 +54,17 @@ RSpec.describe 'Conversation Messages API', type: :request do
         expect(response).to have_http_status(:success)
         expect(conversation.reload).to be_human_active
         expect(conversation.control_version).to eq(3)
+        expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'human_reply_after_trigger')
       end
 
       it 'does not change control state for private notes' do
         conversation.update!(control_state: :ai_active, control_version: 2)
+        lead_message = create(:message, account: account, conversation: conversation, inbox: conversation.inbox, message_type: :incoming)
+        intent = create(:ai_orchestration_intent,
+                        account: account,
+                        conversation: conversation,
+                        triggering_message: lead_message,
+                        observed_control_version: 2)
         params = { content: 'Internal note', private: true }
 
         post api_v1_account_conversation_messages_url(account_id: account.id, conversation_id: conversation.display_id),
@@ -62,6 +75,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
         expect(response).to have_http_status(:success)
         expect(conversation.reload).to be_ai_active
         expect(conversation.control_version).to eq(2)
+        expect(intent.reload).to be_pending
       end
 
       it 'does not create the message' do

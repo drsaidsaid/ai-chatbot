@@ -473,10 +473,14 @@
       "TITLE": "AI Employee",
       "PAUSE": "Pause",
       "RESUME": "Resume",
+      "HANDOFF": "Handoff",
+      "OWNER": "Owner",
+      "NO_OWNER": "Unassigned",
       "CONTROL_VERSION": "Control version {version}",
       "LAST_DECISION": "Last AI Decision",
       "REFUSAL_REASON": "Refused: {reason}",
       "RECENT_EVENTS": "Recent Meta Events",
+      "RECENT_CONTROL_EVENTS": "Recent Control Events",
       "QUALIFICATION": {
         "TITLE": "Qualification",
         "QUALITY": "Quality",
@@ -499,6 +503,7 @@
       },
       "EVENT": {
         "MESSAGE_TEXT": "Inbound message",
+        "MESSAGE_ECHO": "WhatsApp app reply",
         "MESSAGE_VOICE": "Unsupported voice note",
         "STATUS": "Delivery status"
       }

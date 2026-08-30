@@ -21,7 +21,8 @@ class AiLeadEmployee::OrchestrationIntentRecorder
   def eligible_message?
     persisted_incoming_whatsapp_text? &&
       supported_content? &&
-      account_scope_consistent?
+      account_scope_consistent? &&
+      conversation_allows_ai?
   end
 
   def persisted_incoming_whatsapp_text?
@@ -48,6 +49,12 @@ class AiLeadEmployee::OrchestrationIntentRecorder
 
   def account_scope_consistent?
     message.account_id == message.conversation.account_id
+  end
+
+  def conversation_allows_ai?
+    message.conversation.ai_active? &&
+      message.conversation.open? &&
+      message.conversation.assignee_id.blank?
   end
 
   def find_or_create_intent

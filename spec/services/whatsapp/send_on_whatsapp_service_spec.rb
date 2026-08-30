@@ -112,6 +112,25 @@ describe Whatsapp::SendOnWhatsappService do
         expect(Meta::Whatsapp::OutboundMessageSender).not_to have_received(:new)
       end
 
+      it 'does not send internal notes to WhatsApp leads' do
+        whatsapp_cloud_channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+        agent = create(:user, account: whatsapp_cloud_channel.account)
+        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox, source_id: '255700111222')
+        cloud_conversation = create(:conversation, contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
+        message = create(:message,
+                         message_type: :outgoing,
+                         sender: agent,
+                         content: 'Internal note for the team.',
+                         private: true,
+                         conversation: cloud_conversation,
+                         account: cloud_conversation.account)
+
+        described_class.new(message: message).perform
+
+        expect(message.reload.source_id).to be_nil
+        expect(a_request(:post, %r{https://graph.facebook.com/v13.0/.*/messages})).not_to have_been_made
+      end
+
       it 'fails a free-form message without contacting the provider when outside the 24 hour limit' do
         create(:message, message_type: :incoming, content: 'test', created_at: 25.hours.ago,
                          conversation: conversation, account: conversation.account)

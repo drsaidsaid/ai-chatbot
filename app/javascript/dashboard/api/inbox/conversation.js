@@ -64,6 +64,10 @@ class ConversationApi extends ApiClient {
     return axios.post(`${this.url}/${conversationId}/resume_ai`);
   }
 
+  handoffAI({ conversationId }) {
+    return axios.post(`${this.url}/${conversationId}/handoff_ai`);
+  }
+
   togglePriority({ conversationId, priority }) {
     return axios.post(`${this.url}/${conversationId}/toggle_priority`, {
       priority,

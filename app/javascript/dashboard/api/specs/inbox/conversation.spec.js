@@ -12,6 +12,7 @@ describe('#ConversationAPI', () => {
     expect(conversationAPI).toHaveProperty('toggleStatus');
     expect(conversationAPI).toHaveProperty('pauseAI');
     expect(conversationAPI).toHaveProperty('resumeAI');
+    expect(conversationAPI).toHaveProperty('handoffAI');
     expect(conversationAPI).toHaveProperty('assignAgent');
     expect(conversationAPI).toHaveProperty('assignTeam');
     expect(conversationAPI).toHaveProperty('markMessageRead');
@@ -102,6 +103,13 @@ describe('#ConversationAPI', () => {
       conversationAPI.resumeAI({ conversationId: 12 });
       expect(axiosMock.post).toHaveBeenCalledWith(
         `/api/v1/conversations/12/resume_ai`
+      );
+    });
+
+    it('#handoffAI', () => {
+      conversationAPI.handoffAI({ conversationId: 12 });
+      expect(axiosMock.post).toHaveBeenCalledWith(
+        `/api/v1/conversations/12/handoff_ai`
       );
     });
 

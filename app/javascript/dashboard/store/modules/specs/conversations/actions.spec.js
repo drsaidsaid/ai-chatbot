@@ -461,6 +461,34 @@ describe('#actions', () => {
     });
   });
 
+  describe('#handoffAI', () => {
+    it('sends correct mutations if handoff is successful', async () => {
+      axios.post.mockResolvedValue({
+        data: {
+          status: 'open',
+          control_state: 'handoff_requested',
+          control_version: 4,
+        },
+      });
+      await actions.handoffAI({ commit }, { conversationId: 1 });
+      expect(commit).toHaveBeenCalledTimes(2);
+      expect(commit.mock.calls).toEqual([
+        [
+          types.CHANGE_CONVERSATION_STATUS,
+          { conversationId: 1, status: 'open', snoozedUntil: null },
+        ],
+        [
+          types.CHANGE_CONVERSATION_CONTROL,
+          {
+            conversationId: 1,
+            controlState: 'handoff_requested',
+            controlVersion: 4,
+          },
+        ],
+      ]);
+    });
+  });
+
   describe('#assignTeam', () => {
     it('sends correct mutations if assignment is successful', async () => {
       axios.post.mockResolvedValue({

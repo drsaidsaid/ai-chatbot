@@ -1,4 +1,6 @@
 class Conversations::AssignmentService
+  HUMAN_ASSIGNMENT_BLOCK_REASON = AiLeadEmployee::Orchestration::DecisionPlaceholder::BLOCK_REASONS[:assigned_to_human_operator]
+
   def initialize(conversation:, assignee_id:, assignee_type: nil)
     @conversation = conversation
     @assignee_id = assignee_id
@@ -16,10 +18,12 @@ class Conversations::AssignmentService
   def assign_agent
     conversation.with_lock do
       previous_assignee_id = conversation.assignee_id
+      previous_control_state = conversation.control_state
       open_for_human_assignment if should_open_for_human_assignment?
       apply_human_assignment
       conversation.save!
-      audit_human_reassignment!(previous_assignee_id) if previous_assignee_id != conversation.assignee_id
+      invalidate_pending_ai! if assignee.present?
+      audit_human_reassignment!(previous_assignee_id, previous_control_state) if previous_assignee_id != conversation.assignee_id
     end
     AiLeadEmployee::FollowUpScheduler.cancel_pending_for!(conversation: conversation, reason: 'control_state_human_active') if assignee.present?
     assignee
@@ -69,7 +73,7 @@ class Conversations::AssignmentService
     assignee_type.to_s == 'AgentBot'
   end
 
-  def audit_human_reassignment!(previous_assignee_id)
+  def audit_human_reassignment!(previous_assignee_id, previous_control_state)
     return unless conversation.persisted?
 
     Audited::Audit.create!(
@@ -77,7 +81,11 @@ class Conversations::AssignmentService
       associated: conversation.account,
       user: Current.user,
       action: 'update',
-      audited_changes: { 'assignee_id' => [previous_assignee_id, conversation.assignee_id] },
+      audited_changes: {
+        'ai_lead_employee_action' => 'human_assignment',
+        'control_state' => [previous_control_state, conversation.control_state],
+        'assignee_id' => [previous_assignee_id, conversation.assignee_id]
+      },
       version: next_audit_version,
       created_at: Time.current
     )
@@ -85,5 +93,9 @@ class Conversations::AssignmentService
 
   def next_audit_version
     Audited::Audit.where(auditable: conversation).maximum(:version).to_i + 1
+  end
+
+  def invalidate_pending_ai!
+    Conversations::ControlService.invalidate_pending_ai!(conversation: conversation, reason: HUMAN_ASSIGNMENT_BLOCK_REASON)
   end
 end

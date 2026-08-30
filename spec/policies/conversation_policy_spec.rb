@@ -70,4 +70,31 @@ RSpec.describe ConversationPolicy, type: :policy do
       end
     end
   end
+
+  permissions :control? do
+    context 'when user is an administrator' do
+      it 'allows control changes' do
+        expect(subject).to permit(administrator_context, conversation)
+      end
+    end
+
+    context 'when agent has inbox access' do
+      before { create(:inbox_member, user: agent, inbox: conversation.inbox) }
+
+      it 'allows control changes' do
+        expect(subject).to permit(agent_context, conversation)
+      end
+    end
+
+    context 'when an agent bot has conversation access' do
+      let(:agent_bot) { create(:agent_bot, account: account) }
+      let(:agent_bot_context) { { user: agent_bot, account: account, account_user: nil } }
+
+      before { create(:agent_bot_inbox, agent_bot: agent_bot, inbox: conversation.inbox) }
+
+      it 'denies human control changes' do
+        expect(subject).not_to permit(agent_bot_context, conversation)
+      end
+    end
+  end
 end

@@ -122,6 +122,62 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
       end
     end
 
+    context 'when Meta sends a WhatsApp Business app coexistence echo' do
+      it 'stores a visible outbound message and treats it as Human Operator activity' do
+        contact = create(:contact, account: whatsapp_channel.account, phone_number: '+2423423243')
+        contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: '2423423243')
+        conversation = create(:conversation,
+                              account: whatsapp_channel.account,
+                              contact: contact,
+                              inbox: whatsapp_channel.inbox,
+                              contact_inbox: contact_inbox,
+                              control_state: :ai_active,
+                              control_version: 6)
+        lead_message = create(:message,
+                              account: whatsapp_channel.account,
+                              inbox: whatsapp_channel.inbox,
+                              conversation: conversation,
+                              sender: contact,
+                              message_type: :incoming,
+                              content: 'Do you offer AI employees?',
+                              source_id: 'wamid.ECHO.TRIGGER')
+        intent = create(:ai_orchestration_intent,
+                        account: whatsapp_channel.account,
+                        conversation: conversation,
+                        triggering_message: lead_message,
+                        observed_control_version: 6)
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: echo_params(message_id: 'wamid.ECHO.HUMAN', body: 'Handled in WhatsApp.'),
+                            outgoing_echo: true).perform
+
+        echo = conversation.messages.outgoing.find_by!(source_id: 'wamid.ECHO.HUMAN')
+        expect(echo).to have_attributes(content: 'Handled in WhatsApp.', status: 'delivered', private: false)
+        expect(echo.content_attributes['external_echo']).to be(true)
+        expect(conversation.reload).to have_attributes(control_state: 'human_active', control_version: 7)
+        expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'human_reply_after_trigger')
+        expect(AiLeadEmployee::OrchestrationIntent.where(triggering_message: echo).count).to eq(0)
+      end
+
+      it 'deduplicates repeated coexistence echoes after takeover' do
+        contact = create(:contact, account: whatsapp_channel.account, phone_number: '+2423423243')
+        contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: '2423423243')
+        conversation = create(:conversation,
+                              account: whatsapp_channel.account,
+                              contact: contact,
+                              inbox: whatsapp_channel.inbox,
+                              contact_inbox: contact_inbox,
+                              control_state: :ai_active,
+                              control_version: 1)
+
+        payload = echo_params(message_id: 'wamid.ECHO.DUPLICATE', body: 'Already answered.')
+        described_class.new(inbox: whatsapp_channel.inbox, params: payload, outgoing_echo: true).perform
+        described_class.new(inbox: whatsapp_channel.inbox, params: payload, outgoing_echo: true).perform
+
+        expect(conversation.messages.outgoing.where(source_id: 'wamid.ECHO.DUPLICATE').count).to eq(1)
+        expect(conversation.reload).to have_attributes(control_state: 'human_active', control_version: 2)
+      end
+    end
+
     context 'when valid attachment message params' do
       it 'creates appropriate conversations, message and contacts' do
         stub_media_url_request
@@ -632,6 +688,36 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
         }]
       }]
     }.with_indifferent_access
+  end
+
+  def echo_params(message_id:, body:)
+    {
+      phone_number: whatsapp_channel.phone_number,
+      object: 'whatsapp_business_account',
+      entry: [{
+        changes: [{
+          field: 'smb_message_echoes',
+          value: {
+            metadata: {
+              phone_number_id: whatsapp_channel.provider_config['phone_number_id'],
+              display_phone_number: whatsapp_channel.phone_number.delete('+')
+            },
+            message_echoes: [message_echo_payload(message_id: message_id, body: body)]
+          }
+        }]
+      }]
+    }.with_indifferent_access
+  end
+
+  def message_echo_payload(message_id:, body:)
+    {
+      from: whatsapp_channel.phone_number.delete('+'),
+      to: sender_number,
+      id: message_id,
+      text: { body: body },
+      timestamp: '1787740800',
+      type: 'text'
+    }
   end
 
   def status_params(message_id, status)

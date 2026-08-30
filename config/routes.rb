@@ -204,6 +204,7 @@ Rails.application.routes.draw do
               post :unmute
               post :transcript
               post :toggle_status
+              post :handoff_ai
               post :pause_ai
               post :resume_ai
               post :toggle_priority

@@ -3,14 +3,34 @@
 
 class Whatsapp::IncomingMessageWhatsappCloudService < Whatsapp::IncomingMessageBaseService
   def perform
+    processed_params
+    new_provider_message = new_provider_message?
     super
-    AiLeadEmployee::OrchestrationIntentRecorder.new(message: @message).perform
+    record_coexistence_echo_takeover! if new_provider_message && outgoing_echo
+    record_orchestration_intent! if new_provider_message
   end
 
   private
 
   def processed_params
     @processed_params ||= params[:entry].try(:first).try(:[], 'changes').try(:first).try(:[], 'value')
+  end
+
+  def new_provider_message?
+    return false if messages_data.blank?
+
+    Message.find_by(source_id: messages_data.first[:id]).blank?
+  end
+
+  def record_coexistence_echo_takeover!
+    return unless @message&.outgoing?
+    return if @message.content_attributes['external_echo'].blank?
+
+    Conversations::ControlService.new(conversation: @message.conversation).coexistence_echo!
+  end
+
+  def record_orchestration_intent!
+    AiLeadEmployee::OrchestrationIntentRecorder.new(message: @message).perform
   end
 
   def download_attachment_file(attachment_payload)

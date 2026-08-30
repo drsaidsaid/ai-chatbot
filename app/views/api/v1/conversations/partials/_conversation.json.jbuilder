@@ -89,6 +89,24 @@ json.meta_whatsapp_events conversation.meta_whatsapp_webhook_events.order(create
   json.processed_at event.processed_at&.to_i
   json.created_at event.created_at.to_i
 end
+if local_assigns[:include_control_events]
+  json.control_events Audited::Audit.where(auditable: conversation)
+                                    .where("audited_changes ? 'ai_lead_employee_action' OR audited_changes ? 'control_state'")
+                                    .order(created_at: :desc)
+                                    .limit(10) do |event|
+    changes = event.audited_changes || {}
+    control_state_change = changes['control_state'] || []
+    assignee_change = changes['assignee_id'] || []
+    json.id event.id
+    json.action changes['ai_lead_employee_action'] || event.action
+    json.from control_state_change.first
+    json.to control_state_change.last
+    json.assignee_id assignee_change.last
+    json.actor_id event.user_id
+    json.actor_name event.user&.try(:name)
+    json.created_at event.created_at.to_i
+  end
+end
 json.created_at conversation.created_at.to_i
 json.updated_at conversation.updated_at.to_f
 json.timestamp conversation.last_activity_at.to_i

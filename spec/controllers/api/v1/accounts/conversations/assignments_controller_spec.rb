@@ -57,6 +57,12 @@ RSpec.describe 'Conversation Assignment API', type: :request do
 
       it 'marks the conversation as human controlled when a Human Operator is assigned' do
         conversation.update!(control_state: :ai_active, control_version: 4)
+        lead_message = create(:message, account: account, conversation: conversation, inbox: conversation.inbox, message_type: :incoming)
+        intent = create(:ai_orchestration_intent,
+                        account: account,
+                        conversation: conversation,
+                        triggering_message: lead_message,
+                        observed_control_version: 4)
 
         post api_v1_account_conversation_assignments_url(account_id: account.id, conversation_id: conversation.display_id),
              params: { assignee_id: agent.id },
@@ -66,6 +72,11 @@ RSpec.describe 'Conversation Assignment API', type: :request do
         expect(response).to have_http_status(:success)
         expect(conversation.reload).to be_human_active
         expect(conversation.control_version).to eq(5)
+        expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'assigned_to_human_operator')
+        expect(Audited::Audit.last.audited_changes).to include(
+          'ai_lead_employee_action' => 'human_assignment',
+          'control_state' => %w[ai_active human_active]
+        )
       end
 
       it 'assigns an agent bot to the conversation' do
@@ -88,9 +99,16 @@ RSpec.describe 'Conversation Assignment API', type: :request do
       end
 
       it 'assigns a team to the conversation' do
+        conversation.update!(control_state: :ai_active, control_version: 4)
         team_member = create(:user, account: account, role: :agent, auto_offline: false)
         create(:inbox_member, inbox: conversation.inbox, user: team_member)
         create(:team_member, team: team, user: team_member)
+        lead_message = create(:message, account: account, conversation: conversation, inbox: conversation.inbox, message_type: :incoming)
+        intent = create(:ai_orchestration_intent,
+                        account: account,
+                        conversation: conversation,
+                        triggering_message: lead_message,
+                        observed_control_version: 4)
         params = { team_id: team.id }
 
         post api_v1_account_conversation_assignments_url(account_id: account.id, conversation_id: conversation.display_id),
@@ -102,6 +120,13 @@ RSpec.describe 'Conversation Assignment API', type: :request do
         expect(conversation.reload.team).to eq(team)
         # assignee will be from team
         expect(conversation.reload.assignee).to eq(team_member)
+        expect(conversation).to be_human_active
+        expect(conversation.control_version).to eq(5)
+        expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'assigned_to_human_operator')
+        expect(Audited::Audit.last.audited_changes).to include(
+          'ai_lead_employee_action' => 'team_assignment',
+          'control_state' => %w[ai_active human_active]
+        )
       end
     end
 

@@ -48,7 +48,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
 
     described_class.perform_now(intent.id)
 
-    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'stale_control_version')
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'assigned_to_human_operator')
     expect(conversation.messages.outgoing.count).to eq(0)
     expect(OutboxEvent.count).to eq(0)
   end
@@ -128,7 +128,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     Conversations::ControlService.new(conversation: conversation.reload).resume_ai!
 
     expect { described_class.perform_now(intent.id) }.not_to change(Message, :count)
-    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'stale_control_version')
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'incompatible_control_state')
     expect(OutboxEvent.count).to eq(0)
   end
 

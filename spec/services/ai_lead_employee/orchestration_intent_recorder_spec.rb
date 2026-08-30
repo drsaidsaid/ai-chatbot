@@ -95,6 +95,63 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     expect(review_request.conversation).to eq(whatsapp_channel.inbox.conversations.first)
   end
 
+  it 'does not create automation while a Human Operator owns the conversation' do
+    contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
+    contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    conversation = create(:conversation,
+                          account: whatsapp_channel.account,
+                          inbox: whatsapp_channel.inbox,
+                          contact: contact,
+                          contact_inbox: contact_inbox,
+                          control_state: :human_active,
+                          control_version: 3)
+
+    message = create(:message,
+                     account: whatsapp_channel.account,
+                     inbox: whatsapp_channel.inbox,
+                     conversation: conversation,
+                     sender: contact,
+                     message_type: :incoming,
+                     content: 'Are you available?',
+                     source_id: 'wamid.HUMAN.ACTIVE.LEAD')
+
+    expect(described_class.new(message: message).perform).to be_nil
+    expect(AiLeadEmployee::OrchestrationIntent.count).to eq(0)
+  end
+
+  it 'creates a new intent only for the next lead message after explicit resume' do
+    contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
+    contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    conversation = create(:conversation,
+                          account: whatsapp_channel.account,
+                          inbox: whatsapp_channel.inbox,
+                          contact: contact,
+                          contact_inbox: contact_inbox,
+                          control_state: :ai_paused,
+                          control_version: 4)
+
+    expect do
+      Conversations::ControlService.new(conversation: conversation).resume_ai!
+    end.not_to change(Message, :count)
+
+    resumed_message = create(:message,
+                             account: whatsapp_channel.account,
+                             inbox: whatsapp_channel.inbox,
+                             conversation: conversation,
+                             sender: contact,
+                             message_type: :incoming,
+                             content: 'Can you help now?',
+                             source_id: 'wamid.RESUMED.LEAD')
+    intent = described_class.new(message: resumed_message).perform
+
+    expect(intent).to have_attributes(
+      conversation: conversation,
+      triggering_message: resumed_message,
+      observed_control_version: 5,
+      state: 'pending'
+    )
+  end
+
   def described_service
     Whatsapp::IncomingMessageWhatsappCloudService.new(inbox: whatsapp_channel.inbox, params: params)
   end

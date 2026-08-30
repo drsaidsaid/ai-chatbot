@@ -3,6 +3,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   include DateRangeHelper
   include HmacConcern
   include ConversationCustomAttributesConcern
+  include Api::V1::Accounts::Concerns::ConversationAiControl
 
   before_action :conversation, except: [:index, :meta, :search, :create, :filter]
   before_action :inbox, :contact, :contact_inbox, only: [:create]
@@ -94,15 +95,11 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     handle_human_open if @conversation.open? && Current.user.is_a?(User)
   end
 
-  def pause_ai = Conversations::ControlService.new(conversation: @conversation).pause_ai!
+  def pause_ai = control_ai!(:pause_ai!)
+  def resume_ai = control_ai!(:resume_ai!)
+  def handoff_ai = control_ai!(:handoff_requested!)
 
-  def resume_ai = Conversations::ControlService.new(conversation: @conversation).resume_ai!
-
-  def bot_handoff?
-    return false unless Current.user.is_a?(AgentBot)
-
-    @conversation.status == 'pending' && params[:status] == 'open'
-  end
+  def bot_handoff? = Current.user.is_a?(AgentBot) && @conversation.status == 'pending' && params[:status] == 'open'
 
   def toggle_priority
     @conversation.toggle_priority(params[:priority])
@@ -182,8 +179,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def handle_human_open
-    operator = Current.user if Current.user.agent?
-    Conversations::ControlService.new(conversation: @conversation).human_takeover!(operator: operator)
+    Conversations::ControlService.new(conversation: @conversation).human_takeover!(operator: Current.user.agent? ? Current.user : nil)
   end
 
   def conversation

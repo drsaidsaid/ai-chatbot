@@ -39,6 +39,7 @@ class Api::V1::Accounts::Conversations::AssignmentsController < Api::V1::Account
     @conversation.with_lock do
       @conversation.update!(team: @team)
     end
+    Conversations::ControlService.new(conversation: @conversation).team_assignment! if @team.present?
     render json: @team
   end
 

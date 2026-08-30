@@ -326,6 +326,24 @@ const actions = {
     }
   },
 
+  handoffAI: async ({ commit }, { conversationId }) => {
+    try {
+      const { data } = await ConversationApi.handoffAI({ conversationId });
+      commit(types.CHANGE_CONVERSATION_STATUS, {
+        conversationId,
+        status: data.status,
+        snoozedUntil: null,
+      });
+      commit(types.CHANGE_CONVERSATION_CONTROL, {
+        conversationId,
+        controlState: data.control_state,
+        controlVersion: data.control_version,
+      });
+    } catch (error) {
+      // Handle error
+    }
+  },
+
   createPendingMessageAndSend: async ({ dispatch }, data) => {
     const pendingMessage = createPendingMessage(data);
     dispatch('sendMessageWithData', pendingMessage);

@@ -18,8 +18,15 @@ const controlState = computed(
   () => props.currentChat.control_state || 'ai_active'
 );
 const controlVersion = computed(() => props.currentChat.control_version || 0);
+const controlEvents = computed(() => props.currentChat.control_events || []);
 const metaWhatsappEvents = computed(
   () => props.currentChat.meta_whatsapp_events || []
+);
+const ownerName = computed(
+  () =>
+    props.currentChat.meta?.assignee?.name ||
+    props.currentChat.meta?.assignee?.available_name ||
+    null
 );
 const aiEmployeeDecision = computed(
   () => props.currentChat.ai_employee_decision || null
@@ -35,10 +42,11 @@ const qualificationEvidence = computed(
   () => leadQualification.value?.evidence || {}
 );
 const decisionSources = computed(() => aiEmployeeDecision.value?.sources || []);
-const isAIActive = computed(() => controlState.value === 'ai_active');
-const canUpdateAI = computed(
-  () => !['human_active', 'closed'].includes(controlState.value)
+const canPauseAI = computed(() => controlState.value === 'ai_active');
+const canResumeAI = computed(
+  () => !['ai_active', 'closed'].includes(controlState.value)
 );
+const canRequestHandoff = computed(() => controlState.value === 'ai_active');
 const stateLabel = computed(() => {
   switch (controlState.value) {
     case 'ai_active':
@@ -57,6 +65,10 @@ const stateLabel = computed(() => {
 });
 
 const latestEventLabel = event => {
+  if (event.event_kind === 'smb_message_echoes') {
+    return t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.EVENT.MESSAGE_ECHO');
+  }
+
   if (event.event_kind?.startsWith('status.')) {
     return t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.EVENT.STATUS');
   }
@@ -72,6 +84,15 @@ const latestEventLabel = event => {
     default:
       return event.event_kind;
   }
+};
+
+const controlEventLabel = event => {
+  const action = event.action || '';
+  const from = event.from || '';
+  const to = event.to || '';
+  if (!from && !to) return action;
+
+  return `${action}: ${from} -> ${to}`;
 };
 
 const formatTime = timestamp => {
@@ -118,28 +139,69 @@ const updateAIControl = async action => {
     <div class="flex gap-2">
       <button
         type="button"
-        class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
-        :disabled="!canUpdateAI || !isAIActive || isUpdating"
+        class="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-n-weak px-2 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
+        :disabled="!canPauseAI || isUpdating"
+        data-testid="ai-control-pause"
         @click="updateAIControl('pauseAI')"
       >
+        <span class="i-lucide-pause size-3.5" />
         {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.PAUSE') }}
       </button>
       <button
         type="button"
-        class="inline-flex h-8 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
-        :disabled="!canUpdateAI || isAIActive || isUpdating"
+        class="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-n-weak px-2 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
+        :disabled="!canResumeAI || isUpdating"
+        data-testid="ai-control-resume"
         @click="updateAIControl('resumeAI')"
       >
+        <span class="i-lucide-play size-3.5" />
         {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.RESUME') }}
+      </button>
+      <button
+        type="button"
+        class="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-n-weak px-2 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
+        :disabled="!canRequestHandoff || isUpdating"
+        data-testid="ai-control-handoff"
+        @click="updateAIControl('handoffAI')"
+      >
+        <span class="i-lucide-hand size-3.5" />
+        {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.HANDOFF') }}
       </button>
     </div>
 
-    <div class="text-xs text-n-slate-11">
-      {{
-        $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONTROL_VERSION', {
-          version: controlVersion,
-        })
-      }}
+    <div class="flex flex-col gap-1 text-xs text-n-slate-11">
+      <div class="flex items-center justify-between gap-2">
+        <span>{{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.OWNER') }}</span>
+        <span class="font-medium text-n-slate-12">
+          {{ ownerName || $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.NO_OWNER') }}
+        </span>
+      </div>
+      <span>
+        {{
+          $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONTROL_VERSION', {
+            version: controlVersion,
+          })
+        }}
+      </span>
+    </div>
+
+    <div v-if="controlEvents.length" class="flex flex-col gap-2">
+      <div class="text-xs font-medium uppercase text-n-slate-11">
+        {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.RECENT_CONTROL_EVENTS') }}
+      </div>
+      <div
+        v-for="event in controlEvents"
+        :key="event.id"
+        class="flex flex-col gap-1 border-t border-n-weak pt-2 text-xs"
+      >
+        <span class="text-n-slate-12">{{ controlEventLabel(event) }}</span>
+        <span v-if="event.actor_name" class="text-n-slate-11">
+          {{ event.actor_name }}
+        </span>
+        <span class="text-n-slate-11">
+          {{ formatTime(event.created_at) }}
+        </span>
+      </div>
     </div>
 
     <div
