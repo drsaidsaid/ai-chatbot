@@ -481,12 +481,17 @@
       "REFUSAL_REASON": "Refused: {reason}",
       "RECENT_EVENTS": "Recent Meta Events",
       "RECENT_CONTROL_EVENTS": "Recent Control Events",
+      "HANDOFF_STATUS": "Handoff status",
       "QUALIFICATION": {
         "TITLE": "Qualification",
         "QUALITY": "Quality",
         "SCORE": "Score",
         "NEXT_QUESTION": "Next question",
         "FACTS": "Facts",
+        "EVIDENCE_REVIEW": "Evidence review",
+        "EVIDENCE_CORRECTION": "Correct evidence",
+        "EVIDENCE_VALUE": "Corrected value",
+        "SAVE": "Save",
         "REASONS": "Reasons"
       },
       "FOLLOW_UP": {

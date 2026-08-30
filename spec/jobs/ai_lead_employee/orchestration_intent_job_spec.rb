@@ -132,8 +132,10 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     expect(OutboxEvent.count).to eq(0)
   end
 
-  it 'atomically records a grounded AI answer, verified Source References, and outbox event once under retry' do
+  it 'atomically records qualification, a grounded AI answer, the next question, verified Source References, and outbox event once under retry' do # rubocop:disable RSpec/ExampleLength, RSpec/MultipleExpectations
     knowledge_item = create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
+    create(:qualification_question, account: account, signal: :problem, prompt: 'What problem should we solve?', position: 1)
+    triggering_message.update!(content: 'Do you offer AI employees? I run an agency.')
     allow(provider_client).to receive(:complete).and_return(
       AiLeadEmployee::AiProvider::Response.new(
         id: 'provider-response-1',
@@ -171,14 +173,69 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       inbox_id: whatsapp_channel.inbox.id,
       conversation_id: conversation.id,
       message_type: 'outgoing',
-      content: 'Yes, we build AI employees for qualified businesses.',
+      content: "Yes, we build AI employees for qualified businesses.\n\nWhat problem should we solve?",
       private: false
     )
+    expect(contact.lead_qualification).to have_attributes(quality: 'low_qualified')
+    expect(contact.lead_qualification.evidence_snapshot).to include('business_type')
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'orchestration_intent_id')).to eq(intent.id)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'outbound_intent_status')).to eq('grounded_answer')
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'source_references').first['id']).to eq(knowledge_item.id)
+    expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification')).to include(
+      'quality' => 'low_qualified',
+      'next_question' => 'What problem should we solve?'
+    )
     expect_outbox_state(outbox_event, outbound_message)
     expect(SendReplyJob).to have_received(:perform_later).with(outbound_message.id).once
+  end
+
+  it 'explains unsupported human requests through durable orchestration without creating a sales handoff' do
+    account.update!(
+      settings: {
+        'ai_lead_employee' => {
+          'unqualified_human_request_explanation' => 'I need to qualify the request before handing this to a Human Operator.'
+        }
+      }
+    )
+    create(:qualification_question, account: account, signal: :problem, prompt: 'What problem should we solve?', position: 1)
+    create(:qualification_budget_range, account: account, min_cents: 100_000, max_cents: nil)
+    triggering_message.update!(content: 'Please give me a human. My budget is $50.')
+
+    described_class.perform_now(intent.id)
+
+    outbound_message = intent.reload.outbound_message
+    expect(outbound_message.content).to eq(
+      "I need to qualify the request before handing this to a Human Operator.\n\nWhat problem should we solve?"
+    )
+    expect(intent).to have_attributes(state: 'completed')
+    expect(contact.lead_qualification).to be_unqualified
+    expect(conversation.reload).to be_ai_active
+    expect(LeadHandoff.count).to eq(0)
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+  end
+
+  it 'creates one highly qualified handoff from current qualification evidence instead of an AI answer' do
+    operator = create(:user, :administrator, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700000001' })
+    account.update!(
+      settings: {
+        'ai_lead_employee' => {
+          'human_operator_id' => operator.id,
+          'alert_routes' => {
+            AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE => [{ 'type' => 'assignee' }]
+          }
+        }
+      }
+    )
+    triggering_message.update!(content: 'I need more leads now. I am the owner of the agency and can spend $2500.')
+
+    described_class.perform_now(intent.id)
+    described_class.perform_now(intent.id)
+
+    expect(intent.reload).to have_attributes(state: 'completed', outbound_message_id: nil)
+    expect(contact.lead_qualification).to be_highly_qualified
+    expect(LeadHandoff.where(account: account, conversation: conversation).count).to eq(1)
+    expect(conversation.reload).to have_attributes(assignee: operator, control_state: 'human_active')
+    expect(SendReplyJob).to have_received(:perform_later).once
   end
 
   it 'creates one Review Request for unknown questions and never creates fallback answer content' do

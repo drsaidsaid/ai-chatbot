@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class AiLeadEmployee::Orchestration::IntentProcessor
   PROVIDER_SYSTEM_PROMPT = [
     'Answer the lead only from the approved business source supplied.',
@@ -24,6 +25,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def perform
     @outbound_message_delivery_id = nil
+    @handoff_alert_delivery_ids = []
     processed_intent = ActiveRecord::Base.transaction do
       intent.lock!
       return intent if intent.terminal?
@@ -37,6 +39,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       process_grounded_answer!
     end
     enqueue_outbound_message_delivery
+    enqueue_handoff_alert_deliveries
     processed_intent
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
     AiLeadEmployee::Orchestration::ProviderFailureHandler.new(intent: intent, failure: e).perform
@@ -94,6 +97,10 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def process_grounded_answer!
+    qualification_result = qualify_lead!
+    qualification_result_response = qualification_result_response(qualification_result)
+    return qualification_result_response if qualification_result_response.present?
+
     answer_result = AiLeadEmployee::KnowledgeAnswerService.new(account: account, question: triggering_message.content).perform
     return request_review!(answer_result.refusal_reason) if answer_result.refused?
 
@@ -103,17 +110,93 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     block_reason = final_block_reason
     return block_intent!(block_reason) if block_reason.present?
 
-    outbound_message = create_outbound_message!(provider_response, answer_result.sources)
+    complete_grounded_answer!(provider_response, answer_result, qualification_result)
+  end
+
+  def qualification_result_response(qualification_result)
+    handoff_result = create_highly_qualified_handoff(qualification_result)
+    return complete_handoff!(handoff_result, qualification_result) if handoff_result&.handoff.present?
+    return complete_unsupported_human_request!(qualification_result) if unsupported_human_request?(qualification_result)
+  end
+
+  def complete_grounded_answer!(provider_response, answer_result, qualification_result)
+    outbound_message = create_outbound_message!(
+      content: reply_content(provider_response.content, qualification_result),
+      source_references: answer_result.sources,
+      qualification_result: qualification_result,
+      status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS
+    )
     create_outbox_event!(outbound_message)
-    completed_intent = complete_intent!(outbound_message, provider_response, answer_result.sources)
+    completed_intent = complete_intent!(
+      outbound_message: outbound_message,
+      provider_response: provider_response,
+      source_references: answer_result.sources,
+      qualification_result: qualification_result,
+      status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS
+    )
     @outbound_message_delivery_id = outbound_message.id
     completed_intent
+  end
+
+  def qualify_lead!
+    AiLeadEmployee::QualificationService.new(
+      conversation: conversation,
+      incoming_message: triggering_message
+    ).perform
+  end
+
+  def create_highly_qualified_handoff(qualification_result)
+    AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification_result.qualification,
+      defer_alert_delivery: true
+    ).perform
+  end
+
+  def complete_handoff!(handoff_result, qualification_result)
+    @handoff_alert_delivery_ids = handoff_result.alert_message_ids
+    intent.update!(
+      state: :completed,
+      source_references: qualification_source_references(qualification_result),
+      decision: {
+        status: 'highly_qualified_handoff',
+        triggering_message_id: triggering_message.id,
+        handoff_id: handoff_result.handoff.id,
+        qualification: qualification_result_payload(qualification_result)
+      },
+      completed_at: Time.current
+    )
+    record_ai_employee_decision!(status: 'highly_qualified_handoff', qualification_result: qualification_result)
+    intent
+  end
+
+  def complete_unsupported_human_request!(qualification_result)
+    outbound_message = create_outbound_message!(
+      content: human_request_explanation(qualification_result),
+      source_references: qualification_source_references(qualification_result),
+      qualification_result: qualification_result,
+      status: 'qualification_question'
+    )
+    create_outbox_event!(outbound_message)
+    complete_intent!(
+      outbound_message: outbound_message,
+      provider_response: nil,
+      source_references: qualification_source_references(qualification_result),
+      qualification_result: qualification_result,
+      status: 'qualification_question'
+    )
+    @outbound_message_delivery_id = outbound_message.id
+    intent
   end
 
   def enqueue_outbound_message_delivery
     return if @outbound_message_delivery_id.blank?
 
     SendReplyJob.perform_later(@outbound_message_delivery_id)
+  end
+
+  def enqueue_handoff_alert_deliveries
+    @handoff_alert_delivery_ids.each { |message_id| SendReplyJob.perform_later(message_id) }
   end
 
   def build_provider_answer(answer_result)
@@ -139,21 +222,22 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     provider_response.content.to_s.strip == 'REVIEW_REQUIRED'
   end
 
-  def create_outbound_message!(provider_response, source_references)
+  def create_outbound_message!(content:, source_references:, qualification_result:, status:)
     conversation.messages.create!(
       account: account,
       inbox: conversation.inbox,
       message_type: :outgoing,
       content_type: :text,
-      content: provider_response.content,
+      content: content,
       private: false,
       additional_attributes: {
         ai_lead_employee: {
           orchestration_intent_id: intent.id,
           actor_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::ACTOR_TYPE,
           delivery_boundary: AiLeadEmployee::Orchestration::DecisionPlaceholder::DELIVERY_BOUNDARY,
-          outbound_intent_status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS,
-          source_references: source_references
+          outbound_intent_status: status,
+          source_references: source_references,
+          qualification: qualification_result_payload(qualification_result)
         }
       }
     )
@@ -175,23 +259,80 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     )
   end
 
-  def complete_intent!(outbound_message, provider_response, source_references)
+  def complete_intent!(outbound_message:, provider_response:, source_references:, qualification_result:, status:)
+    intent.update!(completion_attributes(outbound_message, provider_response, source_references, qualification_result, status))
+    record_ai_employee_decision!(
+      status: status,
+      qualification_result: qualification_result,
+      source_references: source_references
+    )
+    intent
+  end
+
+  def completion_attributes(outbound_message, provider_response, source_references, qualification_result, status)
     connection = account.ai_provider_connection
-    intent.update!(
+    {
       state: :completed,
       outbound_message: outbound_message,
       source_references: source_references,
       selected_provider: connection&.provider,
-      model: provider_response.model || connection&.model,
+      model: provider_response&.model || connection&.model,
       decision: {
-        status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS,
+        status: status,
         triggering_message_id: triggering_message.id,
         outbound_message_id: outbound_message.id,
-        provider_response_id: provider_response.id
+        provider_response_id: provider_response&.id,
+        qualification: qualification_result_payload(qualification_result)
       },
       completed_at: Time.current
+    }
+  end
+
+  def reply_content(answer_content, qualification_result)
+    return answer_content if qualification_result&.next_question.blank?
+
+    [answer_content, qualification_result.next_question].join("\n\n")
+  end
+
+  def unsupported_human_request?(qualification_result)
+    qualification_result.present? &&
+      qualification_result.qualification&.highly_qualified? == false &&
+      triggering_message.content.to_s.match?(/\b(human|person|operator|agent|sales|representative)\b/i)
+  end
+
+  def human_request_explanation(qualification_result)
+    [
+      AiLeadEmployee::HighlyQualifiedHandoffService.unqualified_human_request_explanation(account),
+      qualification_result.next_question
+    ].compact_blank.join("\n\n")
+  end
+
+  def qualification_source_references(qualification_result)
+    qualification_result.qualification.evidence_snapshot.values.filter_map { |evidence| evidence['source_reference'] }
+  end
+
+  def qualification_result_payload(qualification_result)
+    return nil if qualification_result.blank?
+
+    {
+      'quality' => qualification_result.qualification.quality,
+      'score' => qualification_result.qualification.score,
+      'missing_signals' => qualification_result.qualification.missing_signals,
+      'next_question' => qualification_result.next_question,
+      'configuration_version' => qualification_result.qualification.configuration_version
+    }
+  end
+
+  def record_ai_employee_decision!(status:, qualification_result:, source_references: [])
+    conversation.update!(
+      additional_attributes: conversation.additional_attributes.merge(
+        'ai_employee_last_decision' => {
+          'status' => status,
+          'sources' => source_references,
+          'qualification' => qualification_result_payload(qualification_result)
+        }
+      )
     )
-    intent
   end
 
   def request_review!(reason)
@@ -208,3 +349,4 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     intent
   end
 end
+# rubocop:enable Metrics/ClassLength

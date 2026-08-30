@@ -34,6 +34,7 @@ class LeadQualification < ApplicationRecord
   belongs_to :account
   belongs_to :contact
   has_many :bookings, dependent: :destroy_async
+  has_many :lead_handoffs, dependent: :destroy_async
   has_many :lead_qualification_decisions, dependent: :destroy_async
   has_many :lead_follow_ups, dependent: :destroy_async
 

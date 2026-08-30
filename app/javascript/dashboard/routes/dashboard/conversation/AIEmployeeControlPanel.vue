@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
+import LeadQualificationsAPI from 'dashboard/api/leadQualifications';
 
 const props = defineProps({
   currentChat: {
@@ -10,9 +11,22 @@ const props = defineProps({
   },
 });
 
+const QUALIFICATION_SIGNALS = [
+  'business_type',
+  'problem',
+  'lead_volume',
+  'urgency',
+  'budget',
+  'decision_authority',
+  'contact_details',
+];
+
 const store = useStore();
 const { t } = useI18n();
 const isUpdating = ref(false);
+const isSavingEvidence = ref(false);
+const correctionSignal = ref(QUALIFICATION_SIGNALS[0]);
+const correctionValue = ref('');
 
 const controlState = computed(
   () => props.currentChat.control_state || 'ai_active'
@@ -40,6 +54,14 @@ const leadFollowUpOptedOut = computed(
 );
 const qualificationEvidence = computed(
   () => leadQualification.value?.evidence || {}
+);
+const qualificationEvidenceRecords = computed(
+  () => leadQualification.value?.evidence_records || []
+);
+const leadHandoffs = computed(() => leadQualification.value?.handoffs || []);
+const contactId = computed(
+  () =>
+    props.currentChat.meta?.sender?.id || leadQualification.value?.contact_id
 );
 const decisionSources = computed(() => aiEmployeeDecision.value?.sources || []);
 const canPauseAI = computed(() => controlState.value === 'ai_active');
@@ -119,6 +141,28 @@ const updateAIControl = async action => {
     await store.dispatch(action, { conversationId: props.currentChat.id });
   } finally {
     isUpdating.value = false;
+  }
+};
+
+const saveEvidenceCorrection = async () => {
+  if (
+    !contactId.value ||
+    !correctionValue.value.trim() ||
+    isSavingEvidence.value
+  ) {
+    return;
+  }
+
+  isSavingEvidence.value = true;
+  try {
+    await LeadQualificationsAPI.evidence(contactId.value, {
+      signal: correctionSignal.value,
+      value: correctionValue.value.trim(),
+    });
+    correctionValue.value = '';
+    await store.dispatch('getConversation', props.currentChat.id);
+  } finally {
+    isSavingEvidence.value = false;
   }
 };
 </script>
@@ -279,6 +323,74 @@ const updateAIControl = async action => {
           <span class="text-n-slate-11">{{ evidence.value }}</span>
         </span>
       </div>
+      <div
+        v-if="qualificationEvidenceRecords.length"
+        class="flex flex-col gap-1"
+      >
+        <span class="text-n-slate-11">
+          {{
+            $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.EVIDENCE_REVIEW')
+          }}
+        </span>
+        <span
+          v-for="record in qualificationEvidenceRecords"
+          :key="record.id"
+          class="text-n-slate-12"
+        >
+          <span>{{ record.signal }}</span>
+          <span class="text-n-slate-11">{{ record.value }}</span>
+          <span class="text-n-slate-11">{{ record.source }}</span>
+        </span>
+      </div>
+      <form
+        class="flex flex-col gap-2"
+        @submit.prevent="saveEvidenceCorrection"
+      >
+        <span class="text-n-slate-11">
+          {{
+            $t(
+              'CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.EVIDENCE_CORRECTION'
+            )
+          }}
+        </span>
+        <select
+          v-model="correctionSignal"
+          class="h-8 rounded-md border border-n-weak bg-n-alpha-2 px-2 text-xs text-n-slate-12 outline-none"
+          data-testid="qualification-evidence-signal"
+        >
+          <option
+            v-for="signal in QUALIFICATION_SIGNALS"
+            :key="signal"
+            :value="signal"
+          >
+            {{ signal }}
+          </option>
+        </select>
+        <div class="flex gap-2">
+          <input
+            v-model="correctionValue"
+            type="text"
+            class="min-w-0 flex-1 rounded-md border border-n-weak bg-n-alpha-2 px-2 text-xs text-n-slate-12 outline-none"
+            :placeholder="
+              $t(
+                'CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.EVIDENCE_VALUE'
+              )
+            "
+            data-testid="qualification-evidence-value"
+          />
+          <button
+            type="submit"
+            class="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-n-weak px-2 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="
+              !contactId || !correctionValue.trim() || isSavingEvidence
+            "
+            data-testid="qualification-evidence-save"
+          >
+            <span class="i-lucide-check size-3.5" />
+            {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.SAVE') }}
+          </button>
+        </div>
+      </form>
       <div v-if="leadQualification.reasons?.length" class="flex flex-col gap-1">
         <span class="text-n-slate-11">
           {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.REASONS') }}
@@ -325,6 +437,25 @@ const updateAIControl = async action => {
             class="text-n-slate-11"
           >
             {{ followUp.cancellation_reason || followUp.failure_reason }}
+          </span>
+        </span>
+      </div>
+      <div v-if="leadHandoffs.length" class="flex flex-col gap-1">
+        <span class="text-n-slate-11">
+          {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.HANDOFF_STATUS') }}
+        </span>
+        <span
+          v-for="handoff in leadHandoffs"
+          :key="handoff.id"
+          class="text-n-slate-12"
+        >
+          {{ handoff.status }}
+          <span class="text-n-slate-11">
+            {{
+              handoff.alert_deliveries
+                ?.map(delivery => delivery.status)
+                .join(', ')
+            }}
           </span>
         </span>
       </div>

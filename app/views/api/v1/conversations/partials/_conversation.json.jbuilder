@@ -66,6 +66,26 @@ if conversation.contact&.lead_qualification.present?
       account: conversation.account,
       evidence_snapshot: qualification.evidence_snapshot
     )
+    json.evidence_records QualificationEvidence.where(account: conversation.account, contact: conversation.contact)
+                                               .order(observed_at: :desc, id: :desc)
+                                               .limit(20) do |evidence|
+      json.id evidence.id
+      json.signal evidence.signal
+      json.value evidence.value['value']
+      json.source evidence.source
+      json.source_reference AiLeadEmployee::QualificationEvidenceSnapshot.source_reference_for(evidence)
+      json.observed_at evidence.observed_at&.iso8601
+      json.superseded evidence.superseded_at.present?
+    end
+    json.handoffs qualification.lead_handoffs.order(created_at: :desc).limit(5) do |handoff|
+      json.id handoff.id
+      json.status handoff.status
+      json.alert_type handoff.alert_type
+      json.assignee_id handoff.assignee_id
+      json.handed_off_at handoff.handed_off_at&.iso8601
+      json.alert_recipients handoff.alert_recipients
+      json.alert_deliveries handoff.alert_deliveries
+    end
     json.follow_up_opted_out LeadFollowUpOptOut.exists?(account: conversation.account, contact: conversation.contact)
     json.follow_ups qualification.lead_follow_ups.order(created_at: :desc).limit(5) do |follow_up|
       json.id follow_up.id

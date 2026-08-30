@@ -319,7 +319,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
     expect(inbound_message).to have_attributes(account_id: account.id, message_type: 'incoming', content: 'Do you offer AI employees?')
     expect(greeting).to have_attributes(account_id: account.id, message_type: 'template', content: 'Welcome to AI Lead Employee.')
     expect(conversation.messages.chat.order(:created_at, :id).map(&:content)).to eq(
-      ['Do you offer AI employees?', 'Welcome to AI Lead Employee.', 'Yes, we build AI employees for qualified businesses.']
+      ['Do you offer AI employees?', 'Welcome to AI Lead Employee.', expected_ai_employee_reply]
     )
   end
 
@@ -335,7 +335,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
   def expect_ai_outbound_message(outbound_message, conversation, intent, knowledge_item)
     expect(outbound_message).to have_attributes(account_id: account.id, inbox_id: whatsapp_channel.inbox.id,
                                                 conversation_id: conversation.id, message_type: 'outgoing',
-                                                content: 'Yes, we build AI employees for qualified businesses.',
+                                                content: expected_ai_employee_reply,
                                                 private: false)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'orchestration_intent_id')).to eq(intent.id)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'source_references').first['id']).to eq(knowledge_item.id)
@@ -367,7 +367,11 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
     expect(a_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
       .with { |request| JSON.parse(request.body).dig('text', 'body') == 'Welcome to AI Lead Employee.' }).to have_been_made.once
     expect(a_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
-      .with { |request| JSON.parse(request.body).dig('text', 'body') == provider_response.content }).to have_been_made.once
+      .with { |request| JSON.parse(request.body).dig('text', 'body') == expected_ai_employee_reply }).to have_been_made.once
+  end
+
+  def expected_ai_employee_reply
+    "#{provider_response.content}\n\nWhat type of business do you run?"
   end
 
   def reconcile_delivery_statuses(outbound_message)

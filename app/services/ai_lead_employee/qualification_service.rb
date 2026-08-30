@@ -31,7 +31,7 @@ class AiLeadEmployee::QualificationService
   end
 
   def perform
-    new_evidence = incoming_message.present? ? extract_evidence! : []
+    new_evidence = extract_evidence!
     qualification = evaluate!
 
     Result.new(
@@ -46,20 +46,31 @@ class AiLeadEmployee::QualificationService
     evidence = nil
 
     ActiveRecord::Base.transaction do
-      evidence = QualificationEvidence.create!(
-        account: contact.account,
+      evidence = create_human_evidence!(contact: contact, conversation: conversation, user: user, signal: signal, value: value)
+      supersede_current_evidence!(contact: contact, signal: signal, replacement: evidence)
+      AiLeadEmployee::QualificationEvidenceAudit.record!(
         contact: contact,
         conversation: conversation,
         user: user,
         signal: signal,
-        source: :human,
-        value: { 'value' => value.to_s },
-        observed_at: Time.current
+        value: value
       )
-      supersede_current_evidence!(contact: contact, signal: signal, replacement: evidence)
     end
 
     evidence
+  end
+
+  def self.create_human_evidence!(contact:, conversation:, user:, signal:, value:)
+    QualificationEvidence.create!(
+      account: contact.account,
+      contact: contact,
+      conversation: conversation,
+      user: user,
+      signal: signal,
+      source: :human,
+      value: { 'value' => value.to_s },
+      observed_at: Time.current
+    )
   end
 
   def self.next_question_for(account:, evidence_snapshot:)
@@ -85,30 +96,14 @@ class AiLeadEmployee::QualificationService
   attr_reader :account, :contact, :conversation, :incoming_message
 
   def extract_evidence!
-    evidence = extracted_values.filter_map do |signal, extracted_value|
-      existing_evidence = current_evidence[signal]
-      next if existing_evidence&.fetch('source') == 'human'
-      next if existing_evidence&.fetch('value') == extracted_value
-
-      QualificationEvidence.create!(
-        account: account,
-        contact: contact,
-        conversation: conversation,
-        message: incoming_message,
-        signal: signal,
-        source: :extracted,
-        value: { 'value' => extracted_value },
-        observed_at: incoming_message.created_at || Time.current
-      ).tap do |new_evidence|
-        self.class.supersede_current_evidence!(contact: contact, signal: signal, replacement: new_evidence)
-      end
-    end
+    evidence = AiLeadEmployee::PersistedQualificationEvidenceExtractor.new(
+      account: account,
+      contact: contact,
+      incoming_message: incoming_message,
+      evidence_snapshot: current_evidence
+    ).perform
     @current_evidence = nil if evidence.present?
     evidence
-  end
-
-  def extracted_values
-    AiLeadEmployee::QualificationEvidenceExtractor.new(incoming_message.content).evidence
   end
 
   def evaluate!
@@ -134,19 +129,7 @@ class AiLeadEmployee::QualificationService
   end
 
   def current_evidence
-    @current_evidence ||= QualificationEvidence.current
-                                               .where(account: account, contact: contact)
-                                               .order(:created_at)
-                                               .each_with_object({}) do |evidence, result|
-      result[evidence.signal] = {
-        'value' => evidence.value['value'],
-        'source' => evidence.source,
-        'evidence_id' => evidence.id,
-        'conversation_id' => evidence.conversation_id,
-        'message_id' => evidence.message_id,
-        'observed_at' => evidence.observed_at.iso8601
-      }
-    end
+    @current_evidence ||= AiLeadEmployee::QualificationEvidenceSnapshot.new(account: account, contact: contact).to_h
   end
 
   def missing_signals(snapshot)

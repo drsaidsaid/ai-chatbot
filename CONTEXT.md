@@ -95,6 +95,7 @@ _Avoid_: Call request, appointment lead
 
 **Alert**:
 A routed notification about a hot lead, booking, urgent review, or knowledge decision.
+Hot Lead WhatsApp alerts reuse the existing Community Edition WhatsApp sender by creating account-owned alert Contact, ContactInbox, Conversation, and outgoing Message records marked with `ai_lead_employee_alert_conversation`. When an approved WhatsApp template is configured, the alert Message carries CE `template_params` populated with the Handoff context so delivery can use the template path outside an active WhatsApp session. These records are operator-notification plumbing, not Lead-facing Conversations, and must remain tenant-scoped, Control-State-gated, and idempotent by Handoff delivery record.
 _Avoid_: Message, notification event
 
 **Inbox Conversation Status**:

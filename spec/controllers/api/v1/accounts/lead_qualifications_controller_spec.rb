@@ -23,6 +23,23 @@ RSpec.describe 'Lead Qualifications API', type: :request do
 
   it 'shows an existing decision without re-evaluating it' do
     qualification = create(:lead_qualification, account: account, contact: conversation.contact, score: 10)
+    evidence = create(
+      :qualification_evidence,
+      account: account,
+      contact: conversation.contact,
+      conversation: conversation,
+      signal: :problem,
+      value: { 'value' => 'need more leads' }
+    )
+    handoff = create(
+      :lead_handoff,
+      account: account,
+      contact: conversation.contact,
+      conversation: conversation,
+      lead_qualification: qualification,
+      alert_recipients: ['255700000001'],
+      alert_deliveries: [{ 'recipient' => '255700000001', 'status' => 'queued', 'message_id' => 123 }]
+    )
 
     expect do
       get "/api/v1/accounts/#{account.id}/lead_qualifications/#{conversation.contact.id}",
@@ -32,6 +49,23 @@ RSpec.describe 'Lead Qualifications API', type: :request do
 
     expect(response).to have_http_status(:success)
     expect(response.parsed_body['score']).to eq(10)
+    expect(response.parsed_body['evidence_records'].first).to include(
+      'id' => evidence.id,
+      'signal' => 'problem',
+      'value' => 'need more leads',
+      'source' => 'extracted',
+      'source_reference' => include(
+        'type' => 'message',
+        'evidence_id' => evidence.id,
+        'conversation_id' => conversation.id
+      )
+    )
+    expect(response.parsed_body['evidence_records'].first).not_to include('source_message', 'user_name')
+    expect(response.parsed_body['handoffs'].first).to include(
+      'id' => handoff.id,
+      'status' => 'open',
+      'alert_deliveries' => [{ 'recipient' => '255700000001', 'status' => 'queued', 'message_id' => 123 }]
+    )
   end
 
   it 'does not let an admin read a Lead from a different Business Account through the selected account' do

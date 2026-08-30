@@ -46,10 +46,11 @@ RSpec.describe AiLeadEmployee::QualificationService do
   it 'keeps human corrections current and stores the configuration version used for re-evaluation' do
     account.update!(settings: account.settings.merge('qualification_config_version' => 4))
     extracted = create(:qualification_evidence, account: account, contact: conversation.contact, signal: :budget, value: { 'value' => '$50' })
+    operator = create(:user, account: account)
     human = described_class.record_human_evidence!(
       contact: conversation.contact,
       conversation: conversation,
-      user: create(:user, account: account),
+      user: operator,
       signal: :budget,
       value: '$2500'
     )
@@ -58,7 +59,17 @@ RSpec.describe AiLeadEmployee::QualificationService do
 
     expect(extracted.reload.superseded_by).to eq(human)
     expect(result.qualification.evidence_snapshot.dig('budget', 'value')).to eq('$2500')
+    expect(result.qualification.evidence_snapshot.dig('budget', 'source_reference')).to include(
+      'type' => 'human_edit',
+      'user_id' => operator.id,
+      'conversation_id' => conversation.id
+    )
     expect(result.qualification.configuration_version).to eq(4)
+    expect(Audited::Audit.where(auditable: conversation.contact).last.audited_changes).to include(
+      'ai_lead_employee_action' => 'qualification_evidence_corrected',
+      'signal' => 'budget',
+      'value' => '$2500'
+    )
   end
 
   it 'stores each quality decision without replacing prior decision history' do
@@ -86,6 +97,74 @@ RSpec.describe AiLeadEmployee::QualificationService do
     expect(result.qualification).to be_low_qualified
     expect(result.qualification.evidence_snapshot.dig('budget', 'value')).to eq('$2500')
     expect(QualificationEvidence.where(contact: conversation.contact, signal: :budget).current.count).to eq(1)
+  end
+
+  it 'extracts returning Lead evidence from prior persisted messages when no evidence exists yet' do
+    create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      sender: conversation.contact,
+      content: 'I run an agency and need more leads.'
+    )
+    create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      sender: conversation.contact,
+      content: 'I am the owner, this is urgent, and my budget is $2500.'
+    )
+
+    result = described_class.new(conversation: conversation).perform
+
+    expect(result.qualification).to be_highly_qualified
+    expect(result.qualification.evidence_snapshot).to include('business_type', 'problem', 'urgency', 'budget', 'decision_authority')
+    expect(result.next_question).to eq('How many leads or inquiries do you handle each month?')
+  end
+
+  it 'does not treat stale required evidence as current for highly qualified decisions' do
+    {
+      problem: 'need more sales',
+      budget: '$2000',
+      urgency: 'urgent',
+      decision_authority: 'owner'
+    }.each do |signal, value|
+      create(
+        :qualification_evidence,
+        account: account,
+        contact: conversation.contact,
+        signal: signal,
+        value: { 'value' => value },
+        observed_at: 45.days.ago
+      )
+    end
+
+    result = described_class.new(conversation: conversation).perform
+
+    expect(result.qualification).not_to be_highly_qualified
+    expect(result.qualification.missing_signals).to include('problem', 'budget', 'urgency', 'decision_authority')
+    expect(result.next_question).to eq('What type of business do you run?')
+  end
+
+  it 'does not recreate stale evidence from old persisted Lead messages on repeated evaluation' do
+    create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      sender: conversation.contact,
+      content: 'I am the owner, this is urgent, and my budget is $2500.',
+      created_at: 45.days.ago
+    )
+
+    first_result = described_class.new(conversation: conversation).perform
+    second_result = described_class.new(conversation: conversation).perform
+
+    expect(first_result.qualification).to be_unknown
+    expect(second_result.qualification).to be_unknown
+    expect(QualificationEvidence.where(contact: conversation.contact)).to be_empty
   end
 
   it 'keeps human evidence authoritative over later extracted evidence' do
