@@ -1,6 +1,6 @@
 # End-to-End Canonical Launch Proof
 
-**Status:** Replacement blocker ticket
+**Status:** Automated proof implemented
 
 ## What to build
 
@@ -11,23 +11,29 @@ WhatsApp delivery, and delivery-status reconciliation.
 
 ## Acceptance criteria
 
-- [ ] The launch proof uses the existing owned Community Edition WhatsApp
+- [x] The launch proof uses the existing owned Community Edition WhatsApp
       webhook path and fails if the duplicate custom Meta webhook is used.
-- [ ] It verifies Business Account scope, Lead identity, Conversation,
+- [x] It verifies Business Account scope, Lead identity, Conversation,
       Inbound Message, Channel Greeting, AI Orchestration intent, Source References,
       Outbound Message, Meta message identifier, and delivery status.
-- [ ] It covers duplicate inbound events with no second logical effect.
-- [ ] It covers stale AI jobs after human takeover, assignment, pause,
+- [x] It covers duplicate inbound events with no second logical effect.
+- [x] It covers stale AI jobs after human takeover, assignment, pause,
       resolution, WhatsApp coexistence echo, and explicit resume.
-- [ ] It covers provider authentication failure, timeout, rate limit, invalid
+- [x] It covers provider authentication failure, timeout, rate limit, invalid
       response, and source-unverified answer with no fabricated fallback.
-- [ ] It proves a team member cannot access another Business Account's Leads,
+- [x] It proves a team member cannot access another Business Account's Leads,
       Conversations, Knowledge Items, Review Requests, provider configuration, or
       orchestration records.
-- [ ] The launch report records tested code version, configuration version,
+- [x] The launch report records tested code version, configuration version,
       Knowledge Item versions, provider model, test number, and remaining blockers.
 
-## Blocked by
+## Evidence
+
+- Automated proof: `spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb`
+- Launch report artifact: `docs/launch_proofs/006-end-to-end-canonical-launch-proof.md`
+- Runtime report object: `AiLeadEmployee::LaunchProofReport`
+
+## Completed Dependencies
 
 - Ticket 001: Canonical WhatsApp round trip with Channel Greeting.
 - Ticket 002: Durable AI Orchestration intent and outbound boundary.
