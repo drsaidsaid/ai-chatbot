@@ -1,168 +1,133 @@
-# AI Lead Employee V1 Specification
+# AI Lead Employee V1 Implementation Spec
 
-**Status:** Build ready  
-**Planning map:** GitHub issue #1  
-**Product boundary:** Owned Community Edition fork, direct Meta WhatsApp Cloud
-API, no Chatwoot service or Enterprise source
+**Status:** Replacement planning foundation
+**Date:** 2026-08-30
+**Product boundary:** Owned Community Edition fork, direct Meta WhatsApp Cloud API through the existing WhatsApp channel, durable grounded AI Orchestration
 
-## Problem Statement
+## Purpose
 
-Business owners receive too many WhatsApp inquiries to answer, diagnose, and
-follow up with personally. They need an AI Employee that handles ordinary
-questions, qualifies each Lead naturally, and brings only the right people to a
-Human Operator's attention without losing context or sending unsafe replies.
+This spec replaces the misleading ticket-completion plan with the corrected V1
+foundation. The current code contains useful Community Edition behavior and
+later experiments, but production work must first prove the canonical WhatsApp
+round trip and durable AI boundary.
 
-## Solution
+## Canonical Acceptance Seam
 
-AI Lead Employee is a branded, owned WhatsApp lead-operations workspace. It
-receives Meta messages directly, persists them in an owned inbox, answers only
-from approved Knowledge Items, asks one qualification question at a time, and
-maintains separate Qualification, Follow-up State, Control State, and Inbox
-Conversation Status. It alerts and books calls only when a Lead is Highly
-Qualified. A Human Operator can take over, pause, correct, or resume safely at
-any time.
+The highest-priority acceptance seam is:
 
-## User Stories
+```text
+WhatsApp message
+  -> existing owned Community Edition Meta webhook
+  -> visible persisted Conversation and Inbound Message
+  -> configured Channel Greeting, when enabled
+  -> durable grounded AI Orchestration job
+  -> persisted Outbound Message intent with verified Source References
+  -> existing WhatsApp outbound sender
+  -> Meta delivery status reconciliation
+```
 
-1. As a Lead, I want a prompt, helpful WhatsApp reply so that I receive useful
-   information without waiting for a person.
-2. As a Lead, I want the AI Employee to answer relevant questions before asking
-   for qualification details so that the conversation feels respectful.
-3. As a Lead, I want one qualification question at a time so that I can answer
-   naturally on WhatsApp.
-4. As a Lead, I want the conversation to remember my prior messages so that I
-   do not need to repeat known information.
-5. As a Lead, I want a clear, confirmed call time when I qualify so that I know
-   when a Human Operator will contact me.
-6. As a Lead, I want a template-based follow-up after the WhatsApp service
-   window closes so that messages remain compliant with WhatsApp rules.
-7. As a Human Operator, I want an owned Inbox showing all WhatsApp
-   Conversations so that I can work from one operational workspace.
-8. As a Human Operator, I want to see Lead Quality, evidence, the reason for a
-   decision, and missing signals so that I can trust or correct the AI Employee.
-9. As a Human Operator, I want to claim a Conversation, pause the AI Employee,
-   or resume it explicitly so that no automated reply interrupts my work.
-10. As a Human Operator, I want a complete Hot Lead alert with contact details,
-    pain, urgency, budget signal, and call time so that I can act immediately.
-11. As a Human Operator, I want to assign a Conversation and a Hot Lead to a
-    teammate so that responsibility is clear.
-12. As a Human Operator, I want unresolved or unsafe questions routed to
-    Reviews so that an AI Employee never invents an answer.
-13. As an admin, I want to approve a Human Operator's answer as Knowledge so
-    that future answers improve only with deliberate approval.
-14. As an admin, I want to configure Offers, qualification questions, hard
-    rules, scoring rules, business hours, availability, and alert recipients so
-    that the AI Employee reflects my business.
-15. As an admin, I want membership-controlled access so that each Business
-    Account's Leads and messages remain private.
-16. As an admin, I want to see WhatsApp connection health and delivery states
-    so that I can identify provider problems early.
-17. As an admin, I want a simulation workspace so that I can test qualification
-    changes without contacting a real Lead.
-18. As an operator, I want follow-up and opt-out rules applied consistently so
-    that the system is persistent without unwanted contact.
+No later qualification, booking, follow-up, dashboard, or launch feature is
+complete until this seam works against the owned Rails/Vue application.
 
-## Implementation Decisions
+## Required Decisions
 
-- The owned application is built from the pinned Chatwoot Community Edition
-  `v4.17.0` source at the repository root. Preserve the MIT notice and do not
-  import, invoke, or distribute Enterprise code.
-- The owned Rails backend, PostgreSQL database, Redis queues, Vue inbox, user
-  identity, and product API share one application boundary. Meta is the only
-  messaging provider in V1.
-- The operator UI keeps the Community Edition dashboard shell, inbox layout,
-  component conventions, Tailwind styling approach, and interaction model.
-  AI Lead Employee surfaces are integrated into that system so the product feels
-  like one owned Community Edition-derived application, not two patched-together
-  products.
-- The Meta adapter is the sole channel boundary. It verifies GET callback
-  challenges and raw-body POST HMAC signatures, records webhook events and
-  normalized messages transactionally, and treats outbound delivery status
-  webhooks as authoritative.
-- A Conversation is the unit of serialized automation. Ownership-changing
-  actions increment its `control_version`; every AI or follow-up job locks and
-  rechecks Control State, owner, inbox status, and control version before it
-  sends.
-- An outbound-message decision is persisted with its associated domain change
-  and an outbox event. A worker sends it through Meta, stores Meta's message ID,
-  and later reconciles `sent`, `delivered`, `read`, or failure status.
-- The AI Employee retrieves only approved Knowledge Items. FAQ and Offer
-  content override supporting documents. Unknown, conflicting, sensitive,
-  angry, and qualified-blocking questions create Review Requests.
-- Review Requests are tenant-scoped operator work items linked to the lead
-  message, Conversation, alert delivery attempts, the Human Operator answer, and
-  any draft Knowledge Item proposed from that answer. Proposed knowledge remains
-  unavailable to the AI Employee until the existing approval flow approves it.
-- Qualification uses hard rules plus scoring. Lead Quality is only Unknown,
-  Unqualified, Low Qualified, Qualified, or Highly Qualified. Highly Qualified
-  requires current evidence for pain, urgency, budget, and decision authority.
-- The AI Employee asks the configured question sequence one at a time. A Lead's
-  relevant question receives a short approved answer, then the AI Employee
-  returns to the next needed qualification question.
-- Only Highly Qualified Leads receive a Booking and immediate Hot Lead alert in
-  V1. Booking checks both connected-calendar availability and the Business
-  Account's configured working hours.
-- The owned UI exposes Inbox, Hot Leads, Leads, Reviews, Knowledge, Bookings,
-  and Settings as native-feeling Community Edition dashboard areas. Other
-  Community Edition surfaces remain hidden and unsupported.
-- Authentication is owned and invite-only. V1 roles are `admin` and
-  `team_member`; tenant scope comes from server-verified Business Account
-  membership, never a client-supplied identifier.
-- The initial environment uses Meta's test number. External onboarding requires
-  the production number, a permanent system-user token, App Review, Advanced
-  Access, and business verification where Meta requires them.
+- AI Lead Employee is an owned product built from Chatwoot Community Edition
+  source. There is no Chatwoot Cloud account, Chatwoot API token, Chatwoot
+  webhook secret, separate Chatwoot database, or external Chatwoot runtime.
+- Useful Community Edition inbox capabilities are retained and rebranded rather
+  than rebuilt.
+- Authentication is application-owned while retaining the existing User,
+  Account, AccountUser, Devise, invitation, and tenancy foundations.
+- Meta WhatsApp events enter through the existing owned Community Edition
+  WhatsApp webhook path. The duplicate custom `/webhooks/meta/whatsapp` path is
+  not production.
+- A configured Channel Greeting is intentional and visible. It must not prevent
+  the Lead's first message from being stored, and it must not cause duplicate
+  AI salutations.
+- AI Orchestration runs asynchronously after message persistence commits. Late
+  jobs must re-check Control State, Inbox Conversation Status, assignment,
+  opt-out state, and observed control version.
+- Human replies, WhatsApp coexistence echoes, assignment, pause, and resolution
+  stop the AI Employee. Resume is explicit and does not send immediately.
+- AI provider integration is provider-neutral and OpenAI-compatible. OpenRouter
+  is the first provider, with encrypted server-side credentials, admin-only
+  configuration, approved relevant Knowledge Items, verified Source References,
+  failure classification, and no fabricated fallback.
+- Review Request behavior is safe: the Lead receives only an approved boundary
+  response or human-authored response, proposed knowledge stays unavailable
+  until approved, and all work remains tenant-scoped.
 
-### Primary Seams
+## Code Reconciliation
 
-1. **Meta WhatsApp adapter:** accepts verified inbound events and sends owned
-   outbound-message intents without exposing provider details to domain logic.
-2. **Conversation control service:** owns handoff, assignment, pause, resume,
-   resolution, and the final authorization check before automated work.
-3. **Qualification service:** accepts normalized evidence and configuration, then
-   produces Lead Quality, reasons, missing signals, and the next question.
-4. **Knowledge answer service:** returns an approved answer or a Review Request;
-   it never returns an unapproved answer to a Lead.
-5. **Booking and alert services:** accept idempotent domain commands and create
-   durable Booking and Alert records before external delivery.
+The implementation must preserve and extend these owned Community Edition
+surfaces:
 
-## Testing Decisions
+- `Webhooks::WhatsappController`
+- `Webhooks::WhatsappEventsJob`
+- `Whatsapp::IncomingMessageWhatsappCloudService`
+- `Conversation`
+- `Message`
+- `MessageTemplates::HookExecutionService`
+- `MessageTemplates::Template::Greeting`
+- `Whatsapp::SendOnWhatsappService`
+- Existing Rails account membership, policy, invitation, and dashboard routing
+  patterns
 
-- Tests validate externally visible behavior and domain invariants rather than
-  private implementation steps.
-- Contract tests cover Meta callback verification, supported inbound payloads,
-  outbound request shape, status normalization, retries, and template fallback
-  after the 24-hour customer-service window.
-- Transactional integration tests prove duplicate provider events have no second
-  logical effect and a late AI job cannot reply after human takeover, pause, or
-  resolution.
-- Qualification tests cover hard-rule override, score boundaries, evidence
-  provenance, one-question progression, returning Leads, manual evidence edits,
-  and Highly Qualified requirements.
-- Authorization tests prove no user, API request, background job, webhook, or
-  search query can cross a Business Account boundary.
-- Booking tests cover availability rules, calendar conflicts, idempotent retries,
-  confirmation delivery, and optional calendar invite behavior.
-- End-to-end staging tests use the Meta test number to confirm verified inbound
-  message, owned inbox persistence, controlled outbound reply, and delivery
-  status reconciliation.
-- Evaluation scenarios cover successful qualification, low-budget Leads,
-  unsupported questions, human takeover, audio fallback, opt-out, duplicate
-  events, and unavailable booking slots.
+These current additions are donor/reference only until reconciled:
 
-## Out of Scope
+- `Webhooks::Meta::WhatsappController`
+- `Meta::Whatsapp::InboundWebhookProcessor`
+- `Meta::Whatsapp::OutboundMessageSender`
+- `Meta::Whatsapp::TextMessageClient`
+- Inline `AiLeadEmployee::WhatsappAutoReplyService` calls from webhook
+  processing
+- Deterministic knowledge, qualification, handoff, booking, follow-up, dashboard,
+  and evaluation experiments built before the canonical seam was proven
 
-- Facebook Messenger, Instagram Direct, TikTok, and YouTube.
-- Chatwoot-hosted services, Chatwoot credentials, and Enterprise source code.
-- Bulk marketing campaigns, customer portal/help center, CRM sync, billing,
-  usage metering, self-service client onboarding, voice transcription, calling,
-  SAML, social login, custom roles, and complex capacity management.
+## Invariants
 
-## Further Notes
+- Every tenant-owned read and write resolves Business Account scope server-side.
+- Meta webhook verification happens before persistence.
+- Duplicate provider events have one logical effect.
+- The Lead's Inbound Message is visible before any Channel Greeting or AI reply.
+- Channel Greeting messages remain visible conversation history.
+- AI Orchestration is created after commit and is idempotent by Business Account,
+  Conversation, triggering Message, and observed control version.
+- AI Orchestration locks and re-reads the Conversation before sending.
+- Human Operator reply, assignment, pause, resolution, WhatsApp coexistence echo,
+  opt-out, and stale control version all block automated sending.
+- Explicit resume allows future eligible work only.
+- Provider credentials never reach the browser or logs.
+- Lead-facing AI answers require approved Knowledge Items and verified Source
+  References.
+- Provider failures, missing knowledge, conflicting knowledge, unsupported media,
+  sensitive questions, angry Leads, and source verification failures do not
+  fabricate answers.
+- Internal notes are never sent to Leads.
+- Delivery status reconciliation updates the persisted Message and does not
+  trigger a second AI decision.
 
-- Implement the Community Edition source import before the first production
-  ticket; the existing prototype is retained only as repository history.
-- Direct Meta production credentials are a later human provisioning task. They
-  are not required for unit, integration, or simulation work, but they are
-  required for a real WhatsApp round trip.
-- The operator experience should be concise and work-focused. Lead Quality must
-  never be conflated with Inbox Conversation Status or Follow-up State.
+## Launch Proof
+
+Before live AI operation is enabled, the team must demonstrate:
+
+- Meta test number inbound event reaches the existing WhatsApp webhook.
+- The correct Business Account, Lead identity, Conversation, and Inbound Message
+  are visible in the owned inbox.
+- A configured Channel Greeting is recorded and sent once.
+- A durable AI Orchestration job answers the actual Lead message from approved
+  knowledge with Source References.
+- The existing WhatsApp sender delivers the Outbound Message and records Meta's
+  message identifier.
+- Delivery status webhooks reconcile sent, delivered, read, and failed states.
+- Duplicate events, provider failures, stale jobs, human takeover, coexistence
+  echoes, pause, resolution, explicit resume, and cross-tenant attempts are
+  covered by automated tests.
+
+## Recovery Rule
+
+Later Q10-Q15-style features may be recovered only after the canonical round
+trip, durable AI boundary, secure provider adapter, grounded Review Request
+behavior, human takeover, and end-to-end proof are correct. Recovery must be
+selective: reuse code that fits the domain model and discard code that depends
+on the retired custom Meta path or inline AI decisions.

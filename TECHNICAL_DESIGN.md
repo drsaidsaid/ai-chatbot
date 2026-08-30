@@ -1,8 +1,8 @@
 # AI Lead Employee Technical Design
 
-**Status:** Draft approved for v1 implementation planning  
-**Product requirements:** `PRODUCT_REQUIREMENTS.md`  
-**Architecture decision:** `docs/adr/0002-owned-inbox-fork.md`
+**Status:** Reconciled planning baseline
+**Product requirements:** `PRODUCT_REQUIREMENTS.md`
+**Architecture decisions:** `docs/adr/0002-owned-inbox-fork.md`, `docs/adr/0005-canonical-whatsapp-path.md`, `docs/adr/0006-durable-grounded-ai-boundary.md`
 
 ## 1. System Boundary
 
@@ -13,12 +13,14 @@ evidence, conversation control, knowledge approval, booking, alerts, follow-up,
 audit, and evaluations run inside our application boundary.
 
 The system does not call a Chatwoot service or depend on Chatwoot credentials.
+The existing Community Edition WhatsApp channel code is part of this owned
+application and is the canonical Meta integration path.
 
 ```text
 Lead <---- WhatsApp ----> Meta WhatsApp Cloud API
                                |
                                v
-              AI Lead Employee (owned inbox + AI workflow)
+              AI Lead Employee (owned CE inbox + durable AI workflow)
                     |          |           |           |
                     v          v           v           v
                 Postgres   AI model   Calendar   Alert delivery
@@ -40,11 +42,12 @@ Lead <---- WhatsApp ----> Meta WhatsApp Cloud API
 
 ### Product Extensions
 
-- First-party AI orchestration, scheduling, alerts, qualification, booking, and
+- First-party AI Orchestration, scheduling, alerts, qualification, booking, and
   knowledge modules inside the owned backend.
-- Redis-backed jobs for immediate processing, with durable job intent recorded
-  in our PostgreSQL database.
-- OpenAI-compatible model adapter so the model provider is replaceable.
+- PostgreSQL-backed orchestration intent plus queued workers for automated work
+  that must survive retries and re-check Control State.
+- OpenAI-compatible model adapter so the model provider is replaceable;
+  OpenRouter is the initial configured provider.
 - A calendar adapter, with Google Calendar as the current leading candidate but
   not a locked provider decision.
 
@@ -83,32 +86,58 @@ Reviews, Knowledge, Bookings, and owned settings. Other Community Edition
 capabilities are retained but hidden until a separate product decision enables
 them. `docs/V1_OWNED_INBOX_SCOPE.md` is the authoritative feature boundary.
 
+## 4.1 Current Code Reconciliation
+
+The current branch contains useful Community Edition WhatsApp channel behavior
+and later AI Lead Employee experiments, but it is not a coherent V1 baseline.
+Planning must treat the following as blockers before feature recovery:
+
+- `Webhooks::WhatsappController`, `Webhooks::WhatsappEventsJob`,
+  `Whatsapp::IncomingMessageWhatsappCloudService`, `Message`, `Conversation`,
+  and `Whatsapp::SendOnWhatsappService` are the production path to retain and
+  extend.
+- `Webhooks::Meta::WhatsappController`,
+  `Meta::Whatsapp::InboundWebhookProcessor`,
+  `Meta::Whatsapp::OutboundMessageSender`, and `Meta::Whatsapp::TextMessageClient`
+  duplicate that path and bypass Community Edition behavior. They are donor
+  code only until retired or folded into the canonical services.
+- The current custom processor calls `AiLeadEmployee::WhatsappAutoReplyService`
+  inline after persistence. V1 requires durable AI Orchestration after commit,
+  not model or answer decisions inside webhook processing.
+- Community Edition already records configured greetings as visible template
+  messages through the message-template hook. V1 must coordinate this greeting
+  with AI Orchestration rather than replacing it or hiding it.
+- Current knowledge and qualification services are deterministic experiments.
+  The production AI provider boundary, encrypted admin configuration,
+  OpenRouter-compatible calls, Source References, and provider failure
+  classification remain unimplemented blockers.
+
 ## 5. State Mapping
 
 Lead Quality, Follow-up State, Control State, and Inbox Conversation Status are independent.
 
-| Product meaning | Authoritative state | Owned inbox representation |
-|---|---|---|
-| AI may reply | Control State = `ai_active` | Conversation is `pending`, assigned to AI Employee |
-| Human requested | Control State = `handoff_requested` | Bot handoff event; conversation becomes `open` |
-| Human owns replies | Control State = `human_active` | Conversation `open`, assigned to Human Operator |
-| AI manually paused | Control State = `ai_paused` | Conversation remains operationally open or pending; product attribute records pause |
-| Follow-up scheduled | Follow-up State plus scheduled action | Conversation may be `snoozed` until due |
-| Conversation finished | Control State = `closed` | Conversation `resolved` |
-| Lead is hot | Lead Quality = `highly_qualified` | Mirrored label/custom attribute and urgent priority |
+| Product meaning       | Authoritative state                   | Owned inbox representation                                                          |
+| --------------------- | ------------------------------------- | ----------------------------------------------------------------------------------- |
+| AI may reply          | Control State = `ai_active`           | Conversation is eligible for the AI Employee only after final checks                |
+| Human requested       | Control State = `handoff_requested`   | Bot handoff event; conversation becomes `open`                                      |
+| Human owns replies    | Control State = `human_active`        | Conversation `open`, assigned to Human Operator                                     |
+| AI manually paused    | Control State = `ai_paused`           | Conversation remains operationally open or pending; product attribute records pause |
+| Follow-up scheduled   | Follow-up State plus scheduled action | Conversation may be `snoozed` until due                                             |
+| Conversation finished | Control State = `closed`              | Conversation `resolved`                                                             |
+| Lead is hot           | Lead Quality = `highly_qualified`     | Mirrored label/custom attribute and urgent priority                                 |
 
 A human-authored outgoing message always transitions Control State to `human_active`. Only an explicit resume command may return it to `ai_active`.
 
 ### Control State Transitions
 
-| Current state | Event | Next state | Required side effect |
-|---|---|---|---|
-| `ai_active` | AI requests a human | `handoff_requested` | Clear AI ownership, cancel pending AI replies, open the owned inbox Conversation |
-| `ai_active` or `handoff_requested` | Human assigned or human replies | `human_active` | Assign the Human Operator and cancel pending AI replies and automatic follow-ups |
-| Any non-closed state | Human pauses AI | `ai_paused` | Cancel pending AI replies and automatic follow-ups |
-| `human_active` or `ai_paused` | Human explicitly resumes AI | `ai_active` | Return the owned inbox to the AI-ready state; do not send until a new eligible lead message exists |
-| Any non-closed state | Conversation resolved | `closed` | Cancel pending AI replies and automatic follow-ups |
-| `closed` | Lead sends a new message | `ai_active` | Begin a new conversation lifecycle while retaining the existing Lead identity |
+| Current state                      | Event                           | Next state          | Required side effect                                                                               |
+| ---------------------------------- | ------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------- |
+| `ai_active`                        | AI requests a human             | `handoff_requested` | Clear AI ownership, cancel pending AI replies, open the owned inbox Conversation                   |
+| `ai_active` or `handoff_requested` | Human assigned or human replies | `human_active`      | Assign the Human Operator and cancel pending AI replies and automatic follow-ups                   |
+| Any non-closed state               | Human pauses AI                 | `ai_paused`         | Cancel pending AI replies and automatic follow-ups                                                 |
+| `human_active` or `ai_paused`      | Human explicitly resumes AI     | `ai_active`         | Return the owned inbox to the AI-ready state; do not send until a new eligible lead message exists |
+| Any non-closed state               | Conversation resolved           | `closed`            | Cancel pending AI replies and automatic follow-ups                                                 |
+| `closed`                           | Lead sends a new message        | `ai_active`         | Begin a new conversation lifecycle while retaining the existing Lead identity                      |
 
 Assignment, human reply, pause, and resolution events are authoritative even when
 an AI job was queued earlier. A queued job must not infer permission from the state
@@ -148,6 +177,15 @@ membership before any account selection or query.
 - `business_account_id`, `provider`, `status`, external account identifiers, encrypted secret reference, scopes, expiry, and health metadata.
 - Provider categories initially: `meta_whatsapp`, `ai_model`, and `calendar`; the concrete AI and calendar providers remain replaceable.
 - Raw secrets must never be returned to the browser or written to logs.
+
+#### `ai_orchestration_intents`
+
+- `business_account_id`, conversation, triggering message, observed control
+  version, state, idempotency key, selected provider, model, failure class,
+  source references, review request, outbound message, attempts, and timestamps.
+- Unique: `(business_account_id, idempotency_key)`.
+- Workers lock the intent and Conversation before any lead-facing Outbound
+  Message is created.
 
 ### Offer and Qualification Configuration
 
@@ -200,6 +238,9 @@ Conversation before sending.
 - Actor types: `lead`, `ai_employee`, `human_operator`, `system`.
 - Unique: `(business_account_id, channel, external_message_id)`.
 - Message content follows the configured retention policy; secrets and unnecessary raw webhook data are excluded.
+- A Channel Greeting is a visible template Outbound Message. An AI Employee
+  answer is a separate visible Outbound Message and must not duplicate the
+  greeting salutation.
 
 ### Knowledge and Human Review
 
@@ -317,18 +358,23 @@ Owned labels initially include `hot-lead`, `needs-review`, `follow-up-due`, and
 ## 8. Event Processing Invariants
 
 1. Verify the Meta webhook signature before accepting an event.
-2. Store and deduplicate the webhook before running AI logic.
-3. Serialize processing per Conversation.
-4. Immediately before sending an AI reply, lock and re-read Control State, inbox status, current owner, and `control_version` from PostgreSQL. Send only when the state is `ai_active`, inbox status is `pending`, and the AI Employee still owns the Conversation.
-5. Persist the AI decision, outbound message intent, and outbox event in one database transaction.
-6. Send through Meta using an idempotency key where supported and reconcile the external message ID.
-7. A handoff request, human assignment, human reply, manual pause, or resolution invalidates pending AI reply jobs. Human activity, pause, and resolution also invalidate automatic follow-up jobs.
-8. Booking and alert creation are idempotent and retryable; Highly Qualified
-   sales handoff alert idempotency is enforced by `lead_handoffs`.
-9. Every Lead Quality transition records evidence, reasons, configuration version, and actor.
-10. No cross-tenant query may execute without Business Account scope.
-11. A duplicate Meta event has no second logical effect, even when it arrives after the first event has been processed.
-12. Manual resume grants permission for future eligible work; it does not by itself send an AI reply.
+2. Use the existing Community Edition WhatsApp webhook, event job, and channel
+   service as the only production inbound Meta path.
+3. Store and deduplicate the webhook before running AI logic.
+4. Persist the Lead's Inbound Message and any configured Channel Greeting before
+   AI Orchestration evaluates the Lead message.
+5. Serialize processing per Conversation.
+6. Immediately before sending an AI reply, lock and re-read Control State, inbox status, current owner, and `control_version` from PostgreSQL. Send only when the state is `ai_active`, the Conversation is still eligible, and the observed version still matches.
+7. Persist the AI decision, Source References, outbound message intent, and outbox event in one database transaction.
+8. Send through the existing WhatsApp sender using an idempotency key where supported and reconcile the external message ID.
+9. A handoff request, human assignment, human reply, WhatsApp coexistence echo, manual pause, or resolution invalidates pending AI reply jobs. Human activity, pause, and resolution also invalidate automatic follow-up jobs.
+10. Booking and alert creation are idempotent and retryable; Highly Qualified
+    sales handoff alert idempotency is enforced by `lead_handoffs`.
+11. Every Lead Quality transition records evidence, reasons, configuration version, and actor.
+12. No cross-tenant query may execute without Business Account scope.
+13. A duplicate Meta event has no second logical effect, even when it arrives after the first event has been processed.
+14. Manual resume grants permission for future eligible work; it does not by itself send an AI reply.
+15. Missing, conflicting, unverified, sensitive, angry, and provider-failed AI outcomes create safe Review Request behavior and no fabricated fallback.
 
 ## 9. Security and Operations
 
@@ -344,11 +390,10 @@ Owned labels initially include `hot-lead`, `needs-review`, `follow-up-due`, and
 ## 10. Implementation Order
 
 1. Infrastructure and empty schema migrations.
-2. Owned inbox baseline, Meta webhook ingestion, deduplication, and normalized messages.
-3. Control State and human takeover safety in the owned inbox.
-4. Configurable offers, questions, rules, and qualification evidence.
-5. Approved knowledge and review requests.
-6. Embedded qualification panel and operational queues.
-7. Calendar booking and WhatsApp alerts.
-8. Follow-up, opt-out, analytics, audit, and CSV import/export.
-9. Sandbox, evaluations, launch gate, and controlled pilot.
+2. Owned inbox baseline and access verification against the imported Community Edition source.
+3. Canonical Community Edition WhatsApp webhook ingestion, deduplication, normalized messages, configured greeting, and outbound delivery.
+4. Durable AI Orchestration boundary after message commit.
+5. Secure provider-neutral AI adapter with OpenRouter initially.
+6. Approved knowledge, Source References, provider failure classification, and Review Requests.
+7. Control State, human takeover, WhatsApp coexistence echoes, and explicit resume.
+8. Configurable offers, questions, rules, qualification evidence, handoff, alerts, booking, follow-up, dashboards, evaluations, launch gate, and controlled pilot.

@@ -5,6 +5,14 @@
 **Scope:** The owned AI Lead Employee inbox connects directly to Meta's WhatsApp
 Cloud API. This note uses only first-party Meta documentation.
 
+**Implementation correction, 2026-08-30:** ADR-0005 supersedes the custom
+`/webhooks/meta/whatsapp` callback shape from the original research. Production
+work must use the existing owned Community Edition WhatsApp channel callback
+path, currently `GET /webhooks/whatsapp/:phone_number` and
+`POST /webhooks/whatsapp/:phone_number`, then the existing WhatsApp event job
+and channel services. The Meta verification, signature, idempotency, rollout,
+and credential requirements below still apply.
+
 ## Decision summary
 
 Build one owned WhatsApp adapter around Meta's Cloud API. It must verify and
@@ -61,7 +69,7 @@ Use one publicly reachable HTTPS callback. Meta requires a valid TLS/SSL
 certificate and does not support self-signed certificates.
 [Meta webhook endpoint setup](https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint)
 
-### Verification: `GET /webhooks/meta/whatsapp`
+### Verification: existing WhatsApp channel callback
 
 When the callback URL or verify token is saved in Meta's dashboard, Meta calls:
 
@@ -74,7 +82,7 @@ with the exact `hub.challenge`; otherwise return a non-200 response. Meta will
 not send events until this succeeds.
 [Meta webhook endpoint setup](https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint)
 
-### Events: `POST /webhooks/meta/whatsapp`
+### Events: existing WhatsApp channel callback
 
 Verify `X-Hub-Signature-256` before parsing or queuing the payload. Compute
 HMAC-SHA256 from the **raw** POST body using the Meta app secret and compare the

@@ -20,6 +20,18 @@ _Avoid_: Customer, user, contact
 A channel-specific exchange between a Lead and the Business Account. A Lead can have multiple conversations over time.
 _Avoid_: Chat, thread, session
 
+**Inbound Message**:
+A message sent by a Lead to the Business Account through a configured channel.
+_Avoid_: Webhook payload, event, user message
+
+**Outbound Message**:
+A visible message sent by the Business Account to a Lead through the same channel conversation.
+_Avoid_: Reply event, response payload
+
+**Channel Greeting**:
+A configured first response from the Business Account that welcomes a Lead at the start of a Conversation. It is visible conversation history, not hidden AI context.
+_Avoid_: Bot intro, duplicate salutation, welcome hook
+
 **AI Employee**:
 The automated participant that answers approved questions, gathers qualification evidence, and follows configured rules.
 _Avoid_: Chatbot, agent, bot
@@ -52,6 +64,10 @@ _Avoid_: Lead status, conversation status
 The authority governing who may reply automatically: AI Active, Handoff Requested, Human Active, AI Paused, or Closed.
 _Avoid_: Conversation status, bot status
 
+**AI Orchestration**:
+The durable work of deciding whether and how the AI Employee may answer an Inbound Message, using current Control State and approved knowledge.
+_Avoid_: Inline reply, webhook response, model call
+
 **Handoff**:
 The controlled transfer of a Conversation from the AI Employee to a Human Operator.
 _Avoid_: Escalation, assignment
@@ -59,6 +75,10 @@ _Avoid_: Escalation, assignment
 **Knowledge Item**:
 An approved, versioned answer or rule that the AI Employee may use when responding.
 _Avoid_: Memory, training data
+
+**Source Reference**:
+A verified identifier for the approved Knowledge Item or document section used to support an AI Employee answer.
+_Avoid_: Citation guess, source text, retrieval blob
 
 **Review Request**:
 A question or decision the AI Employee cannot safely complete and has submitted to a Human Operator.

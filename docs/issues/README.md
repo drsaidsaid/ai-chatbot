@@ -1,28 +1,27 @@
 # V1 Implementation Tickets
 
-These tickets are ordered as tracer-bullet slices. Each ticket must deliver a
-narrow, demonstrable path through storage, services, Meta, the owned inbox, the operator
-interface, and automated verification where those layers are relevant.
+These tickets replace the prior misleading "done" sequence. They are ordered as
+blocker-first tracer-bullet slices and must be worked from
+`codex/reconcile-v1-baseline` or a branch created from it.
 
-| ID | Title | Blocked by | Initial state |
-|---|---|---|---|
-| 000 | Owned Community Edition baseline and access | None | Done |
-| 001 | Direct Meta WhatsApp round trip and safe human takeover | 000 | Done |
-| 002 | Approved answers and unsupported media | 001 | Done |
-| 003 | One-question-at-a-time lead qualification | 002 | Done |
-| 004 | Unanswered-question review and knowledge approval | 002 | Done |
-| 005 | Highly Qualified handoff and WhatsApp alert | 003 | Done |
-| 006 | Conflict-free call booking | 005 | Done |
-| 007 | Incomplete-lead follow-up and opt-out | 003 | Done |
-| 008 | Operational dashboard and team access | 001, 005 | Done |
-| 009 | Evaluation sandbox and launch gate | 002-008 | Blocked |
+Each ticket should deliver a narrow, demonstrable path through the owned
+Community Edition Rails/Vue application. Later experimental code may be used as
+donor material only after it is reconciled with the canonical WhatsApp path and
+durable AI Orchestration boundary.
 
-Ticket 001 is intentionally the first production proof. It must confirm direct
-Meta WhatsApp webhooks, event ordering, owned-inbox behavior, and outbound
-message delivery before later orchestration work depends on those assumptions.
+| ID  | Title                                                     | Blocked by | Initial state |
+| --- | --------------------------------------------------------- | ---------- | ------------- |
+| 000 | Owned Community Edition baseline, access, and route audit | None       | Ready         |
+| 001 | Canonical WhatsApp round trip with Channel Greeting       | 000        | Blocked       |
+| 002 | Durable AI Orchestration intent and outbound boundary     | 001        | Blocked       |
+| 003 | Secure OpenAI-compatible provider configuration           | 002        | Blocked       |
+| 004 | Grounded answer and Review Request tracer bullet          | 003        | Blocked       |
+| 005 | Control State, takeover, coexistence, and explicit resume | 002, 004   | Blocked       |
+| 006 | End-to-end canonical launch proof                         | 001-005    | Blocked       |
+| 007 | Recover qualification, handoff, and alerting              | 006        | Blocked       |
+| 008 | Recover booking, follow-up, and operator queues           | 007        | Blocked       |
+| 009 | Evaluation sandbox and controlled pilot gate              | 008        | Blocked       |
 
-Before starting ticket 006, review tickets 000-005 together in the running app:
-confirm the owned dashboard shell, Meta WhatsApp round trip, safe human takeover,
-approved-knowledge answers, one-question qualification, unanswered-question
-review flow, and Highly Qualified handoff/alert path still work as one coherent
-operator workflow.
+The current frontier is tickets 000-006. Tickets 007-009 intentionally wait
+until the route, greeting, durable AI boundary, secure provider adapter, grounded
+review behavior, takeover, and launch proof are correct.

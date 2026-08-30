@@ -2,12 +2,12 @@
 
 ## Product Requirements Document
 
-**Status:** Revised for owned-inbox v1 implementation
-**Revision:** 3 (2026-08-25)
+**Status:** Reconciled planning baseline
+**Revision:** 4 (2026-08-30)
 **Working product name:** AI Lead Employee  
 **Initial channel:** WhatsApp  
 **Initial customer:** Our own online education and AI employee services business  
-**Delivery model:** Done-for-you service  
+**Delivery model:** Done-for-you service
 
 ## 1. Product Summary
 
@@ -35,7 +35,8 @@ The product succeeds when it:
 
 ### Included
 
-- Direct Meta WhatsApp Business Cloud API integration.
+- Direct Meta WhatsApp Business Cloud API integration through the owned
+  Community Edition WhatsApp channel path.
 - An owned inbox frontend and backend derived from the Community Edition source.
 - First-party AI-to-human handoff, qualification panel, and operational queues.
 - First-party user authentication, role management, and tenant-scoped database.
@@ -58,6 +59,32 @@ The product succeeds when it:
 - Click-to-WhatsApp advertisement attribution when Meta referral data is available.
 - Business-hours-aware human handoff messaging.
 - Optional WhatsApp Business app coexistence when supported by Meta and the connected account.
+
+### Correction Baseline
+
+The V1 implementation baseline is the owned Community Edition Rails and Vue
+application. There is no Chatwoot Cloud account, Chatwoot API token, Chatwoot
+webhook secret, separate Chatwoot database, or external Chatwoot runtime.
+
+The canonical WhatsApp path is:
+
+1. Meta sends a verified WhatsApp event to the existing owned Community Edition
+   WhatsApp webhook.
+2. The existing WhatsApp event job and channel service create or update the
+   tenant-scoped Lead identity, Conversation, and visible Inbound Message.
+3. If a Channel Greeting is configured and this is the first Lead message, the
+   greeting is recorded and sent as visible conversation history.
+4. After message persistence commits, durable AI Orchestration evaluates the
+   actual Lead message with current Control State and approved Knowledge Items.
+5. The AI Employee creates a persisted Outbound Message intent with verified
+   Source References or creates safe Review Request behavior.
+6. The existing WhatsApp outbound sender delivers the reply through Meta and
+   delivery status webhooks reconcile the Message.
+
+The parallel custom `/webhooks/meta/whatsapp` controller and processor that
+exist in the current code are an unsafe experiment, not the production path.
+They must be retired or quarantined before later AI behavior is treated as
+complete.
 
 ### Not Included
 
@@ -214,6 +241,9 @@ The agent acts as a warm business advisor: friendly, brief, respectful, professi
 - Do not claim that a human will call unless the lead is highly qualified and a handoff or booking is actually being created.
 - Redirect immediately when a lead asks about topics outside the business or service.
 - Never invent an answer when approved knowledge is insufficient or conflicting.
+- Do not greet twice. A configured Channel Greeting may welcome the Lead, but
+  the AI Employee's answer should respond to the actual Lead message and omit a
+  second salutation.
 
 ### Question Debt Rule
 
@@ -280,6 +310,11 @@ When the agent cannot answer:
 
 The system must never learn automatically from every human answer.
 
+The AI provider integration must be OpenAI-compatible and provider-neutral.
+OpenRouter is the initial provider, but the product must store encrypted
+server-side credentials, expose provider configuration only to admins, classify
+provider failures, and avoid fabricated fallback answers.
+
 ## 10. Booking
 
 Only highly qualified leads are automatically offered a call in v1.
@@ -345,6 +380,8 @@ The booked-call alert should also include:
 - The assigned human receives the direct WhatsApp alert; the admin may be copied on high-priority alerts.
 - Reassignment remains possible after booking and must be recorded in the audit history.
 - When a human sends a reply, the AI pauses automatically for that conversation.
+- A WhatsApp Business app coexistence echo is treated as human activity for
+  Control State.
 - A human assignment, handoff, pause, reply, or resolution cancels any pending AI reply before it can be sent.
 - Before every outbound AI message, the system must recheck that the AI still owns the conversation; an already-queued reply must be blocked after human takeover.
 - The AI resumes only when a human explicitly resumes it.

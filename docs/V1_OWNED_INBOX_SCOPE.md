@@ -29,6 +29,15 @@ separate application bolted beside Community Edition.
 V1 supports one direct WhatsApp connection per Business Account. Lead messages,
 human replies, AI replies, and alert delivery use that connection.
 
+The supported connection is the owned Community Edition WhatsApp channel path:
+the existing webhook, event job, channel service, Conversation, Message, and
+outbound sender. A parallel custom Meta webhook is outside the supported V1
+surface until removed or folded into that path.
+
+Configured Channel Greetings are visible V1 conversation messages. They are
+allowed to welcome a Lead once, but AI Employee replies must answer the actual
+Lead message and avoid a second greeting.
+
 ## Retained but hidden
 
 The owned fork retains underlying Community Edition code that may become useful
