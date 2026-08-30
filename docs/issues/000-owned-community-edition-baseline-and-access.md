@@ -12,20 +12,26 @@ mark duplicate custom Meta routing as donor code, not production.
 
 ## Acceptance criteria
 
-- [ ] The pinned Community Edition source, MIT notice, upstream reference, and
+- [x] The pinned Community Edition source, MIT notice, upstream reference, and
       Enterprise exclusion are verified.
-- [ ] User, Account, AccountUser, Devise, invitation, role, and Business Account
+- [x] User, Account, AccountUser, Devise, invitation, role, and Business Account
       scoping behavior are retained and rebranded for owned access.
-- [ ] Server-side policy and query checks prove an admin and team member cannot
+- [x] Server-side policy and query checks prove an admin and team member cannot
       cross Business Account boundaries.
-- [ ] V1 navigation exposes only Inbox, Hot Leads, Leads, Reviews, Knowledge,
+- [x] V1 navigation exposes only Inbox, Hot Leads, Leads, Reviews, Knowledge,
       Bookings, and Settings; unrelated Community Edition surfaces remain hidden.
-- [ ] The code audit identifies all callers of the duplicate
+- [x] The code audit identifies all callers of the duplicate
       `/webhooks/meta/whatsapp` path and inline AI reply behavior.
-- [ ] The implementation plan for ticket 001 says exactly how the duplicate
+- [x] The implementation plan for ticket 001 says exactly how the duplicate
       custom Meta path will be retired or quarantined.
-- [ ] Smoke checks cover boot, sign-in, invite-only access, tenant isolation,
+- [x] Smoke checks cover boot, sign-in, invite-only access, tenant isolation,
       and V1 navigation visibility.
+
+## Delivery notes
+
+- Audit artifact: `docs/audits/000-owned-community-edition-baseline-and-access.md`.
+- The duplicate `/webhooks/meta/whatsapp` route is quarantined with `410 Gone` and does not call the custom processor or inline AI service.
+- `LeadQualificationPolicy` and the lead qualification API now prove Business Account scope for admins and team members.
 
 ## Blocked by
 

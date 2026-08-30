@@ -2,10 +2,24 @@
 
 class LeadQualificationPolicy < ApplicationPolicy
   def show?
-    true
+    same_business_account?
   end
 
   def evidence?
-    true
+    same_business_account?
+  end
+
+  class Scope < ApplicationPolicy::Scope
+    def resolve
+      return scope.none if account_user.blank?
+
+      scope.where(account_id: account.id)
+    end
+  end
+
+  private
+
+  def same_business_account?
+    account_user.present? && record.account_id == account.id
   end
 end

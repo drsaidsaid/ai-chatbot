@@ -1,16 +1,19 @@
 # frozen_string_literal: true
 
 class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseController
-  before_action :check_authorization
   before_action :contact
   before_action :ensure_latest_conversation!
 
   def show
     qualification = contact.lead_qualification || qualification_result.qualification
+    authorize qualification, :show?
+
     render json: qualification_payload(qualification)
   end
 
   def evidence
+    authorize lead_qualification_for_evidence, :evidence?
+
     evidence = AiLeadEmployee::QualificationService.record_human_evidence!(
       contact: contact,
       conversation: latest_conversation,
@@ -35,6 +38,10 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
 
   def qualification_result
     @qualification_result ||= AiLeadEmployee::QualificationService.new(conversation: latest_conversation).perform
+  end
+
+  def lead_qualification_for_evidence
+    contact.lead_qualification || LeadQualification.new(account: current_account, contact: contact)
   end
 
   def qualification_payload(qualification)

@@ -107,4 +107,13 @@ RSpec.describe 'Owned Community Edition baseline', type: :request do
     expect(conversation.reload.status).to eq('resolved')
     expect(other_conversation.reload.status).to eq('open')
   end
+
+  it 'keeps V1 navigation limited to owned operator surfaces' do
+    navigation_source = Rails.root.join('app/javascript/dashboard/components-next/sidebar/aiLeadEmployeeNavigation.js').read
+    allowed_surfaces = ["'Inbox'", "'Hot Leads'", "'Leads'", "'Reviews'", "'Knowledge'", "'Bookings'", "'Settings'"]
+    hidden_surfaces = ["'Contacts'", "'Reports'", "'Campaigns'", "'Help Center'", "'Integrations'"]
+
+    expect(allowed_surfaces).to all(satisfy { |surface| navigation_source.include?(surface) })
+    expect(hidden_surfaces).to all(satisfy { |surface| navigation_source.exclude?(surface) })
+  end
 end

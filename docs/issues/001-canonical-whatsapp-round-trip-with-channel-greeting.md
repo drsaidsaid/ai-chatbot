@@ -9,6 +9,27 @@ Edition WhatsApp webhook, event job, channel service, Conversation, Message,
 configured Channel Greeting, and existing outbound sender. The duplicate custom
 Meta webhook path must not be used for this slice.
 
+## Ticket 000 retirement/quarantine plan
+
+1. Keep `GET /webhooks/meta/whatsapp` and `POST /webhooks/meta/whatsapp`
+   quarantined as `410 Gone` endpoints until all external Meta app callback URLs
+   are confirmed to use `/webhooks/whatsapp/:phone_number`.
+2. Build ticket 001 only against `Webhooks::WhatsappController`,
+   `Webhooks::WhatsappEventsJob`, `Whatsapp::IncomingMessageWhatsappCloudService`,
+   `MessageTemplates::HookExecutionService`, `MessageTemplates::Template::Greeting`,
+   `Conversation`, `Message`, and `Whatsapp::SendOnWhatsappService`.
+3. Do not call `Meta::Whatsapp::InboundWebhookProcessor`,
+   `Meta::Whatsapp::OutboundMessageSender`, `Meta::Whatsapp::TextMessageClient`,
+   or `AiLeadEmployee::WhatsappAutoReplyService` from the canonical round-trip.
+4. Fold any reusable parsing, idempotency, unsupported-media, delivery-status,
+   or test-fixture ideas from the custom Meta classes into the existing
+   Community Edition WhatsApp services with new tests, then delete or leave the
+   custom classes unused as donor code.
+5. Ticket 001 is complete only when a spec fails if `/webhooks/meta/whatsapp`
+   is used for canonical ingestion and when duplicate events, greeting ordering,
+   unsupported media visibility, outbound delivery, and delivery-status
+   reconciliation all pass through `/webhooks/whatsapp/:phone_number`.
+
 ## Acceptance criteria
 
 - [ ] A verified Meta test-number message enters through

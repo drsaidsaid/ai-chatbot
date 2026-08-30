@@ -33,4 +33,31 @@ RSpec.describe 'Lead Qualifications API', type: :request do
     expect(response).to have_http_status(:success)
     expect(response.parsed_body['score']).to eq(10)
   end
+
+  it 'does not let an admin read a Lead from a different Business Account through the selected account' do
+    other_account = create(:account)
+    other_conversation = create(:conversation, account: other_account)
+    create(:account_user, account: other_account, user: agent, role: :administrator)
+    create(:lead_qualification, account: other_account, contact: other_conversation.contact, score: 99)
+
+    get "/api/v1/accounts/#{account.id}/lead_qualifications/#{other_conversation.contact.id}",
+        headers: agent.create_new_auth_token,
+        as: :json
+
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it 'does not let a team member write evidence for a Lead from a different Business Account through the selected account' do
+    other_account = create(:account)
+    other_conversation = create(:conversation, account: other_account)
+    create(:account_user, account: other_account, user: agent, role: :agent)
+
+    post "/api/v1/accounts/#{account.id}/lead_qualifications/#{other_conversation.contact.id}/evidence",
+         headers: agent.create_new_auth_token,
+         params: { signal: 'budget', value: '$2500' },
+         as: :json
+
+    expect(response).to have_http_status(:not_found)
+    expect(QualificationEvidence.where(contact: other_conversation.contact)).to be_empty
+  end
 end
