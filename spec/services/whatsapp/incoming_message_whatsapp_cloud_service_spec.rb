@@ -32,6 +32,96 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
       }.with_indifferent_access
     end
 
+    context 'when a text message starts a channel-greeted conversation' do
+      let(:text_message_id) { 'wamid.CANONICAL.FIRST' }
+      let(:text_params) { canonical_text_params(message_id: text_message_id, body: 'Can you help qualify my leads?') }
+
+      before do
+        whatsapp_channel.inbox.update!(greeting_enabled: true, greeting_message: 'Welcome to AI Lead Employee.')
+        stub_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
+          .with(
+            body: {
+              messaging_product: 'whatsapp',
+              context: nil,
+              to: sender_number,
+              text: { body: 'Welcome to AI Lead Employee.' },
+              type: 'text'
+            }.to_json
+          )
+          .to_return(
+            status: 200,
+            body: { messages: [{ id: 'wamid.GREETING.SENT' }] }.to_json,
+            headers: { 'content-type' => 'application/json' }
+          )
+      end
+
+      it 'persists the lead message before one visible greeting and replays without side effects' do
+        perform_enqueued_jobs do
+          described_class.new(inbox: whatsapp_channel.inbox, params: text_params).perform
+          described_class.new(inbox: whatsapp_channel.inbox, params: text_params).perform
+        end
+
+        conversation = whatsapp_channel.inbox.conversations.first
+        messages = conversation.messages.chat.order(:created_at, :id).to_a
+
+        expect(whatsapp_channel.account.contacts.find_by!(phone_number: '+2423423243')).to have_attributes(
+          name: 'Sojan Jose',
+          contact_type: 'lead'
+        )
+        expect(messages.map(&:content)).to eq(['Can you help qualify my leads?', 'Welcome to AI Lead Employee.'])
+        expect(messages.map(&:message_type)).to eq(%w[incoming template])
+        expect(Message.where(source_id: text_message_id).count).to eq(1)
+        greeting = conversation.messages.template.find_by!(content: 'Welcome to AI Lead Employee.')
+        expect(greeting.source_id).to eq('wamid.GREETING.SENT')
+        expect(conversation.messages.template.where(content: 'Welcome to AI Lead Employee.').count).to eq(1)
+        expect(a_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')).to have_been_made.once
+      end
+    end
+
+    context 'when Meta sends unsupported media' do
+      let(:unsupported_params) do
+        canonical_text_params(message_id: 'wamid.UNSUPPORTED.MEDIA', body: nil).tap do |payload|
+          message = payload.dig(:entry, 0, :changes, 0, :value, :messages, 0)
+          message.delete(:text)
+          message[:type] = 'unsupported'
+          message[:errors] = [{ code: 131_060, title: 'Unsupported message type' }]
+        end
+      end
+
+      it 'stores a visible unsupported placeholder without invoking inline AI behavior' do
+        allow(AiLeadEmployee::WhatsappAutoReplyService).to receive(:new)
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: unsupported_params).perform
+
+        message = whatsapp_channel.inbox.messages.find_by!(source_id: 'wamid.UNSUPPORTED.MEDIA')
+        expect(message).to have_attributes(
+          message_type: 'incoming',
+          content: I18n.t('conversations.messages.whatsapp.unsupported_message')
+        )
+        expect(message.content_attributes['is_unsupported']).to be(true)
+        expect(AiLeadEmployee::WhatsappAutoReplyService).not_to have_received(:new)
+      end
+    end
+
+    context 'when Meta sends a delivery status' do
+      it 'reconciles the persisted outbound message status by Meta message id' do
+        contact = create(:contact, account: whatsapp_channel.account, phone_number: '+2423423243')
+        contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: '2423423243')
+        conversation = create(:conversation, contact: contact, inbox: whatsapp_channel.inbox, contact_inbox: contact_inbox)
+        message = create(:message,
+                         account: whatsapp_channel.account,
+                         inbox: whatsapp_channel.inbox,
+                         conversation: conversation,
+                         message_type: :outgoing,
+                         status: :sent,
+                         source_id: 'wamid.OUTBOUND.STATUS')
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: status_params('wamid.OUTBOUND.STATUS', 'read')).perform
+
+        expect(message.reload.status).to eq('read')
+      end
+    end
+
     context 'when valid attachment message params' do
       it 'creates appropriate conversations, message and contacts' do
         stub_media_url_request
@@ -521,5 +611,45 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
 
   def contact_from_number
     Contact.find_by(phone_number: contact_phone_number)
+  end
+
+  def canonical_text_params(message_id:, body:)
+    {
+      phone_number: whatsapp_channel.phone_number,
+      object: 'whatsapp_business_account',
+      entry: [{
+        changes: [{
+          value: {
+            contacts: [{ profile: { name: 'Sojan Jose' }, wa_id: sender_number }],
+            messages: [{
+              from: sender_number,
+              id: message_id,
+              text: { body: body },
+              timestamp: '1787740800',
+              type: 'text'
+            }]
+          }
+        }]
+      }]
+    }.with_indifferent_access
+  end
+
+  def status_params(message_id, status)
+    {
+      phone_number: whatsapp_channel.phone_number,
+      object: 'whatsapp_business_account',
+      entry: [{
+        changes: [{
+          value: {
+            statuses: [{
+              id: message_id,
+              status: status,
+              timestamp: '1787740801',
+              recipient_id: sender_number
+            }]
+          }
+        }]
+      }]
+    }.with_indifferent_access
   end
 end

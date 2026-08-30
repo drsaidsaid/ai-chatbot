@@ -49,6 +49,7 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
 
       allow(Meta::Whatsapp::InboundWebhookProcessor).to receive(:new)
       allow(AiLeadEmployee::WhatsappAutoReplyService).to receive(:new)
+      allow(Webhooks::WhatsappEventsJob).to receive(:perform_later)
 
       expect do
         post '/webhooks/meta/whatsapp',
@@ -59,6 +60,7 @@ RSpec.describe 'Webhooks::Meta::WhatsappController', type: :request do
       expect(response).to have_http_status(:gone)
       expect(Meta::Whatsapp::InboundWebhookProcessor).not_to have_received(:new)
       expect(AiLeadEmployee::WhatsappAutoReplyService).not_to have_received(:new)
+      expect(Webhooks::WhatsappEventsJob).not_to have_received(:perform_later)
       expect(response.parsed_body).to include(
         'error' => 'retired_meta_whatsapp_path',
         'canonical_path' => '/webhooks/whatsapp/:phone_number'

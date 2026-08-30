@@ -72,6 +72,46 @@ describe Whatsapp::SendOnWhatsappService do
         expect(message.reload.source_id).to eq('123456789')
       end
 
+      it 'sends a controlled human outbound message through WhatsApp Cloud and stores the Meta message id' do
+        whatsapp_cloud_channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+        agent = create(:user, account: whatsapp_cloud_channel.account)
+        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox, source_id: '255700111222')
+        cloud_conversation = create(:conversation, contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
+        create(:message,
+               message_type: :incoming,
+               content: 'Can a human explain pricing?',
+               conversation: cloud_conversation,
+               account: cloud_conversation.account)
+        message = create(:message,
+                         message_type: :outgoing,
+                         sender: agent,
+                         content: 'Yes, I can help with that.',
+                         conversation: cloud_conversation,
+                         account: cloud_conversation.account)
+
+        allow(Meta::Whatsapp::OutboundMessageSender).to receive(:new)
+        stub_request(:post, "https://graph.facebook.com/v13.0/#{whatsapp_cloud_channel.provider_config['phone_number_id']}/messages")
+          .with(
+            body: {
+              messaging_product: 'whatsapp',
+              context: nil,
+              to: '255700111222',
+              text: { body: 'Yes, I can help with that.' },
+              type: 'text'
+            }.to_json
+          )
+          .to_return(
+            status: 200,
+            body: { messages: [{ id: 'wamid.CONTROLLED.OUTBOUND' }] }.to_json,
+            headers: { 'content-type' => 'application/json' }
+          )
+
+        described_class.new(message: message).perform
+
+        expect(message.reload.source_id).to eq('wamid.CONTROLLED.OUTBOUND')
+        expect(Meta::Whatsapp::OutboundMessageSender).not_to have_received(:new)
+      end
+
       it 'fails a free-form message without contacting the provider when outside the 24 hour limit' do
         create(:message, message_type: :incoming, content: 'test', created_at: 25.hours.ago,
                          conversation: conversation, account: conversation.account)
