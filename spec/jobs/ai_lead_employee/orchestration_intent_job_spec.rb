@@ -40,6 +40,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     intent
     allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
     allow(SendReplyJob).to receive(:perform_later)
+    allow(AiLeadEmployee::OutboxDispatchJob).to receive(:perform_later)
     allow(AiLeadEmployee::AiProvider::ClientFactory).to receive(:for).and_return(provider_client)
   end
 
@@ -199,7 +200,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       'next_question' => 'What problem should we solve?'
     )
     expect_outbox_state(outbox_event, outbound_message)
-    expect(SendReplyJob).to have_received(:perform_later).with(outbound_message.id).once
+    expect(AiLeadEmployee::OutboxDispatchJob).to have_received(:perform_later).with(outbox_event.id).once
   end
 
   it 'explains unsupported human requests through durable orchestration without creating a sales handoff' do

@@ -4,13 +4,33 @@
 class Whatsapp::IncomingMessageWhatsappCloudService < Whatsapp::IncomingMessageBaseService
   def perform
     processed_params
+    return process_message_batch if messages_data&.many?
+
     new_provider_message = new_provider_message?
     super
     record_coexistence_echo_takeover! if new_provider_message && outgoing_echo
-    record_orchestration_intent! if new_provider_message
+    record_orchestration_intent! if @message.present?
   end
 
   private
+
+  def process_message_batch
+    messages_data.each do |message|
+      self.class.new(
+        inbox: inbox,
+        params: params_for_single_message(message),
+        outgoing_echo: outgoing_echo
+      ).perform
+    end
+  end
+
+  def params_for_single_message(message)
+    single_message_params = params.deep_dup
+    value = single_message_params.dig(:entry, 0, :changes, 0, :value)
+    key = value[:messages].present? ? :messages : :message_echoes
+    value[key] = [message]
+    single_message_params
+  end
 
   def processed_params
     @processed_params ||= params[:entry].try(:first).try(:[], 'changes').try(:first).try(:[], 'value')

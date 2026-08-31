@@ -1,6 +1,6 @@
 # Test Center Simulation and Release Check
 
-Status: Integration verification
+Status: Done
 
 ## What to build
 

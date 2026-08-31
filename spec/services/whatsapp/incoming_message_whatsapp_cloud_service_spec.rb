@@ -79,6 +79,48 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
       end
     end
 
+    context 'when Meta batches multiple messages in one webhook value' do
+      it 'persists and records orchestration for every message' do
+        allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).and_return(true)
+        batch_params = canonical_text_params(message_id: 'wamid.BATCH.ONE', body: 'First question')
+        second_message = batch_params.dig(:entry, 0, :changes, 0, :value, :messages, 0).deep_dup
+        second_message[:id] = 'wamid.BATCH.TWO'
+        second_message[:text] = { body: 'Second question' }
+        batch_params.dig(:entry, 0, :changes, 0, :value, :messages) << second_message
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: batch_params).perform
+
+        expect(whatsapp_channel.inbox.messages.incoming.pluck(:source_id)).to contain_exactly(
+          'wamid.BATCH.ONE',
+          'wamid.BATCH.TWO'
+        )
+        expect(AiLeadEmployee::OrchestrationIntent.where(account: whatsapp_channel.account).count).to eq(2)
+      end
+    end
+
+    context 'when orchestration recording fails after the message is persisted' do
+      it 'records the missing intent when Meta retries the webhook' do
+        allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).and_return(true)
+        payload = canonical_text_params(message_id: 'wamid.RETRY.INTENT', body: 'Please qualify my business')
+        recorder = instance_double(AiLeadEmployee::OrchestrationIntentRecorder)
+
+        allow(AiLeadEmployee::OrchestrationIntentRecorder).to receive(:new).and_return(recorder)
+        allow(recorder).to receive(:perform).and_raise(StandardError, 'temporary recorder failure').once
+
+        expect do
+          described_class.new(inbox: whatsapp_channel.inbox, params: payload).perform
+        end.to raise_error(StandardError, 'temporary recorder failure')
+
+        allow(AiLeadEmployee::OrchestrationIntentRecorder).to receive(:new).and_call_original
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: payload).perform
+
+        message = whatsapp_channel.inbox.messages.find_by!(source_id: 'wamid.RETRY.INTENT')
+        expect(whatsapp_channel.inbox.messages.where(source_id: 'wamid.RETRY.INTENT').count).to eq(1)
+        expect(AiLeadEmployee::OrchestrationIntent.where(triggering_message: message).count).to eq(1)
+      end
+    end
+
     context 'when Meta sends unsupported media' do
       let(:unsupported_params) do
         canonical_text_params(message_id: 'wamid.UNSUPPORTED.MEDIA', body: nil).tap do |payload|

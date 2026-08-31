@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::FollowUpDeliveryService
+  OUTBOX_EVENT_TYPE = 'ai_employee.follow_up_recorded'
+
   def initialize(follow_up:)
     @follow_up = follow_up
   end
 
   def perform
-    message_id_to_deliver = nil
+    outbox_event_id = nil
 
     follow_up.with_lock do
       return unless follow_up.pending?
@@ -23,17 +25,17 @@ class AiLeadEmployee::FollowUpDeliveryService
         return
       end
 
-      message_id_to_deliver = send_follow_up!
+      outbox_event_id = record_follow_up!
     end
 
-    SendReplyJob.perform_later(message_id_to_deliver) if message_id_to_deliver.present?
+    AiLeadEmployee::OutboxDispatchJob.perform_later(outbox_event_id) if outbox_event_id.present?
   end
 
   private
 
   attr_reader :follow_up
 
-  def send_follow_up!
+  def record_follow_up!
     conversation.with_lock do
       unless compatible_conversation_state?
         follow_up.cancel!('incompatible_control_state')
@@ -43,8 +45,21 @@ class AiLeadEmployee::FollowUpDeliveryService
       return reschedule_delivery! if follow_up.scheduled_at.future?
 
       message = follow_up.message || create_follow_up_message!
-      follow_up.update!(status: :sent, message: message, sent_at: Time.current)
-      message.id if message.source_id.blank? || message.failed?
+      follow_up.update!(message: message)
+      create_outbox_event!(message).id
+    end
+  end
+
+  def create_outbox_event!(message)
+    OutboxEvent.find_or_create_by!(account: follow_up.account, idempotency_key: "ai-follow-up/#{follow_up.id}") do |event|
+      event.aggregate = message
+      event.event_type = OUTBOX_EVENT_TYPE
+      event.payload = {
+        message_id: message.id,
+        conversation_id: conversation.id,
+        follow_up_id: follow_up.id,
+        channel: 'whatsapp'
+      }
     end
   end
 

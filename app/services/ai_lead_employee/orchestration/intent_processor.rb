@@ -28,7 +28,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   # rubocop:disable Metrics/MethodLength
   def perform
-    @outbound_message_delivery_id = nil
+    @outbox_event_id = nil
     @handoff_alert_delivery_ids = []
     processed_intent = ActiveRecord::Base.transaction do
       intent.lock!
@@ -42,7 +42,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
       process_grounded_answer!
     end
-    enqueue_outbound_message_delivery
+    enqueue_outbox_delivery
     enqueue_handoff_alert_deliveries
     processed_intent
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
@@ -140,15 +140,13 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS
     )
     create_outbox_event!(outbound_message)
-    completed_intent = complete_intent!(
+    complete_intent!(
       outbound_message: outbound_message,
       provider_response: provider_response,
       source_references: answer_result.sources,
       qualification_result: qualification_result,
       status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS
     )
-    @outbound_message_delivery_id = outbound_message.id
-    completed_intent
   end
 
   def qualify_lead!
@@ -198,15 +196,14 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       qualification_result: qualification_result,
       status: 'qualification_question'
     )
-    @outbound_message_delivery_id = outbound_message.id
     intent
   end
 
-  def enqueue_outbound_message_delivery
-    return if @outbound_message_delivery_id.blank?
+  def enqueue_outbox_delivery
+    return if @outbox_event_id.blank?
     return unless enqueue_deliveries
 
-    SendReplyJob.perform_later(@outbound_message_delivery_id)
+    AiLeadEmployee::OutboxDispatchJob.perform_later(@outbox_event_id)
   end
 
   def enqueue_handoff_alert_deliveries
@@ -260,7 +257,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def create_outbox_event!(outbound_message)
-    OutboxEvent.create!(
+    outbox_event = OutboxEvent.create!(
       account: account,
       aggregate: outbound_message,
       event_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE,
@@ -273,6 +270,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
         channel: 'whatsapp'
       }
     )
+    @outbox_event_id = outbox_event.id
   end
 
   def complete_intent!(outbound_message:, provider_response:, source_references:, qualification_result:, status:)
