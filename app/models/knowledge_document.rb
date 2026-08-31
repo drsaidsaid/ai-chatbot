@@ -4,23 +4,23 @@
 #
 # Table name: knowledge_documents
 #
-#  id                      :bigint           not null, primary key
-#  archived_at             :datetime
-#  body                    :text             default(""), not null
-#  general_question_access :boolean          default(TRUE), not null
-#  import_metadata         :jsonb            not null
-#  offer_ids               :jsonb            not null
-#  published_at            :datetime
+#  id                       :bigint           not null, primary key
+#  archived_at              :datetime
+#  body                     :text             default(""), not null
+#  general_question_access  :boolean          default(TRUE), not null
+#  import_metadata          :jsonb            not null
+#  offer_ids                :jsonb            not null
+#  published_at             :datetime
 #  published_content_digest :string
-#  revisions               :jsonb            not null
-#  sensitive_topics        :jsonb            not null
-#  status                  :integer          default("draft"), not null
-#  title                   :string           not null
-#  used_by_ai_employee     :boolean          default(TRUE), not null
-#  created_at              :datetime         not null
-#  updated_at              :datetime         not null
-#  account_id              :bigint           not null
-#  last_editor_id          :bigint
+#  revisions                :jsonb            not null
+#  sensitive_topics         :jsonb            not null
+#  status                   :integer          default("draft"), not null
+#  title                    :string           not null
+#  used_by_ai_employee      :boolean          default(TRUE), not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  account_id               :bigint           not null
+#  last_editor_id           :bigint
 #
 # Indexes
 #

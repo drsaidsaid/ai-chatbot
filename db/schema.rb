@@ -223,6 +223,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_31_000100) do
     t.index ["approved_by_id"], name: "index_ai_lead_employee_launch_gates_on_approved_by_id"
   end
 
+  create_table "ai_lead_employee_offers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.string "price", default: "", null: false
+    t.text "best_for", default: "", null: false
+    t.string "primary_action", default: "", null: false
+    t.boolean "enabled", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "enabled", "position"], name: "idx_ai_lead_offers_on_account_enabled_position"
+    t.index ["account_id", "name"], name: "index_ai_lead_employee_offers_on_account_id_and_name", unique: true
+    t.index ["account_id"], name: "index_ai_lead_employee_offers_on_account_id"
+  end
+
   create_table "ai_orchestration_intents", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "conversation_id", null: false
@@ -1754,6 +1770,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_31_000100) do
     t.index ["user_id"], name: "index_qualification_evidences_on_user_id"
   end
 
+  create_table "qualification_hard_rules", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "key", null: false
+    t.string "label", null: false
+    t.text "description", default: "", null: false
+    t.boolean "enabled", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "enabled", "position"], name: "idx_qualification_hard_rules_on_account_enabled_position"
+    t.index ["account_id", "key"], name: "index_qualification_hard_rules_on_account_id_and_key", unique: true
+    t.index ["account_id"], name: "index_qualification_hard_rules_on_account_id"
+  end
+
   create_table "qualification_questions", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.integer "signal", null: false
@@ -1763,9 +1794,27 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_31_000100) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "required", default: true, null: false
+    t.string "validation_key", default: "plain_text", null: false
     t.index ["account_id", "enabled", "position"], name: "idx_on_account_id_enabled_position_81d2a5e994"
     t.index ["account_id", "signal"], name: "index_qualification_questions_on_account_id_and_signal", unique: true
     t.index ["account_id"], name: "index_qualification_questions_on_account_id"
+  end
+
+  create_table "qualification_score_ranges", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "quality", null: false
+    t.integer "min_score", null: false
+    t.integer "max_score", null: false
+    t.string "label", null: false
+    t.text "meaning", default: "", null: false
+    t.text "examples", default: "", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "position"], name: "idx_qualification_score_ranges_on_account_position"
+    t.index ["account_id"], name: "index_qualification_score_ranges_on_account_id"
   end
 
   create_table "related_categories", force: :cascade do |t|
@@ -1990,6 +2039,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_31_000100) do
   add_foreign_key "ai_lead_employee_evaluation_runs", "users", column: "reviewed_by_id"
   add_foreign_key "ai_lead_employee_launch_gates", "accounts"
   add_foreign_key "ai_lead_employee_launch_gates", "users", column: "approved_by_id"
+  add_foreign_key "ai_lead_employee_offers", "accounts"
   add_foreign_key "ai_orchestration_intents", "accounts"
   add_foreign_key "ai_orchestration_intents", "conversations"
   add_foreign_key "ai_orchestration_intents", "human_review_requests", column: "review_request_id"
@@ -2047,7 +2097,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_31_000100) do
   add_foreign_key "qualification_evidences", "messages"
   add_foreign_key "qualification_evidences", "qualification_evidences", column: "superseded_by_id"
   add_foreign_key "qualification_evidences", "users"
+  add_foreign_key "qualification_hard_rules", "accounts"
   add_foreign_key "qualification_questions", "accounts"
+  add_foreign_key "qualification_score_ranges", "accounts"
   add_foreign_key "user_sessions", "users"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").

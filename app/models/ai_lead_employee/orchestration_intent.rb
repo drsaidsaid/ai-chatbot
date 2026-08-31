@@ -4,6 +4,46 @@
 #
 # Table name: ai_orchestration_intents
 #
+#  id                       :bigint           not null, primary key
+#  attempts                 :integer          default(0), not null
+#  blocked_at               :datetime
+#  blocked_reason           :string
+#  completed_at             :datetime
+#  decision                 :jsonb            not null
+#  failure_class            :string
+#  idempotency_key          :string           not null
+#  model                    :string
+#  observed_control_version :integer          not null
+#  selected_provider        :string
+#  source_references        :jsonb            not null
+#  state                    :integer          default("pending"), not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  account_id               :bigint           not null
+#  conversation_id          :bigint           not null
+#  outbound_message_id      :bigint
+#  review_request_id        :bigint
+#  triggering_message_id    :bigint           not null
+#
+# Indexes
+#
+#  idx_ai_orchestration_intents_on_logical_trigger          (account_id,conversation_id,triggering_message_id,observed_control_version) UNIQUE
+#  idx_on_account_id_conversation_id_state_b83b69ea47       (account_id,conversation_id,state)
+#  idx_on_account_id_idempotency_key_c7b0a1d67b             (account_id,idempotency_key) UNIQUE
+#  index_ai_orchestration_intents_on_account_id             (account_id)
+#  index_ai_orchestration_intents_on_conversation_id        (conversation_id)
+#  index_ai_orchestration_intents_on_outbound_message_id    (outbound_message_id)
+#  index_ai_orchestration_intents_on_review_request_id      (review_request_id)
+#  index_ai_orchestration_intents_on_triggering_message_id  (triggering_message_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (conversation_id => conversations.id)
+#  fk_rails_...  (outbound_message_id => messages.id)
+#  fk_rails_...  (review_request_id => human_review_requests.id)
+#  fk_rails_...  (triggering_message_id => messages.id)
+#
 class AiLeadEmployee::OrchestrationIntent < ApplicationRecord
   self.table_name = 'ai_orchestration_intents'
 

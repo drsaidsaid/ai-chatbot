@@ -2,9 +2,9 @@
 
 import ApiClient from './ApiClient';
 
-class BookingConfigurationAPI extends ApiClient {
+class QualificationConfigurationAPI extends ApiClient {
   constructor() {
-    super('booking_configuration', { accountScoped: true });
+    super('qualification_configuration', { accountScoped: true });
   }
 
   get() {
@@ -16,4 +16,4 @@ class BookingConfigurationAPI extends ApiClient {
   }
 }
 
-export default new BookingConfigurationAPI();
+export default new QualificationConfigurationAPI();

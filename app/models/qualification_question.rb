@@ -4,15 +4,17 @@
 #
 # Table name: qualification_questions
 #
-#  id         :bigint           not null, primary key
-#  enabled    :boolean          default(TRUE), not null
-#  metadata   :jsonb            not null
-#  position   :integer          default(0), not null
-#  prompt     :text             not null
-#  signal     :integer          not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  account_id :bigint           not null
+#  id             :bigint           not null, primary key
+#  enabled        :boolean          default(TRUE), not null
+#  metadata       :jsonb            not null
+#  position       :integer          default(0), not null
+#  prompt         :text             not null
+#  required       :boolean          default(TRUE), not null
+#  signal         :integer          not null
+#  validation_key :string           default("plain_text"), not null
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  account_id     :bigint           not null
 #
 # Indexes
 #
