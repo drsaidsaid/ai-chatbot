@@ -6,6 +6,86 @@ RSpec.describe AiLeadEmployee::QualificationService do
   let(:account) { create(:account) }
   let(:conversation) { create(:conversation, account: account) }
 
+  it 'uses an existing WhatsApp profile name without asking for it again' do
+    conversation.contact.update!(name: 'Asha Mushi')
+
+    result = described_class.new(conversation: conversation).perform
+
+    expect(result.qualification.evidence_snapshot.dig('name', 'value')).to eq('Asha Mushi')
+    expect(result.next_question).to eq('What type of business do you run?')
+  end
+
+  it 'asks for a name when the contact still has a phone-number placeholder' do
+    conversation.contact.update!(name: '+255712345678', phone_number: '+255712345678')
+    message = create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      sender: conversation.contact,
+      content: 'Hello'
+    )
+
+    result = described_class.new(conversation: conversation, incoming_message: message).perform
+
+    expect(conversation.contact.reload.name).to eq('+255712345678')
+    expect(result.next_question).to eq('What is your name?')
+  end
+
+  it 'saves a valid answer to the name question on the canonical Contact' do
+    conversation.contact.update!(name: '+255712345678', phone_number: '+255712345678')
+    create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      message_type: :outgoing,
+      content: "Welcome.\n\nWhat is your name?"
+    )
+    answer = create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      sender: conversation.contact,
+      message_type: :incoming,
+      content: 'My name is Neema Juma'
+    )
+
+    result = described_class.new(conversation: conversation, incoming_message: answer).perform
+
+    expect(conversation.contact.reload.name).to eq('Neema Juma')
+    expect(result.qualification.evidence_snapshot.dig('name', 'value')).to eq('Neema Juma')
+    expect(result.next_question).to eq('What type of business do you run?')
+  end
+
+  it 'does not save a greeting as the name after asking the name question' do
+    conversation.contact.update!(name: '+255712345678', phone_number: '+255712345678')
+    create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      message_type: :outgoing,
+      content: 'What is your name?'
+    )
+    greeting = create(
+      :message,
+      account: account,
+      conversation: conversation,
+      inbox: conversation.inbox,
+      sender: conversation.contact,
+      message_type: :incoming,
+      content: 'Hello'
+    )
+
+    result = described_class.new(conversation: conversation, incoming_message: greeting).perform
+
+    expect(conversation.contact.reload.name).to eq('+255712345678')
+    expect(result.qualification.evidence_snapshot).not_to have_key('name')
+    expect(result.next_question).to eq('What is your name?')
+  end
+
   it 'asks the first unanswered enabled question and skips facts already provided' do
     create(:qualification_question, account: account, signal: :problem, prompt: 'What problem should we solve?', position: 1)
     create(:qualification_question, account: account, signal: :budget, prompt: 'What budget have you set aside?', position: 2)
@@ -164,7 +244,7 @@ RSpec.describe AiLeadEmployee::QualificationService do
 
     expect(first_result.qualification).to be_unknown
     expect(second_result.qualification).to be_unknown
-    expect(QualificationEvidence.where(contact: conversation.contact)).to be_empty
+    expect(QualificationEvidence.where(contact: conversation.contact).where.not(signal: :name)).to be_empty
   end
 
   it 'keeps human evidence authoritative over later extracted evidence' do

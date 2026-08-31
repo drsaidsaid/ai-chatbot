@@ -197,10 +197,10 @@ onMounted(load);
           <div class="mt-3 grid gap-3">
             <label
               v-for="question in qualification.questions"
-              :key="question.id"
+              :key="question.id || question.signal"
               class="grid gap-1"
-              ><span class="text-sm font-medium text-n-slate-12">{{
-                question.signal
+              ><span class="text-sm font-medium capitalize text-n-slate-12">{{
+                question.signal.replaceAll('_', ' ')
               }}</span
               ><input
                 v-model="question.prompt"

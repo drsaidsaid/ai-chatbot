@@ -46,7 +46,7 @@ class QualificationEvidence < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :superseded_by, class_name: 'QualificationEvidence', optional: true
 
-  enum signal: QualificationQuestion::SIGNALS
+  enum :signal, QualificationQuestion::SIGNALS, prefix: true
   enum source: { extracted: 0, human: 1 }
 
   validates :signal, :source, :observed_at, presence: true

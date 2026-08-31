@@ -34,12 +34,13 @@ class QualificationQuestion < ApplicationRecord
     urgency: 3,
     budget: 4,
     decision_authority: 5,
-    contact_details: 6
+    contact_details: 6,
+    name: 7
   }.freeze
 
   belongs_to :account
 
-  enum signal: SIGNALS
+  enum :signal, SIGNALS, prefix: true
 
   validates :signal, :prompt, :position, presence: true
   validates :signal, uniqueness: { scope: :account_id }

@@ -44,12 +44,27 @@ class Api::V1::Accounts::QualificationConfigurationsController < Api::V1::Accoun
   def configuration_payload
     {
       version: current_account.settings.fetch('qualification_config_version', 1).to_i,
-      questions: current_account.qualification_questions.order(:position, :id).as_json(only: [:id, :signal, :prompt, :position, :enabled, :metadata]),
+      questions: qualification_questions_payload,
       budget_ranges: current_account.qualification_budget_ranges.order(:position, :id).as_json(
         only: [:id, :label, :min_cents, :max_cents, :position, :enabled]
       ),
       follow_up: AiLeadEmployee::FollowUpConfig.new(current_account).payload
     }
+  end
+
+  def qualification_questions_payload
+    questions = current_account.qualification_questions.order(:position, :id)
+    payload = questions.as_json(only: [:id, :signal, :prompt, :position, :enabled, :metadata])
+    return default_questions_payload if payload.empty?
+    return payload if payload.any? { |question| question['signal'] == 'name' }
+
+    [default_questions_payload.first, *payload]
+  end
+
+  def default_questions_payload
+    AiLeadEmployee::QualificationService::DEFAULT_QUESTIONS.each_with_index.map do |(signal, prompt), position|
+      { 'id' => nil, 'signal' => signal, 'prompt' => prompt, 'position' => position, 'enabled' => true, 'metadata' => {} }
+    end
   end
 
   def update_follow_up!

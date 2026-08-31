@@ -3,6 +3,7 @@
 class AiLeadEmployee::QualificationService
   REQUIRED_HIGHLY_QUALIFIED_SIGNALS = %w[problem budget urgency decision_authority].freeze
   SIGNAL_WEIGHTS = {
+    'name' => 0,
     'business_type' => 10,
     'problem' => 20,
     'lead_volume' => 10,
@@ -12,6 +13,7 @@ class AiLeadEmployee::QualificationService
     'contact_details' => 10
   }.freeze
   DEFAULT_QUESTIONS = [
+    ['name', 'What is your name?'],
     ['business_type', 'What type of business do you run?'],
     ['problem', 'What problem are you trying to solve right now?'],
     ['lead_volume', 'How many leads or inquiries do you handle each month?'],
@@ -31,6 +33,7 @@ class AiLeadEmployee::QualificationService
   end
 
   def perform
+    capture_name!
     new_evidence = extract_evidence!
     qualification = evaluate!
 
@@ -79,7 +82,12 @@ class AiLeadEmployee::QualificationService
 
   def self.configured_question_pairs(account)
     configured_questions = account.qualification_questions.enabled_in_order
-    return configured_questions.map { |question| [question.signal, question.prompt] } if configured_questions.exists?
+    if configured_questions.exists?
+      pairs = configured_questions.map { |question| [question.signal, question.prompt] }
+      return pairs if pairs.any? { |signal, _prompt| signal == 'name' }
+
+      return [DEFAULT_QUESTIONS.first, *pairs]
+    end
 
     DEFAULT_QUESTIONS
   end
@@ -94,6 +102,17 @@ class AiLeadEmployee::QualificationService
   private
 
   attr_reader :account, :contact, :conversation, :incoming_message
+
+  def capture_name!
+    evidence = AiLeadEmployee::LeadNameCaptureService.new(
+      account: account,
+      contact: contact,
+      conversation: conversation,
+      incoming_message: incoming_message,
+      name_prompt: questions.find { |signal, _prompt| signal == 'name' }&.second
+    ).perform
+    @current_evidence = nil if evidence.present?
+  end
 
   def extract_evidence!
     evidence = AiLeadEmployee::PersistedQualificationEvidenceExtractor.new(
@@ -143,7 +162,7 @@ class AiLeadEmployee::QualificationService
   def quality_for(snapshot, missing, score)
     return :unqualified if unqualified?(snapshot)
     return :highly_qualified if (REQUIRED_HIGHLY_QUALIFIED_SIGNALS - snapshot.keys).empty?
-    return :unknown if snapshot.empty?
+    return :unknown if snapshot.except('name').empty?
     return :qualified if score >= 60 && missing.exclude?('budget')
 
     :low_qualified
