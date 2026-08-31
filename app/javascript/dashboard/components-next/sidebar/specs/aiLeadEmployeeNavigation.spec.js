@@ -131,23 +131,14 @@ describe('AI Lead Employee navigation', () => {
     );
   });
 
-  it('shows AI provider settings only to administrators', () => {
-    const adminMenu = buildAILeadEmployeeMenuItems({
+  it('keeps the protected AI provider page within Settings navigation state', () => {
+    const settingsItem = buildAILeadEmployeeMenuItems({
       t,
       accountScopedRoute,
-      isAdmin: true,
-    });
-    const agentMenu = buildAILeadEmployeeMenuItems({
-      t,
-      accountScopedRoute,
-      isAdmin: false,
-    });
+    }).at(-1);
 
-    expect(adminMenu.at(-1).children.map(item => item.name)).toContain(
-      'Settings AI Provider'
-    );
-    expect(agentMenu.at(-1).children.map(item => item.name)).not.toContain(
-      'Settings AI Provider'
-    );
+    expect(settingsItem.name).toBe('Settings');
+    expect(settingsItem.activeOn).toContain('owned_ai_provider_settings');
+    expect(settingsItem.children).toBeUndefined();
   });
 });
