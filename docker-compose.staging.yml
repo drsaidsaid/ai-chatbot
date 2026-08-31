@@ -1,0 +1,52 @@
+services:
+  rails:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.staging-debian
+    image: ai-lead-employee:staging
+    env_file: .env.staging
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    ports:
+      - "127.0.0.1:3100:3000"
+    volumes:
+      - ai_lead_employee_staging_storage:/app/storage
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    restart: unless-stopped
+
+  sidekiq:
+    image: ai-lead-employee:staging
+    env_file: .env.staging
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    volumes:
+      - ai_lead_employee_staging_storage:/app/storage
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    restart: unless-stopped
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    env_file: .env.staging
+    volumes:
+      - ai_lead_employee_staging_postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    env_file: .env.staging
+    command: ["sh", "-c", "redis-server --requirepass \"$${REDIS_PASSWORD}\""]
+    volumes:
+      - ai_lead_employee_staging_redis:/data
+    restart: unless-stopped
+
+volumes:
+  ai_lead_employee_staging_storage:
+  ai_lead_employee_staging_postgres:
+  ai_lead_employee_staging_redis:
