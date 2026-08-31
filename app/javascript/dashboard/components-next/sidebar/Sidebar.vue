@@ -152,7 +152,11 @@ const closeMobileSidebar = () => {
 };
 
 const menuItems = computed(() =>
-  buildAILeadEmployeeMenuItems({ t, accountScopedRoute })
+  buildAILeadEmployeeMenuItems({
+    t,
+    accountScopedRoute,
+    isAdmin: store.getters.getCurrentRole === 'administrator',
+  })
 );
 </script>
 

@@ -9,7 +9,11 @@ export const AI_LEAD_EMPLOYEE_TOP_LEVEL_NAVIGATION = [
   'Settings',
 ];
 
-export const buildAILeadEmployeeMenuItems = ({ t, accountScopedRoute }) => [
+export const buildAILeadEmployeeMenuItems = ({
+  t,
+  accountScopedRoute,
+  isAdmin = true,
+}) => [
   {
     name: 'Inbox',
     label: t('SIDEBAR.INBOX'),
@@ -67,6 +71,16 @@ export const buildAILeadEmployeeMenuItems = ({ t, accountScopedRoute }) => [
     label: t('SIDEBAR.SETTINGS'),
     icon: 'i-lucide-bolt',
     children: [
+      ...(isAdmin
+        ? [
+            {
+              name: 'Settings AI Provider',
+              label: t('AI_LEAD_EMPLOYEE.NAV.AI_PROVIDER'),
+              icon: 'i-lucide-brain-circuit',
+              to: accountScopedRoute('owned_ai_provider_settings'),
+            },
+          ]
+        : []),
       {
         name: 'Settings Account Settings',
         label: t('SIDEBAR.ACCOUNT_SETTINGS'),

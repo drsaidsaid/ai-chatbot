@@ -67,11 +67,6 @@ const description = computed(() => {
       <p class="mt-2 max-w-2xl text-sm text-n-slate-11">
         {{ description }}
       </p>
-      <div class="mt-6 rounded-lg border border-n-weak bg-n-solid-1 p-5">
-        <p class="text-sm text-n-slate-11">
-          {{ t('AI_LEAD_EMPLOYEE.BASELINE_NOTICE') }}
-        </p>
-      </div>
       <HumanReviewRequestsPanel v-if="surface === 'REVIEWS'" />
       <KnowledgeItemsPanel v-if="surface === 'KNOWLEDGE'" />
       <BookingsPanel v-if="surface === 'BOOKINGS'" />

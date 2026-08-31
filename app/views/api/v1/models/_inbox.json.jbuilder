@@ -134,7 +134,13 @@ json.bot_name resource.channel.try(:bot_name) if resource.telegram?
 if resource.whatsapp?
   message_templates = resource.channel.try(:message_templates)
   json.message_templates message_templates.is_a?(Array) ? message_templates : []
-  json.provider_config resource.channel.try(:provider_config) if Current.account_user&.administrator?
+  if Current.account_user&.administrator?
+    provider_config = resource.channel.try(:provider_config).to_h
+    safe_provider_config = provider_config.except('api_key', 'webhook_verify_token')
+    safe_provider_config['api_key_configured'] = provider_config['api_key'].present?
+    safe_provider_config['webhook_verify_token_configured'] = provider_config['webhook_verify_token'].present?
+    json.provider_config safe_provider_config
+  end
   if Current.account_user&.administrator? &&
      ChatwootApp.chatwoot_cloud? &&
      (resource.channel.try(:provider_config) || {}).to_h['source'] == 'embedded_signup'

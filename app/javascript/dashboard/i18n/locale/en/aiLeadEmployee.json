@@ -1,14 +1,42 @@
 {
   "AI_LEAD_EMPLOYEE": {
     "PRODUCT_NAME": "AI Lead Employee",
-    "BASELINE_NOTICE": "This V1 surface uses the Community Edition dashboard shell and will grow into the owned workflow here.",
     "NAV": {
       "HOT_LEADS": "Hot Leads",
       "LEADS": "Leads",
       "REVIEWS": "Reviews",
       "KNOWLEDGE": "Knowledge",
       "BOOKINGS": "Bookings",
-      "TEST_CENTER": "Test Center"
+      "TEST_CENTER": "Test Center",
+      "AI_PROVIDER": "AI Provider"
+    },
+    "AI_PROVIDER": {
+      "TITLE": "AI Provider",
+      "DESCRIPTION": "Connect the model used for grounded answers and qualification decisions.",
+      "LOADING": "Loading AI provider settings",
+      "CONNECTION": "Connection",
+      "HEALTH": "Health",
+      "CONNECTED": "Connected",
+      "NOT_CONNECTED": "Not connected",
+      "NOT_CHECKED": "Not checked",
+      "HEALTHY": "Healthy",
+      "NEEDS_ATTENTION": "Needs attention",
+      "PROVIDER": "Provider",
+      "OPENROUTER": "OpenRouter",
+      "MODEL": "Model",
+      "MODEL_PLACEHOLDER": "openai/gpt-4.1-mini",
+      "API_KEY": "API key",
+      "KEY_PLACEHOLDER": "Enter an OpenRouter API key",
+      "KEY_SAVED": "A key is saved. Enter a new key to rotate it.",
+      "KEY_HELP": "The key is encrypted and is never shown again after saving.",
+      "SAVE": "Save connection",
+      "CHECK": "Check connection",
+      "DISABLE": "Disable",
+      "SAVED": "AI provider connection saved",
+      "SAVE_ERROR": "AI provider connection could not be saved",
+      "HEALTH_CHECKED": "Connection check completed",
+      "HEALTH_ERROR": "Connection check failed",
+      "DISABLED": "AI provider connection disabled"
     },
     "SURFACES": {
       "HOT_LEADS": {
@@ -37,6 +65,8 @@
       }
     },
     "TEST_CENTER": {
+      "YES": "Yes",
+      "NO": "No",
       "LOADING": "Loading simulations",
       "SCENARIO": "Scenario",
       "REVIEWED": "Reviewed",

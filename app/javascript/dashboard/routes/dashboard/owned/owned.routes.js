@@ -1,5 +1,6 @@
 import { frontendURL } from 'dashboard/helper/URLHelper';
 import OwnedWorkspacePage from './OwnedWorkspacePage.vue';
+import AiProviderSettingsPage from './AiProviderSettingsPage.vue';
 import { ROLES } from 'dashboard/constants/permissions.js';
 
 const ownedSurfaceRoute = ({ path, name, surface }) => ({
@@ -43,4 +44,12 @@ export const routes = [
     name: 'owned_test_center_index',
     surface: 'TEST_CENTER',
   }),
+  {
+    path: frontendURL('accounts/:accountId/settings/ai-provider'),
+    name: 'owned_ai_provider_settings',
+    component: AiProviderSettingsPage,
+    meta: {
+      permissions: ['administrator'],
+    },
+  },
 ];

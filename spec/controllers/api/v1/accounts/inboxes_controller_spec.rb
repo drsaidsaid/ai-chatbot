@@ -60,11 +60,15 @@ RSpec.describe 'Inboxes API', type: :request do
       context 'when provider_config' do
         let(:inbox) { create(:channel_whatsapp, account: account, sync_templates: false, validate_provider_config: false).inbox }
 
-        it 'returns provider config attributes for admin' do
+        it 'returns non-secret provider config attributes for admin' do
           get "/api/v1/accounts/#{account.id}/inboxes",
               headers: admin.create_new_auth_token,
               as: :json
-          expect(response.body).to include('provider_config')
+
+          provider_config = response.parsed_body['payload'].find { |item| item['id'] == inbox.id }['provider_config']
+          expect(provider_config).to include('api_key_configured', 'webhook_verify_token_configured')
+          expect(provider_config).not_to have_key('api_key')
+          expect(provider_config).not_to have_key('webhook_verify_token')
         end
 
         it 'will not return provider config for agent' do

@@ -238,11 +238,17 @@ onMounted(load);
             </div>
             <span>
               {{
-                scenario.result.reviewed ? t('GENERAL.YES') : t('GENERAL.NO')
+                scenario.result.reviewed
+                  ? t('AI_LEAD_EMPLOYEE.TEST_CENTER.YES')
+                  : t('AI_LEAD_EMPLOYEE.TEST_CENTER.NO')
               }}
             </span>
             <span>
-              {{ scenario.result.passed ? t('GENERAL.YES') : t('GENERAL.NO') }}
+              {{
+                scenario.result.passed
+                  ? t('AI_LEAD_EMPLOYEE.TEST_CENTER.YES')
+                  : t('AI_LEAD_EMPLOYEE.TEST_CENTER.NO')
+              }}
             </span>
             <button
               type="button"

@@ -619,7 +619,7 @@ onMounted(() => {
                   <div class="w-full h-px bg-n-weak my-4" />
 
                   <!-- Upgrade prompt when advanced_assignment is not enabled -->
-                  <div v-if="!hasAdvancedAssignment">
+                  <div v-if="!hasAdvancedAssignment && isEnterprise">
                     <p class="text-body-main text-n-slate-11 mb-1">
                       {{ $t('INBOX_MGMT.ASSIGNMENT.UPGRADE_PROMPT') }}
                     </p>

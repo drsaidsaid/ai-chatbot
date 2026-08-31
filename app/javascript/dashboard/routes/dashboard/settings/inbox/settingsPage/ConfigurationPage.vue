@@ -402,7 +402,9 @@ export default {
             $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_SUBHEADER')
           "
         >
-          <woot-code :script="inbox.provider_config.webhook_verify_token" />
+          <p class="text-sm text-n-slate-12">
+            {{ $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECRET_CONFIGURED') }}
+          </p>
         </SettingsFieldSection>
         <SettingsFieldSection
           v-if="showWhatsAppReconfigure"
@@ -431,7 +433,9 @@ export default {
             $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_SUBHEADER')
           "
         >
-          <woot-code :script="inbox.provider_config.webhook_verify_token" />
+          <p class="text-sm text-n-slate-12">
+            {{ $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECRET_CONFIGURED') }}
+          </p>
         </SettingsFieldSection>
         <SettingsFieldSection
           :label="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECTION_TITLE')"
@@ -439,7 +443,9 @@ export default {
             $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECTION_SUBHEADER')
           "
         >
-          <woot-code :script="inbox.provider_config.api_key" />
+          <p class="text-sm text-n-slate-12">
+            {{ $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECRET_CONFIGURED') }}
+          </p>
         </SettingsFieldSection>
         <SettingsFieldSection
           :label="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECTION_UPDATE_TITLE')"

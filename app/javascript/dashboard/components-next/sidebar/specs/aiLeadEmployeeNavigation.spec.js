@@ -47,4 +47,24 @@ describe('AI Lead Employee navigation', () => {
       }
     );
   });
+
+  it('shows AI provider settings only to administrators', () => {
+    const adminMenu = buildAILeadEmployeeMenuItems({
+      t,
+      accountScopedRoute,
+      isAdmin: true,
+    });
+    const agentMenu = buildAILeadEmployeeMenuItems({
+      t,
+      accountScopedRoute,
+      isAdmin: false,
+    });
+
+    expect(adminMenu.at(-1).children.map(item => item.name)).toContain(
+      'Settings AI Provider'
+    );
+    expect(agentMenu.at(-1).children.map(item => item.name)).not.toContain(
+      'Settings AI Provider'
+    );
+  });
 });
