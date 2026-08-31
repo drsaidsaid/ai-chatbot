@@ -1,6 +1,6 @@
 # Inbox Conversation Cockpit
 
-Status: Integration verification
+Status: Awaiting UI approval
 
 ## What to build
 

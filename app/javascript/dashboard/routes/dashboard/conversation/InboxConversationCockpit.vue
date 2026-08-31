@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { emitter } from 'shared/helpers/mitt';
 import Avatar from 'next/avatar/Avatar.vue';
 import Icon from 'next/icon/Icon.vue';
 import MessagesView from 'dashboard/components/widgets/conversation/MessagesView.vue';
@@ -364,6 +366,9 @@ const loadConversation = async displayId => {
     await store.dispatch('setActiveChat', {
       data: selectedData,
       after: route.query.messageId,
+    });
+    emitter.emit(BUS_EVENTS.SCROLL_TO_MESSAGE, {
+      messageId: route.query.messageId,
     });
     activeDetailTab.value = 'summary';
     isMobileBriefOpen.value = false;

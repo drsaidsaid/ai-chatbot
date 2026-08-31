@@ -5,6 +5,8 @@ import InboxConversationCockpit from '../InboxConversationCockpit.vue';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import BookingsAPI from 'dashboard/api/bookings';
 import OperationalDashboardAPI from 'dashboard/api/operationalDashboard';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { emitter } from 'shared/helpers/mitt';
 
 vi.mock('dashboard/api/inbox/conversation', () => ({
   default: {
@@ -435,6 +437,7 @@ describe('InboxConversationCockpit', () => {
   });
 
   it('loads Hot by default and switches Review and Booked with API-backed filters', async () => {
+    const emitSpy = vi.spyOn(emitter, 'emit');
     const { wrapper, router } = await mountCockpit();
 
     expect(router.currentRoute.value.query.queue).toBe('hot');
@@ -446,6 +449,9 @@ describe('InboxConversationCockpit', () => {
     );
     expect(wrapper.text()).toContain('Asha Mushi');
     expect(wrapper.text()).toContain('I need WhatsApp automation this week.');
+    expect(emitSpy).toHaveBeenCalledWith(BUS_EVENTS.SCROLL_TO_MESSAGE, {
+      messageId: undefined,
+    });
 
     await clickQueue(wrapper, 'Review');
 
