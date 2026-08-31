@@ -38,8 +38,19 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
 
   before do
     intent
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
     allow(SendReplyJob).to receive(:perform_later)
     allow(AiLeadEmployee::AiProvider::ClientFactory).to receive(:for).and_return(provider_client)
+  end
+
+  it 'blocks live processing when the launch gate is not approved' do
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(false)
+
+    described_class.perform_now(intent.id)
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'launch_gate_not_approved')
+    expect(conversation.messages.outgoing.count).to eq(0)
+    expect(OutboxEvent.count).to eq(0)
   end
 
   it 'blocks a delayed worker after human takeover without creating outbound side effects' do

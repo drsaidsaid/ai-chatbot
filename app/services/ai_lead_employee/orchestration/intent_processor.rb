@@ -11,6 +11,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   FINAL_CHECKS = [
     [:tenant_scope_mismatch, :tenant_scope_mismatch?],
+    [:launch_gate_not_approved, :launch_gate_not_approved?],
     [:stale_control_version, :stale_control_version?],
     [:incompatible_control_state, :incompatible_control_state?],
     [:ineligible_inbox_status, :ineligible_inbox_status?],
@@ -19,10 +20,13 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     [:human_reply_after_trigger, :human_reply_after_trigger?]
   ].freeze
 
-  def initialize(intent:)
+  def initialize(intent:, enqueue_deliveries: true, enforce_launch_gate: true)
     @intent = intent
+    @enqueue_deliveries = enqueue_deliveries
+    @enforce_launch_gate = enforce_launch_gate
   end
 
+  # rubocop:disable Metrics/MethodLength
   def perform
     @outbound_message_delivery_id = nil
     @handoff_alert_delivery_ids = []
@@ -42,12 +46,17 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     enqueue_handoff_alert_deliveries
     processed_intent
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
-    AiLeadEmployee::Orchestration::ProviderFailureHandler.new(intent: intent, failure: e).perform
+    AiLeadEmployee::Orchestration::ProviderFailureHandler.new(
+      intent: intent,
+      failure: e,
+      enqueue_review_alerts: enqueue_deliveries
+    ).perform
   end
+  # rubocop:enable Metrics/MethodLength
 
   private
 
-  attr_reader :intent
+  attr_reader :intent, :enqueue_deliveries, :enforce_launch_gate
 
   delegate :conversation, :triggering_message, :account, to: :intent
 
@@ -60,6 +69,10 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     conversation.account_id != intent.account_id ||
       triggering_message.account_id != intent.account_id ||
       triggering_message.conversation_id != conversation.id
+  end
+
+  def launch_gate_not_approved?
+    enforce_launch_gate && !AiLeadEmployee::LaunchGate.live_ai_enabled?(account)
   end
 
   def stale_control_version?
@@ -191,11 +204,14 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def enqueue_outbound_message_delivery
     return if @outbound_message_delivery_id.blank?
+    return unless enqueue_deliveries
 
     SendReplyJob.perform_later(@outbound_message_delivery_id)
   end
 
   def enqueue_handoff_alert_deliveries
+    return unless enqueue_deliveries
+
     @handoff_alert_delivery_ids.each { |message_id| SendReplyJob.perform_later(message_id) }
   end
 
@@ -339,7 +355,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     review_result = AiLeadEmployee::HumanReviewRequestService.new(
       conversation: conversation,
       lead_message: triggering_message,
-      reason: reason.to_s
+      reason: reason.to_s,
+      enqueue_alerts: enqueue_deliveries
     ).perform
     block_intent!(BLOCK_REASONS.fetch(reason.to_sym, reason.to_s), review_request: review_result.request)
   end

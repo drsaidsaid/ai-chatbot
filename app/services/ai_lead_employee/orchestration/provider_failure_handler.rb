@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::Orchestration::ProviderFailureHandler
-  def initialize(intent:, failure:)
+  def initialize(intent:, failure:, enqueue_review_alerts: true)
     @intent = intent
     @failure = failure
+    @enqueue_review_alerts = enqueue_review_alerts
   end
 
   def perform
@@ -18,7 +19,7 @@ class AiLeadEmployee::Orchestration::ProviderFailureHandler
 
   private
 
-  attr_reader :intent, :failure
+  attr_reader :intent, :failure, :enqueue_review_alerts
 
   def block_reasons
     AiLeadEmployee::Orchestration::DecisionPlaceholder::BLOCK_REASONS
@@ -42,7 +43,8 @@ class AiLeadEmployee::Orchestration::ProviderFailureHandler
     @review_result ||= AiLeadEmployee::HumanReviewRequestService.new(
       conversation: intent.conversation,
       lead_message: intent.triggering_message,
-      reason: 'provider_failed'
+      reason: 'provider_failed',
+      enqueue_alerts: enqueue_review_alerts
     ).perform
   end
 end

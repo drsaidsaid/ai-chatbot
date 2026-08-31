@@ -55,6 +55,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
   end
 
   it 'records one tenant-scoped intent after the inbound message and channel greeting commit' do
+    approve_launch_gate!
+
     perform_enqueued_jobs(only: SendReplyJob) do
       described_service.perform
       described_service.perform
@@ -80,7 +82,23 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     expect(enqueued_jobs.map { |job| job[:job] }).to include(AiLeadEmployee::OrchestrationIntentJob)
   end
 
+  it 'does not create live AI orchestration before an admin approves the launch gate' do
+    message = create(:message,
+                     account: whatsapp_channel.account,
+                     inbox: whatsapp_channel.inbox,
+                     conversation: create(:conversation, account: whatsapp_channel.account, inbox: whatsapp_channel.inbox, control_state: :ai_active),
+                     message_type: :incoming,
+                     content: 'Can you help?',
+                     source_id: 'wamid.GATED.LEAD')
+
+    expect(described_class.new(message: message).perform).to be_nil
+    expect(AiLeadEmployee::OrchestrationIntent.count).to eq(0)
+    expect(enqueued_jobs.map { |job| job[:job] }).not_to include(AiLeadEmployee::OrchestrationIntentJob)
+  end
+
   it 'creates a Review Request without orchestration intent for unsupported media' do
+    approve_launch_gate!
+
     unsupported_params = params.deep_dup
     message = unsupported_params.dig(:entry, 0, :changes, 0, :value, :messages, 0)
     message.delete(:text)
@@ -93,6 +111,32 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     review_request = HumanReviewRequest.find_by!(reason: :unsupported_media)
     expect(review_request.question).to eq(I18n.t('conversations.messages.whatsapp.unsupported_message'))
     expect(review_request.conversation).to eq(whatsapp_channel.inbox.conversations.first)
+  end
+
+  it 'does not create live unsupported-media review automation before launch approval' do
+    contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
+    contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    conversation = create(:conversation,
+                          account: whatsapp_channel.account,
+                          inbox: whatsapp_channel.inbox,
+                          contact: contact,
+                          contact_inbox: contact_inbox,
+                          control_state: :ai_active)
+    message = create(:message,
+                     account: whatsapp_channel.account,
+                     inbox: whatsapp_channel.inbox,
+                     conversation: conversation,
+                     sender: contact,
+                     message_type: :incoming,
+                     content: I18n.t('conversations.messages.whatsapp.unsupported_message'),
+                     content_attributes: { is_unsupported: true },
+                     source_id: 'wamid.UNSUPPORTED.GATED')
+
+    clear_enqueued_jobs
+
+    expect(described_class.new(message: message).perform).to be_nil
+    expect(HumanReviewRequest.count).to eq(0)
+    expect(enqueued_jobs.map { |job| job[:job] }).not_to include(SendReplyJob)
   end
 
   it 'does not create automation while a Human Operator owns the conversation' do
@@ -120,6 +164,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
   end
 
   it 'creates a new intent only for the next lead message after explicit resume' do
+    approve_launch_gate!
+
     contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
     contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
     conversation = create(:conversation,
@@ -154,5 +200,9 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
 
   def described_service
     Whatsapp::IncomingMessageWhatsappCloudService.new(inbox: whatsapp_channel.inbox, params: params)
+  end
+
+  def approve_launch_gate!
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(whatsapp_channel.account).and_return(true)
   end
 end

@@ -22,6 +22,8 @@ separate application bolted beside Community Edition.
   Knowledge Items with explicit approval.
 - **Bookings:** confirmed and upcoming Booking records with the assigned Human
   Operator.
+- **Test Center:** admin-only simulation runs, reviewer grading, launch report,
+  and controlled pilot approval for live AI operation.
 - **Settings:** Business Account profile, team invitations, offers,
   qualification questions and rules, availability, alert routes, and direct
   Meta WhatsApp connection health.
@@ -33,6 +35,10 @@ The supported connection is the owned Community Edition WhatsApp channel path:
 the existing webhook, event job, channel service, Conversation, Message, and
 outbound sender. A parallel custom Meta webhook is outside the supported V1
 surface until removed or folded into that path.
+
+Review Request and Hot Lead alerts also use the same Community Edition
+Conversation, Message, `SendReplyJob`, and WhatsApp sender path. Custom direct
+Meta text senders are outside the supported production architecture.
 
 Configured Channel Greetings are visible V1 conversation messages. They are
 allowed to welcome a Lead once, but AI Employee replies must answer the actual

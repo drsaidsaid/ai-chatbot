@@ -18,11 +18,12 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
   let(:message) { create(:message, account: account, conversation: conversation, inbox: channel.inbox, content: 'Can you guarantee results?') }
 
   before do
-    stub_request(:post, 'https://graph.facebook.com/v23.0/123456789/messages')
-      .to_return(status: 200, body: { messages: [{ id: 'alert-message-id' }] }.to_json)
+    allow(SendReplyJob).to receive(:perform_later)
+    allow(Meta::Whatsapp::TextMessageClient).to receive(:new)
   end
 
-  it 'creates one open review request and sends the configured WhatsApp alert' do
+  # rubocop:disable RSpec/MultipleExpectations
+  it 'creates one open review request and queues a canonical WhatsApp alert message' do
     result = described_class.new(
       conversation: conversation,
       lead_message: message,
@@ -33,12 +34,13 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
     expect(result.request.question).to eq('Can you guarantee results?')
     expect(result.request.alert_recipients).to eq(['255700000001'])
     expect(result.request.alert_deliveries).to contain_exactly(
-      include('recipient' => '255700000001', 'status' => 'sent', 'provider_message_id' => 'alert-message-id')
+      include('recipient' => '255700000001', 'status' => 'queued', 'message_id' => be_present)
     )
-    expect(
-      a_request(:post, 'https://graph.facebook.com/v23.0/123456789/messages')
-        .with(body: hash_including(to: '255700000001', type: 'text'))
-    ).to have_been_made.once
+    alert_message = account.messages.find(result.request.alert_deliveries.first['message_id'])
+    expect(alert_message.additional_attributes.dig('ai_lead_employee', 'delivery_boundary')).to eq('outbox')
+    expect(alert_message.additional_attributes.dig('ai_lead_employee', 'review_request_id')).to eq(result.request.id)
+    expect(SendReplyJob).to have_received(:perform_later).with(alert_message.id).once
+    expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
 
     expect do
       described_class.new(
@@ -47,5 +49,23 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
         reason: 'no_approved_knowledge'
       ).perform
     end.not_to change(HumanReviewRequest, :count)
+  end
+  # rubocop:enable RSpec/MultipleExpectations
+
+  it 'can persist the review request without queueing alert delivery for simulations' do
+    result = described_class.new(
+      conversation: conversation,
+      lead_message: message,
+      reason: 'sensitive_question',
+      enqueue_alerts: false
+    ).perform
+
+    expect(result.request).to be_open
+    expect(result.request.alert_deliveries).to contain_exactly(
+      include('recipient' => '255700000001', 'status' => 'queued', 'message_id' => be_present)
+    )
+    alert_message = account.messages.find(result.request.alert_deliveries.first['message_id'])
+    expect(SendReplyJob).not_to have_received(:perform_later).with(alert_message.id)
+    expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
   end
 end

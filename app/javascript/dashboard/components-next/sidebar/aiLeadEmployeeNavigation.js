@@ -5,6 +5,7 @@ export const AI_LEAD_EMPLOYEE_TOP_LEVEL_NAVIGATION = [
   'Reviews',
   'Knowledge',
   'Bookings',
+  'Test Center',
   'Settings',
 ];
 
@@ -53,6 +54,13 @@ export const buildAILeadEmployeeMenuItems = ({ t, accountScopedRoute }) => [
     icon: 'i-lucide-calendar-check',
     to: accountScopedRoute('owned_bookings_index'),
     activeOn: ['owned_bookings_index'],
+  },
+  {
+    name: 'Test Center',
+    label: t('AI_LEAD_EMPLOYEE.NAV.TEST_CENTER'),
+    icon: 'i-lucide-clipboard-check',
+    to: accountScopedRoute('owned_test_center_index'),
+    activeOn: ['owned_test_center_index'],
   },
   {
     name: 'Settings',

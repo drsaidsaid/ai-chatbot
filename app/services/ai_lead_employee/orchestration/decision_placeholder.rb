@@ -7,6 +7,7 @@ module AiLeadEmployee::Orchestration::DecisionPlaceholder
     human_reply_after_trigger: 'human_reply_after_trigger',
     incompatible_control_state: 'incompatible_control_state',
     ineligible_inbox_status: 'ineligible_inbox_status',
+    launch_gate_not_approved: 'launch_gate_not_approved',
     no_approved_knowledge: 'no_approved_knowledge',
     opted_out: 'opted_out',
     provider_failure: 'provider_failure',

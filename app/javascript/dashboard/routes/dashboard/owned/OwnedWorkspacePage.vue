@@ -5,6 +5,7 @@ import HumanReviewRequestsPanel from './HumanReviewRequestsPanel.vue';
 import KnowledgeItemsPanel from './KnowledgeItemsPanel.vue';
 import BookingsPanel from './BookingsPanel.vue';
 import OperationalDashboardPanel from './OperationalDashboardPanel.vue';
+import EvaluationSandboxPanel from './EvaluationSandboxPanel.vue';
 
 const props = defineProps({
   surface: {
@@ -28,6 +29,9 @@ const title = computed(() => {
   if (props.surface === 'KNOWLEDGE') {
     return t('AI_LEAD_EMPLOYEE.SURFACES.KNOWLEDGE.TITLE');
   }
+  if (props.surface === 'TEST_CENTER') {
+    return t('AI_LEAD_EMPLOYEE.SURFACES.TEST_CENTER.TITLE');
+  }
   return t('AI_LEAD_EMPLOYEE.SURFACES.BOOKINGS.TITLE');
 });
 
@@ -43,6 +47,9 @@ const description = computed(() => {
   }
   if (props.surface === 'KNOWLEDGE') {
     return t('AI_LEAD_EMPLOYEE.SURFACES.KNOWLEDGE.DESCRIPTION');
+  }
+  if (props.surface === 'TEST_CENTER') {
+    return t('AI_LEAD_EMPLOYEE.SURFACES.TEST_CENTER.DESCRIPTION');
   }
   return t('AI_LEAD_EMPLOYEE.SURFACES.BOOKINGS.DESCRIPTION');
 });
@@ -68,6 +75,7 @@ const description = computed(() => {
       <HumanReviewRequestsPanel v-if="surface === 'REVIEWS'" />
       <KnowledgeItemsPanel v-if="surface === 'KNOWLEDGE'" />
       <BookingsPanel v-if="surface === 'BOOKINGS'" />
+      <EvaluationSandboxPanel v-if="surface === 'TEST_CENTER'" />
       <OperationalDashboardPanel
         v-if="['HOT_LEADS', 'LEADS', 'REVIEWS'].includes(surface)"
         :surface="surface"

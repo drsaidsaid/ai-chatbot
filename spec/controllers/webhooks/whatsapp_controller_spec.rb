@@ -156,6 +156,7 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
       channel.provider_config = channel.provider_config.merge('app_secret' => channel_secret)
       channel.save!
       channel.inbox.update!(greeting_enabled: true, greeting_message: 'Welcome to AI Lead Employee.')
+      allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).and_return(true)
       allow_retired_whatsapp_services
       stub_greeting_delivery(sender_number: '255700111225')
 

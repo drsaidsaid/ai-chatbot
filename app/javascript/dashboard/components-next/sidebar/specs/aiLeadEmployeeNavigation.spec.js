@@ -13,6 +13,7 @@ describe('AI Lead Employee navigation', () => {
     'Reviews',
     'Knowledge',
     'Bookings',
+    'Test Center',
     'Settings',
   ];
 
@@ -26,12 +27,13 @@ describe('AI Lead Employee navigation', () => {
   it('routes owned workflow surfaces through account-scoped dashboard routes', () => {
     const menuItems = buildAILeadEmployeeMenuItems({ t, accountScopedRoute });
 
-    expect(menuItems.slice(1, 6).map(item => item.to)).toEqual([
+    expect(menuItems.slice(1, 7).map(item => item.to)).toEqual([
       '/accounts/1/owned_hot_leads_index',
       '/accounts/1/owned_leads_index',
       '/accounts/1/owned_reviews_index',
       '/accounts/1/owned_knowledge_index',
       '/accounts/1/owned_bookings_index',
+      '/accounts/1/owned_test_center_index',
     ]);
   });
 

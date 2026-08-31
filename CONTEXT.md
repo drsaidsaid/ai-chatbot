@@ -89,13 +89,21 @@ _Avoid_: Citation guess, source text, retrieval blob
 A question or decision the AI Employee cannot safely complete and has submitted to a Human Operator.
 _Avoid_: Ticket, escalation
 
+**Evaluation Run**:
+An admin-only simulation record that executes AI Orchestration decisions without deliverable WhatsApp side effects and preserves the exact answer, Source References, evidence, qualification, next action, configuration, Knowledge Item versions, provider model, prompt version, and reviewer decision.
+_Avoid_: Fake conversation, test chat
+
+**Launch Gate**:
+The server-side approval record that keeps live AI operation disabled until required Evaluation Runs, reviewed qualification accuracy, zero serious issues, team roleplay, pilot reviews, and admin approval are complete.
+_Avoid_: Frontend toggle, feature flag
+
 **Booking**:
 A calendar reservation created for a Highly Qualified Lead with confirmed start and end times.
 _Avoid_: Call request, appointment lead
 
 **Alert**:
 A routed notification about a hot lead, booking, urgent review, or knowledge decision.
-Hot Lead WhatsApp alerts reuse the existing Community Edition WhatsApp sender by creating account-owned alert Contact, ContactInbox, Conversation, and outgoing Message records marked with `ai_lead_employee_alert_conversation`. When an approved WhatsApp template is configured, the alert Message carries CE `template_params` populated with the Handoff context so delivery can use the template path outside an active WhatsApp session. These records are operator-notification plumbing, not Lead-facing Conversations, and must remain tenant-scoped, Control-State-gated, and idempotent by Handoff delivery record.
+Hot Lead and Review Request WhatsApp alerts reuse the existing Community Edition WhatsApp sender by creating account-owned alert Contact, ContactInbox, Conversation, and outgoing Message records, then queueing `SendReplyJob` so delivery flows through `Whatsapp::SendOnWhatsappService`. When an approved WhatsApp template is configured, the alert Message carries CE `template_params` populated with the Handoff context so delivery can use the template path outside an active WhatsApp session. These records are operator-notification plumbing, not Lead-facing Conversations, and must remain tenant-scoped, Control-State-gated, and idempotent by Handoff delivery record.
 _Avoid_: Message, notification event
 
 **Inbox Conversation Status**:

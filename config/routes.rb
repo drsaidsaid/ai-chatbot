@@ -165,6 +165,15 @@ Rails.application.routes.draw do
           resources :human_review_requests, only: [:index, :show] do
             post :resolve, on: :member
           end
+          resource :evaluation_sandbox, only: [:show] do
+            get :scenarios
+            get :runs
+            post :runs, action: :create_run
+            post 'runs/:run_id/grade', action: :grade_run
+            get :launch_gate
+            patch :launch_gate, action: :update_launch_gate
+            post :approve_launch
+          end
           resource :ai_provider_connection, only: [:show, :update, :destroy] do
             post :health_check
           end

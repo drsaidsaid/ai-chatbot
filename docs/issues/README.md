@@ -20,7 +20,7 @@ durable AI Orchestration boundary.
 | 006 | End-to-end canonical launch proof                         | 001-005    | Blocked       |
 | 007 | Recover qualification, handoff, and alerting              | 006        | Blocked       |
 | 008 | Recover booking, follow-up, and operator queues           | 007        | Blocked       |
-| 009 | Evaluation sandbox and controlled pilot gate              | 008        | Blocked       |
+| 009 | Evaluation sandbox and controlled pilot gate              | 008        | Implemented   |
 
 The current frontier is tickets 000-006. Tickets 007-009 intentionally wait
 until the route, greeting, durable AI boundary, secure provider adapter, grounded

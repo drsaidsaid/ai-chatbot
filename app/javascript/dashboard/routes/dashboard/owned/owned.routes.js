@@ -38,4 +38,9 @@ export const routes = [
     name: 'owned_bookings_index',
     surface: 'BOOKINGS',
   }),
+  ownedSurfaceRoute({
+    path: 'test-center',
+    name: 'owned_test_center_index',
+    surface: 'TEST_CENTER',
+  }),
 ];

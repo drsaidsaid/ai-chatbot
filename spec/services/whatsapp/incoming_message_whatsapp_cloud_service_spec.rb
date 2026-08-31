@@ -38,6 +38,7 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
 
       before do
         whatsapp_channel.inbox.update!(greeting_enabled: true, greeting_message: 'Welcome to AI Lead Employee.')
+        allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).and_return(true)
         stub_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
           .with(
             body: {

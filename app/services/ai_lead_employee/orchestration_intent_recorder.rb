@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::OrchestrationIntentRecorder
-  def initialize(message:)
+  def initialize(message:, enqueue_review_alerts: true, enforce_launch_gate: true)
     @message = message
+    @enqueue_review_alerts = enqueue_review_alerts
+    @enforce_launch_gate = enforce_launch_gate
   end
 
   def perform
-    return create_unsupported_media_review if unsupported_media_message?
+    return create_unsupported_media_review if unsupported_media_message? && live_ai_enabled?
     return unless eligible_message?
 
     intent = find_or_create_intent
@@ -16,7 +18,7 @@ class AiLeadEmployee::OrchestrationIntentRecorder
 
   private
 
-  attr_reader :message
+  attr_reader :message, :enqueue_review_alerts, :enforce_launch_gate
 
   def eligible_message?
     persisted_incoming_whatsapp_text? &&
@@ -54,7 +56,12 @@ class AiLeadEmployee::OrchestrationIntentRecorder
   def conversation_allows_ai?
     message.conversation.ai_active? &&
       message.conversation.open? &&
-      message.conversation.assignee_id.blank?
+      message.conversation.assignee_id.blank? &&
+      live_ai_enabled?
+  end
+
+  def live_ai_enabled?
+    !enforce_launch_gate || AiLeadEmployee::LaunchGate.live_ai_enabled?(message.account)
   end
 
   def find_or_create_intent
@@ -82,7 +89,8 @@ class AiLeadEmployee::OrchestrationIntentRecorder
     AiLeadEmployee::HumanReviewRequestService.new(
       conversation: message.conversation,
       lead_message: message,
-      reason: 'unsupported_media'
+      reason: 'unsupported_media',
+      enqueue_alerts: enqueue_review_alerts
     ).perform
     nil
   end

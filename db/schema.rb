@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_30_000200) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_30_000300) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -177,20 +177,50 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000200) do
     t.index ["user_id"], name: "index_agent_sessions_on_user_id"
   end
 
-  create_table "ai_provider_connections", force: :cascade do |t|
+  create_table "ai_lead_employee_evaluation_runs", force: :cascade do |t|
     t.bigint "account_id", null: false
-    t.string "provider", default: "openrouter", null: false
-    t.string "model", null: false
-    t.text "api_key"
+    t.bigint "user_id", null: false
+    t.string "scenario_key", null: false
+    t.string "scenario_name", null: false
     t.integer "status", default: 0, null: false
-    t.datetime "disabled_at"
-    t.datetime "last_health_checked_at"
-    t.string "last_health_status"
-    t.string "last_health_failure_class"
-    t.jsonb "last_health_response", default: {}, null: false
+    t.boolean "automated_passed", default: false, null: false
+    t.boolean "passed", default: false, null: false
+    t.integer "review_status", default: 0, null: false
+    t.jsonb "messages", default: [], null: false
+    t.jsonb "steps", default: [], null: false
+    t.jsonb "grades", default: {}, null: false
+    t.jsonb "metrics", default: {}, null: false
+    t.jsonb "expected_results", default: {}, null: false
+    t.jsonb "configuration_snapshot", default: {}, null: false
+    t.jsonb "knowledge_snapshot", default: {}, null: false
+    t.string "simulation_identifier", null: false
+    t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_ai_provider_connections_on_account_id", unique: true
+    t.jsonb "provider_snapshot", default: {}, null: false
+    t.string "prompt_version", default: "ai-orchestration-v1", null: false
+    t.jsonb "reviewer_decision", default: {}, null: false
+    t.bigint "reviewed_by_id"
+    t.datetime "reviewed_at"
+    t.index ["account_id", "passed"], name: "idx_ai_lead_eval_runs_on_account_passed"
+    t.index ["account_id", "scenario_key", "created_at"], name: "idx_ai_lead_eval_runs_on_account_scenario"
+    t.index ["account_id"], name: "index_ai_lead_employee_evaluation_runs_on_account_id"
+    t.index ["reviewed_by_id"], name: "index_ai_lead_employee_evaluation_runs_on_reviewed_by_id"
+    t.index ["user_id"], name: "index_ai_lead_employee_evaluation_runs_on_user_id"
+  end
+
+  create_table "ai_lead_employee_launch_gates", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.boolean "team_roleplay_completed", default: false, null: false
+    t.integer "pilot_conversations_reviewed_count", default: 0, null: false
+    t.text "approval_notes"
+    t.jsonb "report", default: {}, null: false
+    t.bigint "approved_by_id"
+    t.datetime "approved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_ai_lead_employee_launch_gates_on_account_id", unique: true
+    t.index ["approved_by_id"], name: "index_ai_lead_employee_launch_gates_on_approved_by_id"
   end
 
   create_table "ai_orchestration_intents", force: :cascade do |t|
@@ -221,6 +251,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000200) do
     t.index ["outbound_message_id"], name: "index_ai_orchestration_intents_on_outbound_message_id"
     t.index ["review_request_id"], name: "index_ai_orchestration_intents_on_review_request_id"
     t.index ["triggering_message_id"], name: "index_ai_orchestration_intents_on_triggering_message_id"
+  end
+
+  create_table "ai_provider_connections", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "provider", default: "openrouter", null: false
+    t.string "model", null: false
+    t.text "api_key"
+    t.integer "status", default: 0, null: false
+    t.datetime "disabled_at"
+    t.datetime "last_health_checked_at"
+    t.string "last_health_status"
+    t.string "last_health_failure_class"
+    t.jsonb "last_health_response", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_ai_provider_connections_on_account_id", unique: true
   end
 
   create_table "applied_slas", force: :cascade do |t|
@@ -1912,6 +1958,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_000200) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_lead_employee_evaluation_runs", "accounts"
+  add_foreign_key "ai_lead_employee_evaluation_runs", "users"
+  add_foreign_key "ai_lead_employee_evaluation_runs", "users", column: "reviewed_by_id"
+  add_foreign_key "ai_lead_employee_launch_gates", "accounts"
+  add_foreign_key "ai_lead_employee_launch_gates", "users", column: "approved_by_id"
   add_foreign_key "ai_orchestration_intents", "accounts"
   add_foreign_key "ai_orchestration_intents", "conversations"
   add_foreign_key "ai_orchestration_intents", "human_review_requests", column: "review_request_id"

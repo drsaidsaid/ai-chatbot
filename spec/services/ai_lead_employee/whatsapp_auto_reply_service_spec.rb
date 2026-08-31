@@ -3,29 +3,14 @@
 require 'rails_helper'
 
 RSpec.describe AiLeadEmployee::WhatsappAutoReplyService do
-  let(:account) do
-    create(
-      :account,
-      settings: {
-        'ai_lead_employee' => {
-          'unqualified_human_request_explanation' => 'I need to qualify the request before handing this to a Human Operator.'
-        }
-      }
-    )
-  end
+  let(:account) { create(:account) }
   let!(:channel) do
     create(
       :channel_whatsapp,
       account: account,
       provider: 'whatsapp_cloud',
       sync_templates: false,
-      validate_provider_config: false,
-      provider_config: {
-        'api_key' => 'test-key',
-        'phone_number_id' => '111222333',
-        'business_account_id' => '444555666',
-        'source' => 'embedded_signup'
-      }
+      validate_provider_config: false
     )
   end
   let(:contact) { create(:contact, account: account, phone_number: '+255712345678') }
@@ -49,35 +34,25 @@ RSpec.describe AiLeadEmployee::WhatsappAutoReplyService do
       conversation: conversation,
       sender: contact,
       message_type: :incoming,
-      content: 'Please give me a human. My budget is $50.'
+      content: 'Please give me a human.'
     )
   end
 
   before do
-    create(:knowledge_item, account: account, question: 'human', answer: 'I can help with approved information.')
-    create(:qualification_question, account: account, signal: :budget, prompt: 'What budget range have you set aside?', position: 1)
-    create(:qualification_question, account: account, signal: :problem, prompt: 'What problem should we solve?', position: 2)
-    create(:qualification_budget_range, account: account, min_cents: 100_000, max_cents: nil)
-    stub_request(:post, 'https://graph.facebook.com/v23.0/123456789/messages')
-      .to_return(
-        status: 200,
-        body: { messages: [{ id: 'wamid.AUTO_REPLY' }] }.to_json,
-        headers: { 'Content-Type' => 'application/json' }
-      )
+    allow(Meta::Whatsapp::OutboundMessageSender).to receive(:new)
+    allow(Meta::Whatsapp::TextMessageClient).to receive(:new)
   end
 
-  it 'explains that an unqualified human request must continue qualification without handoff' do
-    described_class.new(
-      conversation: conversation,
-      incoming_message: incoming_message,
-      provider_message_payload: { type: 'text' }
-    ).perform
+  it 'is a retired inline AI shim with no WhatsApp delivery side effects' do
+    expect do
+      described_class.new(
+        conversation: conversation,
+        incoming_message: incoming_message,
+        provider_message_payload: { type: 'text' }
+      ).perform
+    end.not_to change(Message.outgoing, :count)
 
-    expect(Message.outgoing.last.content).to eq(
-      "I need to qualify the request before handing this to a Human Operator.\n\nWhat problem should we solve?"
-    )
-    expect(conversation.reload).to be_ai_active
-    expect(conversation.assignee_id).to be_nil
-    expect(LeadHandoff.count).to eq(0)
+    expect(Meta::Whatsapp::OutboundMessageSender).not_to have_received(:new)
+    expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
   end
 end

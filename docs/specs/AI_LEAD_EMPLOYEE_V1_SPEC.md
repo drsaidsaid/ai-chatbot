@@ -140,6 +140,14 @@ Before live AI operation is enabled, the team must demonstrate:
 - Duplicate events, provider failures, stale jobs, human takeover, coexistence
   echoes, pause, resolution, explicit resume, and cross-tenant attempts are
   covered by automated tests.
+- Admin Test Center scenarios run AI Orchestration without deliverable WhatsApp
+  side effects and persist exact configuration, Knowledge Item versions,
+  provider model, prompt version, evidence, Source References, and reviewer
+  decision.
+- Live AI operation remains server-side gated until all required scenarios have
+  reviewed passing runs, reviewed qualification accuracy is at least 85%,
+  serious fabricated, harmful, or policy-breaking answers are zero, team
+  roleplay and pilot reviews are recorded, and an admin approves launch.
 
 ## Recovery Rule
 

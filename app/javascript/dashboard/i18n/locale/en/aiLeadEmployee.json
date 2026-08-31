@@ -7,7 +7,8 @@
       "LEADS": "Leads",
       "REVIEWS": "Reviews",
       "KNOWLEDGE": "Knowledge",
-      "BOOKINGS": "Bookings"
+      "BOOKINGS": "Bookings",
+      "TEST_CENTER": "Test Center"
     },
     "SURFACES": {
       "HOT_LEADS": {
@@ -29,6 +30,51 @@
       "BOOKINGS": {
         "TITLE": "Bookings",
         "DESCRIPTION": "Confirmed and upcoming calls for highly qualified leads."
+      },
+      "TEST_CENTER": {
+        "TITLE": "Test Center",
+        "DESCRIPTION": "Admin simulation runs, reviewer grading, and controlled pilot approval."
+      }
+    },
+    "TEST_CENTER": {
+      "LOADING": "Loading simulations",
+      "SCENARIO": "Scenario",
+      "REVIEWED": "Reviewed",
+      "PASSED": "Passed",
+      "ACTION": "Action",
+      "RUN": "Run",
+      "RUN_ERROR": "Simulation could not be run",
+      "GRADE_ERROR": "Review could not be saved",
+      "APPROVAL_BLOCKED": "Launch approval is still blocked",
+      "LAUNCH_GATE": "Launch gate",
+      "ROLEPLAY": "Team roleplay completed",
+      "PILOT_REVIEWS": "Pilot conversations reviewed",
+      "NOTES": "Notes",
+      "SAVE_GATE": "Save gate",
+      "APPROVAL_NOTES": "Approval notes",
+      "APPROVE": "Approve live AI",
+      "SAVE_REVIEW": "Save review",
+      "PASS": "Pass",
+      "SERIOUS_ISSUE": "Serious issue",
+      "ENABLED": "Enabled",
+      "BLOCKED": "Blocked",
+      "SELECTED_ANSWER": "Selected answer",
+      "SOURCES": "Source References",
+      "QUALITY": "Lead Quality",
+      "NEXT_ACTION": "Next action",
+      "METRIC": {
+        "ACCURACY": "Qualification accuracy",
+        "THRESHOLD": "Required threshold",
+        "SERIOUS": "Serious issues",
+        "LIVE": "Live AI"
+      },
+      "GRADE": {
+        "ANSWER_CORRECTNESS": "Answer correctness",
+        "QUALIFICATION_CORRECTNESS": "Qualification correctness",
+        "TONE": "Tone",
+        "SAFETY": "Safety",
+        "SOURCE_QUALITY": "Source quality",
+        "NEXT_ACTION": "Next action"
       }
     },
     "BOOKINGS": {

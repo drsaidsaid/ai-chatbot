@@ -31,6 +31,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
     create(:inbox_member, user: operator, inbox: whatsapp_channel.inbox)
     allow_retired_whatsapp_services
     allow(AiLeadEmployee::AiProvider::ClientFactory).to receive(:for).and_return(provider_client)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).and_return(true)
   end
 
   after do
