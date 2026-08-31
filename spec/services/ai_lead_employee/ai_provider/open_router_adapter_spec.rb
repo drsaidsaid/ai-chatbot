@@ -39,6 +39,7 @@ RSpec.describe AiLeadEmployee::AiProvider::OpenRouterAdapter do
 
   {
     401 => AiLeadEmployee::AiProvider::AuthenticationFailure,
+    402 => AiLeadEmployee::AiProvider::InsufficientCreditsFailure,
     403 => AiLeadEmployee::AiProvider::AuthenticationFailure,
     429 => AiLeadEmployee::AiProvider::RateLimitFailure
   }.each do |status, failure|

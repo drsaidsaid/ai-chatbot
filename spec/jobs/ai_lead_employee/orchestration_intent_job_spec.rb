@@ -159,6 +159,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     described_class.perform_now(intent.id)
     described_class.perform_now(intent.id)
 
+    expect(provider_client).to have_received(:complete).with(hash_including(max_tokens: 64)).once
+
     intent.reload
     outbound_message = intent.outbound_message
     outbox_event = OutboxEvent.find_by!(aggregate: outbound_message)

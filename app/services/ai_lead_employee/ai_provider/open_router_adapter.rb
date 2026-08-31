@@ -76,6 +76,8 @@ class AiLeadEmployee::AiProvider::OpenRouterAdapter
     case response.code.to_i
     when 401, 403
       raise AiLeadEmployee::AiProvider::AuthenticationFailure, "AI provider rejected credentials with HTTP #{response.code}"
+    when 402
+      raise AiLeadEmployee::AiProvider::InsufficientCreditsFailure, 'AI provider has insufficient credits'
     when 429
       raise AiLeadEmployee::AiProvider::RateLimitFailure, 'AI provider rate limit reached'
     else

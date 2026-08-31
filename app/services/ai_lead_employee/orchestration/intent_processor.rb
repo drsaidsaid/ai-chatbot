@@ -218,7 +218,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   def build_provider_answer(answer_result)
     ai_provider_client.complete(
       messages: provider_messages(answer_result),
-      max_tokens: 320,
+      max_tokens: 64,
       temperature: 0.1
     )
   end
