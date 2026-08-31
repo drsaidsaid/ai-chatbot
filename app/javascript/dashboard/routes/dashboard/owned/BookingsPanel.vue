@@ -228,7 +228,7 @@ onMounted(load);
             class="mt-1 w-full rounded border border-n-weak bg-n-background px-3 py-2 text-sm text-n-slate-12"
           />
         </label>
-        <div class="mt-4 grid grid-cols-2 gap-3">
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
           <label class="block text-xs font-medium text-n-slate-11">
             {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.FIELD.START') }}
             <input
@@ -246,7 +246,7 @@ onMounted(load);
             />
           </label>
         </div>
-        <div class="mt-4 grid grid-cols-2 gap-3">
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
           <label class="block text-xs font-medium text-n-slate-11">
             {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.FIELD.DURATION') }}
             <input

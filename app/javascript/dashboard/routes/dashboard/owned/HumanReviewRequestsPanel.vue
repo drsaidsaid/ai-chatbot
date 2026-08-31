@@ -90,9 +90,9 @@ onMounted(loadReviewRequests);
 </script>
 
 <template>
-  <section class="mt-6 border border-n-weak bg-n-solid-1">
+  <section class="mt-6 overflow-x-auto border border-n-weak bg-n-solid-1">
     <div
-      class="grid grid-cols-[1.1fr_0.8fr_0.9fr_1.4fr] gap-3 border-b border-n-weak px-4 py-3 text-xs font-medium uppercase text-n-slate-11"
+      class="grid min-w-[760px] grid-cols-[1.1fr_0.8fr_0.9fr_1.4fr] gap-3 border-b border-n-weak px-4 py-3 text-xs font-medium uppercase text-n-slate-11"
     >
       <span>{{ t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.QUESTION') }}</span>
       <span>{{ t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.REASON') }}</span>
@@ -112,7 +112,7 @@ onMounted(loadReviewRequests);
       <div
         v-for="request in reviewRequests"
         :key="request.id"
-        class="grid grid-cols-[1.1fr_0.8fr_0.9fr_1.4fr] gap-3 border-b border-n-weak px-4 py-4 text-sm text-n-slate-12"
+        class="grid min-w-[760px] grid-cols-[1.1fr_0.8fr_0.9fr_1.4fr] gap-3 border-b border-n-weak px-4 py-4 text-sm text-n-slate-12"
       >
         <p class="min-w-0 break-words">
           {{ request.question }}

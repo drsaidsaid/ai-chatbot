@@ -212,9 +212,9 @@ onMounted(load);
     </div>
 
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <section class="border border-n-weak bg-n-solid-1">
+      <section class="overflow-x-auto border border-n-weak bg-n-solid-1">
         <div
-          class="grid grid-cols-[1fr_0.5fr_0.5fr_120px] gap-3 border-b border-n-weak px-4 py-3 text-xs font-medium uppercase text-n-slate-11"
+          class="grid min-w-[640px] grid-cols-[1fr_0.5fr_0.5fr_120px] gap-3 border-b border-n-weak px-4 py-3 text-xs font-medium uppercase text-n-slate-11"
         >
           <span>{{ t('AI_LEAD_EMPLOYEE.TEST_CENTER.SCENARIO') }}</span>
           <span>{{ t('AI_LEAD_EMPLOYEE.TEST_CENTER.REVIEWED') }}</span>
@@ -228,7 +228,7 @@ onMounted(load);
           <div
             v-for="scenario in requiredScenarioRows"
             :key="scenario.key"
-            class="grid grid-cols-[1fr_0.5fr_0.5fr_120px] gap-3 border-b border-n-weak px-4 py-4 text-sm text-n-slate-12"
+            class="grid min-w-[640px] grid-cols-[1fr_0.5fr_0.5fr_120px] gap-3 border-b border-n-weak px-4 py-4 text-sm text-n-slate-12"
           >
             <div class="min-w-0">
               <p class="font-medium">{{ scenario.name }}</p>

@@ -56,7 +56,7 @@ const description = computed(() => {
 </script>
 
 <template>
-  <main class="flex-1 min-w-0 bg-n-background p-6">
+  <main class="flex-1 min-w-0 bg-n-background p-4 sm:p-6">
     <section class="max-w-5xl mx-auto">
       <p class="text-xs font-medium uppercase text-n-slate-11 tracking-normal">
         {{ t('AI_LEAD_EMPLOYEE.PRODUCT_NAME') }}
