@@ -204,6 +204,7 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
   def performance
     visible_scope = LeadQualification.where(account: account, contact_id: visible_contact_ids)
     visible_review_scope = HumanReviewRequest.open.where(account: account, conversation_id: visible_conversations.select(:id))
+    qualified_contact_ids = visible_scope.select(:contact_id)
 
     {
       total_leads: visible_scope.count,
@@ -211,9 +212,17 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
       unanswered_questions: visible_review_scope.count,
       booked_calls: visible_scope.call_booked.count,
       knowledge_approvals: account.knowledge_items.draft.count,
-      human_active_conversations: visible_conversations.human_active.count,
-      ai_active_conversations: visible_conversations.ai_active.count
+      human_active_conversations: active_lead_count(:human_active, qualified_contact_ids),
+      ai_active_conversations: active_lead_count(:ai_active, qualified_contact_ids)
     }
+  end
+
+  def active_lead_count(control_state, qualified_contact_ids)
+    visible_conversations
+      .public_send(control_state)
+      .where(contact_id: qualified_contact_ids)
+      .distinct
+      .count(:contact_id)
   end
 
   def filter_options

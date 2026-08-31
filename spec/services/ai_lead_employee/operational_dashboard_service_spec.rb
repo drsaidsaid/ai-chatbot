@@ -188,8 +188,11 @@ RSpec.describe AiLeadEmployee::OperationalDashboardService do
     it 'returns basic performance metrics from the visible tenant scope' do
       highly_qualified = create(:contact, account: account)
       booked = create(:contact, account: account)
-      create(:conversation, account: account, inbox: inbox, contact: highly_qualified)
-      create(:conversation, account: account, inbox: inbox, contact: booked)
+      unqualified = create(:contact, account: account)
+      create(:conversation, account: account, inbox: inbox, contact: highly_qualified, control_state: :ai_active)
+      create(:conversation, account: account, inbox: inbox, contact: highly_qualified, control_state: :ai_active)
+      create(:conversation, account: account, inbox: inbox, contact: booked, control_state: :human_active)
+      create(:conversation, account: account, inbox: inbox, contact: unqualified, control_state: :ai_active)
       create(:lead_qualification, account: account, contact: highly_qualified, quality: :highly_qualified)
       create(:lead_qualification, account: account, contact: booked, quality: :qualified, follow_up_state: :call_booked)
       create(:knowledge_item, account: account, status: :draft)
@@ -200,7 +203,9 @@ RSpec.describe AiLeadEmployee::OperationalDashboardService do
         total_leads: 2,
         highly_qualified_leads: 1,
         booked_calls: 1,
-        knowledge_approvals: 1
+        knowledge_approvals: 1,
+        ai_active_conversations: 1,
+        human_active_conversations: 1
       )
     end
   end
