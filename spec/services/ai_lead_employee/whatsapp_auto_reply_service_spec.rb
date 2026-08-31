@@ -41,16 +41,18 @@ RSpec.describe AiLeadEmployee::WhatsappAutoReplyService do
   before do
     allow(Meta::Whatsapp::OutboundMessageSender).to receive(:new)
     allow(Meta::Whatsapp::TextMessageClient).to receive(:new)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
   end
 
-  it 'is a retired inline AI shim with no WhatsApp delivery side effects' do
+  it 'records an orchestration intent without direct WhatsApp delivery side effects' do
     expect do
       described_class.new(
         conversation: conversation,
         incoming_message: incoming_message,
         provider_message_payload: { type: 'text' }
       ).perform
-    end.not_to change(Message.outgoing, :count)
+    end.to change(AiLeadEmployee::OrchestrationIntent, :count).by(1)
+                                                              .and not_change(Message.outgoing, :count)
 
     expect(Meta::Whatsapp::OutboundMessageSender).not_to have_received(:new)
     expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)

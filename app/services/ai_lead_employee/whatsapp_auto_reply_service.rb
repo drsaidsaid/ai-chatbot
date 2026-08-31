@@ -8,6 +8,10 @@ class AiLeadEmployee::WhatsappAutoReplyService
   end
 
   def perform
-    nil
+    AiLeadEmployee::OrchestrationIntentRecorder.new(message: incoming_message).perform
   end
+
+  private
+
+  attr_reader :conversation, :incoming_message, :provider_message_payload
 end
