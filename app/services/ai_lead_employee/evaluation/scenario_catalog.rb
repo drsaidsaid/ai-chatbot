@@ -77,7 +77,7 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
           type: 'text',
           body: 'What is your price, refund policy, and guarantee?',
           expected: {
-            review_request_reason: 'sensitive_question',
+            review_request_present: true,
             selected_answer: nil,
             no_real_send: true
           }

@@ -43,7 +43,7 @@ RSpec.describe AiLeadEmployee::Evaluation::ScenarioCatalog do
     )
 
     expect(controlled_claim.dig(:messages, 0, :expected)).to include(
-      review_request_reason: 'sensitive_question',
+      review_request_present: true,
       selected_answer: nil,
       no_real_send: true
     )

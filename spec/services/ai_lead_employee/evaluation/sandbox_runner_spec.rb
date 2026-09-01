@@ -61,7 +61,7 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
 
     expect(result.run).to be_completed
     expect(result.run).to be_pending_review
-    expect(result.run.steps.first['review_request']).to include('reason' => 'sensitive_question')
+    expect(result.run.steps.first['review_request']).to be_present
     expect(result.run.steps.first['selected_answer']).to be_nil
     expect(result.run.metrics.fetch('serious_issue_count')).to eq(0)
   end

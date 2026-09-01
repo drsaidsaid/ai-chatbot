@@ -342,6 +342,8 @@ class AiLeadEmployee::Evaluation::SandboxRunner
       step.dig('qualification', 'quality')
     when 'no_real_send'
       !step['sender_invoked']
+    when 'review_request_present'
+      step['review_request'].present?
     else
       step[key.to_s]
     end
