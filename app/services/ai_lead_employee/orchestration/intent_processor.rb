@@ -115,6 +115,9 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     return qualification_result_response if qualification_result_response.present?
 
     answer_result = AiLeadEmployee::KnowledgeAnswerService.new(account: account, question: triggering_message.content).perform
+    safe_reply = safe_conversation_reply(answer_result, qualification_result)
+    return complete_knowledge_gap_reply!(safe_reply, answer_result, qualification_result) if safe_reply.present?
+
     return request_review!(answer_result.refusal_reason) if answer_result.refused?
 
     provider_response = build_provider_answer(answer_result)
@@ -147,6 +150,28 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       qualification_result: qualification_result,
       status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS
     )
+  end
+
+  def complete_knowledge_gap_reply!(content, answer_result, qualification_result)
+    review_result = create_review_request!(answer_result.refusal_reason)
+    outbound_message = create_outbound_message!(
+      content: content,
+      source_references: answer_result.sources,
+      qualification_result: qualification_result,
+      status: 'knowledge_gap_reply'
+    )
+    create_outbox_event!(outbound_message)
+    intent.update!(
+      completion_attributes(outbound_message, nil, answer_result.sources, qualification_result, 'knowledge_gap_reply')
+        .deep_merge(decision: knowledge_gap_decision(review_result, answer_result))
+        .merge(review_request: review_result.request)
+    )
+    record_ai_employee_decision!(
+      status: 'knowledge_gap_reply',
+      qualification_result: qualification_result,
+      source_references: answer_result.sources
+    )
+    intent
   end
 
   def qualify_lead!
@@ -308,6 +333,23 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     [answer_content, qualification_result.next_question].join("\n\n")
   end
 
+  def safe_conversation_reply(answer_result, qualification_result)
+    return unless answer_result.refused?
+
+    AiLeadEmployee::SafeConversationReplyService.new(
+      message: triggering_message.content,
+      refusal_reason: answer_result.refusal_reason,
+      qualification_result: qualification_result
+    ).perform
+  end
+
+  def knowledge_gap_decision(review_result, answer_result)
+    {
+      review_request_id: review_result.request.id,
+      refusal_reason: answer_result.refusal_reason
+    }
+  end
+
   def unsupported_human_request?(qualification_result)
     qualification_result.present? &&
       qualification_result.qualification&.highly_qualified? == false &&
@@ -350,13 +392,17 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def request_review!(reason)
-    review_result = AiLeadEmployee::HumanReviewRequestService.new(
+    review_result = create_review_request!(reason)
+    block_intent!(BLOCK_REASONS.fetch(reason.to_sym, reason.to_s), review_request: review_result.request)
+  end
+
+  def create_review_request!(reason)
+    AiLeadEmployee::HumanReviewRequestService.new(
       conversation: conversation,
       lead_message: triggering_message,
       reason: reason.to_s,
       enqueue_alerts: enqueue_deliveries
     ).perform
-    block_intent!(BLOCK_REASONS.fetch(reason.to_sym, reason.to_s), review_request: review_result.request)
   end
 
   def block_intent!(reason, review_request: nil)

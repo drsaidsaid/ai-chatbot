@@ -53,6 +53,7 @@
       "PROPOSED_NEXT_STEP": "AI proposed next step",
       "HANDOFF_STATE": "Handoff: {state}",
       "OPEN_REVIEW_COUNT": "{count} review open",
+      "OPEN_REVIEW_REASON": "{count} review open: {reason}",
       "TECHNICAL_DETAILS": "Technical details",
       "CONTROL_VERSION": "Control version {version}",
       "PROPOSED_TIME": "Proposed time",

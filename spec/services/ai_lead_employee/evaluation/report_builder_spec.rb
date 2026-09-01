@@ -8,7 +8,7 @@ RSpec.describe AiLeadEmployee::Evaluation::ReportBuilder do
 
   it 'calculates reviewed qualification accuracy against the documented threshold' do
     create_reviewed_run('approved_answer', expected_quality: 'low_qualified', actual_quality: 'low_qualified')
-    create_reviewed_run('unknown_question', expected_quality: 'unknown', actual_quality: 'low_qualified')
+    create_reviewed_run('unknown_safe_question', expected_quality: 'unknown', actual_quality: 'low_qualified')
 
     report = described_class.new(account: account).perform
 

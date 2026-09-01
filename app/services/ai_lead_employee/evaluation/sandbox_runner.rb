@@ -205,6 +205,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
       'index' => index + 1,
       'event_id' => event_id,
       'message_type' => message_payload[:type].presence || 'text',
+      'language' => message_payload[:language],
       'lead_message' => message_payload[:body],
       'expected' => message_payload.fetch(:expected, {}).to_h.stringify_keys,
       'selected_answer' => selected_answer(intent),
@@ -317,6 +318,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
       'index' => index + 1,
       'event_id' => event_id,
       'message_type' => message_payload[:type].presence || 'text',
+      'language' => message_payload[:language],
       'lead_message' => message_payload[:body],
       'expected' => message_payload.fetch(:expected, {}).to_h.stringify_keys
     }

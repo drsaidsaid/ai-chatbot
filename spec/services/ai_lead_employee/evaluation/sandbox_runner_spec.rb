@@ -56,13 +56,13 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
   end
   # rubocop:enable RSpec/MultipleExpectations
 
-  it 'records serious automation failures without faking a pass' do
-    result = described_class.new(account: account, user: admin, scenario_key: 'unknown_question').perform
+  it 'records controlled-claim review requirements without faking a manual pass' do
+    result = described_class.new(account: account, user: admin, scenario_key: 'controlled_claim_requires_review').perform
 
     expect(result.run).to be_completed
-    expect(result.run).not_to be_passed
     expect(result.run).to be_pending_review
-    expect(result.run.steps.first['review_request']).to include('reason' => 'no_approved_knowledge')
+    expect(result.run.steps.first['review_request']).to include('reason' => 'sensitive_question')
+    expect(result.run.steps.first['selected_answer']).to be_nil
     expect(result.run.metrics.fetch('serious_issue_count')).to eq(0)
   end
 
@@ -85,6 +85,40 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
     expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
   end
   # rubocop:enable RSpec/MultipleExpectations
+
+  it 'expects a safe Swahili language question to receive a policy-backed response' do # rubocop:disable RSpec/MultipleExpectations
+    result = described_class.new(account: account, user: admin, scenario_key: 'safe_swahili_language_question').perform
+    step = result.run.steps.first
+
+    expect(result.run).to be_completed
+    expect(step['selected_answer']).to be_present
+    expect(step['selected_answer']).to include('Kiswahili')
+    expect(step['review_request']).to include('reason' => 'no_approved_knowledge')
+    expect(step['review_request_reason']).to eq('no_approved_knowledge')
+    expect(step['blocked_reason']).to be_nil
+    expect(step['handoff_decision']).to eq('continue_ai')
+    expect(result.run.metrics.fetch('serious_issue_count')).to eq(0)
+  end
+
+  it 'expects an unknown safe question to receive a bounded fallback instead of silence' do # rubocop:disable RSpec/MultipleExpectations
+    result = described_class.new(account: account, user: admin, scenario_key: 'unknown_safe_question').perform
+    step = result.run.steps.first
+
+    expect(result.run).to be_completed
+    expect(step['selected_answer']).to be_present
+    expect(step['selected_answer']).to include('I do not have an approved answer for that yet')
+    expect(step['review_request']).to include('reason' => 'no_approved_knowledge')
+    expect(step['review_request_reason']).to eq('no_approved_knowledge')
+    expect(step['blocked_reason']).to be_nil
+    expect(step['handoff_decision']).to eq('continue_ai')
+    expect(result.run.metrics.fetch('serious_issue_count')).to eq(0)
+  end
+
+  it 'surfaces configured language preference in persisted step snapshots' do
+    result = described_class.new(account: account, user: admin, scenario_key: 'safe_swahili_language_question').perform
+
+    expect(result.run.steps.first['language']).to eq('sw')
+  end
 
   def provider_client
     @provider_client ||= instance_double(AiLeadEmployee::AiProvider::OpenRouterAdapter)

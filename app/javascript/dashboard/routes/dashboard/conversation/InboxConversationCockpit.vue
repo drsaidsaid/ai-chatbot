@@ -120,6 +120,18 @@ const selectedContact = computed(
   () => currentChat.value?.meta?.sender || selectedRow.value || {}
 );
 
+function humanize(value) {
+  return value
+    ? value
+        .toString()
+        .replace(/[._-]/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+    : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.EMPTY_VALUE');
+}
+
 const cockpit = computed(() => currentChat.value?.cockpit || {});
 const qualification = computed(() => currentChat.value?.lead_qualification);
 const currentAssignee = computed(() => currentChat.value?.meta?.assignee);
@@ -133,6 +145,22 @@ const evidenceRows = computed(() => cockpit.value.evidence || []);
 const activityRows = computed(() => cockpit.value.activity || []);
 const nextAction = computed(() => cockpit.value.next_action || {});
 const openReviews = computed(() => cockpit.value.open_reviews || []);
+const primaryOpenReview = computed(() => openReviews.value[0] || null);
+const openReviewSummary = computed(() => {
+  if (!openReviews.value.length) return '';
+
+  const reason = primaryOpenReview.value?.reason;
+  if (!reason) {
+    return t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.OPEN_REVIEW_COUNT', {
+      count: openReviews.value.length,
+    });
+  }
+
+  return t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.OPEN_REVIEW_REASON', {
+    count: openReviews.value.length,
+    reason: humanize(reason),
+  });
+});
 const latestBooking = computed(() => cockpit.value.booking);
 const latestHandoff = computed(() => cockpit.value.handoff);
 const missingSignals = computed(
@@ -174,17 +202,6 @@ const rowLabel = row =>
     name: row.name,
     id: row.conversation_display_id,
   });
-
-const humanize = value =>
-  value
-    ? value
-        .toString()
-        .replace(/[._-]/g, ' ')
-        .split(' ')
-        .filter(Boolean)
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-    : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.EMPTY_VALUE');
 
 const formatTime = value => {
   if (!value) return '';
@@ -990,11 +1007,7 @@ onMounted(() => {
                       v-if="openReviews.length"
                       class="rounded-full bg-n-amber-3 px-2 py-0.5 font-medium text-n-amber-11"
                     >
-                      {{
-                        t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.OPEN_REVIEW_COUNT', {
-                          count: openReviews.length,
-                        })
-                      }}
+                      {{ openReviewSummary }}
                     </span>
                   </div>
                 </div>

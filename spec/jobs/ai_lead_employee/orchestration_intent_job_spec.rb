@@ -252,7 +252,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     expect(SendReplyJob).to have_received(:perform_later).once
   end
 
-  it 'creates one Review Request for unknown questions and never creates fallback answer content' do
+  it 'creates one Review Request and a conservative outbound reply for unknown non-risky questions' do # rubocop:disable RSpec/MultipleExpectations
     expect do
       described_class.perform_now(intent.id)
       intent.update!(state: :pending, blocked_reason: nil, blocked_at: nil, review_request: nil)
@@ -267,9 +267,35 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       reason: 'no_approved_knowledge',
       status: 'open'
     )
-    expect(intent).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
-    expect(conversation.messages.outgoing.count).to eq(0)
-    expect(OutboxEvent.count).to eq(0)
+    expect(intent).to have_attributes(state: 'completed', blocked_reason: nil)
+    expect(intent.decision).to include(
+      'status' => 'knowledge_gap_reply',
+      'refusal_reason' => 'no_approved_knowledge',
+      'review_request_id' => review_request.id
+    )
+    expect(intent.outbound_message.content).to include('I do not have an approved answer for that yet')
+    expect(intent.outbound_message.content).to include('What type of business do you run?')
+    expect(conversation.messages.outgoing.count).to eq(1)
+    expect(OutboxEvent.count).to eq(1)
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+  end
+
+  it 'answers Swahili language-support questions in Swahili instead of blocking on missing knowledge' do
+    triggering_message.update!(content: 'unaongea kiswahili?')
+
+    described_class.perform_now(intent.id)
+
+    expect(intent.reload).to have_attributes(state: 'completed', blocked_reason: nil)
+    expect(intent.decision).to include('status' => 'knowledge_gap_reply')
+    expect(intent.outbound_message.content).to include('Ndiyo, ninaweza kuendelea kwa Kiswahili au Kiingereza.')
+    expect(intent.outbound_message.content).to include('Unaendesha biashara ya aina gani?')
+    expect(
+      HumanReviewRequest.where(
+        conversation: conversation,
+        lead_message: triggering_message,
+        reason: :no_approved_knowledge
+      ).count
+    ).to eq(1)
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 

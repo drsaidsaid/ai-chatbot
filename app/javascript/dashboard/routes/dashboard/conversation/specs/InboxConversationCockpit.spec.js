@@ -106,6 +106,10 @@ vi.mock('vue-i18n', () => ({
         return `Open ${params.name} ${params.id}`;
       }
 
+      if (key === 'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.OPEN_REVIEW_REASON') {
+        return `${params.count} review open: ${params.reason}`;
+      }
+
       if (key === 'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.SCORE') {
         return `Score ${params.score}`;
       }
@@ -294,6 +298,7 @@ const conversationPayload = {
       {
         id: 1,
         question: 'Can we send pricing?',
+        reason: 'no_approved_knowledge',
         status: 'open',
       },
     ],
@@ -475,6 +480,7 @@ describe('InboxConversationCockpit', () => {
 
     expect(wrapper.text()).toContain('Why this lead matters');
     expect(wrapper.text()).toContain('Clinic owner');
+    expect(wrapper.text()).toContain('1 review open: No Approved Knowledge');
     expect(wrapper.text()).toContain('Reply composer');
 
     await wrapper.get('button[aria-expanded="false"]').trigger('click');
