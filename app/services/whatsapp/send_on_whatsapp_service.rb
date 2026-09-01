@@ -32,15 +32,21 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
                                          lang_code: lang_code,
                                          parameters: processed_parameters
                                        }, message)
-    message.update!(source_id: message_id) if message_id.present?
+    mark_message_sent!(message_id)
   end
 
   def send_session_message
     message_id = channel.send_message(message.conversation.contact_inbox.source_id, message)
-    message.update!(source_id: message_id) if message_id.present?
+    mark_message_sent!(message_id)
   end
 
   def template_params
     message.additional_attributes && message.additional_attributes['template_params']
+  end
+
+  def mark_message_sent!(message_id)
+    return if message_id.blank?
+
+    message.update!(source_id: message_id, external_error: nil)
   end
 end

@@ -86,6 +86,7 @@ describe Whatsapp::SendOnWhatsappService do
                          message_type: :outgoing,
                          sender: agent,
                          content: 'Yes, I can help with that.',
+                         external_error: 'Authentication Error',
                          conversation: cloud_conversation,
                          account: cloud_conversation.account)
 
@@ -109,6 +110,7 @@ describe Whatsapp::SendOnWhatsappService do
         described_class.new(message: message).perform
 
         expect(message.reload.source_id).to eq('wamid.CONTROLLED.OUTBOUND')
+        expect(message.external_error).to be_nil
         expect(Meta::Whatsapp::OutboundMessageSender).not_to have_received(:new)
       end
 
