@@ -257,7 +257,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def provider_review_required?(provider_response)
-    provider_response.content.to_s.strip == 'REVIEW_REQUIRED'
+    provider_response.content.to_s.strip.match?(/\Areview_required[.!]?\z/i)
   end
 
   def create_outbound_message!(content:, source_references:, qualification_result:, status:)

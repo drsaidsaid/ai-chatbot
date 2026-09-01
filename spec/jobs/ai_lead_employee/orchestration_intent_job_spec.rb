@@ -356,7 +356,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       AiLeadEmployee::AiProvider::Response.new(
         id: 'provider-response-review',
         model: 'openai/gpt-5.2',
-        content: 'REVIEW_REQUIRED',
+        content: 'REVIEW_REQUIRED.',
         finish_reason: 'stop'
       )
     )
