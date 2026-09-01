@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::OutboxDispatchJob < ApplicationJob
+  DeliveryFailed = Class.new(StandardError)
+
   EVENT_TYPES = [
     AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE,
     AiLeadEmployee::FollowUpDeliveryService::OUTBOX_EVENT_TYPE
@@ -31,6 +33,7 @@ class AiLeadEmployee::OutboxDispatchJob < ApplicationJob
     end
 
     SendReplyJob.perform_now(event.payload.fetch('message_id'))
+    raise_if_message_failed!(event)
     mark_delivered!(event)
   rescue StandardError => e
     event.update_columns(failure_class: e.class.name, failed_at: Time.current, updated_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
@@ -42,6 +45,13 @@ class AiLeadEmployee::OutboxDispatchJob < ApplicationJob
       event.update!(state: :delivered, delivered_at: Time.current, failure_class: nil, failed_at: nil)
       mark_follow_up_sent!(event)
     end
+  end
+
+  def raise_if_message_failed!(event)
+    message = event.account.messages.find(event.payload.fetch('message_id'))
+    return unless message.failed?
+
+    raise DeliveryFailed, message.external_error.presence || 'Message delivery failed'
   end
 
   def mark_follow_up_sent!(event)

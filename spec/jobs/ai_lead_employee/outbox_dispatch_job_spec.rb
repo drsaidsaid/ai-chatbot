@@ -62,6 +62,20 @@ RSpec.describe AiLeadEmployee::OutboxDispatchJob do
     expect(follow_up_event.failure_class).to eq('StandardError')
   end
 
+  it 'keeps the event pending when SendReplyJob records a failed message without raising' do
+    allow(SendReplyJob).to receive(:perform_now) do
+      message.update!(status: :failed, content_attributes: { external_error: 'Authentication Error' })
+    end
+
+    expect do
+      described_class.perform_now(event.id)
+    end.to have_enqueued_job(described_class).with(event.id)
+
+    expect(event.reload).to be_pending
+    expect(event.failure_class).to eq('AiLeadEmployee::OutboxDispatchJob::DeliveryFailed')
+    expect(event.delivered_at).to be_nil
+  end
+
   it 'does not deliver a follow-up that was cancelled before dispatch' do
     follow_up = create(:lead_follow_up, account: account, message: message)
     follow_up_event = OutboxEvent.create!(
