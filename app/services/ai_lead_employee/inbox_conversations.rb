@@ -25,9 +25,18 @@ class AiLeadEmployee::InboxConversations
   attr_reader :scope, :user, :filters
 
   def rows(selected, page)
-    selected.includes(:inbox, :assignee, :human_review_requests, contact: :lead_qualification)
-            .order(last_activity_at: :desc, id: :desc).limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE)
-            .map { |conversation| AiLeadEmployee::InboxConversationRow.new(conversation).to_h }
+    conversations = selected.includes(:inbox, :assignee, :human_review_requests, contact: :lead_qualification)
+                            .order(last_activity_at: :desc, id: :desc).limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE).to_a
+    previews = latest_public_previews(conversations.map(&:id))
+    conversations.map do |conversation|
+      AiLeadEmployee::InboxConversationRow.new(conversation, last_message_preview: previews[conversation.id]).to_h
+    end
+  end
+
+  def latest_public_previews(conversation_ids)
+    Message.non_activity_messages.where(conversation_id: conversation_ids, private: false)
+           .reorder(:conversation_id, created_at: :desc, id: :desc)
+           .pluck(Arel.sql('DISTINCT ON (conversation_id) conversation_id'), :content).to_h
   end
 
   def filtered_scope

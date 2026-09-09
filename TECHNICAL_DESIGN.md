@@ -426,6 +426,14 @@ below is historical context, not the current completion frontier.
 
 ## R02 Inbox navigation boundary
 
+The query boundary selects the Conversation page first, then fetches at most one
+public, non-activity message preview per selected Conversation in one PostgreSQL
+query. `DISTINCT ON (conversation_id)` uses `created_at DESC, id DESC` to preserve
+message chronology and make timestamp ties deterministic. The row presenter
+receives only the preview content; it never loads message histories or performs
+per-row preview queries. Conversations with no eligible message retain a null
+preview.
+
 The Inbox list reads account-scoped Conversation records through
 `GET /api/v1/accounts/:account_id/inbox_conversations`, with
 `ConversationPolicy::Scope` providing the same inbox/team visibility as the

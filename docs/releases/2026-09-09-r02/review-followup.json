@@ -1,0 +1,52 @@
+{
+  "verified_at_utc": "2026-09-09T20:58:26.892114+00:00",
+  "implementation_parent": "f13026342e3dcdca2ff972d0c3784c55c86826a4",
+  "image_capture_source_commit": "a21c26e6b8ca34738bc9d854b370330802f49f2d",
+  "image_evidence_note": "All 11 existing captures remain byte-identical to a21c26e and retain the corrected JPEG paths/dimensions. No browser session was restarted or images recaptured for these two code fixes. The English presentation is unchanged and verified by component tests.",
+  "i18n": {
+    "change": "New R02 draft label, guidance, review link, default test question and default document title use the existing English locale dictionary and t(). Existing unrelated literals are untouched.",
+    "regression": "English presentation and route href are preserved; changing the active locale updates the new tab, guidance and review-link text.",
+    "red": "Locale-switch test received Drafts & approvals instead of its translated label before the fix.",
+    "green": "Knowledge suite: 5 tests pass; Inbox route/focus suite: 6 tests pass.",
+    "local_log": "tmp/release/review-vue.log"
+  },
+  "preview_queries": {
+    "change": "The query boundary loads only the selected Conversation page, then plucks one latest public non-activity content value per Conversation with DISTINCT ON. The presenter receives that value and never queries messages.",
+    "ordering": "created_at DESC, then id DESC for deterministic timestamp ties. Private/activity tails are excluded; message IDs are not used as a substitute for chronology; no eligible message gives null.",
+    "red": {
+      "one_row_message_queries": 1,
+      "twenty_five_row_message_queries": 25,
+      "ordering_failure": "The old last call on a descending scope returned an older timestamp."
+    },
+    "green": {
+      "one_row_message_queries": 1,
+      "twenty_five_row_message_queries": 1,
+      "history_loading_bound": "Message instantiation must not exceed selected rows, despite multiple historical/private messages per Conversation."
+    },
+    "fixtures": "Widget email collection is explicitly disabled in the new service spec to keep eligible messages controlled; test mail/jobs remain local.",
+    "local_logs": [
+      "tmp/release/preview-batch-red.log",
+      "tmp/release/review-rspec-final.log",
+      "tmp/release/preview-batch-final.log"
+    ]
+  },
+  "checks": {
+    "rails_request_policy_baseline_and_preview_examples": 28,
+    "rails_failures": 0,
+    "final_strengthened_preview_examples": 2,
+    "vue_examples": 11,
+    "vue_failures": 0,
+    "rubocop": "3 review-touched files pass",
+    "eslint": "0 errors; 31 existing Vue formatting warnings in the changed panel/spec pair",
+    "production_build": "Pass, 5078 modules, 2m 4s; inherited Browserslist and chunk-size warnings"
+  },
+  "source_sha256": {
+    "app/javascript/dashboard/i18n/locale/en/aiLeadEmployee.json": "e427d06520f104e416ed279766597d9a8ca8f488990d06215efd3f4bf085a26a",
+    "app/javascript/dashboard/routes/dashboard/owned/KnowledgeItemsPanel.vue": "9e8e62c1ae89b38153ece7d8ed5443c1367477104671b549d701ab073e9c90b0",
+    "app/javascript/dashboard/routes/dashboard/owned/specs/KnowledgeItemsPanel.spec.js": "73c5504ecefaa2503b6fde314719ac796641ec86ed6e16278257d0d45128b1dd",
+    "app/services/ai_lead_employee/inbox_conversations.rb": "ac8890ac7fcd6147190a8b82a28eb62289c16c7090cf171f270db7d99b7946f0",
+    "app/services/ai_lead_employee/inbox_conversation_row.rb": "fc2177c4f60134fd47388b27368a3d707d3002d30ea7ac4e4456a17dcc82394a",
+    "spec/services/ai_lead_employee/inbox_conversations_spec.rb": "70fc69090112aa1616e1d59ec650383c7813accc0c00a27d20095a314d23cfb1"
+  },
+  "scope": "No dependency, schema, provider, deployment, integration-branch or issue-status changes. Only task-owned PostgreSQL/Redis were restarted for tests; no Rails/Vite server, browser, worker, provider or live actions."
+}

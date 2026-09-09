@@ -54,16 +54,16 @@ All browser work uses this task's in-app browser tab,
 production-built frontend assets, an isolated test Rails application and purely
 synthetic records. It creates no provider connection or live delivery.
 
-- **26 Ruby examples pass:** the new Conversation query and V1 gates, the
+- **28 Ruby examples pass:** the new Conversation query and V1 gates, the
   existing Conversation policy and baseline sign-in/recovery/account checks.
-  Six additional English/Swahili intent-classifier examples pass; 32 Ruby examples
+  Six additional English/Swahili intent-classifier examples pass; 34 Ruby examples
   pass in total.
-- **41 Vue tests pass across seven suites:** navigation, phone shell, Inbox,
-  persistent Settings, Knowledge, route guards and Dashboard. The last focused
-  Inbox run adds and proves restored keyboard focus with a slow request boundary.
+- **42 Vue tests pass across seven suites:** navigation, phone shell, Inbox,
+  persistent Settings, Knowledge, route guards and Dashboard. The review follow-up
+  reruns Knowledge and Inbox, including locale changes and restored keyboard focus.
 - Changed Ruby files and SCSS pass lint. ESLint reports zero errors and 58
   warnings, mainly inherited Vue formatting conflicts and dynamic i18n keys.
-- Production Vite build passes: 5,078 modules, 1m 46s. Existing Browserslist age,
+- Production Vite build passes: 5,078 modules, 2m 4s. Existing Browserslist age,
   large-chunk and the package's missing development source-map warnings remain.
 - Final in-app paths run at 390×844, 1280×720 and 1440×900 without document-wide
   horizontal overflow. Search plus an Unknown quality filter survives navigation;
@@ -149,3 +149,31 @@ are 390×844; desktop captures 07 and 08 are 1440×900.
 This correction changes only new R02 evidence and references. No images were
 re-encoded, no app code changed, and no services or builds were restarted. All
 155 frozen earlier audit/approved-plan files remain unchanged.
+
+## Standards review follow-up
+
+The [review record](review-followup.json) records the two accepted corrections
+and their exact source hashes. New R02 Knowledge strings now use the existing
+locale dictionary and `t()`. Their English text is unchanged; a real locale
+switch changes the draft tab, guidance and review link while retaining its route.
+The R02 default question and document title are also localized.
+
+The query boundary now fetches only the current page’s latest eligible previews
+in one query and passes content into the presenter. Ordering is by message
+`created_at DESC`, then `id DESC`, with private/activity messages excluded. This
+also corrects the old `.last` call on a descending scope, which selected an older
+message. The regression observes one query for both 1 and 25 rows, checks timestamp
+ties and IDs out of chronological order, private/activity tails, empty previews,
+and caps message instantiation so loading all histories cannot satisfy the test.
+
+The Rails request/policy/baseline/preview run passes 28 examples; the strengthened
+preview suite passes 2 examples. The affected Knowledge and Inbox suites pass all
+11 tests, including route/filter/focus behavior. Ruby and JavaScript lint pass
+with the existing Vue formatting warnings; the production build passes. Earlier
+untouched suites account for the remaining checks in the totals above.
+
+The 11 browser images remain the original captures from `a21c26e`; their corrected
+JPEG metadata and hashes are preserved. This review follow-up uses component,
+request, query, lint and build evidence and does not claim new browser captures.
+Only the isolated PostgreSQL/Redis services were restarted for these checks; they
+are stopped afterward. No provider or live action was performed.

@@ -682,6 +682,11 @@
       }
     },
     "KNOWLEDGE": {
+      "DRAFTS_TAB": "Drafts & approvals",
+      "DRAFTS_GUIDANCE": "Drafts are not used by AI until approved. Customer questions are handled in Inbox.",
+      "REVIEW_LINK": "Needs review →",
+      "DEFAULT_TEST_QUESTION": "Can you explain our services?",
+      "DEFAULT_DOCUMENT_TITLE": "Untitled business document",
       "NEW_TITLE": "New Knowledge Item",
       "EDIT_TITLE": "Edit Knowledge Item",
       "SAVE": "Save",

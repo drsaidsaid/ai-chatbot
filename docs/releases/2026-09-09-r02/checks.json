@@ -1,49 +1,53 @@
 {
   "baseline": "fb7d54ac3c527940a63b171c45e4e2e7ca898d26",
   "ruby": {
-    "examples": 26,
+    "examples": 28,
     "failures": 0,
     "files": [
+      "spec/services/ai_lead_employee/inbox_conversations_spec.rb",
       "spec/requests/api/v1/accounts/inbox_conversations_spec.rb",
       "spec/requests/v1_surface_availability_spec.rb",
       "spec/policies/conversation_policy_spec.rb",
       "spec/requests/owned_baseline_smoke_spec.rb"
     ],
-    "local_log": "tmp/release/rspec-final.log"
+    "local_log": "tmp/release/review-rspec-final.log",
+    "additional_verification": "Final strengthened preview fixture/query/model-loading bounds also pass in tmp/release/preview-batch-final.log."
   },
   "vue": {
-    "passing_tests": 41,
+    "passing_tests": 42,
     "files": {
       "aiLeadEmployeeNavigation.spec.js": 8,
       "ConversationCockpitMobileShell.spec.js": 2,
       "InboxConversationCockpit.spec.js": 6,
       "OwnedSettingsLayout.spec.js": 1,
-      "KnowledgeItemsPanel.spec.js": 4,
+      "KnowledgeItemsPanel.spec.js": 5,
       "routes/index.spec.js": 6,
       "Dashboard.spec.js": 14
     },
-    "run_note": "Final full run: 40 tests before the last focus regression. The final focused Inbox run: 6 tests, including the added focus regression; the other 35 tests are unchanged.",
+    "run_note": "Review follow-up: all 11 tests in Inbox (6) and Knowledge (5) pass. The other 31 tests are unchanged and passed in the earlier R02 runs.",
     "local_logs": [
       "tmp/release/vue-final.log",
-      "tmp/release/row-focus-green.log"
+      "tmp/release/row-focus-green.log",
+      "tmp/release/review-vue.log"
     ]
   },
   "lint": {
-    "rubocop": "12 changed Ruby files pass; final branding and fallback-copy corrections independently rechecked",
+    "rubocop": "13 changed Ruby files pass; the 3 files touched by Standards review were independently rechecked.",
     "scss": "Changed stylesheet passes scss-lint",
     "eslint_errors": 0,
-    "eslint_warnings": 58
+    "eslint_warnings": 58,
+    "review_eslint": "Changed Knowledge panel/spec: 0 errors and 31 Vue formatting warnings; other files unchanged."
   },
   "build": {
     "command": "RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 pnpm exec vite build",
     "result": "pass",
     "modules": 5078,
-    "duration": "1m 46s",
+    "duration": "2m 4s",
     "warnings": [
       "Browserslist data age",
       "Large output chunks"
     ],
-    "local_log": "tmp/release/production-build.log"
+    "local_log": "tmp/release/review-production-build.log"
   },
   "regressions": {
     "conversation_query": "Leads without Qualification, multiple Conversations, scoped counts/search, actual Booking and due Follow-up, pagination",
@@ -78,5 +82,6 @@
     "reader": "macOS sips / ImageIO; independent file cross-check",
     "all_original_image_hashes_unchanged": true,
     "image_01": "333×720 cropped capture, not a full 1280×720 screenshot"
-  }
+  },
+  "review_followup": "review-followup.json"
 }

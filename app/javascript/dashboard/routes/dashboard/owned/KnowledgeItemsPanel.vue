@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Icon from 'next/icon/Icon.vue';
 import KnowledgeDocumentsAPI from 'dashboard/api/knowledgeDocuments';
@@ -8,12 +9,13 @@ import KnowledgeItemsAPI from 'dashboard/api/knowledgeItems';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
 
 const route = useRoute();
+const { t } = useI18n();
 
-const tabs = [
+const tabs = computed(() => [
   { key: 'documents', label: 'Documents' },
   { key: 'approved_answers', label: 'Approved Answers' },
-  { key: 'drafts', label: 'Drafts & approvals' },
-];
+  { key: 'drafts', label: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.DRAFTS_TAB') },
+]);
 const answerKinds = [
   'pricing',
   'refund',
@@ -43,7 +45,7 @@ const showRevisionHistory = ref(false);
 const showImport = ref(false);
 const showNewAnswer = ref(false);
 const hasUnsavedDocumentChanges = ref(false);
-const testQuestion = ref('Can you explain our services?');
+const testQuestion = ref(t('AI_LEAD_EMPLOYEE.KNOWLEDGE.DEFAULT_TEST_QUESTION'));
 const testResult = ref(null);
 const saveError = ref('');
 
@@ -233,7 +235,7 @@ const createDocument = async () => {
   isSaving.value = true;
   try {
     const { data } = await KnowledgeDocumentsAPI.create({
-      title: 'Untitled business document',
+      title: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.DEFAULT_DOCUMENT_TITLE'),
       body: 'Add company context, services, offers, and policies here.',
       used_by_ai_employee: true,
       general_question_access: true,
@@ -432,8 +434,7 @@ onMounted(loadWorkspace);
       v-if="activeTab === 'drafts'"
       class="border-b border-n-weak px-4 py-3 text-sm text-n-slate-11"
     >
-      Drafts are not used by AI until approved. Customer questions are handled
-      in Inbox.
+      {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.DRAFTS_GUIDANCE') }}
       <RouterLink
         :to="{
           name: 'home',
@@ -442,7 +443,7 @@ onMounted(loadWorkspace);
         }"
         class="underline"
       >
-        Needs review →
+        {{ t('AI_LEAD_EMPLOYEE.KNOWLEDGE.REVIEW_LINK') }}
       </RouterLink>
     </p>
     <div

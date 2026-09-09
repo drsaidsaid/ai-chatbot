@@ -1,9 +1,12 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
+import { withFullI18n } from 'test-i18n';
 import KnowledgeItemsPanel from '../KnowledgeItemsPanel.vue';
 import KnowledgeDocumentsAPI from 'dashboard/api/knowledgeDocuments';
 import KnowledgeItemsAPI from 'dashboard/api/knowledgeItems';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
+
+const i18n = withFullI18n();
 
 vi.mock('dashboard/api/knowledgeDocuments', () => ({
   default: {
@@ -114,6 +117,7 @@ const mountComponent = async () => {
 describe('KnowledgeItemsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.global.locale.value = 'en';
     KnowledgeDocumentsAPI.list.mockResolvedValue({ data: [documentPayload] });
     KnowledgeDocumentsAPI.create.mockResolvedValue({
       data: { ...documentPayload, id: 4, status: 'draft' },
@@ -205,6 +209,38 @@ describe('KnowledgeItemsPanel', () => {
       .trigger('click');
     await flushPromises();
     expect(KnowledgeDocumentsAPI.import).toHaveBeenCalled();
+  });
+
+  it('updates the new draft guidance and review link when the locale changes', async () => {
+    const wrapper = await mountComponent();
+    await wrapper.get('[data-testid="knowledge-tab-drafts"]').trigger('click');
+    expect(wrapper.text()).toContain('Drafts & approvals');
+    expect(wrapper.text()).toContain(
+      'Drafts are not used by AI until approved. Customer questions are handled in Inbox.'
+    );
+    expect(wrapper.get('a').text()).toBe('Needs review →');
+
+    i18n.global.setLocaleMessage('r02-test', {
+      AI_LEAD_EMPLOYEE: {
+        KNOWLEDGE: {
+          DRAFTS_TAB: 'Translated drafts',
+          DRAFTS_GUIDANCE: 'Translated guidance',
+          REVIEW_LINK: 'Translated review link',
+        },
+      },
+    });
+    i18n.global.locale.value = 'r02-test';
+    await flushPromises();
+
+    expect(wrapper.get('[data-testid="knowledge-tab-drafts"]').text()).toBe(
+      'Translated drafts'
+    );
+    expect(wrapper.text()).toContain('Translated guidance');
+    expect(wrapper.get('a').text()).toBe('Translated review link');
+    expect(wrapper.get('a').attributes('href')).toBe(
+      '/app/accounts/1/dashboard?queue=review'
+    );
+    wrapper.unmount();
   });
 
   it('keeps mobile header actions and tabs reachable at narrow widths', async () => {

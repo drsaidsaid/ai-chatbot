@@ -1,6 +1,7 @@
 class AiLeadEmployee::InboxConversationRow
-  def initialize(conversation)
+  def initialize(conversation, last_message_preview:)
     @conversation = conversation
+    @last_message_preview = last_message_preview
   end
 
   def to_h
@@ -32,11 +33,11 @@ class AiLeadEmployee::InboxConversationRow
   def activity
     {
       last_activity_at: conversation.last_activity_at,
-      last_message_preview: conversation.messages.non_activity_messages.where(private: false).last&.content
+      last_message_preview: last_message_preview
     }
   end
 
-  attr_reader :conversation
+  attr_reader :conversation, :last_message_preview
 
   def contact
     conversation.contact

@@ -133,5 +133,7 @@
     }
   ],
   "normal_width_evidence_note": "The 1280px Inbox navigation and scrollWidth observations were obtained from browser DOM inspection. Image 01 is a 333×720 crop, not a full-width screenshot. Images 09 and 11 are complete 1280×720 sign-in and Settings viewport captures.",
-  "evidence_correction": "evidence-correction.json"
+  "evidence_correction": "evidence-correction.json",
+  "capture_source_commit": "a21c26e6b8ca34738bc9d854b370330802f49f2d",
+  "subsequent_validation": "review-followup.json"
 }
