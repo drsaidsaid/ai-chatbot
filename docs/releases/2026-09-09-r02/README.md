@@ -48,7 +48,7 @@ It uses the approved audit's CE layout and establishes spacing, type, touch
 targets and visible focus for desktop and phone.
 
 Final [browser observations](browser-observations.json),
-[screenshots](screenshots/07-desktop-conversation.png) and
+[screenshots](screenshots/07-desktop-conversation.jpg) and
 [verification results](checks.json) are recorded alongside this file.
 All browser work uses this task's in-app browser tab,
 production-built frontend assets, an isolated test Rails application and purely
@@ -128,3 +128,24 @@ prove real Booking and due Follow-up filters, inaccessible records and paginatio
 Task-owned Rails, Vite, PostgreSQL and Redis services are stopped after verification.
 The normal installed pre-commit hooks ran without bypass. The containing commit
 is available with `git log -1 --format=%H -- docs/releases/2026-09-09-r02/README.md`.
+
+## Image evidence correction
+
+Coordinator review found that the screenshot tool returned JPEG bytes, which R02
+saved under `.png` names and measured using PNG header offsets. The 11 files now
+use `.jpg` names. Read-only ImageIO inspection reports their actual dimensions;
+`file` independently confirms the format and sizes. Every image is byte-identical
+to its original in commit `a21c26e6b8ca34738bc9d854b370330802f49f2d`.
+The [correction record](evidence-correction.json) maps each old path to its current
+path and records both hashes and the actual dimensions.
+
+[Image 01](screenshots/01-normal-filtered-list-crop.jpg) is a **333×720 crop** of
+the navigation rail and part of the Inbox list. It is not a full 1280×720 capture
+and does not independently establish full-width layout or overflow. The normal
+1280px Inbox observations came from the browser DOM checks. The sign-in and
+Settings captures (09 and 11) are full 1280×720 viewport images. Phone captures
+are 390×844; desktop captures 07 and 08 are 1440×900.
+
+This correction changes only new R02 evidence and references. No images were
+re-encoded, no app code changed, and no services or builds were restarted. All
+155 frozen earlier audit/approved-plan files remain unchanged.

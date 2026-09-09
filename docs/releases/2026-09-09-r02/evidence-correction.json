@@ -1,0 +1,132 @@
+{
+  "source_commit": "a21c26e6b8ca34738bc9d854b370330802f49f2d",
+  "corrected_at_utc": "2026-09-09T20:44:52.005497+00:00",
+  "scope": "New R02 evidence only; no application changes, re-encoding, rebuild or service restart. Frozen earlier evidence is unchanged.",
+  "dimension_reader": "macOS sips (ImageIO), read-only format/pixelWidth/pixelHeight queries; independently cross-checked using file",
+  "original_metadata_defect": "JPEG data was saved with .png extensions and its dimensions were incorrectly interpreted using PNG byte offsets.",
+  "images": [
+    {
+      "original_path": "screenshots/01-normal-filtered-list.png",
+      "corrected_path": "screenshots/01-normal-filtered-list-crop.jpg",
+      "format": "JPEG",
+      "width": 333,
+      "height": 720,
+      "capture_type": "cropped",
+      "sha256_before": "c1d49ac0801d9e39eece164136b594352791eba0728508f81fe56c82217b0d53",
+      "sha256_after": "c1d49ac0801d9e39eece164136b594352791eba0728508f81fe56c82217b0d53",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/02-phone-all-conversations.png",
+      "corrected_path": "screenshots/02-phone-all-conversations.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 844,
+      "capture_type": "viewport",
+      "sha256_before": "b0f412d5fd9328f911d0432e701dd32b9a651d78b1edde423285636e6f420184",
+      "sha256_after": "b0f412d5fd9328f911d0432e701dd32b9a651d78b1edde423285636e6f420184",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/03-phone-returned-focus.png",
+      "corrected_path": "screenshots/03-phone-returned-focus.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 844,
+      "capture_type": "viewport",
+      "sha256_before": "43505c627f82f19b635546278cfea051121dec64c0eb7047e45d6ac0d0a59865",
+      "sha256_after": "43505c627f82f19b635546278cfea051121dec64c0eb7047e45d6ac0d0a59865",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/04-phone-conversation.png",
+      "corrected_path": "screenshots/04-phone-conversation.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 844,
+      "capture_type": "viewport",
+      "sha256_before": "5e529d5ba2100f51eca2719eb984a780a07860c177095792f302f8c3b1f64923",
+      "sha256_after": "5e529d5ba2100f51eca2719eb984a780a07860c177095792f302f8c3b1f64923",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/05-phone-test-center.png",
+      "corrected_path": "screenshots/05-phone-test-center.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 844,
+      "capture_type": "viewport",
+      "sha256_before": "5070a794775774e4679ab426f9c108d8b41cd9ee461942255f9c00068e14a59d",
+      "sha256_after": "5070a794775774e4679ab426f9c108d8b41cd9ee461942255f9c00068e14a59d",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/06-phone-provider-settings.png",
+      "corrected_path": "screenshots/06-phone-provider-settings.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 844,
+      "capture_type": "viewport",
+      "sha256_before": "d582e8f6b4855348d1dc44c4bb9fdfd6b0e18f55838f15697e9c0a2de5d5df41",
+      "sha256_after": "d582e8f6b4855348d1dc44c4bb9fdfd6b0e18f55838f15697e9c0a2de5d5df41",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/07-desktop-conversation.png",
+      "corrected_path": "screenshots/07-desktop-conversation.jpg",
+      "format": "JPEG",
+      "width": 1440,
+      "height": 900,
+      "capture_type": "viewport",
+      "sha256_before": "879cb6da3d1b96393f6b857603af9e5570fe308d1348469f482547479491e7ae",
+      "sha256_after": "879cb6da3d1b96393f6b857603af9e5570fe308d1348469f482547479491e7ae",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/08-desktop-filtered-focus.png",
+      "corrected_path": "screenshots/08-desktop-filtered-focus.jpg",
+      "format": "JPEG",
+      "width": 1440,
+      "height": 900,
+      "capture_type": "viewport",
+      "sha256_before": "b246d5257e71eeb423133e8d0e7c82ee5de58381564f60974ea17049e07761dd",
+      "sha256_after": "b246d5257e71eeb423133e8d0e7c82ee5de58381564f60974ea17049e07761dd",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/09-owned-sign-in.png",
+      "corrected_path": "screenshots/09-owned-sign-in.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "capture_type": "viewport",
+      "sha256_before": "986479ee047844a4b8c2308dc6eb6a52af670bf206891d021263e300a339047d",
+      "sha256_after": "986479ee047844a4b8c2308dc6eb6a52af670bf206891d021263e300a339047d",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/10-phone-member-more.png",
+      "corrected_path": "screenshots/10-phone-member-more.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 844,
+      "capture_type": "viewport",
+      "sha256_before": "735cc07a19b59fa02b2ea84cce0306912f17976713b8434a12ad497ca02fee20",
+      "sha256_after": "735cc07a19b59fa02b2ea84cce0306912f17976713b8434a12ad497ca02fee20",
+      "bytes_unchanged": true
+    },
+    {
+      "original_path": "screenshots/11-desktop-settings.png",
+      "corrected_path": "screenshots/11-desktop-settings.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "capture_type": "viewport",
+      "sha256_before": "9d6f7627d3849eb65e6874938f8458426b2cda2fb1c9cca1886ccc917f6ae80b",
+      "sha256_after": "9d6f7627d3849eb65e6874938f8458426b2cda2fb1c9cca1886ccc917f6ae80b",
+      "bytes_unchanged": true
+    }
+  ],
+  "all_11_image_bytes_match_source_commit": true,
+  "historical_path_note": "original_path is resolved in source_commit; corrected_path is the live relative path in this release folder."
+}

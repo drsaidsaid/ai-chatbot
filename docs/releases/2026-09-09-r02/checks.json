@@ -70,5 +70,13 @@
     "local_log": "tmp/release/intent-classifier.log"
   },
   "hooks": "Normal installed pre-commit hooks run; no bypass. First commit hooks left all recorded runtime hashes unchanged.",
-  "services": "Task-owned Rails, Vite, PostgreSQL and Redis stopped after verification; no worker started."
+  "services": "Task-owned Rails, Vite, PostgreSQL and Redis stopped after verification; no worker started.",
+  "image_evidence_correction": {
+    "record": "evidence-correction.json",
+    "images_verified": 11,
+    "format": "JPEG",
+    "reader": "macOS sips / ImageIO; independent file cross-check",
+    "all_original_image_hashes_unchanged": true,
+    "image_01": "333×720 cropped capture, not a full 1280×720 screenshot"
+  }
 }

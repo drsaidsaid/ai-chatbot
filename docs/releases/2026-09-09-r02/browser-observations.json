@@ -5,70 +5,104 @@
   "environment": "Rails test adapters, production Vite frontend, isolated synthetic data; no provider connections or sends",
   "screenshots": [
     {
-      "path": "screenshots/01-normal-filtered-list.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "c1d49ac0801d9e39eece164136b594352791eba0728508f81fe56c82217b0d53"
+      "path": "screenshots/01-normal-filtered-list-crop.jpg",
+      "width": 333,
+      "height": 720,
+      "sha256": "c1d49ac0801d9e39eece164136b594352791eba0728508f81fe56c82217b0d53",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "cropped",
+      "description": "333×720 crop showing the navigation rail and only part of the Inbox list. This is not a complete 1280×720 viewport screenshot and cannot independently demonstrate full-width layout or overflow."
     },
     {
-      "path": "screenshots/02-phone-all-conversations.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "b0f412d5fd9328f911d0432e701dd32b9a651d78b1edde423285636e6f420184"
+      "path": "screenshots/02-phone-all-conversations.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "b0f412d5fd9328f911d0432e701dd32b9a651d78b1edde423285636e6f420184",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/03-phone-returned-focus.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "43505c627f82f19b635546278cfea051121dec64c0eb7047e45d6ac0d0a59865"
+      "path": "screenshots/03-phone-returned-focus.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "43505c627f82f19b635546278cfea051121dec64c0eb7047e45d6ac0d0a59865",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/04-phone-conversation.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "5e529d5ba2100f51eca2719eb984a780a07860c177095792f302f8c3b1f64923"
+      "path": "screenshots/04-phone-conversation.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "5e529d5ba2100f51eca2719eb984a780a07860c177095792f302f8c3b1f64923",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/05-phone-test-center.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "5070a794775774e4679ab426f9c108d8b41cd9ee461942255f9c00068e14a59d"
+      "path": "screenshots/05-phone-test-center.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "5070a794775774e4679ab426f9c108d8b41cd9ee461942255f9c00068e14a59d",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/06-phone-provider-settings.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "d582e8f6b4855348d1dc44c4bb9fdfd6b0e18f55838f15697e9c0a2de5d5df41"
+      "path": "screenshots/06-phone-provider-settings.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "d582e8f6b4855348d1dc44c4bb9fdfd6b0e18f55838f15697e9c0a2de5d5df41",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/07-desktop-conversation.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "879cb6da3d1b96393f6b857603af9e5570fe308d1348469f482547479491e7ae"
+      "path": "screenshots/07-desktop-conversation.jpg",
+      "width": 1440,
+      "height": 900,
+      "sha256": "879cb6da3d1b96393f6b857603af9e5570fe308d1348469f482547479491e7ae",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/08-desktop-filtered-focus.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "b246d5257e71eeb423133e8d0e7c82ee5de58381564f60974ea17049e07761dd"
+      "path": "screenshots/08-desktop-filtered-focus.jpg",
+      "width": 1440,
+      "height": 900,
+      "sha256": "b246d5257e71eeb423133e8d0e7c82ee5de58381564f60974ea17049e07761dd",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/09-owned-sign-in.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "986479ee047844a4b8c2308dc6eb6a52af670bf206891d021263e300a339047d"
+      "path": "screenshots/09-owned-sign-in.jpg",
+      "width": 1280,
+      "height": 720,
+      "sha256": "986479ee047844a4b8c2308dc6eb6a52af670bf206891d021263e300a339047d",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/10-phone-member-more.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "735cc07a19b59fa02b2ea84cce0306912f17976713b8434a12ad497ca02fee20"
+      "path": "screenshots/10-phone-member-more.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "735cc07a19b59fa02b2ea84cce0306912f17976713b8434a12ad497ca02fee20",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     },
     {
-      "path": "screenshots/11-desktop-settings.png",
-      "width": 65536,
-      "height": 4292542531,
-      "sha256": "9d6f7627d3849eb65e6874938f8458426b2cda2fb1c9cca1886ccc917f6ae80b"
+      "path": "screenshots/11-desktop-settings.jpg",
+      "width": 1280,
+      "height": 720,
+      "sha256": "9d6f7627d3849eb65e6874938f8458426b2cda2fb1c9cca1886ccc917f6ae80b",
+      "format": "JPEG",
+      "mime_type": "image/jpeg",
+      "capture_type": "viewport"
     }
   ],
   "verified": [
@@ -97,5 +131,7 @@
       "finding": "HMR circular initialization during active source editing",
       "resolution": "Not reproduced after loading the production frontend; no packaged browser errors."
     }
-  ]
+  ],
+  "normal_width_evidence_note": "The 1280px Inbox navigation and scrollWidth observations were obtained from browser DOM inspection. Image 01 is a 333×720 crop, not a full-width screenshot. Images 09 and 11 are complete 1280×720 sign-in and Settings viewport captures.",
+  "evidence_correction": "evidence-correction.json"
 }
