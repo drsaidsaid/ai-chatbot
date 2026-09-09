@@ -21,9 +21,11 @@ RSpec.describe 'WhatsApp connection', type: :request do
     stub_request(:get, %r{https://graph.facebook.com/[^/]+/9003/message_templates})
       .to_return(status: 200, body: { data: [] }.to_json, headers: { 'Content-Type' => 'application/json' })
     stub_request(:get, %r{https://graph.facebook.com/[^/]+/9003/phone_numbers})
-      .to_return(status: 200, body: { data: [{ id: '3003' }] }.to_json, headers: { 'Content-Type' => 'application/json' })
+      .to_return(status: 200, body: { data: [{ id: '3003', display_phone_number: '+255 700 000 003' }] }.to_json,
+                 headers: { 'Content-Type' => 'application/json' })
     stub_request(:get, %r{https://graph.facebook.com/[^/]+/3003})
-      .to_return(status: 200, body: { id: '3003', status: 'CONNECTED', code_verification_status: 'VERIFIED', platform_type: 'CLOUD_API' }.to_json,
+      .to_return(status: 200, body: { id: '3003', display_phone_number: '+255 700 000 003', status: 'CONNECTED',
+                                      code_verification_status: 'VERIFIED', platform_type: 'CLOUD_API' }.to_json,
                  headers: { 'Content-Type' => 'application/json' })
     stub_request(:get, %r{https://graph.facebook.com/[^/]+/9003\?})
       .to_return(status: 200, body: { id: '9003', name: 'Synthetic business' }.to_json, headers: { 'Content-Type' => 'application/json' })
@@ -90,6 +92,62 @@ RSpec.describe 'WhatsApp connection', type: :request do
     expect(response.body).not_to include('r03-access-secret', 'r03-signing-secret')
     get path, headers: headers
     expect(response.parsed_body['health_error_code']).to eq('authorization')
+  end
+
+  it 'rejects a phone-only typo without replacing the provider-verified receiving number' do
+    path = "/api/v1/accounts/#{account.id}/whatsapp_connection"
+    values = configuration[:channel][:provider_config].merge(phone_number: '+255700000003')
+    patch path, params: values, headers: headers, as: :json
+    expect(response).to have_http_status(:success)
+
+    patch path, params: { phone_number: '+255700000099' }, headers: headers, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    get path, headers: headers
+    expect(response.parsed_body['phone_number']).to eq('+255700000003')
+    expect(Whatsapp::WebhookChannelFinderService.new(display_phone_number: '+255 700 000 003', phone_number_id: '3003').perform)
+      .to eq(account.whatsapp_channels.first)
+  end
+
+  it 'requires fresh callback registration after a provider-verified phone-only change' do
+    path = "/api/v1/accounts/#{account.id}/whatsapp_connection"
+    values = configuration[:channel][:provider_config].merge(phone_number: '+255700000003')
+    patch path, params: values, headers: headers, as: :json
+    expect(response.parsed_body['webhook_registered_at']).to be_present
+    stub_request(:get, %r{https://graph.facebook.com/[^/]+/9003/phone_numbers})
+      .to_return(status: 200, body: { data: [{ id: '3003', display_phone_number: '+255 700 000 004' }] }.to_json,
+                 headers: { 'Content-Type' => 'application/json' })
+    stub_request(:post, %r{https://graph.facebook.com/[^/]+/9003/subscribed_apps}).to_return(status: 503)
+
+    patch path, params: { phone_number: '+255700000004' }, headers: headers, as: :json
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body).to include('phone_number' => '+255700000004', 'webhook_registered_at' => nil,
+                                            'webhook_error_code' => 'registration_failed', 'status' => 'needs_attention')
+  end
+
+  it 'does not report receiving for a previously saved phone that no longer matches provider health' do
+    path = "/api/v1/accounts/#{account.id}/whatsapp_connection"
+    values = configuration[:channel][:provider_config].merge(phone_number: '+255700000003')
+    patch path, params: values, headers: headers, as: :json
+    channel = account.whatsapp_channels.first
+    payload = { object: 'whatsapp_business_account', entry: [{ id: '9003', changes: [{ field: 'messages', value: {
+      metadata: { phone_number_id: '3003', display_phone_number: '255700000003' },
+      contacts: [{ wa_id: '255711111111', profile: { name: 'Amina' } }],
+      messages: [{ id: 'wamid.R03.CONNECTION', from: '255711111111', timestamp: '1789000000', type: 'text', text: { body: 'Habari' } }]
+    } }] }] }.to_json
+    signature = "sha256=#{OpenSSL::HMAC.hexdigest('SHA256', 'r03-signing-secret', payload)}"
+    perform_enqueued_jobs(only: Webhooks::WhatsappEventsJob) do
+      post '/webhooks/whatsapp/+255700000003', params: payload,
+                                               headers: { 'CONTENT_TYPE' => 'application/json', 'X-Hub-Signature-256' => signature }
+    end
+    get path, headers: headers
+    expect(response.parsed_body['status']).to eq('receiving')
+
+    # Reproduce a pre-fix phone-only write that preserved the old registration and health.
+    channel.update_columns(phone_number: '+255700000099') # rubocop:disable Rails/SkipsModelValidations
+    get path, headers: headers
+    expect(response.parsed_body['status']).to eq('check_required')
+    post "#{path}/health_check", headers: headers
+    expect(response.parsed_body['status']).to eq('check_required')
   end
 
   it 'keeps an unsigned configuration incomplete and denies team member connection access' do

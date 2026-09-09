@@ -27,6 +27,14 @@ RSpec.describe 'Verified WhatsApp receiving', type: :request do
     post "/webhooks/whatsapp/#{channel.phone_number}", params: raw, headers: request_headers
   end
 
+  def status_envelope(message, status, timestamp, **attributes)
+    payload = envelope_for(channel)
+    value = payload.dig(:entry, 0, :changes, 0, :value)
+    value.delete(:messages)
+    value[:statuses] = [{ id: message.source_id, status: status, timestamp: timestamp, **attributes }]
+    payload
+  end
+
   it 'rejects unsigned manual setup even when no signing secret was configured' do
     # Simulate a pre-existing incomplete installation, bypassing configuration writers.
     channel.update_columns(provider_config: channel[:provider_config].merge('source' => 'manual'), provider_secrets: nil) # rubocop:disable Rails/SkipsModelValidations
@@ -127,6 +135,44 @@ RSpec.describe 'Verified WhatsApp receiving', type: :request do
     expect(sent_message.reload.status).to eq('delivered')
     expect(read_message.external_error.to_s).not_to include('Unsafe provider detail')
     expect(Whatsapp::WebhookEvent.where(kind: 'statuses').count).to eq(3)
+  end
+
+  it 'applies the same monotonic delivery projection to old queued work after verified receipt processing' do
+    perform_enqueued_jobs(only: Webhooks::WhatsappEventsJob) { deliver(envelope_for(channel)) }
+    %w[delivered read sent].each do |status|
+      message = create(:message, conversation: channel.inbox.conversations.first, inbox: channel.inbox, account: channel.account,
+                                 message_type: :outgoing, status: :sent, source_id: "wamid.R03.LEGACY.#{status}")
+      perform_enqueued_jobs(only: Webhooks::WhatsappEventsJob) { deliver(status_envelope(message, status, '1789000020')) }
+
+      legacy = status_envelope(message, 'sent', '1789000010', recipient_user_id: "TZ.R03#{status}")
+      Webhooks::WhatsappEventsJob.perform_now(legacy.with_indifferent_access)
+      expect(message.reload.status).to eq(status)
+      expect(channel.inbox.contact_inboxes.find_by!(source_id: "TZ.R03#{status}").contact).to eq(message.conversation.contact)
+
+      legacy = status_envelope(message, 'failed', '1789000010', errors: [{ code: 190, title: 'Unsafe provider secret' }])
+      Webhooks::WhatsappEventsJob.perform_now(legacy.with_indifferent_access)
+      expect(message.reload.status).to eq(status)
+      expect(message.content_attributes.to_json).not_to include('Unsafe provider secret')
+    end
+  end
+
+  it 'projects legacy failures with safe errors and provider-time ordering' do
+    perform_enqueued_jobs(only: Webhooks::WhatsappEventsJob) { deliver(envelope_for(channel)) }
+    message = create(:message, conversation: channel.inbox.conversations.first, inbox: channel.inbox, account: channel.account,
+                               message_type: :outgoing, status: :sent, source_id: 'wamid.R03.LEGACY.FAILURE')
+    perform_enqueued_jobs(only: Webhooks::WhatsappEventsJob) { deliver(status_envelope(message, 'sent', '1789000020')) }
+
+    legacy = status_envelope(message, 'failed', '1789000030', errors: [{ code: 190, title: 'Unsafe provider secret' }])
+    Webhooks::WhatsappEventsJob.perform_now(legacy.with_indifferent_access)
+    expect(message.reload).to have_attributes(
+      status: 'failed', external_error: 'WhatsApp could not deliver this message. Check the connection before retrying.',
+      content_attributes: include('whatsapp_delivery_error_code' => '190', 'whatsapp_delivery_timestamp' => 1_789_000_030)
+    )
+    Webhooks::WhatsappEventsJob.perform_now(status_envelope(message, 'sent', '1789000020').with_indifferent_access)
+    expect(message.reload.status).to eq('failed')
+    Webhooks::WhatsappEventsJob.perform_now(status_envelope(message, 'sent', '1789000040').with_indifferent_access)
+    expect(message.reload).to have_attributes(status: 'sent', external_error: nil)
+    expect(message.content_attributes['whatsapp_delivery_error_code']).to be_nil
   end
 
   it 'rejects an entire batch signed for only one of its Business Accounts' do

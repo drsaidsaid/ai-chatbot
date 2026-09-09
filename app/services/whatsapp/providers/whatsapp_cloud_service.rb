@@ -62,15 +62,15 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
   end
 
   def validate_provider_config?
-    config = whatsapp_channel.provider_config
     response = HTTParty.get("#{business_account_path}/message_templates", headers: api_headers, timeout: 10)
     return log_transfer_failure('waba_or_token_check', response) unless response.success?
-    # The templates check only proves the WABA/token pair, so verify the phone_number_id belongs to this WABA when it changes.
-    return true unless whatsapp_channel.provider_config_changed?
+    # Bind the stored routing number and ID to the WABA, including phone-only edits.
+    return true unless whatsapp_channel.connection_configuration_changed?
 
-    phone_response = HTTParty.get("#{business_account_path}/phone_numbers?fields=id&limit=100", headers: api_headers, timeout: 10)
-    ids = phone_response.parsed_response.is_a?(Hash) ? Array(phone_response.parsed_response['data']) : []
-    return true if phone_response.success? && ids.any? { |number| number['id'] == config['phone_number_id'].to_s }
+    phone_response = HTTParty.get("#{business_account_path}/phone_numbers?fields=id,display_phone_number&limit=100",
+                                  headers: api_headers, timeout: 10)
+    numbers = phone_response.parsed_response.is_a?(Hash) ? Array(phone_response.parsed_response['data']) : []
+    return true if phone_response.success? && numbers.any? { |number| provider_phone_matches?(number) }
 
     log_transfer_failure('phone_number_id_check', phone_response)
   end
@@ -98,6 +98,13 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
 
   private
 
+  def provider_phone_matches?(number)
+    return false unless number.is_a?(Hash)
+
+    Whatsapp::WebhookChannelFinderService.new(display_phone_number: number['display_phone_number'], phone_number_id: number['id'])
+                                         .matches?(whatsapp_channel)
+  end
+
   # Only saves dropping the embedded_signup source marker are transfer attempts; creation/rotation failures are setup errors. Returns false.
   def log_transfer_failure(check, response)
     return false unless whatsapp_channel.embedded_to_manual_transfer_pending?
@@ -111,18 +118,14 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     @csat_template_service ||= Whatsapp::CsatTemplateService.new(whatsapp_channel)
   end
 
-  def api_base_path
-    ENV.fetch('WHATSAPP_CLOUD_BASE_URL', 'https://graph.facebook.com')
-  end
+  def api_base_path = ENV.fetch('WHATSAPP_CLOUD_BASE_URL', 'https://graph.facebook.com')
 
   # TODO: See if we can unify the API versions and for both paths and make it consistent with out facebook app API versions
   def phone_id_path(version = 'v13.0')
     "#{api_base_path}/#{version}/#{whatsapp_channel.provider_config['phone_number_id']}"
   end
 
-  def business_account_path
-    "#{api_base_path}/v14.0/#{whatsapp_channel.provider_config['business_account_id']}"
-  end
+  def business_account_path = "#{api_base_path}/v14.0/#{whatsapp_channel.provider_config['business_account_id']}"
 
   def send_text_message(phone_number, message)
     response = HTTParty.post(

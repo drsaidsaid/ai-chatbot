@@ -73,6 +73,8 @@ class Whatsapp::ConnectionStatus
 
   def checked_and_connected?
     @channel.webhook_registered_at && @channel.phone_number_health_checked_at &&
-      @channel.phone_number_health['status'] == 'CONNECTED' && @channel.phone_number_health['code_verification_status'] == 'VERIFIED'
+      @channel.phone_number_health['status'] == 'CONNECTED' && @channel.phone_number_health['code_verification_status'] == 'VERIFIED' &&
+      Whatsapp::WebhookChannelFinderService.new(display_phone_number: @channel.phone_number_health['display_phone_number'],
+                                                phone_number_id: @channel.phone_number_health['id']).matches?(@channel)
   end
 end

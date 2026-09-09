@@ -37,6 +37,10 @@ Work within the owned Community Edition Rails/Vue product. Deliver the real narr
 - [x] Duplicate receipts and crashes between receipt, normalization and queue creation recover without lost or duplicate logical messages.
 - [x] Delivery updates do not regress a delivered/read state when older updates arrive; errors have safe user-facing recovery actions.
 - [x] Exercise the canonical route with an isolated fake provider; later real test delivery requires authorized test assets.
+- [x] Review correction: phone-only edits validate the provider phone identity and
+  invalidate registration; previously saved mismatches cannot report receiving.
+- [x] Review correction: legacy queued statuses share locked monotonic projection
+  and safe errors with new receipts, including stale sent/failure ordering.
 
 ## Resolved blockers
 

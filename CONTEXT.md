@@ -48,6 +48,8 @@ An internal durable copy of an authenticated Meta envelope and verified routing,
 recorded before acknowledgement. Its channel-scoped logical events track
 normalization, recovery and delivery history (ADR 0009); a receipt is not a
 Conversation or proof that processing has completed.
+Already queued legacy delivery updates share the same monotonic Message
+projection as verified receipts.
 
 **Outbound Message**:
 A visible message sent by the Business Account to a Lead through the same channel conversation.

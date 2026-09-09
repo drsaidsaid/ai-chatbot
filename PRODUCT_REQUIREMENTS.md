@@ -23,7 +23,10 @@ R03 connection acceptance follows ADR 0009: administrators configure one direct
 Meta connection in Settings, with encrypted credentials and saved actionable
 health. All supported callbacks require signatures. Authenticated receipts,
 complete batch normalization and recoverable processing precede any claim of
-successful receiving; late delivery updates cannot regress delivered/read.
+successful receiving; late delivery updates, including already queued legacy
+work, cannot regress delivered/read or expose raw provider errors. Setup and
+readiness bind the saved phone number to Meta's identity; a phone-only edit
+requires renewed callback registration.
 Local proof uses an isolated fake provider; real Meta delivery is a separate
 authorized-assets check.
 

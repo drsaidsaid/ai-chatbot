@@ -55,12 +55,7 @@ class Whatsapp::IncomingMessageBaseService
   end
 
   def update_message_with_status(message, status)
-    message.status = status[:status]
-    if status[:status] == 'failed' && status[:errors].present?
-      error = status[:errors]&.first
-      message.external_error = "#{error[:code]}: #{error[:title]}"
-    end
-    message.save!
+    Whatsapp::MessageStatusProjector.new(message: message, status: status).perform
   end
 
   def create_messages

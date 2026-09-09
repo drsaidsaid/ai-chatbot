@@ -91,7 +91,9 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname.endsWith('/message_templates'))
       return send(200, { data: [] });
     if (request.method === 'GET' && url.pathname.endsWith('/phone_numbers'))
-      return send(200, { data: [{ id: '3003' }] });
+      return send(200, {
+        data: [{ id: '3003', display_phone_number: '255700000003' }],
+      });
     if (request.method === 'GET' && url.pathname.endsWith('/9003'))
       return send(200, { id: '9003', name: 'R03 Synthetic Business' });
     if (request.method === 'GET' && url.pathname.endsWith('/3003')) {

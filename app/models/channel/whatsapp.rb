@@ -35,7 +35,7 @@ class Channel::Whatsapp < ApplicationRecord
   PROVIDERS = %w[default whatsapp_cloud].freeze
   before_validation :ensure_webhook_verify_token
   after_create :sync_templates
-  before_update :invalidate_connection_health, if: :provider_config_changed?
+  before_update :invalidate_connection_health, if: :connection_configuration_changed?
 
   validates :provider, inclusion: { in: PROVIDERS }
   validates :phone_number, presence: true, uniqueness: true
@@ -152,6 +152,8 @@ class Channel::Whatsapp < ApplicationRecord
     provider == 'whatsapp_cloud' && Chatwoot.encryption_configured? && signing_secrets.present? &&
       provider_config.values_at('api_key', 'phone_number_id', 'business_account_id', 'webhook_verify_token').all?(&:present?)
   end
+
+  def connection_configuration_changed? = provider_config_changed? || phone_number_changed?
 
   private
 

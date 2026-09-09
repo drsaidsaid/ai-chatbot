@@ -26,6 +26,12 @@ never stored credentials. Saved credentials can be retained on updates without
 being returned to the form. Webhook registration uses the server-held verification
 token, removing the old FinishSetup token-reflection dependency.
 
+Configuration validation binds the stored phone number and number ID to Meta's
+WABA phone identity using the same country normalization as callback routing.
+Phone-only edits must pass that check and invalidate callback registration and
+health. Readiness also requires saved provider health to match the current phone
+identity, so a pre-existing mismatch cannot report successful receiving.
+
 Every supported Cloud callback requires raw-body HMAC verification, including
 manual setup. Each supported entry/change must resolve to the stored number ID
 and Business Account and validate against that connection's signing authority.
@@ -72,6 +78,10 @@ Delivery history remains immutable. Project sent/delivered/read without
 regressing delivered/read on late events. Record failures independently of the
 success ordering and preserve provider timestamps; a failure cannot erase
 evidence of delivery/read. Status lookup is scoped to the verified channel.
+Already queued legacy raw-hash jobs use the same Message row lock, monotonic
+projection and safe error text as receipt processing. An older duplicate sent
+update must not move the projection timestamp backwards and thereby admit a
+stale failure. New HTTP ingress continues to enqueue only verified receipt IDs.
 
 ## Acceptance and external boundary
 
