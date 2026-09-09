@@ -1,0 +1,11 @@
+enum :webhook_type, {account_type: 0, inbox_type: 1}
+ (called from <class:Webhook> at /Users/ghalyasaid/.codex/worktrees/3a8d/AI Chatbot/app/models/webhook.rb:30)
+...DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :subscription_type, {browser_push: 1, fcm: 2}
+ (called from <class:NotificationSubscription> at /Users/ghalyasaid/.codex/worktrees/3a8d/AI Chatbot/app/models/notification_subscription.rb:28)
+....................................
+
+Finished in 50.92 seconds (files took 6.71 seconds to load)
+79 examples, 0 failures

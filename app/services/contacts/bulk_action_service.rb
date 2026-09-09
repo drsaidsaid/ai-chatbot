@@ -33,6 +33,8 @@ class Contacts::BulkActionService
   end
 
   def delete_contacts
+    return { success: false, error: 'unauthorized' } unless access.administrator?
+
     Contacts::BulkDeleteService.new(
       account: @account,
       contact_ids: ids
@@ -40,7 +42,11 @@ class Contacts::BulkActionService
   end
 
   def ids
-    Array(@params[:ids]).compact
+    access.contacts.where(id: Array(@params[:ids]).compact).pluck(:id)
+  end
+
+  def access
+    AiLeadEmployee::AccessScope.new(account: @account, user: @user)
   end
 
   def labels_to_add

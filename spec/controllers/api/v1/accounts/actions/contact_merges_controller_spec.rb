@@ -14,8 +14,8 @@ RSpec.describe 'Contact Merge Action API', type: :request do
       end
     end
 
-    context 'when it is an authenticated user' do
-      let(:agent) { create(:user, account: account, role: :agent) }
+    context 'when it is an authenticated Admin' do
+      let(:agent) { create(:user, account: account, role: :administrator) }
       let(:merge_action) { double }
 
       before do

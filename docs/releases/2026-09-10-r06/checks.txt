@@ -40,3 +40,8 @@ git diff --check
 
 Browser acceptance — PENDING: Mac locked; user unlock requested.
 No real browser acceptance, screenshot or production/provider delivery is claimed.
+
+Alternative-path review — PASS: 79 examples, 0 failures
+bundle exec rspec spec/requests/r06* spec/jobs/r06* spec/controllers/api/v1/accounts/macros_controller_spec.rb spec/controllers/api/v1/accounts/actions/contact_merges_controller_spec.rb spec/controllers/api/v1/accounts/bulk_actions_controller_spec.rb spec/jobs/contacts/bulk_action_job_spec.rb spec/services/contacts/bulk* spec/services/macros/execution_service_spec.rb
+Ruby lint: 11 files, no offenses. Frontend/build inputs unchanged.
+See review-follow-up.md for the reproduced red failures and final behavior.

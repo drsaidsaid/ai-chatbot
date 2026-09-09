@@ -40,3 +40,10 @@ Based on the 9 September 2026 standalone UI/UX audit and the standalone portions
 ## Execution coordination
 
 The owner approved implementation of all 18 completion tickets in separate Codex tasks until completion. Respect blockers and use the coordinator integration branch codex/v1-completion-20260909 as the source of integrated predecessor work after R01 validates it. Do not implement against the older saved checkout. Each task owns its focused branch and commit/PR evidence; the coordinator alone combines ticket work on the integration branch. Use the in-app browser for all browser validation.
+
+## Alternative-path review follow-up
+
+Coordinator review identified retained macro execution, Lead merge, and Contact
+bulk label/deletion paths. Their HTTP/job fixes passed 79 regression examples and clean Ruby lint.
+See `docs/releases/2026-09-10-r06/review-follow-up.md`; existing browser acceptance
+remains pending Mac unlock.

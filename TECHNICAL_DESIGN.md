@@ -149,7 +149,11 @@ The following sections describe the domain responsibilities, not replacement DDL
 R06's concrete CE authorization contract is [ADR 0010](docs/adr/0010-assigned-conversation-access.md):
 AccountUser remains membership authority; Admin/Team Member map to
 administrator/agent. Resource scopes must use current membership and assignment
-at request and asynchronous delivery time. No new conceptual tenancy tables are
+at request and asynchronous delivery time. Legacy macro queues require current
+Admin access and account-scoped Conversations even though V1 HTTP macro routes
+are disabled. Contact bulk labels resolve AccessScope.contacts at execution;
+queued deletion and synchronous Lead merges require current Admin membership.
+No new conceptual tenancy tables are
 introduced by this feature.
 
 #### `business_accounts`

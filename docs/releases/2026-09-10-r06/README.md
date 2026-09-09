@@ -63,6 +63,25 @@ The final production Vite build passed: **5,078 modules, 2m35s**.
 Ruby lint passed across 79 changed/new files with no offenses. Whitespace checks
 passed. Exact commands and results are recorded in `checks.txt`.
 
+## Alternative-path review fixes
+
+The coordinator's three confirmed access gaps are fixed. V1 macro HTTP endpoints
+return 404 for both roles without queueing work. Legacy macro jobs resolve current
+Conversation access and require current Admin membership plus macro visibility
+before execution; a member's personal macro cannot self-assign hidden work, send
+messages or queue a disclosure webhook. Lead merges require the existing Admin
+destructive-operation policy before either contact is resolved. Contact bulk labels
+resolve the actor's current visible contacts in the execution service, and queued
+bulk deletion requires current Admin membership.
+
+The review regression passed **79 examples, 0 failures**, covering the new paths
+and the existing R06 invitation/media/realtime paths. Cases include reassignment,
+queued demotion/revocation, current Admin positive paths and cross-account IDs.
+All 11 changed/new Ruby files passed lint. The changes are backend-only; no
+frontend build inputs changed. The upstream macro implementation is retained;
+its HTTP specs now assert the V1 unavailable contract, while the legacy executor
+service tests still run. See `review-follow-up.md` for the red/green evidence.
+
 ## Browser evidence — pending
 
 The coordinator granted the in-app browser slot. The task opened its isolated

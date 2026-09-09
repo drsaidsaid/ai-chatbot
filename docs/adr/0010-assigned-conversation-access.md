@@ -56,3 +56,15 @@ payloads and must not inherit a browser's cookie. The existing server sender
 obtains that capability through Attachment#download_url. Its endpoint rechecks
 the attachment/message/account; no public access to arbitrary blobs is granted.
 R03/R04 retain WhatsApp delivery authority, idempotency and final-send gates.
+
+## Retained CE action paths
+
+Macros are unsupported in V1, so all dashboard macro HTTP endpoints return an
+unavailable response for both roles. Pre-existing queued macros may execute
+only for a current Admin with access to that macro and Business Account; member
+macros cannot bypass assignment, messaging or webhook restrictions.
+
+Lead merges are destructive and require current Admin access before either
+record is resolved. Contact bulk label jobs resolve the actor's current
+AccessScope.contacts when executing. Bulk deletion additionally requires current
+Admin membership, so demotion or revocation after enqueueing cancels deletion.

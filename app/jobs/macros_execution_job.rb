@@ -2,12 +2,13 @@ class MacrosExecutionJob < ApplicationJob
   queue_as :medium
 
   def perform(macro, conversation_ids:, user:)
-    account = macro.account
-    conversations = account.conversations.where(display_id: conversation_ids.to_a)
+    access = AiLeadEmployee::AccessScope.new(account: macro.account, user: user)
+    return unless macro.global? || macro.created_by_id == user.id
 
-    return if conversations.blank?
+    access.conversations.where(display_id: conversation_ids.to_a).find_each do |conversation|
+      # Old queued macros can assign work and disclose it through webhooks.
+      next unless access.administrator?
 
-    conversations.each do |conversation|
       ::Macros::ExecutionService.new(macro, conversation, user).perform
     end
   end

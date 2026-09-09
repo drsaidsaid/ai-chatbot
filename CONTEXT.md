@@ -27,6 +27,8 @@ R06 fixed-role authorization is specified by [ADR 0010](docs/adr/0010-assigned-c
 Admin (`administrator`) has Business Account-wide access. Team Member (`agent`)
 access requires current membership and Conversation assignment. Lead identity
 access does not grant access to every Conversation or combined Qualification.
+Retained macro HTTP endpoints are unavailable in V1. Lead merges and bulk
+deletion require Admin access; queued labels recheck current Lead visibility.
 
 **Business Account**:
 The tenant whose offers, knowledge, leads, conversations, rules, team, and integrations are isolated from every other business.

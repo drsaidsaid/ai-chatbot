@@ -1,6 +1,7 @@
 class Api::V1::Accounts::MacrosController < Api::V1::Accounts::BaseController
   include AttachmentConcern
 
+  before_action :reject_unsupported_v1_surface
   before_action :fetch_macro, only: [:show, :update, :destroy, :execute]
   before_action :check_authorization, only: [:show, :update, :destroy, :execute]
 
@@ -54,6 +55,10 @@ class Api::V1::Accounts::MacrosController < Api::V1::Accounts::BaseController
   end
 
   private
+
+  def reject_unsupported_v1_surface
+    render json: { error: 'Macros are unavailable in V1.' }, status: :not_found
+  end
 
   def permitted_params
     params.permit(

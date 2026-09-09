@@ -139,7 +139,9 @@ The business owner or administrator can:
 R06 enforces these permissions through current Conversation assignment, including
 search, counts, downloads, realtime and queued work. Shared Lead identity never
 grants another Conversation's content; mixed-access Qualification summaries are
-withheld while permitted evidence remains available. See ADR 0010.
+withheld while permitted evidence remains available. Unsupported macro endpoints
+are blocked in V1. Lead merging and bulk deletion require current Admin access;
+bulk labels affect only currently accessible Leads. See ADR 0010.
 
 A team member can:
 
