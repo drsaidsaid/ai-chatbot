@@ -1,0 +1,116 @@
+{
+  "recorded_at_utc": "2026-09-09T22:40:53.171933+00:00",
+  "issue": 20,
+  "implementation_commit": "cf83fd9b097fd62d37eff8ca5b66b5fa33543662",
+  "ruby_regressions": {
+    "result": "passed",
+    "examples": 196,
+    "evidence": "evidence/ruby-tests.txt"
+  },
+  "native_inbox_health": {
+    "result": "passed",
+    "examples": 11,
+    "evidence": "evidence/native-health-tests.txt",
+    "selection": "spec/controllers/api/v1/accounts/inboxes_controller_spec.rb:1442"
+  },
+  "frontend_tests": {
+    "result": "passed",
+    "tests": 2,
+    "evidence": "evidence/frontend-tests.txt"
+  },
+  "ruby_lint": {
+    "result": "passed",
+    "files": 43,
+    "offenses": 0,
+    "evidence": "evidence/ruby-lint.txt"
+  },
+  "frontend_lint": {
+    "result": "passed",
+    "errors": 0,
+    "warnings": 31,
+    "notes": "Dynamic translation keys and one closing-bracket formatting warning.",
+    "evidence": "evidence/frontend-lint.txt"
+  },
+  "production_build": {
+    "result": "passed",
+    "modules": 5078,
+    "duration": "8m36s",
+    "evidence": "evidence/production-build.txt",
+    "notes": "One required build; Browserslist age and large-chunk warnings retained."
+  },
+  "schema_paths": {
+    "result": "passed",
+    "normalized_sha256": "438329e761330cb7e9654cfcd78f22a6b0337873e1a881770fe2d7aafbfb9489",
+    "current_vs_checkpoint": "equal",
+    "current_vs_committed": "equal",
+    "evidence": "evidence/schema-comparison.txt",
+    "database": {
+      "server_version": "18.6 (Homebrew)",
+      "migration_count": 199,
+      "latest_migration": "20260910000304",
+      "public_tables": 123,
+      "user_triggers": 4
+    }
+  },
+  "credential_upgrade": {
+    "result": "passed",
+    "checks": [
+      "legacy JSON tokens, signing secrets, verify token and PIN decrypt after migration",
+      "legacy plaintext business-management token is encrypted",
+      "existing management-token ciphertext preserved byte-for-byte",
+      "duplicate Cloud connection migration refuses conflict without deleting either row"
+    ],
+    "evidence": "evidence/credential-upgrade.txt"
+  },
+  "browser": {
+    "result": "passed",
+    "surface": "Codex in-app browser, task tab 1, closed after proof",
+    "desktop": [
+      1440,
+      1000
+    ],
+    "phone": [
+      390,
+      844
+    ],
+    "console_errors": 0,
+    "manifest": "screenshot-manifest.json",
+    "provider": "loopback fake Meta; real GET verification and signed canonical POST",
+    "receipts_after_replay": 2,
+    "logical_events_after_replay": 1,
+    "incoming_messages_after_replay": 1,
+    "conversations_after_replay": 1,
+    "live_ai_enabled": false
+  },
+  "normal_implementation_commit_hook": {
+    "result": "passed",
+    "evidence": "evidence/implementation-commit.txt",
+    "bypassed": false
+  },
+  "protected_inputs": {
+    "result": "unchanged from base",
+    "paths": [
+      "docs/integration-audit",
+      "docs/ui-ux-audit",
+      "docs/v1-completion-plan",
+      "LICENSE",
+      "enterprise"
+    ]
+  },
+  "test_files": [
+    "spec/controllers/webhooks/whatsapp_controller_spec.rb",
+    "spec/jobs/webhooks/whatsapp_events_job_spec.rb",
+    "spec/services/whatsapp/incoming_message_whatsapp_cloud_service_spec.rb",
+    "spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb",
+    "spec/models/channel/whatsapp_spec.rb",
+    "spec/services/whatsapp/health_service_spec.rb",
+    "spec/services/whatsapp/webhook_setup_service_spec.rb",
+    "spec/services/whatsapp/channel_creation_service_spec.rb",
+    "spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb",
+    "spec/services/ai_lead_employee/orchestration_intent_recorder_spec.rb",
+    "spec/requests/whatsapp_ingress_spec.rb",
+    "spec/requests/whatsapp_connection_spec.rb",
+    "spec/requests/whatsapp_concurrency_spec.rb"
+  ],
+  "external_boundary": "No live Meta assets, recipients, AI providers, calendar delivery, or production launch approval exercised."
+}

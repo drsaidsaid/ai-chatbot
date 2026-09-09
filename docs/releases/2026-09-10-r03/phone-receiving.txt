@@ -1,0 +1,69 @@
+- main:
+  - generic: Settings section
+  - combobox "Settings section":
+    - option "Business & offers"
+    - option "Team & alerts"
+    - option "Booking hours"
+    - option "Follow-ups"
+    - option "WhatsApp connection" [selected]
+    - option "AI & testing"
+  - main:
+    - heading "WhatsApp connection" [level=1]
+    - paragraph: Connect the WhatsApp number for this Business Account and track incoming messages.
+    - status: Connection check finished. Review the saved status above.
+    - region "Connection health":
+      - heading "Receiving messages" [level=2]
+      - paragraph: A verified incoming message has been stored in Inbox. Receipt and processing times below come from saved records.
+      - button "Refresh"
+      - term: Last verified receipt
+      - definition: 10/09/2026, 01:08:41
+      - term: Last message stored in Inbox
+      - definition: 10/09/2026, 01:08:56
+      - term: Last connection check
+      - definition: 10/09/2026, 01:08:11
+      - term: Messages or updates waiting for processing
+      - definition: "0"
+      - button "Check connection"
+    - heading "Connection details" [level=2]
+    - text: Connection name
+    - textbox "Connection name": Business WhatsApp
+    - text: WhatsApp number (with country code)
+    - textbox "WhatsApp number (with country code)"
+    - text: Meta phone number ID
+    - textbox "Meta phone number ID"
+    - text: Meta WhatsApp Business Account ID
+    - textbox "Meta WhatsApp Business Account ID": "9003"
+    - text: Meta access token
+    - textbox "Meta access token Saved securely. Leave blank to keep the current value."
+    - generic: Saved securely. Leave blank to keep the current value.
+    - text: Meta app secret
+    - textbox "Meta app secret Saved securely. Leave blank to keep the current value."
+    - generic: Saved securely. Leave blank to keep the current value.
+    - paragraph: The access token and app secret are stored encrypted and are never shown again. Saving registers the callback using the server-held verification token.
+    - button "Save and check connection"
+    - heading "Registered callback address" [level=2]
+    - paragraph: http://127.0.0.1:3213/webhooks/whatsapp/+255700000003
+    - paragraph: Callback registration is handled by the server. No stored verification token needs to be copied from this page.
+- banner:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+  - link "Notifications":
+    - /url: /app/accounts/1/inbox-view
+  - link "Your profile":
+    - /url: /app/accounts/1/profile/settings
+- navigation "AI Lead Employee mobile navigation":
+  - list:
+    - link "Inbox":
+      - /url: /app/accounts/1/dashboard
+      - generic: Inbox
+    - link "Leads":
+      - /url: /app/accounts/1/leads
+      - generic: Leads
+    - link "Bookings":
+      - /url: /app/accounts/1/bookings
+      - generic: Bookings
+    - button "More":
+      - generic: More

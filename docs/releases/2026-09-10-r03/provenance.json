@@ -1,0 +1,26 @@
+{
+  "base_commit": "5577a37ddae5f6d08b33b0b33aefe6d933d7003c",
+  "implementation_commit": "cf83fd9b097fd62d37eff8ca5b66b5fa33543662",
+  "implementation_tree": "346d006dec044d84d862257fde8c6c2218086f53",
+  "runtime": "pinned CE v4.17.0 Rails/Vue",
+  "ruby": "3.4.4",
+  "bundler": "2.5.16",
+  "node": "24.13.0",
+  "pnpm": "10.2.0",
+  "postgresql": "18.6",
+  "environments": "synthetic test databases only; production-mode frontend build",
+  "ports": {
+    "postgresql": 55483,
+    "redis": 6393,
+    "rails": 3213,
+    "vite": 3093,
+    "fake_meta": 3214
+  },
+  "databases": [
+    "ale_release_r03_spec",
+    "ale_release_r03_browser",
+    "ale_release_r03_upgrade",
+    "ale_release_r03_current"
+  ],
+  "secrets": "Fresh synthetic encryption keys remain in ignored private tmp/release.env; no keys in this artifact."
+}

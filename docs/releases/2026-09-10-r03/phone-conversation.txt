@@ -1,0 +1,49 @@
+- main:
+  - main:
+    - button "Back to list"
+    - heading "Amina — local test" [level=1]
+    - generic: "+255711111111"
+    - generic: AI Active
+    - generic: "Assignee: Unassigned"
+    - list:
+      - paragraph: Habari, ningependa kujua kuhusu huduma zenu.
+      - time: Sep 10, 1:08 AM
+    - button "Not captured · Score 0 · Let AI continue":
+      - generic: Not captured · Score 0 · Let AI continue
+    - button "Reply Private Note":
+      - generic: Reply
+      - generic: Private Note
+    - button "Writing tools"
+    - button "Resize reply editor"
+    - paragraph: Shift + enter for new line. Start with '/' to select a Canned Response.
+    - button "Show emoji selector"
+    - generic "Attach files":
+      - button "Attach files"
+      - button
+    - button "Record audio"
+    - button "Enable signature"
+    - button "Send (⌘ + ↵)" [disabled]:
+      - generic: Send (⌘ + ↵)
+- banner:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+  - link "Notifications":
+    - /url: /app/accounts/1/inbox-view
+  - link "Your profile":
+    - /url: /app/accounts/1/profile/settings
+- navigation "AI Lead Employee mobile navigation":
+  - list:
+    - link "Inbox":
+      - /url: /app/accounts/1/dashboard
+      - generic: Inbox
+    - link "Leads":
+      - /url: /app/accounts/1/leads
+      - generic: Leads
+    - link "Bookings":
+      - /url: /app/accounts/1/bookings
+      - generic: Bookings
+    - button "More":
+      - generic: More

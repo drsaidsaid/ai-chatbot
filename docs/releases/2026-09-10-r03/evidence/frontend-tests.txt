@@ -1,0 +1,31 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/WhatsappConnectionPage.spec.js > saves direct setup, clears submitted secrets and retains saved status on reload
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OwnedSettingsLayout.spec.js (1 test) 219ms
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/WhatsappConnectionPage.spec.js > saves direct setup, clears submitted secrets and retains saved status on reload
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/WhatsappConnectionPage.spec.js (1 test) 291ms
+
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
+   Start at  01:09:34
+   Duration  4.51s (transform 640ms, setup 1.46s, collect 713ms, tests 510ms, environment 3.53s, prepare 753ms)

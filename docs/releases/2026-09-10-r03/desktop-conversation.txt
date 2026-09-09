@@ -1,0 +1,84 @@
+- complementary:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - navigation "AI Lead Employee primary navigation":
+    - list:
+      - link "Inbox":
+        - /url: /app/accounts/1/dashboard
+        - generic: Inbox
+      - link "Leads":
+        - /url: /app/accounts/1/leads
+        - generic: Leads
+      - link "Bookings":
+        - /url: /app/accounts/1/bookings
+        - generic: Bookings
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - generic: Knowledge
+      - link "Settings":
+        - /url: /app/accounts/1/settings/ai-lead-employee/offers-qualification
+        - generic: Settings
+  - button "Release Operator release-operator@example.test":
+    - generic: Release Operator
+    - generic: release-operator@example.test
+- main:
+  - complementary "Inbox conversations":
+    - heading "Inbox" [level=1]
+    - button "Filters"
+    - generic "Inbox quick queues":
+      - link "All 1":
+        - /url: /app/accounts/1/dashboard?queue=all
+        - generic: All
+        - generic: "1"
+      - link "Needs review 0":
+        - /url: /app/accounts/1/dashboard?queue=review
+        - generic: Needs review
+        - generic: "0"
+      - link "Hot leads 0":
+        - /url: /app/accounts/1/dashboard?queue=hot
+        - generic: Hot leads
+        - generic: "0"
+    - generic: Search name, phone, or message
+    - searchbox "Search name, phone, or message"
+    - 'button "Open Amina — local test conversation #1"':
+      - generic: A—
+      - generic: Amina — local test
+      - generic: 1:08
+      - paragraph: Habari, ningependa kujua kuhusu huduma zenu.
+      - generic: Unknown
+    - generic: 1 conversations
+  - main:
+    - button "Back to list"
+    - heading "Amina — local test" [level=1]
+    - generic: "+255711111111"
+    - generic: AI Active
+    - generic: "Assignee: Unassigned"
+    - button "Lead details": Lead details
+    - list:
+      - paragraph: Habari, ningependa kujua kuhusu huduma zenu.
+      - time: Sep 10, 1:08 AM
+    - article:
+      - heading "AI proposed next step" [level=2]
+      - generic: Monitor AI
+      - paragraph: AI Employee is active and can answer the next safe question.
+      - generic "Technical details"
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - text: Knowledge
+      - button "Assign": Assign
+      - button "Pause AI": Pause AI
+    - button "Reply Private Note":
+      - generic: Reply
+      - generic: Private Note
+    - button "Writing tools"
+    - button "Resize reply editor"
+    - paragraph: Shift + enter for new line. Start with '/' to select a Canned Response.
+    - button "Show emoji selector"
+    - generic "Attach files":
+      - button "Attach files"
+      - button
+    - button "Record audio"
+    - button "Enable signature"
+    - button "Send (⌘ + ↵)" [disabled]:
+      - generic: Send (⌘ + ↵)
