@@ -4,9 +4,7 @@ import { createStore } from 'vuex';
 import InboxConversationCockpit from '../InboxConversationCockpit.vue';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import BookingsAPI from 'dashboard/api/bookings';
-import OperationalDashboardAPI from 'dashboard/api/operationalDashboard';
-import { BUS_EVENTS } from 'shared/constants/busEvents';
-import { emitter } from 'shared/helpers/mitt';
+import InboxConversationsAPI from 'dashboard/api/inboxConversations';
 
 vi.mock('dashboard/api/inbox/conversation', () => ({
   default: {
@@ -21,7 +19,7 @@ vi.mock('dashboard/api/bookings', () => ({
   },
 }));
 
-vi.mock('dashboard/api/operationalDashboard', () => ({
+vi.mock('dashboard/api/inboxConversations', () => ({
   default: {
     get: vi.fn(),
   },
@@ -45,11 +43,13 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({
     t: (key, params = {}) => {
       const labels = {
-        'AI_LEAD_EMPLOYEE.INBOX_QUEUE.HOT': 'Hot',
-        'AI_LEAD_EMPLOYEE.INBOX_QUEUE.REVIEW': 'Review',
+        'AI_LEAD_EMPLOYEE.INBOX_QUEUE.ALL': 'All',
+        'AI_LEAD_EMPLOYEE.INBOX_QUEUE.HOT': 'Hot leads',
+        'AI_LEAD_EMPLOYEE.INBOX_QUEUE.REVIEW': 'Needs review',
         'AI_LEAD_EMPLOYEE.INBOX_QUEUE.BOOKED': 'Booked',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.URGENCY': 'Urgent',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.FILTERS': 'Filters',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LEAD_DETAILS': 'Lead details',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.SORT': 'Sort',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.SEARCH': 'Search',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LOADING': 'Loading',
@@ -145,11 +145,16 @@ const MessagesViewStub = {
 };
 
 const routes = [
-  { path: '/accounts/:accountId/dashboard', name: 'home', component: {} },
+  {
+    path: '/accounts/:accountId/dashboard',
+    name: 'home',
+    component: InboxConversationCockpit,
+  },
   {
     path: '/accounts/:accountId/conversations/:conversation_id',
     name: 'inbox_conversation',
-    component: {},
+    component: InboxConversationCockpit,
+    props: route => ({ conversationId: route.params.conversation_id }),
   },
   {
     path: '/accounts/:accountId/knowledge',
@@ -360,23 +365,30 @@ const buildRouter = async (query = {}) => {
   return router;
 };
 
-const mountCockpit = async ({ query = {} } = {}) => {
+const mountCockpit = async ({
+  query = {},
+  list = false,
+  attach = false,
+} = {}) => {
   const router = await buildRouter(query);
+  if (list)
+    await router.push({ name: 'home', params: { accountId: 1 }, query });
   const { store, actions } = buildStore();
 
-  const wrapper = mount(InboxConversationCockpit, {
-    props: {
-      conversationId: 101,
-    },
-    global: {
-      plugins: [router, store],
-      stubs: {
-        Avatar: AvatarStub,
-        Icon: IconStub,
-        MessagesView: MessagesViewStub,
+  const wrapper = mount(
+    { template: '<router-view />' },
+    {
+      attachTo: attach ? document.body : undefined,
+      global: {
+        plugins: [router, store],
+        stubs: {
+          Avatar: AvatarStub,
+          Icon: IconStub,
+          MessagesView: MessagesViewStub,
+        },
       },
-    },
-  });
+    }
+  );
 
   await flushPromises();
 
@@ -399,23 +411,23 @@ const clickButton = async (wrapper, label) => {
 
 describe('InboxConversationCockpit', () => {
   beforeEach(() => {
-    OperationalDashboardAPI.get.mockImplementation(params => {
-      if (params?.unanswered === 'true') {
+    InboxConversationsAPI.get.mockImplementation(params => {
+      if (params?.queue === 'review') {
         return Promise.resolve({
-          data: { leads: rowsByQueue.review, performance: {} },
+          data: { conversations: rowsByQueue.review, counts: {} },
         });
       }
 
       if (params?.booking_status === 'booked') {
         return Promise.resolve({
-          data: { leads: rowsByQueue.booked, performance: {} },
+          data: { conversations: rowsByQueue.booked, counts: {} },
         });
       }
 
       return Promise.resolve({
         data: {
-          leads: rowsByQueue.hot,
-          performance: {
+          conversations: rowsByQueue.hot,
+          counts: {
             highly_qualified_leads: 1,
             unanswered_questions: 1,
             booked_calls: 1,
@@ -441,36 +453,98 @@ describe('InboxConversationCockpit', () => {
     vi.clearAllMocks();
   });
 
-  it('loads Hot by default and switches Review and Booked with API-backed filters', async () => {
-    const emitSpy = vi.spyOn(emitter, 'emit');
-    const { wrapper, router } = await mountCockpit();
-
-    expect(router.currentRoute.value.query.queue).toBe('hot');
-    expect(OperationalDashboardAPI.get).toHaveBeenCalledWith({
+  it('starts with a selectable All list and preserves filters through opening, returning and browser back', async () => {
+    const { wrapper, router } = await mountCockpit({
+      list: true,
+      query: { q: 'Asha', quality: 'highly_qualified' },
+    });
+    expect(router.currentRoute.value.query.queue).toBe('all');
+    expect(ConversationApi.show).not.toHaveBeenCalled();
+    expect(wrapper.find('input[type="search"]').element.value).toBe('Asha');
+    await wrapper
+      .get('button[aria-label="Open Asha Mushi 101"]')
+      .trigger('click');
+    await flushPromises();
+    expect(wrapper.text()).toContain('Reply composer');
+    await wrapper.get('button[aria-label="Back"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.name).toBe('home');
+    expect(wrapper.find('[data-testid="messages-view"]').exists()).toBe(false);
+    expect(
+      wrapper.get('button[aria-label="Open Asha Mushi 101"]').exists()
+    ).toBe(true);
+    expect(router.currentRoute.value.query).toEqual({
+      queue: 'all',
+      q: 'Asha',
       quality: 'highly_qualified',
     });
-    expect(wrapper.find('select option[value="7"]').text()).toBe(
-      'WhatsApp Sales'
+    router.back();
+    await flushPromises();
+    expect(router.currentRoute.value.name).toBe('inbox_conversation');
+    expect(wrapper.text()).toContain('Reply composer');
+  });
+
+  it('restores focus to the selected row without refetching an unchanged list', async () => {
+    const { wrapper } = await mountCockpit({ list: true, attach: true });
+    await wrapper
+      .get('button[aria-label="Open Asha Mushi 101"]')
+      .trigger('click');
+    await flushPromises();
+    InboxConversationsAPI.get.mockClear();
+    InboxConversationsAPI.get.mockImplementationOnce(
+      () => new Promise(() => {})
     );
-    expect(wrapper.text()).toContain('Asha Mushi');
-    expect(wrapper.text()).toContain('I need WhatsApp automation this week.');
-    expect(emitSpy).toHaveBeenCalledWith(BUS_EVENTS.SCROLL_TO_MESSAGE, {
-      messageId: undefined,
-    });
+    await wrapper.get('button[aria-label="Back"]').trigger('click');
+    await flushPromises();
+    expect(document.activeElement).toBe(
+      wrapper.get('button[aria-label="Open Asha Mushi 101"]').element
+    );
+    expect(InboxConversationsAPI.get).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
 
-    await clickQueue(wrapper, 'Review');
-
-    expect(OperationalDashboardAPI.get).toHaveBeenLastCalledWith({
-      unanswered: 'true',
-    });
+  it('changes queues without automatically opening a different Conversation', async () => {
+    const { wrapper, router } = await mountCockpit({ list: true });
+    await clickQueue(wrapper, 'Needs review');
+    expect(router.currentRoute.value.name).toBe('home');
     expect(wrapper.text()).toContain('Ravi Review');
+    expect(InboxConversationsAPI.get).toHaveBeenLastCalledWith(
+      expect.objectContaining({ queue: 'review' })
+    );
+  });
 
-    await clickQueue(wrapper, 'Booked');
-
-    expect(OperationalDashboardAPI.get).toHaveBeenLastCalledWith({
-      booking_status: 'booked',
+  it('provides a way back to the queue when a direct Conversation link is unavailable', async () => {
+    ConversationApi.show.mockRejectedValueOnce(new Error('Not found'));
+    const { wrapper, router } = await mountCockpit({
+      query: { queue: 'review', q: 'Asha' },
     });
-    expect(wrapper.text()).toContain('Bianca Booked');
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+    await wrapper.get('button[aria-label="Back"]').trigger('click');
+    await flushPromises();
+    expect(router.currentRoute.value.name).toBe('home');
+    expect(router.currentRoute.value.query).toEqual({
+      queue: 'review',
+      q: 'Asha',
+    });
+  });
+
+  it('does not offer booking confirmation on desktop or phone when there is no Booking', async () => {
+    ConversationApi.show.mockResolvedValueOnce({
+      data: {
+        ...conversationPayload,
+        cockpit: {
+          ...conversationPayload.cockpit,
+          booking: null,
+          next_action: { kind: 'resume_ai', label: 'Resume AI' },
+        },
+      },
+    });
+    const { wrapper } = await mountCockpit();
+    await wrapper
+      .get('button[aria-controls="mobile-lead-brief-panel"]')
+      .trigger('click');
+    expect(wrapper.text()).not.toContain('Confirm call');
+    expect(BookingsAPI.create).not.toHaveBeenCalled();
   });
 
   it('renders detail tabs, mobile brief disclosure, and AI handoff controls', async () => {
@@ -478,12 +552,15 @@ describe('InboxConversationCockpit', () => {
       query: { queue: 'hot' },
     });
 
+    await clickButton(wrapper, 'Lead details');
     expect(wrapper.text()).toContain('Why this lead matters');
     expect(wrapper.text()).toContain('Clinic owner');
     expect(wrapper.text()).toContain('1 review open: No Approved Knowledge');
     expect(wrapper.text()).toContain('Reply composer');
 
-    await wrapper.get('button[aria-expanded="false"]').trigger('click');
+    await wrapper
+      .get('button[aria-controls="mobile-lead-brief-panel"]')
+      .trigger('click');
 
     expect(wrapper.get('button[aria-expanded="true"]').exists()).toBe(true);
 

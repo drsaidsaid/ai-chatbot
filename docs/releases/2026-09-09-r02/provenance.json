@@ -1,0 +1,635 @@
+{
+  "baseline": "fb7d54ac3c527940a63b171c45e4e2e7ca898d26",
+  "branch": "codex/r02-navigation-20260909",
+  "frozen_evidence_count": 155,
+  "frozen_evidence": [
+    {
+      "path": "docs/integration-audit/2026-09-09/README.md",
+      "sha256": "3252561b6e86ffa6112b2f4b0a05a23fbc9a4c76e23335eca7325b32d05c45d0"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/detailed-audit.md",
+      "sha256": "bf213530f3f53e92e11fed09a1fc433d6bbaf314086cb514d0ef4275010b9100"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/LICENSE",
+      "sha256": "602d38a808315f221a5e72e2e90e40cb9300f09aa4b317a6a8f1a0c7a3d2175d"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/call-site-checks.json",
+      "sha256": "09dcd3e10e6973739618eec4d052ef37b6cde532cfa83bae61858135888ef2f2"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/offline-observations.json",
+      "sha256": "dbd4bf8d48ef3ded75bd2d411bda449447c83770430aabf643e2792bde6909cb"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/offline_reproductions.rb",
+      "sha256": "4dd4d8cbab6b462db6f4436c34c06249ed0749ff9c4c66b743f47a51f797da33"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/online-profits-source/src/services/webinar.ts",
+      "sha256": "c055af57d2eebce577e253f3712e59cff42fe9dcd38cd7dc891d4995dfb9d80c"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/online-profits-source/src/services/whatsappCrm.ts",
+      "sha256": "ebbb499425ce9b15a6dd38aa4ded2229667c0fd0c96136c211f260abe6ea887a"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/online-profits-source/supabase/functions/whatsapp-send/index.ts",
+      "sha256": "78cc210cb6bad6374ec21297692acee5a3957f08dc139c6298c5b1099b2d0952"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/online-profits-source/supabase/migrations/20260519110000_create_whatsapp_crm_foundation.sql",
+      "sha256": "8d7584734092ac66d5e9d280c1cb0e87d85121a8ff51b401b545cb5aed3979de"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source-manifest.json",
+      "sha256": "75e43a07488dac72af7edff1caa46bd0934a2eb00ac0b8634add71b0654f479a"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/builders/contact_inbox_with_contact_builder.rb",
+      "sha256": "5aa308a916fcb811ded2a4d630e4a329e63cababf9421f6a78def721e3e3be61"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/controllers/api/v1/accounts/inboxes_controller.rb",
+      "sha256": "cc77ca547c333d3be03340f83096b933b3b393a22c631e9a87e490d8fa377f77"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/controllers/api/v1/accounts/leads_controller.rb",
+      "sha256": "216d1b8ef7fc855ff6afd4d2bb4fb7ca2374faa593f29ffcc5129156a0ff80f6"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/controllers/concerns/ensure_current_account_helper.rb",
+      "sha256": "b9bcda2ef09908d5269e0b5e46eb2aba260299af4a2b3035ccc6e500bc0f4149"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/controllers/concerns/meta_token_verify_concern.rb",
+      "sha256": "1331fdafe09d3435809fdd927f66ffd4ac9dc06c134c663a13dc096cce5e57c3"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/controllers/webhooks/whatsapp_controller.rb",
+      "sha256": "5b14e6f658b99cc9949600cf38b6b600738f5657ad173b7d1a063318262febd2"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/javascript/dashboard/routes/dashboard/settings/inbox/FinishSetup.vue",
+      "sha256": "53fdda9764a12b67b70cf5461e30bd6e39a965b046abb21a818afb1931c9cb93"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/javascript/dashboard/routes/dashboard/settings/inbox/channels/CloudWhatsapp.vue",
+      "sha256": "bc4db7eaa191cbe347b6e9e8611b68a9f25a6ddea07d228a21bea09b35b50b83"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/jobs/ai_lead_employee/outbox_dispatch_job.rb",
+      "sha256": "4e18670e0449388471ef5e38c97a1a312a4d387b3f3ad707898251a2dd02e0b2"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/jobs/send_reply_job.rb",
+      "sha256": "8beaf0b6ff088e0c73e062f7c5b184c242ca00077c149d02cd4e19a317c7701e"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/jobs/webhooks/whatsapp_events_job.rb",
+      "sha256": "8d63ee000c1e02173e9fbca494d574a1c610fef0192611d49ace320cc9f14862"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/models/ai_lead_employee/ai_provider_connection.rb",
+      "sha256": "58c9bba4c1b228984e37940564d18fab17ef2a25f61cd80bb739486f43d6a50c"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/models/ai_lead_employee/launch_gate.rb",
+      "sha256": "b3c36130c099af03f85f34e6e78032db9b0ff2435b5b900c0e7f8fd7f7c13322"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/models/channel/whatsapp.rb",
+      "sha256": "d72ea4de6ed6ff6adc9058ef4b79cabe561e13b5fe02b6efb06baa1e4fd80493"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/models/contact.rb",
+      "sha256": "717eb184327598dfe45321138dc7ff94f3e10976a4e4d542187f125c374ad245"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/models/knowledge_document.rb",
+      "sha256": "7c6e0af9f1ef70e63e77523d6f7bc1e7976ca493de5866a32f32650c09dac4c9"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/models/knowledge_item.rb",
+      "sha256": "a466eff4848422bd4371802e33173eaed79ae7da2d42e363935796ecab763248"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/models/meta_whatsapp_webhook_event.rb",
+      "sha256": "ec87977b80a99577a5035b4a81fdd6749fd8111c53b2acf5d86ae9dae22e35c5"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/policies/contact_policy.rb",
+      "sha256": "de13a60956afbdd068a483e29655edc7bdec84db3309a6c90c6e79875a21881e"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/policies/conversation_policy.rb",
+      "sha256": "76a5c227865fe32b84969a22034dd960e8ba90aeebc7d0da0bc4f22028404290"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/policies/lead_qualification_policy.rb",
+      "sha256": "afab4328f98e3edb65bfd0272bd908715832cebc7e53d93a6c53ba6b9166514d"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/ai_provider/open_router_adapter.rb",
+      "sha256": "0805a8df133f3ab976932f97fc47d2f608f24bf3c4a45ab857aa00dcad7907c9"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/booking_calendar_client.rb",
+      "sha256": "37a2ca3b5475974138b574f697333a586a1147f56e2400cc227f226aecbc8f09"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb",
+      "sha256": "7422c97fae5b8290dd4efdd6255393fcb1c265c126815124ec59adca53822468"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/evaluation/report_builder.rb",
+      "sha256": "1bd9ba698c270302681ba587461c8d2b66cf58fe233d4a502e1f1859cae778f7"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/evaluation/sandbox_runner.rb",
+      "sha256": "a40bf85339c2e71ee232b0cd3bc24b9651114b3acffb037e83134c0cf5695a57"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/follow_up_config.rb",
+      "sha256": "886351a0c974a3d2620ba28cabf153dd1e37957b491ca281c318a7b66e4094c2"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/follow_up_delivery_service.rb",
+      "sha256": "5a7cc5d63c2affee77d3fa503a2dc570e5a4408bb87cd336b6bbcf2e148a8d40"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/follow_up_scheduler.rb",
+      "sha256": "4948410d6e0be736242c596d0963120600af1d2577f20e78665950f5eeca860c"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/highly_qualified_handoff_service.rb",
+      "sha256": "272c5a38dc9e8639c09c962d0f4545ccd39e1ec6d0f4a7e06b38f1cb8c9fefb3"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/human_review_request_service.rb",
+      "sha256": "b1508ba17a7dff78726ec49e8414f63cddcd593c0829f9f645f669b87dfe18df"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/knowledge_answer_service.rb",
+      "sha256": "85fee86540cf8cff4464255b0d6997bc334fc9cfd204db7af50243b56035b63d"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/language_detector.rb",
+      "sha256": "f99fc57b145826c59fe3b62e1660a40286bbae1d2cf2793a4a1f7c159d6750a6"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/leads_directory_service.rb",
+      "sha256": "d0f8e3c9e84ead709ec919545bf8800e35a08e6a0d55e759fbb77e55c5424df0"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/opt_out_service.rb",
+      "sha256": "941855bc171a4b445d4401e728d277e734680af4d660da6b5569a024985e18dc"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/orchestration/decision_placeholder.rb",
+      "sha256": "79fb9483e3a20a4a32c814c72cdb8aec3efe31ed9e22d96d4f228b2e6ccc1b23"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/orchestration/intent_processor.rb",
+      "sha256": "c3592f6fe7cc0bd9b607445868e523a623ad63735efb95c1ba79c0f0463e156a"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/orchestration_intent_recorder.rb",
+      "sha256": "0690664ffbbc72aba6dda081e81505360276e29f8655487289699abe36e60c91"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/persisted_qualification_evidence_extractor.rb",
+      "sha256": "e018f85ed1778528882fa72c1a0c821c85729bebf6f3117c8c6578d636df58ce"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/qualification_budget_classifier.rb",
+      "sha256": "38b8281d6d910de77ef3d6cdf5574f5369ab39237b768747812c6c364060982b"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/qualification_evidence_extractor.rb",
+      "sha256": "323c03a9949150c9ea22d44adce8b37985e4f551af268595212f48ac8efd2e3d"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/qualification_evidence_snapshot.rb",
+      "sha256": "6199dee8aebacbe798570fb867e541909304eb657586013e976a6214d7587835"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/ai_lead_employee/qualification_service.rb",
+      "sha256": "ab400c1305696ea66ce80b6f0f2df647607047e79f971689827042374c54dae8"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/base/send_on_channel_service.rb",
+      "sha256": "f4006490ac594a59c6fccb4bd6e0cad89305fec4d5974a802e2c6ee8a8290258"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/contact_inbox_source_id_resolver.rb",
+      "sha256": "5b2e944e38b2913c08f94fcb59763cd2dd95a046f5ced564a24f85cb2f29bf19"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/conversations/control_service.rb",
+      "sha256": "ab74e4acd25e74e18a1d4f24510a269de53bfe5a55a8883dbe5116d013b282d1"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/conversations/message_window_service.rb",
+      "sha256": "4cedc740164717bb7b5f2f5f38702f09d81dcad53da366577173065bc5278e5f"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/search_service.rb",
+      "sha256": "2a71e674d6d4915161215d1178329fbc19477fee53844ff22e24d4c0f1f9ed18"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/whatsapp/incoming_message_base_service.rb",
+      "sha256": "1d05a19ec479f87936cce3009bb70aa74178293537cb219cd76cc65198b3d29d"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/whatsapp/incoming_message_identifier_helper.rb",
+      "sha256": "119244377adb509f54ac7f67ea54b971aeda3db40c7a60d5049a5acca567098e"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/whatsapp/incoming_message_service_helpers.rb",
+      "sha256": "f421656c85fcdf7ebd7199508248ead999d6be2744b6f17cabcb9f6ddbd32828"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/whatsapp/incoming_message_whatsapp_cloud_service.rb",
+      "sha256": "c5454e3c15e83d58158eede8f365ad43eac27c8041c93ece7f56af1e669e00c6"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/whatsapp/message_dedup_lock.rb",
+      "sha256": "af5176b24b4c43155022a1a917aa439c4530be2dbc94fa8da6bb4c7f1070e6e7"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/services/whatsapp/send_on_whatsapp_service.rb",
+      "sha256": "237c01998ecee8ebc07c1a5355874648ff1e463378f4ae33c03e49daf1f49c88"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/app/views/api/v1/models/_inbox.json.jbuilder",
+      "sha256": "b634404a2f5ac5d98e4c33edb85f53005ca7db08a1f515dfb7086877d53be5d8"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/config/schedule.yml",
+      "sha256": "2ad2277071a4d52a31ae83da84eb902074605b26d45d489582ba11102963afa2"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/db/schema.rb",
+      "sha256": "d1f0702fcd13b19415a15ba1b1ba6fe7a236569e01b3499d7535b91a7ca3e832"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/docs/adr/0002-owned-inbox-fork.md",
+      "sha256": "7abf9fee7d6b4da665e0b1ab11f7482f3a1db30a26b6a437eaab23d97385cc07"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/docs/adr/0005-canonical-whatsapp-path.md",
+      "sha256": "62a0b4b85af6c01948a6d1737478b119629f8590755a7f0179fae88ef7751c6a"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/docs/issues/016-settings-offers-and-qualification.md",
+      "sha256": "ce8f12be70f29241fc33527bcef8cd77243bcde9f5a5aba46b1c5895f89e2698"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/docs/issues/019-final-visual-parity-and-end-to-end-browser-gate.md",
+      "sha256": "712b5c23457968563d08432a88d622e2f2b163fd1fc49934ba80efd7217ff860"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/docs/issues/README.md",
+      "sha256": "b15d912523a6f3d496073ff74ea5e97200eacfcf2743b831385264308c12e4c8"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/docs/launch_proofs/006-end-to-end-canonical-launch-proof.md",
+      "sha256": "ae2c493a7d94c35ec236011add93e7acc5248bb7891e43498c8c462786426e6d"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/source/spec/controllers/webhooks/whatsapp_controller_spec.rb",
+      "sha256": "ada04b7dbd501833b4f8b1654c433fe5baaa5f75af2cca55453508e6ac346cff"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/evidence/verification.json",
+      "sha256": "c259c4dc70e56f679dfb1852c5ff79f288dd87e03b255bf098e2f1664fcf52ab"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/integration-roadmap.md",
+      "sha256": "e9b08ceda4e2bab0fcc0eeffd2f67840883f4632f83f75ea96e814954f69c595"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/meta-requirements.md",
+      "sha256": "c50fb43543609553c8f467c05d2ff8b9fcc2ace0459f162766de5409ab5b955e"
+    },
+    {
+      "path": "docs/integration-audit/2026-09-09/source-snapshots.json",
+      "sha256": "a5792ca38eb36d05e91856cc444e160319ba6df74b6944183c5f6b6b1bbc50b1"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/README.md",
+      "sha256": "062d4cdaa3285841d5fbf45c7726dfca114029b06c4b2d40d83d87e4ee95ebee"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/accessibility-dom.json",
+      "sha256": "97948c244b906d15c31c044b87c60cdae07fd4e8a1cab38f6089751a8a5993eb"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/capture-notes.json",
+      "sha256": "1689fa414d635d959c9b7947bf617eb56ec54c1fcad517ebb878dc9f1d06f74a"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/contrast-check.json",
+      "sha256": "c0d73b20d69596a7a9fe3355b5d8fc53ab68c6ad3691981869655ea3d759e27e"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/leads-dom.txt",
+      "sha256": "cf440a2e407d4a8c2b5389f154ac0d640030c621d9db8d5363f0ff89a0c961c6"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshot-manifest.json",
+      "sha256": "3114ba973cd64697a502543a5eaedf43e7e21766261eca728e8f8ca05a3cff40"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots.md",
+      "sha256": "87b6bb0b9ef88c35b2ec42f482e5723aad09f9edfa8f53e44454973d82b5df9e"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/01-login.jpg",
+      "sha256": "631cb2fae51467f56c30c85e0e00af6cf413693e740e91d9525119cf9ca47a9c"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/02-conversation-tablet.jpg",
+      "sha256": "61cdc9b198b1b5150fa85c21ee663577396b4213f158bf400393f482cea838db"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/03-conversation-desktop.jpg",
+      "sha256": "f75bce8c8acb2f8aa3aecd3aab4d3cb0449ff5867c1c455ea791e11c89f5d54e"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/04-review-conversation.jpg",
+      "sha256": "f4512f68fc612054ddd556ef0448a9d60182cdc8fa365b33c08c56baf150aadb"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/05-leads.jpg",
+      "sha256": "f1f296674b1555e008dca99bfe15ff545f1fe25d69620057e9049047f879ea84"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/06-leads-empty.jpg",
+      "sha256": "37cc8b52e28c1ed76f6a54904edc764577afcb395f423d36f4fa5a2ffa54250c"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/07-bookings.jpg",
+      "sha256": "0a2f004ea1ce769b49e32e562b181801f335f1789289333f2fcbe0b9019074b2"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/08-availability.jpg",
+      "sha256": "4f1903e3b1ac5085870d100a861a5e3a3b8283e194de9c56eddcde04b3837fac"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/09-knowledge.jpg",
+      "sha256": "e149d52cc432542cc0fd3b407f38beafd0d1968e374f8e0edb4720e062e40308"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/10-approved-answers.jpg",
+      "sha256": "500a7ac3e71aa0d624172c881ec4fe63016054b01f38d0916007e60b8b2da725"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/11-answer-form.jpg",
+      "sha256": "d6a4bb11d6a6f2eb6bd81f2cb6ff1582383a8de893d5279bd86e64766a34c245"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/12-knowledge-review.jpg",
+      "sha256": "943753e6d96b2ff82e159fd1656367533d9c1042042d4fc25bea62dfd69f21ea"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/13-test-center.jpg",
+      "sha256": "f7a805c518ad8b4942f22f6aded909b07737fde19dd4d9706c113e1ebc83bdb1"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/14-release-check.jpg",
+      "sha256": "2e52d3248679519c7d2286311a51f13e53996a7c160c93004f2cd4f446b4beb2"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/15-settings-qualification.jpg",
+      "sha256": "dfaeef53730478e99a686858edf1db0a52ed845cd6ef556d0ff0b9e79939e4c8"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/16-settings-booking.jpg",
+      "sha256": "18139bb23c780dc4f8a64a0ec9b70018be6c60acc7e4e5735b2424b181039264"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/17-settings-team.jpg",
+      "sha256": "7f2e7a7cda57b8e2b891ccf3c3569a10f0cc9bf9d34c81d9df0bda5837d6859f"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/18-settings-followups.jpg",
+      "sha256": "54a25262725fe48161f3b9a27ce2cc3028129a700585f5fbfae03dd3a6b983f7"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/19-settings-alerts.jpg",
+      "sha256": "8eaab0bd2c97550a7c69aff0d1a20cb163cc881e8c257631f928b6f28343b8bc"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/20-settings-whatsapp.jpg",
+      "sha256": "4dd3b8d66c5118bc398c9990624a150687ccff51b9364f40b0cd4938632bcd4c"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/21-inbox-settings.jpg",
+      "sha256": "79a76caa8114a90994a6e4e86dc78777c2fac77795823932aa8126df332e607c"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/22-add-inbox.jpg",
+      "sha256": "0530a9b7983e7b128db8d0716451aa7972b235248303216ea80d09787b0b8cee"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/23-ai-provider.jpg",
+      "sha256": "5a25a0eabe228bd6171526014862fb15fcd7db9043654954e331c85bcebd09cb"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/24-phone-inbox.jpg",
+      "sha256": "bd2a8e5438cd707224ef1ea29c6c42faa9a7cb404f21e0896108289369741659"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/25-phone-brief.jpg",
+      "sha256": "0fb3f24ce62103f2448cf75516d2d2c76fe6c8977ac6619146213cda1e875b93"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/26-phone-queue.jpg",
+      "sha256": "02b45d3259b5634eecb2c7ef01a62c171a62c2f9b9e90d98720a3e54096e5af0"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/27-phone-leads.jpg",
+      "sha256": "1c2082785658fbec30d0a3e54449f505ab4c131f7298f70981f032c71e015174"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/28-phone-bookings.jpg",
+      "sha256": "577a3db0b3b39176740e39e33d1f1fad3dd37a3014184ea3b51fb7938fe5db85"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/screenshots/29-phone-settings.jpg",
+      "sha256": "6356dfd7913d75d53138f18588df0d8416d2df7221808650c40beb7610093b27"
+    },
+    {
+      "path": "docs/ui-ux-audit/2026-09-09/source-verification.md",
+      "sha256": "53bf6fd55dfc2d96bd7cbbba8fd573c82a946502a289f376000c47a61c99b105"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/README.md",
+      "sha256": "4ec49feceaf1916a81bc4b0060ed2f27cc9a9dced9fa006dde468c32d7cff9d5"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/01-reproduce-and-document-one-canonical-v1-release.md",
+      "sha256": "76f88d48a4a11f2d84def881ecb7f0fc384fa29faf548d3f316e49b03dad84b2"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/02-sign-in-and-navigate-the-simplified-app-on-desktop-and-phone.md",
+      "sha256": "44ca54793bc6f31769e274963a8c3da98a4efc2e067bd54a6b38400e6692903d"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/03-connect-whatsapp-and-receive-one-verified-durable-conversation.md",
+      "sha256": "9828d860a528e458b6cf6be036a8d2dca0b8f922e2f329fe1165d70db892da37"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/04-deliver-an-eligible-reply-once-and-recover-safely.md",
+      "sha256": "0831392cf09c737da6557ea19e76ab90ffe3a2c43431ab417dab3dd3af3cf70a"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/05-honor-a-natural-language-stop-request-in-the-live-conversation.md",
+      "sha256": "b2548407ad04b44111ff2dd71eea0090e2c3de2903becac32fa5083c12fc7f9f"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/06-invite-a-team-member-with-access-only-to-assigned-leads.md",
+      "sha256": "065a9bf94695568f50450c20f8395ff7925811512d12a53ea549cc1831e3aecf"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/07-understand-and-control-a-conversation-without-misleading-actions.md",
+      "sha256": "a91d7a6b047560667224ef71331b5d12c537fa39afad0789592b30a7e12176e8"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/08-find-inspect-and-maintain-a-lead-without-losing-context.md",
+      "sha256": "ae6a7b0456202386d68a0ac521384145f9c5e361dda7c99599dc5dfed10c02de"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/09-configure-an-offer-and-qualify-a-lead-from-supported-evidence.md",
+      "sha256": "d6fa41774e801241c463b85db49a3ae908da89fc0307bc64a22f2a2e444d56a4"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/10-connect-and-control-the-ai-provider-with-visible-health-and-limits.md",
+      "sha256": "052687dffc9a2f1efa56a7d98948f398a251a8fe1bcc06ab03cf33a6fb9f4dee"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/11-publish-knowledge-that-answers-only-the-relevant-question-and-offer.md",
+      "sha256": "db9e15d6b7499fb1228bb766c680ec8e9cf16b5f31015745085d9a526377990c"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/12-resolve-a-review-request-and-optionally-propose-knowledge.md",
+      "sha256": "79232db350a3739d350fdcffa155117a39354bc5d064d770490677f19f959cc4"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/13-book-and-manage-one-genuinely-available-call.md",
+      "sha256": "b790015a094994db185c385cff2f7c688e689bb0e9449ed9a80f3b787a1fd95f"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/14-assign-human-work-and-deliver-one-useful-alert.md",
+      "sha256": "aadcb854697316e90d1a788f1b59898b5be59ee1c53b671a4e2f9f8174152349"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/15-schedule-one-permitted-follow-up-and-stop-it-when-circumstances-change.md",
+      "sha256": "930bc3f340781eff67785d4c593d997d0513070f5e52f86793deda0c03ab0e4f"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/16-see-trustworthy-basic-business-results-without-another-main-menu.md",
+      "sha256": "9938fa751666a9f927eb2c52ce474c1f2f11d204a8734d9d411302c3f73b45de"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/17-approve-launch-only-from-current-test-and-pilot-evidence.md",
+      "sha256": "d8f42649240570dd25375576578554ed6d4fbbfa80dfaa34f3cf8dd0e15ec5ec"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/drafts/18-deploy-a-recoverable-release-and-complete-a-supervised-v1-pilot.md",
+      "sha256": "fd9d7604c4175533c9de32e61b5ca983593a2b960438c929bbab053938e42de7"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/navigation.md",
+      "sha256": "cd9ee49bd4227e8004a681a96b429bf4243601db7d8f1f6fde5e11ac57281fc0"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published-tickets.json",
+      "sha256": "d0694b179d8b9977ca3af5d0f0dc13f19f94c946716e6b70a83fd65fbb76f515"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/01-reproduce-and-document-one-canonical-v1-release.md",
+      "sha256": "baab610f2f7ec1280e70755a0012ddd782cafdb74a3d68947236a00fc0739beb"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/02-sign-in-and-navigate-the-simplified-app-on-desktop-and-phone.md",
+      "sha256": "8c5c5f0ff35c41e03c811838efad26b85b42a5dc4c3c479bce1b5b771edfdd18"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/03-connect-whatsapp-and-receive-one-verified-durable-conversation.md",
+      "sha256": "01bd2af495bfac76f0dda2be3b80c634750f414b6526e5cd19fcb15b8381be54"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/04-deliver-an-eligible-reply-once-and-recover-safely.md",
+      "sha256": "51ec6ab2ca7126724c24ed6e0dd2cfd5f4c83f61883ddb0670ade97467342230"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/05-honor-a-natural-language-stop-request-in-the-live-conversation.md",
+      "sha256": "220ddee8989cadfd34a398c711564ec513515ff2116360143a7924dfb950e996"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/06-invite-a-team-member-with-access-only-to-assigned-leads.md",
+      "sha256": "26ebe174e34c5d9a929c5a223b45423e45caec04d1fc26ccd4347c9db1bb80f4"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/07-understand-and-control-a-conversation-without-misleading-actions.md",
+      "sha256": "978227a2d27b5e49b33660469b8d17e344816c4b66434c08c65abb49201617c2"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/08-find-inspect-and-maintain-a-lead-without-losing-context.md",
+      "sha256": "d642c8d20ebaac9f39c17ff14bf16dd49b66f88e4223aa0e85bda91ab9f77009"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/09-configure-an-offer-and-qualify-a-lead-from-supported-evidence.md",
+      "sha256": "217bb6b77011a67c7b874c42c2c953033117597719cb044630e5cd6170388765"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/10-connect-and-control-the-ai-provider-with-visible-health-and-limits.md",
+      "sha256": "2dcc64d8adc90f218928fe0c051077a7306824a94b5c8a0f76674184184b032d"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/11-publish-knowledge-that-answers-only-the-relevant-question-and-offer.md",
+      "sha256": "be1f61fdaabc972780fccff72413c932b18dc7613babdd3f22f056bfe9a96679"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/12-resolve-a-review-request-and-optionally-propose-knowledge.md",
+      "sha256": "76561f761502c12a11bc38fd4ee2d6ad8a0fccec590e57b8d5b51c2383418245"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/13-book-and-manage-one-genuinely-available-call.md",
+      "sha256": "03ff042b9870ec7bb507a5850230afa1f30b1be0c3daedec581e9eff0dc39190"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/14-assign-human-work-and-deliver-one-useful-alert.md",
+      "sha256": "ba11ab9ee94e9018fa4f01c8b5951a051b958bd8b9eb79c77e817d70b5aafcfd"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/15-schedule-one-permitted-follow-up-and-stop-it-when-circumstances-change.md",
+      "sha256": "32ea864e18122787f2cfefc47d988682e3f0e9a117b221af221a3d0c79de85b5"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/16-see-trustworthy-basic-business-results-without-another-main-menu.md",
+      "sha256": "2a2ad0497694fa83a96116709f9edaa91cb090d835de6cd890ccf9196f09b6b1"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/17-approve-launch-only-from-current-test-and-pilot-evidence.md",
+      "sha256": "c50ca056ed17067041afd9ee34069f73e8112f5cd0f903277a97bd73552a2420"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/published/18-deploy-a-recoverable-release-and-complete-a-supervised-v1-pilot.md",
+      "sha256": "efff63e09ae32940b4cdcee8cfd97b98ec36be124f011e43cdffe42d4a1f668d"
+    }
+  ],
+  "unchanged_baseline_files": {
+    "Gemfile.lock": "b9efc099d923d19a20c74a1c6d292afb009bc31d9495bf12a63a4debe2b66359",
+    "pnpm-lock.yaml": "9aff591bedb980ca3d5d1c9efe23b6b85eaefc28b47cdaf4e55f9e95fea04691",
+    "db/schema.rb": "a2ba84ffce0149f65d4914973ef8653c82ada99ebd2f98e37286f3e9d7ce5ea8",
+    "LICENSE": "602d38a808315f221a5e72e2e90e40cb9300f09aa4b317a6a8f1a0c7a3d2175d",
+    "VERSION_CW": "81ca922620dcbe44f632f1e9b3b41440807e61b9233390b80f851b319ac094b2"
+  },
+  "enterprise_directory_present": false
+}

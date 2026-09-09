@@ -1,0 +1,74 @@
+{
+  "baseline": "fb7d54ac3c527940a63b171c45e4e2e7ca898d26",
+  "ruby": {
+    "examples": 26,
+    "failures": 0,
+    "files": [
+      "spec/requests/api/v1/accounts/inbox_conversations_spec.rb",
+      "spec/requests/v1_surface_availability_spec.rb",
+      "spec/policies/conversation_policy_spec.rb",
+      "spec/requests/owned_baseline_smoke_spec.rb"
+    ],
+    "local_log": "tmp/release/rspec-final.log"
+  },
+  "vue": {
+    "passing_tests": 41,
+    "files": {
+      "aiLeadEmployeeNavigation.spec.js": 8,
+      "ConversationCockpitMobileShell.spec.js": 2,
+      "InboxConversationCockpit.spec.js": 6,
+      "OwnedSettingsLayout.spec.js": 1,
+      "KnowledgeItemsPanel.spec.js": 4,
+      "routes/index.spec.js": 6,
+      "Dashboard.spec.js": 14
+    },
+    "run_note": "Final full run: 40 tests before the last focus regression. The final focused Inbox run: 6 tests, including the added focus regression; the other 35 tests are unchanged.",
+    "local_logs": [
+      "tmp/release/vue-final.log",
+      "tmp/release/row-focus-green.log"
+    ]
+  },
+  "lint": {
+    "rubocop": "12 changed Ruby files pass; final branding and fallback-copy corrections independently rechecked",
+    "scss": "Changed stylesheet passes scss-lint",
+    "eslint_errors": 0,
+    "eslint_warnings": 58
+  },
+  "build": {
+    "command": "RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 pnpm exec vite build",
+    "result": "pass",
+    "modules": 5078,
+    "duration": "1m 46s",
+    "warnings": [
+      "Browserslist data age",
+      "Large output chunks"
+    ],
+    "local_log": "tmp/release/production-build.log"
+  },
+  "regressions": {
+    "conversation_query": "Leads without Qualification, multiple Conversations, scoped counts/search, actual Booking and due Follow-up, pagination",
+    "focus": "Confirmed red before stable filter watcher; final six-test Inbox suite passes",
+    "login_redirect": "Confirmed red before completing the rejected navigation guard; routes suite passes",
+    "logo_cache": "Confirmed red before content-versioned owned logo URLs; final Ruby suite passes"
+  },
+  "preservation": {
+    "frozen_evidence_files": 155,
+    "lockfiles_unchanged": true,
+    "schema_unchanged": true,
+    "mit_unchanged": true,
+    "enterprise_directory_absent": true
+  },
+  "limitations": [
+    "Synthetic local delivery only; no provider messages, booking creation or evaluation runs were sent.",
+    "Member Conversation scope mirrors the existing inbox/team show policy until R06 applies the approved stronger rule.",
+    "Existing package source-map warning affects test/dev logs; packaged browser errors were empty."
+  ],
+  "additional_ruby": {
+    "examples": 6,
+    "failures": 0,
+    "file": "spec/services/ai_lead_employee/conversation_intent_classifier_spec.rb",
+    "local_log": "tmp/release/intent-classifier.log"
+  },
+  "hooks": "Normal installed pre-commit hooks run; no bypass. First commit hooks left all recorded runtime hashes unchanged.",
+  "services": "Task-owned Rails, Vite, PostgreSQL and Redis stopped after verification; no worker started."
+}

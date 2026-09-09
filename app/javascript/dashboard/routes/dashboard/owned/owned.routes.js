@@ -1,16 +1,17 @@
 import { frontendURL } from 'dashboard/helper/URLHelper';
+import UnavailablePage from './UnavailablePage.vue';
 import OwnedWorkspacePage from './OwnedWorkspacePage.vue';
 import AiProviderSettingsPage from './AiProviderSettingsPage.vue';
 import LeadsDirectoryPage from './LeadsDirectoryPage.vue';
 import { ROLES } from 'dashboard/constants/permissions.js';
 
-const ownedSurfaceRoute = ({ path, name, surface }) => ({
+const ownedSurfaceRoute = ({ path, name, surface, permissions = ROLES }) => ({
   path: frontendURL(`accounts/:accountId/${path}`),
   name,
   component: OwnedWorkspacePage,
   props: { surface },
   meta: {
-    permissions: ROLES,
+    permissions,
   },
 });
 
@@ -21,6 +22,12 @@ const redirectToInboxQueue = queue => to => ({
 });
 
 export const routes = [
+  {
+    path: frontendURL('accounts/:accountId/unavailable'),
+    name: 'v1_unavailable',
+    component: UnavailablePage,
+    meta: { permissions: ROLES },
+  },
   {
     path: frontendURL('accounts/:accountId/hot-leads'),
     name: 'owned_hot_leads_index',
@@ -43,6 +50,7 @@ export const routes = [
     path: 'knowledge',
     name: 'owned_knowledge_index',
     surface: 'KNOWLEDGE',
+    permissions: ['administrator'],
   }),
   ownedSurfaceRoute({
     path: 'bookings',
@@ -50,10 +58,20 @@ export const routes = [
     surface: 'BOOKINGS',
   }),
   ownedSurfaceRoute({
-    path: 'test-center',
+    path: 'settings/ai-lead-employee/ai-testing/test-center',
     name: 'owned_test_center_index',
     surface: 'TEST_CENTER',
+    permissions: ['administrator'],
   }),
+  {
+    path: frontendURL('accounts/:accountId/test-center'),
+    redirect: to => ({
+      name: 'owned_test_center_index',
+      params: to.params,
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
   {
     path: frontendURL('accounts/:accountId/settings/ai-provider'),
     name: 'owned_ai_provider_settings',

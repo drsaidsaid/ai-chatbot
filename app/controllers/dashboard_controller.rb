@@ -48,6 +48,17 @@ class DashboardController < ActionController::Base
 
   def set_global_config
     @global_config = GlobalConfig.get(*GLOBAL_CONFIG_KEYS).merge(app_config)
+    version_owned_brand_assets
+  end
+
+  def version_owned_brand_assets
+    %w[LOGO LOGO_DARK LOGO_THUMBNAIL].each do |key|
+      path = @global_config[key]
+      next unless path&.match?(%r{\A/brand-assets/logo(?:_dark|_thumbnail)?\.svg\z})
+
+      fingerprint = Digest::SHA256.file(Rails.public_path.join(path.delete_prefix('/'))).hexdigest.first(12)
+      @global_config[key] = "#{path}?v=#{fingerprint}"
+    end
   end
 
   def set_dashboard_scripts
@@ -65,10 +76,7 @@ class DashboardController < ActionController::Base
     @portal = Portal.find_by(custom_domain: domain)
     return unless @portal
 
-    @locale = @portal.default_locale
-    request.variant = :documentation if @portal.layout == 'documentation'
-    load_home_data
-    render 'public/api/v1/portals/show', layout: 'portal', portal: @portal and return
+    head :not_found
   end
 
   def app_config

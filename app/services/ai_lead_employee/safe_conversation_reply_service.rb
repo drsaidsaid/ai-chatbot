@@ -53,9 +53,9 @@ class AiLeadEmployee::SafeConversationReplyService
   end
 
   def localized_greeting_reply
-    return 'Habari. Ninaweza kusaidia kukusanya taarifa zako kwa Online Profits.' if swahili?
+    return 'Habari. Ninaweza kukusanya taarifa chache ili timu yetu ikusaidie.' if swahili?
 
-    'Hello. I can help qualify your request for Online Profits.'
+    'Hello. I can collect a few details so our team can help you.'
   end
 
   def english_knowledge_gap_reply

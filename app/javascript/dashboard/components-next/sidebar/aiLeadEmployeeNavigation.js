@@ -3,7 +3,6 @@ export const AI_LEAD_EMPLOYEE_TOP_LEVEL_NAVIGATION = [
   'Leads',
   'Bookings',
   'Knowledge',
-  'Test Center',
   'Settings',
 ];
 
@@ -14,11 +13,7 @@ export const AI_LEAD_EMPLOYEE_MOBILE_NAVIGATION = [
   'More',
 ];
 
-export const AI_LEAD_EMPLOYEE_MORE_NAVIGATION = [
-  'Knowledge',
-  'Test Center',
-  'Settings',
-];
+export const AI_LEAD_EMPLOYEE_MORE_NAVIGATION = ['Knowledge', 'Settings'];
 
 export const AI_LEAD_EMPLOYEE_SETTINGS_ROUTE_NAMES = [
   'ai_lead_employee_settings_index',
@@ -29,6 +24,19 @@ export const AI_LEAD_EMPLOYEE_SETTINGS_ROUTE_NAMES = [
   'ai_lead_employee_settings_alerts',
   'ai_lead_employee_settings_whatsapp_connection',
   'owned_ai_provider_settings',
+  'owned_test_center_index',
+  'ai_lead_employee_settings_ai_testing',
+  'agent_list',
+  'settings_teams_list',
+  'settings_teams_new',
+  'settings_teams_edit',
+  'settings_inbox_list',
+  'settings_inbox_new',
+  'settings_inboxes_page_channel',
+  'settings_inboxes_add_agents',
+  'settings_inbox_finish',
+  'settings_inbox_show',
+  'general_settings_index',
 ];
 
 export const CONVERSATION_COCKPIT_QUEUE_KEYS = ['hot', 'review', 'booked'];
@@ -117,13 +125,6 @@ export const buildAILeadEmployeeMenuItems = ({ t, accountScopedRoute }) => [
     activeOn: ['owned_knowledge_index'],
   },
   {
-    name: 'Test Center',
-    label: t('AI_LEAD_EMPLOYEE.NAV.TEST_CENTER'),
-    icon: 'i-lucide-clipboard-check',
-    to: accountScopedRoute('owned_test_center_index'),
-    activeOn: ['owned_test_center_index'],
-  },
-  {
     name: 'Settings',
     label: t('AI_LEAD_EMPLOYEE.NAV.SETTINGS'),
     icon: 'i-lucide-settings',
@@ -173,13 +174,6 @@ export const buildAILeadEmployeeMoreNavItems = ({ t, accountScopedRoute }) => [
     icon: 'i-lucide-book-open',
     to: accountScopedRoute('owned_knowledge_index'),
     activeOn: ['owned_knowledge_index'],
-  },
-  {
-    name: 'Test Center',
-    label: t('AI_LEAD_EMPLOYEE.NAV.TEST_CENTER'),
-    icon: 'i-lucide-flask-conical',
-    to: accountScopedRoute('owned_test_center_index'),
-    activeOn: ['owned_test_center_index'],
   },
   {
     name: 'Settings',

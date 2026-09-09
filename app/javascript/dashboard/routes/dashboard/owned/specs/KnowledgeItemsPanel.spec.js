@@ -87,6 +87,11 @@ const mountComponent = async () => {
     history: createMemoryHistory(),
     routes: [
       {
+        path: '/app/accounts/:accountId/dashboard',
+        name: 'home',
+        component: {},
+      },
+      {
         path: '/app/accounts/:accountId/knowledge',
         name: 'owned_knowledge_index',
         component: KnowledgeItemsPanel,
@@ -183,7 +188,7 @@ describe('KnowledgeItemsPanel', () => {
     await flushPromises();
     expect(KnowledgeDocumentsAPI.test).toHaveBeenCalledWith(
       1,
-      'Can you explain Online Profits services?'
+      'Can you explain our services?'
     );
     expect(wrapper.text()).toContain('CRM automation');
 
@@ -239,7 +244,7 @@ describe('KnowledgeItemsPanel', () => {
         classes: expect.arrayContaining(['shrink-0', 'whitespace-nowrap']),
       }),
       expect.objectContaining({
-        text: 'Needs Review',
+        text: 'Drafts & approvals',
         classes: expect.arrayContaining(['shrink-0', 'whitespace-nowrap']),
       }),
     ]);
@@ -278,42 +283,14 @@ describe('KnowledgeItemsPanel', () => {
     expect(KnowledgeItemsAPI.reject).toHaveBeenCalledWith(6);
   });
 
-  it('resolves and rejects Review Requests with linked conversation access', async () => {
+  it('separates reusable knowledge drafts from customer Review Requests', async () => {
     const wrapper = await mountComponent();
-
-    await wrapper
-      .findAll('button')
-      .find(button => button.text() === 'Needs Review')
-      .trigger('click');
-    expect(wrapper.text()).toContain('Can you guarantee sales?');
+    await wrapper.get('[data-testid="knowledge-tab-drafts"]').trigger('click');
+    expect(wrapper.text()).toContain('Customer questions are handled in Inbox');
     expect(
-      wrapper.find('a[href="/app/accounts/1/conversations/42"]').exists()
+      wrapper.find('a[href="/app/accounts/1/dashboard?queue=review"]').exists()
     ).toBe(true);
-
-    await wrapper
-      .find(
-        'textarea[placeholder="Answer for this lead or internal resolution note"]'
-      )
-      .setValue('We cannot guarantee sales.');
-    await wrapper.find('form').trigger('submit.prevent');
-    await flushPromises();
-    expect(HumanReviewRequestsAPI.resolve).toHaveBeenCalledWith(
-      3,
-      expect.objectContaining({
-        answer: 'We cannot guarantee sales.',
-        propose_knowledge: true,
-        send_to_lead: true,
-      })
-    );
-
-    await wrapper
-      .findAll('button')
-      .find(button => button.text() === 'Reject')
-      .trigger('click');
-    await flushPromises();
-    expect(HumanReviewRequestsAPI.reject).toHaveBeenCalledWith(
-      3,
-      expect.any(Object)
-    );
+    expect(wrapper.text()).not.toContain('Can you guarantee sales?');
+    expect(HumanReviewRequestsAPI.get).not.toHaveBeenCalled();
   });
 });

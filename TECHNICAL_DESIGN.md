@@ -423,3 +423,21 @@ below is historical context, not the current completion frontier.
 6. Approved knowledge, Source References, provider failure classification, and Review Requests.
 7. Control State, human takeover, WhatsApp coexistence echoes, and explicit resume.
 8. Configurable offers, questions, rules, qualification evidence, handoff, alerts, booking, follow-up, dashboards, evaluations, launch gate, and controlled pilot.
+
+## R02 Inbox navigation boundary
+
+The Inbox list reads account-scoped Conversation records through
+`GET /api/v1/accounts/:account_id/inbox_conversations`, with
+`ConversationPolicy::Scope` providing the same inbox/team visibility as the
+current Conversation show policy. R06 tightens the shared policy to assigned work.
+Qualification is optional enrichment: it must never determine whether an inquiry
+exists. All, Needs review and Hot leads count Conversations within the active
+search and secondary filters. Reviews, bookings and due follow-ups refer to the
+specific Conversation. Results paginate in stable activity/id order. Query
+parameters preserve queue, filters, search and page across list/detail, refresh
+and browser history. Operator notification plumbing is excluded from Lead work.
+
+A shared Settings layout surrounds supported native CE routes, including provider,
+WhatsApp and team controls; AI & testing contains the admin-only Test Center.
+Legacy supported links redirect to their canonical destination with context intact.
+See `docs/releases/2026-09-09-r02/visual-reference.md` for the first responsive path.

@@ -7,7 +7,6 @@ export default {};
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
-import Icon from 'next/icon/Icon.vue';
 import BookingConfigurationAPI from 'dashboard/api/bookingConfiguration';
 import QualificationConfigurationAPI from 'dashboard/api/qualificationConfiguration';
 
@@ -143,27 +142,6 @@ onMounted(load);
 
 <template>
   <main class="flex h-full min-w-0 flex-1 bg-n-background">
-    <aside
-      class="hidden w-64 shrink-0 border-r border-n-weak bg-n-solid-1 p-4 md:block"
-    >
-      <nav class="grid gap-1">
-        <RouterLink
-          v-for="item in sections"
-          :key="item.key"
-          :to="accountScopedRoute(item.routeName)"
-          class="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium"
-          :class="
-            item.key === activeSection.key
-              ? 'bg-n-blue-2 text-n-blue-11'
-              : 'text-n-slate-12 hover:bg-n-alpha-2'
-          "
-        >
-          <Icon :icon="item.icon" class="size-4" /><span class="truncate">{{
-            item.label
-          }}</span>
-        </RouterLink>
-      </nav>
-    </aside>
     <section class="min-w-0 flex-1 overflow-auto">
       <header
         class="flex min-h-16 items-center justify-between border-b border-n-weak bg-n-solid-1 px-4 md:px-6"
@@ -179,7 +157,7 @@ onMounted(load);
         <button
           v-if="isQualification || isBooking"
           type="button"
-          class="h-9 rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
+          class="min-h-10 shrink-0 whitespace-nowrap rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
           :disabled="saving || loading"
           @click="isQualification ? saveQualification() : saveBooking()"
         >
@@ -282,8 +260,8 @@ onMounted(load);
             Managed in workspace settings
           </h2>
           <p class="mt-2 text-sm text-n-slate-11">
-            This uses the existing Chatwoot account configuration so
-            assignments, alerts, and channels remain the same everywhere.
+            This uses the Business Account configuration so assignments, alerts,
+            and channels remain the same everywhere.
           </p>
           <RouterLink
             :to="accountScopedRoute(nativeDestination.route)"

@@ -1,0 +1,76 @@
+- main:
+  - generic: Settings section
+  - combobox "Settings section":
+    - option "Business & offers"
+    - option "Team & alerts"
+    - option "Booking hours"
+    - option "Follow-ups"
+    - option "WhatsApp connection"
+    - option "AI & testing" [selected]
+  - navigation "Related settings":
+    - link "AI & testing":
+      - /url: /app/accounts/1/settings/ai-lead-employee/ai-testing
+    - link "AI provider":
+      - /url: /app/accounts/1/settings/ai-provider
+    - link "Test Center":
+      - /url: /app/accounts/1/settings/ai-lead-employee/ai-testing/test-center
+  - main:
+    - heading "Test Center" [level=1]
+    - paragraph: Test changes before they reach real leads
+    - button "Run test" [disabled]: Run test
+    - tablist "Test Center tabs":
+      - tab "Scenarios" [selected]
+      - tab "Results"
+      - tab "Release check"
+    - paragraph: Loading Test Center
+    - generic: Search scenarios
+    - textbox "Search scenarios":
+      - /placeholder: Search scenarios...
+    - combobox "Offer filter":
+      - option "Offer" [selected]
+      - option "Growth Plan"
+    - combobox "Result filter":
+      - option "Result" [selected]
+      - option "Passed"
+      - option "Failed"
+      - option "Needs Review"
+      - option "Never Run"
+      - option "Running"
+      - option "Cancelled"
+      - option "Stale Configuration"
+      - option "Failed Model Call"
+    - combobox "Owner filter":
+      - option "Owner" [selected]
+    - button "More filters"
+    - paragraph: No scenarios match these filters.
+    - generic: Showing 0 of 0 scenarios
+    - complementary:
+      - heading "Select a scenario" [level=2]
+      - paragraph: Simulation - no message will be sent. This is a test environment only.
+      - generic: Never Run
+      - button "Transcript actions"
+      - button "Collapse transcript panel"
+      - generic: Run a scenario to see the simulation transcript.
+- banner:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+  - link "Notifications":
+    - /url: /app/accounts/1/inbox-view
+  - link "Your profile":
+    - /url: /app/accounts/1/profile/settings
+- navigation "AI Lead Employee mobile navigation":
+  - list:
+    - link "Inbox":
+      - /url: /app/accounts/1/dashboard
+      - generic: Inbox
+    - link "Leads":
+      - /url: /app/accounts/1/leads
+      - generic: Leads
+    - link "Bookings":
+      - /url: /app/accounts/1/bookings
+      - generic: Bookings
+    - button "More":
+      - generic: More

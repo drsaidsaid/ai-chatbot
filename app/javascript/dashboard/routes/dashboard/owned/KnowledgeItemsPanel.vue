@@ -12,7 +12,7 @@ const route = useRoute();
 const tabs = [
   { key: 'documents', label: 'Documents' },
   { key: 'approved_answers', label: 'Approved Answers' },
-  { key: 'needs_review', label: 'Needs Review' },
+  { key: 'drafts', label: 'Drafts & approvals' },
 ];
 const answerKinds = [
   'pricing',
@@ -43,7 +43,7 @@ const showRevisionHistory = ref(false);
 const showImport = ref(false);
 const showNewAnswer = ref(false);
 const hasUnsavedDocumentChanges = ref(false);
-const testQuestion = ref('Can you explain Online Profits services?');
+const testQuestion = ref('Can you explain our services?');
 const testResult = ref(null);
 const saveError = ref('');
 
@@ -77,8 +77,14 @@ const selectedDocument = computed(
 const selectedAnswer = computed(
   () =>
     approvedAnswers.value.find(
-      answer => answer.id === selectedAnswerId.value
-    ) || null
+      answer =>
+        answer.id === selectedAnswerId.value &&
+        (activeTab.value !== 'drafts' || answer.status === 'draft')
+    ) ||
+    (activeTab.value === 'drafts'
+      ? approvedAnswers.value.find(answer => answer.status === 'draft')
+      : null) ||
+    null
 );
 const selectedReview = computed(
   () =>
@@ -96,14 +102,16 @@ const filteredDocuments = computed(() => {
 });
 const filteredAnswers = computed(() => {
   const query = answerSearch.value.trim().toLowerCase();
-  return approvedAnswers.value.filter(
-    answer =>
-      !query ||
-      [answer.title, answer.question, answer.answer]
-        .join(' ')
-        .toLowerCase()
-        .includes(query)
-  );
+  return approvedAnswers.value
+    .filter(answer => activeTab.value !== 'drafts' || answer.status === 'draft')
+    .filter(
+      answer =>
+        !query ||
+        [answer.title, answer.question, answer.answer]
+          .join(' ')
+          .toLowerCase()
+          .includes(query)
+    );
 });
 const filteredReviews = computed(() => {
   if (reviewFilter.value === 'all') return reviewRequests.value;
@@ -121,7 +129,7 @@ const statusLabel = status =>
     approved: 'Approved',
     rejected: 'Rejected',
     inactive: 'Archived',
-    })[status] || status;
+  })[status] || status;
 
 const answerKindLabel = kind =>
   ({
@@ -213,11 +221,7 @@ const loadWorkspace = async () => {
   isLoading.value = true;
   saveError.value = '';
   try {
-    await Promise.all([
-      loadDocuments(),
-      loadApprovedAnswers(),
-      loadReviewRequests(),
-    ]);
+    await Promise.all([loadDocuments(), loadApprovedAnswers()]);
   } catch {
     saveError.value = 'Could not load Knowledge workspace.';
   } finally {
@@ -229,7 +233,7 @@ const createDocument = async () => {
   isSaving.value = true;
   try {
     const { data } = await KnowledgeDocumentsAPI.create({
-      title: 'Untitled Online Profits document',
+      title: 'Untitled business document',
       body: 'Add company context, services, offers, and policies here.',
       used_by_ai_employee: true,
       general_question_access: true,
@@ -424,6 +428,23 @@ onMounted(loadWorkspace);
       </nav>
     </div>
 
+    <p
+      v-if="activeTab === 'drafts'"
+      class="border-b border-n-weak px-4 py-3 text-sm text-n-slate-11"
+    >
+      Drafts are not used by AI until approved. Customer questions are handled
+      in Inbox.
+      <RouterLink
+        :to="{
+          name: 'home',
+          params: { accountId: route.params.accountId },
+          query: { queue: 'review' },
+        }"
+        class="underline"
+      >
+        Needs review →
+      </RouterLink>
+    </p>
     <div
       v-if="saveError"
       class="border-b border-n-ruby-5 bg-n-ruby-3 px-4 py-3 text-sm text-n-ruby-11"
@@ -865,7 +886,7 @@ onMounted(loadWorkspace);
     </div>
 
     <div
-      v-else-if="activeTab === 'approved_answers'"
+      v-else-if="['approved_answers', 'drafts'].includes(activeTab)"
       class="grid min-h-[calc(100vh-15rem)] lg:grid-cols-[minmax(360px,1fr)_380px]"
     >
       <section class="border-r border-n-weak p-4">
@@ -1020,8 +1041,9 @@ onMounted(loadWorkspace);
       </aside>
     </div>
 
+    <!-- Retained legacy customer review editor; R12 owns resolution in Inbox. -->
     <div
-      v-else
+      v-else-if="activeTab === 'legacy_customer_reviews'"
       class="grid min-h-[calc(100vh-15rem)] lg:grid-cols-[minmax(420px,1fr)_420px]"
     >
       <section class="border-r border-n-weak p-4">

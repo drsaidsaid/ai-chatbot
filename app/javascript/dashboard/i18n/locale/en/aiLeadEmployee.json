@@ -15,14 +15,16 @@
       "PRIMARY": "AI Lead Employee primary navigation",
       "MOBILE_PRIMARY": "AI Lead Employee mobile navigation",
       "MORE": "More",
-      "NOTIFICATIONS": "Notifications"
+      "NOTIFICATIONS": "Notifications",
+      "PROFILE": "Your profile"
     },
     "INBOX_QUEUE": {
       "LABEL": "Inbox quick queues",
-      "HOT": "Hot",
-      "REVIEW": "Review",
+      "HOT": "Hot leads",
+      "REVIEW": "Needs review",
       "BOOKED": "Booked",
-      "ARIA": "{label} queue, {count} items"
+      "ARIA": "{label} queue, {count} items",
+      "ALL": "All"
     },
     "INBOX_COCKPIT": {
       "URGENCY": "Urgent",
@@ -79,7 +81,19 @@
         "SUMMARY": "Summary",
         "EVIDENCE": "Evidence",
         "ACTIVITY": "Activity"
-      }
+      },
+      "FOLLOW_UP_FILTER": "Follow-up timing",
+      "ALL_FOLLOW_UPS": "All follow-ups",
+      "FOLLOW_UP_DUE": "Follow-up due",
+      "LEAD_DETAILS": "Lead details",
+      "PREVIOUS": "Previous",
+      "NEXT": "Next",
+      "LOAD_ERROR": "Unable to load conversations.",
+      "RETRY": "Try again",
+      "CONVERSATION_ERROR": "This conversation is unavailable or you do not have access.",
+      "WRITING_TOOLS": "Writing tools",
+      "CONTENT_TEMPLATES": "Content templates",
+      "RESIZE_EDITOR": "Resize reply editor"
     },
     "SETTINGS": {
       "TITLE": "Settings",
@@ -776,6 +790,29 @@
         "SOURCE": "Source",
         "BOOKING": "Booking"
       }
+    },
+    "SETTINGS_NAV": {
+      "LABEL": "Settings section",
+      "RELATED": "Related settings",
+      "business": "Business & offers",
+      "team": "Team & alerts",
+      "booking": "Booking hours",
+      "followups": "Follow-ups",
+      "whatsapp": "WhatsApp connection",
+      "ai": "AI & testing",
+      "AI_DESCRIPTION": "Configure the AI provider, test answers safely, and review launch readiness. Test runs do not send WhatsApp messages.",
+      "ai_lead_employee_settings_offers_qualification": "Offers & qualification",
+      "general_settings_index": "Business profile",
+      "agent_list": "Team members",
+      "settings_teams_list": "Teams",
+      "ai_lead_employee_settings_alerts": "Alert routes",
+      "ai_lead_employee_settings_ai_testing": "AI & testing",
+      "owned_ai_provider_settings": "AI provider",
+      "owned_test_center_index": "Test Center"
+    },
+    "UNAVAILABLE": {
+      "TITLE": "This area is not available in V1",
+      "DESCRIPTION": "Use the main menu to return to your supported work areas."
     }
   }
 }

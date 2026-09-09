@@ -1,4 +1,4 @@
-import { validateAuthenticateRoutePermission } from './index';
+import { router, validateAuthenticateRoutePermission } from './index';
 import store from '../store'; // This import will be mocked
 import { vi } from 'vitest';
 
@@ -40,6 +40,7 @@ describe('#validateAuthenticateRoutePermission', () => {
       validateAuthenticateRoutePermission(to, next);
 
       expect(mockAssign).toHaveBeenCalledWith('/app/login');
+      expect(next).toHaveBeenCalledWith(false);
     });
   });
 
@@ -105,4 +106,65 @@ describe('#validateAuthenticateRoutePermission', () => {
       });
     });
   });
+});
+
+describe('V1 direct route availability', () => {
+  beforeEach(() => {
+    store.getters.isLoggedIn = true;
+    store.getters.getCurrentUser = {
+      account_id: 1,
+      accounts: [{ id: 1, role: 'administrator', status: 'active' }],
+    };
+  });
+  it('gates a retained generic Campaigns route for an administrator', async () => {
+    const next = vi.fn();
+    await validateAuthenticateRoutePermission(
+      {
+        name: 'campaigns_index',
+        path: '/app/accounts/1/campaigns/ongoing',
+        params: { accountId: 1 },
+        meta: { permissions: ['administrator'] },
+      },
+      next
+    );
+    expect(next).toHaveBeenCalledWith({
+      name: 'v1_unavailable',
+      params: { accountId: 1 },
+    });
+  });
+  it('gates a direct unsupported channel setup link', async () => {
+    const next = vi.fn();
+    await validateAuthenticateRoutePermission(
+      {
+        name: 'settings_inboxes_page_channel',
+        path: '/app/accounts/1/settings/inboxes/new/email',
+        params: { accountId: 1, sub_page: 'email' },
+        meta: { permissions: ['administrator'] },
+      },
+      next
+    );
+    expect(next).toHaveBeenCalledWith({
+      name: 'v1_unavailable',
+      params: { accountId: 1 },
+    });
+  });
+});
+
+it('keeps the full Test Center under administrator Settings and redirects old links with their context', async () => {
+  await router.push('/app/accounts/1/test-center?scenario=sensitive#report');
+  expect(router.currentRoute.value.path).toBe(
+    '/app/accounts/1/settings/ai-lead-employee/ai-testing/test-center'
+  );
+  expect(router.currentRoute.value.query).toEqual({ scenario: 'sensitive' });
+  expect(router.currentRoute.value.hash).toBe('#report');
+  expect(router.currentRoute.value.meta.permissions).toEqual(['administrator']);
+  store.getters.getCurrentUser = {
+    account_id: 1,
+    accounts: [
+      { id: 1, role: 'agent', permissions: ['agent'], status: 'active' },
+    ],
+  };
+  const next = vi.fn();
+  await validateAuthenticateRoutePermission(router.currentRoute.value, next);
+  expect(next).toHaveBeenCalledWith('/app/accounts/1/dashboard');
 });

@@ -125,6 +125,10 @@ A routed notification about a hot lead, booking, urgent review, or knowledge dec
 Hot Lead and Review Request WhatsApp alerts reuse the existing Community Edition WhatsApp sender by creating account-owned alert Contact, ContactInbox, Conversation, and outgoing Message records, then queueing `SendReplyJob` so delivery flows through `Whatsapp::SendOnWhatsappService`. When an approved WhatsApp template is configured, the alert Message carries CE `template_params` populated with the Handoff context so delivery can use the template path outside an active WhatsApp session. These records are operator-notification plumbing, not Lead-facing Conversations, and must remain tenant-scoped, Control-State-gated, and idempotent by Handoff delivery record.
 _Avoid_: Message, notification event
 
+**Inbox View**:
+A permitted Conversation queue: All conversations, Needs review or Hot leads. Search and optional filters narrow Conversation records; a missing Qualification never hides an inquiry.
+_Avoid_: Lead-only inbox, dashboard qualification list
+
 **Inbox Conversation Status**:
 The owned inbox's operational state: pending, open, snoozed, or resolved. It must never be used as Lead Quality.
 _Avoid_: Status

@@ -7,7 +7,6 @@ import SettingsWrapper from '../SettingsWrapper.vue';
 import InboxHome from './Index.vue';
 import Settings from './Settings.vue';
 import InboxChannel from './InboxChannels.vue';
-import ChannelList from './ChannelList.vue';
 import AddAgents from './AddAgents.vue';
 import FinishSetup from './FinishSetup.vue';
 
@@ -55,7 +54,11 @@ export default {
             {
               path: '',
               name: 'settings_inbox_new',
-              component: ChannelList,
+              redirect: to => ({
+                name: 'settings_inboxes_page_channel',
+                params: { ...to.params, sub_page: 'whatsapp' },
+                query: to.query,
+              }),
               meta: {
                 featureFlag: FEATURE_FLAGS.INBOX_MANAGEMENT,
                 permissions: ['administrator'],

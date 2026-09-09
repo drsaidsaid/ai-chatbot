@@ -11,7 +11,6 @@ import {
   buildAILeadEmployeeMobileNavItems,
   buildAILeadEmployeeMoreNavItems,
 } from './aiLeadEmployeeNavigation';
-import ConversationCockpitQueueChips from './ConversationCockpitQueueChips.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -26,17 +25,6 @@ const mobileItems = computed(() =>
 );
 const moreItems = computed(() =>
   buildAILeadEmployeeMoreNavItems({ t, accountScopedRoute })
-);
-
-const isInboxRoute = computed(() =>
-  [
-    'home',
-    'inbox_conversation',
-    'inbox_dashboard',
-    'conversation_through_inbox',
-    'inbox_view',
-    'inbox_view_conversation',
-  ].includes(route.name)
 );
 
 const resolveMeta = item => router.resolve(item.to)?.meta || {};
@@ -82,31 +70,26 @@ watch(
           {{ t('AI_LEAD_EMPLOYEE.PRODUCT_NAME') }}
         </RouterLink>
         <RouterLink
-          :to="{ name: 'search' }"
-          class="grid size-10 place-items-center rounded-lg text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
-          :aria-label="t('COMBOBOX.SEARCH_PLACEHOLDER')"
-        >
-          <Icon icon="i-lucide-search" class="size-5" />
-        </RouterLink>
-        <RouterLink
           :to="accountScopedRoute('inbox_view')"
           class="relative grid size-10 place-items-center rounded-lg text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
           :aria-label="t('AI_LEAD_EMPLOYEE.NAV.NOTIFICATIONS')"
         >
           <Icon icon="i-lucide-bell" class="size-5" />
-          <span
-            class="absolute end-2 top-2 size-2.5 rounded-full bg-n-ruby-9 ring-2 ring-n-background"
+        </RouterLink>
+        <RouterLink
+          :to="accountScopedRoute('profile_settings_index')"
+          :aria-label="t('AI_LEAD_EMPLOYEE.NAV.PROFILE')"
+          class="rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+        >
+          <Avatar
+            :size="40"
+            :name="currentUser.available_name"
+            :src="currentUser.avatar_url"
+            :status="currentUserAvailability"
+            class="shrink-0"
           />
         </RouterLink>
-        <Avatar
-          :size="40"
-          :name="currentUser.available_name"
-          :src="currentUser.avatar_url"
-          :status="currentUserAvailability"
-          class="shrink-0"
-        />
       </div>
-      <ConversationCockpitQueueChips v-if="isInboxRoute" mobile />
     </header>
 
     <div
@@ -135,6 +118,12 @@ watch(
           <Icon icon="i-lucide-chevron-right" class="size-4 text-n-slate-10" />
         </RouterLink>
       </Policy>
+      <RouterLink
+        :to="accountScopedRoute('profile_settings_index')"
+        class="flex min-h-12 items-center rounded-lg px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+      >
+        {{ t('AI_LEAD_EMPLOYEE.NAV.PROFILE') }}
+      </RouterLink>
     </section>
 
     <nav

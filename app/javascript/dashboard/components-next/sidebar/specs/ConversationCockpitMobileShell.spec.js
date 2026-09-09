@@ -65,6 +65,11 @@ const QueueChipsStub = {
 };
 
 const routes = [
+  {
+    path: '/accounts/:accountId/profile/settings',
+    name: 'profile_settings_index',
+    component: {},
+  },
   { path: '/accounts/:accountId/dashboard', name: 'home', component: {} },
   {
     path: '/accounts/:accountId/leads',
@@ -132,13 +137,13 @@ describe('ConversationCockpitMobileShell', () => {
     expect(wrapper.text()).toContain('More');
   });
 
-  it('opens Knowledge, Test Center, and Settings from More', async () => {
+  it('opens Knowledge and Settings from More without a primary Test Center', async () => {
     const wrapper = await mountShell('home');
 
     await wrapper.get('button[aria-label="More"]').trigger('click');
 
     expect(wrapper.text()).toContain('Knowledge');
-    expect(wrapper.text()).toContain('Test Center');
+    expect(wrapper.text()).not.toContain('Test Center');
     expect(wrapper.text()).toContain('Settings');
   });
 });

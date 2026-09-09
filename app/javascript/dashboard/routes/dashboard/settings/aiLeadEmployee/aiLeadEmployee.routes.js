@@ -1,4 +1,5 @@
 import { frontendURL } from 'dashboard/helper/URLHelper';
+import AiTestingPage from './AiTestingPage.vue';
 import AiLeadEmployeeSettingsShell from './AiLeadEmployeeSettingsShell.vue';
 
 const ADMIN_PERMISSIONS = ['administrator'];
@@ -36,11 +37,18 @@ export default {
       name: 'ai_lead_employee_settings_booking_business_hours',
       section: 'booking_business_hours',
     }),
-    aiLeadEmployeeSettingsRoute({
-      path: 'team-assignment',
+    {
+      path: frontendURL(
+        'accounts/:accountId/settings/ai-lead-employee/team-assignment'
+      ),
       name: 'ai_lead_employee_settings_team_assignment',
-      section: 'team_assignment',
-    }),
+      redirect: to => ({
+        name: 'agent_list',
+        params: to.params,
+        query: to.query,
+      }),
+      meta: { permissions: ADMIN_PERMISSIONS },
+    },
     aiLeadEmployeeSettingsRoute({
       path: 'follow-ups',
       name: 'ai_lead_employee_settings_follow_ups',
@@ -51,10 +59,25 @@ export default {
       name: 'ai_lead_employee_settings_alerts',
       section: 'alerts',
     }),
-    aiLeadEmployeeSettingsRoute({
-      path: 'whatsapp-connection',
+    {
+      path: frontendURL(
+        'accounts/:accountId/settings/ai-lead-employee/whatsapp-connection'
+      ),
       name: 'ai_lead_employee_settings_whatsapp_connection',
-      section: 'whatsapp_connection',
-    }),
+      redirect: to => ({
+        name: 'settings_inbox_list',
+        params: to.params,
+        query: to.query,
+      }),
+      meta: { permissions: ADMIN_PERMISSIONS },
+    },
+    {
+      path: frontendURL(
+        'accounts/:accountId/settings/ai-lead-employee/ai-testing'
+      ),
+      name: 'ai_lead_employee_settings_ai_testing',
+      component: AiTestingPage,
+      meta: { permissions: ADMIN_PERMISSIONS },
+    },
   ],
 };

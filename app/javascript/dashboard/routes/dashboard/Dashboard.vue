@@ -1,6 +1,7 @@
 <script>
 import { defineAsyncComponent, ref, computed } from 'vue';
 
+import OwnedSettingsLayout from './settings/aiLeadEmployee/OwnedSettingsLayout.vue';
 import NextSidebar from 'next/sidebar/Sidebar.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
@@ -30,6 +31,7 @@ import { useCallsStore } from 'dashboard/stores/calls';
 export default {
   components: {
     NextSidebar,
+    OwnedSettingsLayout,
     CommandBar,
     WootKeyShortcutModal,
     AddAccountModal,
@@ -140,7 +142,7 @@ export default {
     />
 
     <main
-      class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-n-surface-1 pt-32 pb-20 lg:pt-0 lg:pb-0"
+      class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-n-surface-1 pt-16 pb-20 lg:pt-0 lg:pb-0"
     >
       <UpgradePage
         v-show="showUpgradePage"
@@ -148,7 +150,10 @@ export default {
         :bypass-upgrade-page="bypassUpgradePage"
       />
       <template v-if="!showUpgradePage">
-        <router-view />
+        <OwnedSettingsLayout v-if="$route.path.includes('/settings/')">
+          <router-view />
+        </OwnedSettingsLayout>
+        <router-view v-else />
         <CopilotLauncher />
         <CopilotContainer />
         <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />

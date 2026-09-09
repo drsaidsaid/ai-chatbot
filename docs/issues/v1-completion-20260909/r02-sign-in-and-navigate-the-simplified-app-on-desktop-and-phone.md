@@ -1,6 +1,6 @@
 # R02 — Sign in and navigate the simplified app on desktop and phone
 
-Status: Approved for implementation; blocked by the issues below.
+Status: Locally complete; awaiting coordinator review and integration. Based on R01-integrated baseline `fb7d54ac3c527940a63b171c45e4e2e7ca898d26`. GitHub #19 remains open.
 
 ## Parent
 
@@ -20,13 +20,15 @@ Work within the owned Community Edition Rails/Vue product. Deliver the real narr
 
 ## Acceptance criteria
 
-- [ ] Primary navigation contains Inbox, Leads, Bookings, Knowledge and Settings; full Test Center is reachable under Settings → AI & testing for authorized administrators.
-- [ ] Use one AI Lead Employee identity from login through the app; remove hard-coded Online Profits sample copy from standalone defaults while retaining license attribution.
-- [ ] Inbox has clearly named views for all conversations, Needs review and Hot leads; secondary filters retain follow-up and booked-conversation use cases.
-- [ ] At 390px, the normal in-app width and desktop widths, opening a conversation and Back to list returns to the same selectable queue with filters preserved.
-- [ ] Every supported Settings section remains reachable on phones; browser back, direct links and refresh retain valid navigation state.
-- [ ] Gate unsupported V1 channel setup and public routes according to existing permissions; retain underlying CE source.
-- [ ] Demonstrate this complete path in the in-app browser, with readable lead identity, visible focus and correctly named controls; document the visual reference used.
+- [x] Primary navigation contains Inbox, Leads, Bookings, Knowledge and Settings; full Test Center is reachable under Settings → AI & testing for authorized administrators.
+- [x] Use one AI Lead Employee identity from login through the app; remove hard-coded Online Profits sample copy from standalone defaults while retaining license attribution.
+- [x] Inbox has clearly named views for all conversations, Needs review and Hot leads; secondary filters retain follow-up and booked-conversation use cases.
+- [x] At 390px, the normal in-app width and desktop widths, opening a conversation and Back to list returns to the same selectable queue with filters preserved.
+- [x] Every supported Settings section remains reachable on phones; browser back, direct links and refresh retain valid navigation state.
+- [x] Gate unsupported V1 channel setup and public routes according to existing permissions; retain underlying CE source.
+- [x] Demonstrate this complete path in the in-app browser, with readable lead identity, visible focus and correctly named controls; document the visual reference used.
+
+Local acceptance evidence: [R02 release record](../../releases/2026-09-09-r02/README.md), including screenshots, checks, source hashes and successor handoff. Production delivery and the stronger R06 member scope are not implied by these local checks.
 
 ## Blocked by
 

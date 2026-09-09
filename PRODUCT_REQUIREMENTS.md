@@ -430,6 +430,8 @@ The system follows up when a lead stops responding before qualification is compl
 
 ### Inbox
 
+All conversations includes new inquiries without Qualification and multiple Conversations for one Lead. Needs review and Hot leads are views, with booked and due follow-up filters. List/detail, browser back and refresh preserve the selected queue and filters at phone and desktop widths.
+
 - The owned inbox displays all permitted conversations in a familiar messaging layout.
 - Filters for quality, follow-up state, assignee, source, unanswered questions, and booking status.
 - Search by name, phone number, business, or message text.

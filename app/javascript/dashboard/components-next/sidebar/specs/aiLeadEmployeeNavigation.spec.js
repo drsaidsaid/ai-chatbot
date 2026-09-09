@@ -19,7 +19,6 @@ describe('AI Lead Employee navigation', () => {
     'Leads',
     'Bookings',
     'Knowledge',
-    'Test Center',
     'Settings',
   ];
 
@@ -38,7 +37,6 @@ describe('AI Lead Employee navigation', () => {
       '/accounts/1/owned_leads_index',
       '/accounts/1/owned_bookings_index',
       '/accounts/1/owned_knowledge_index',
-      '/accounts/1/owned_test_center_index',
       '/accounts/1/ai_lead_employee_settings_offers_qualification',
     ]);
   });
@@ -68,21 +66,13 @@ describe('AI Lead Employee navigation', () => {
       'Bookings',
       'More',
     ]);
-    expect(AI_LEAD_EMPLOYEE_MORE_NAVIGATION).toEqual([
-      'Knowledge',
-      'Test Center',
-      'Settings',
-    ]);
+    expect(AI_LEAD_EMPLOYEE_MORE_NAVIGATION).toEqual(['Knowledge', 'Settings']);
     expect(mobileItems.map(item => item.name)).toEqual([
       'Inbox',
       'Leads',
       'Bookings',
     ]);
-    expect(moreItems.map(item => item.name)).toEqual([
-      'Knowledge',
-      'Test Center',
-      'Settings',
-    ]);
+    expect(moreItems.map(item => item.name)).toEqual(['Knowledge', 'Settings']);
   });
 
   it('recognizes cockpit queue keys and matches owned conversation attributes', () => {

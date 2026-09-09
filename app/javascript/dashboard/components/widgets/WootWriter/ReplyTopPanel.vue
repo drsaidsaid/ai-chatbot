@@ -171,6 +171,7 @@ export default {
       <div class="relative">
         <NextButton
           ref="copilotToggleRef"
+          :aria-label="$t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.WRITING_TOOLS')"
           ghost
           :disabled="disabled || isEditorDisabled"
           :class="{
@@ -199,6 +200,7 @@ export default {
         class="text-n-slate-11"
         sm
         icon="i-lucide-maximize-2"
+        :aria-label="$t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESIZE_EDITOR')"
         @click="$emit('toggleEditorSize')"
       />
     </div>

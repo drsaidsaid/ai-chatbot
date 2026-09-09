@@ -1,0 +1,91 @@
+- complementary:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - navigation "AI Lead Employee primary navigation":
+    - list:
+      - link "Inbox":
+        - /url: /app/accounts/1/dashboard
+        - generic: Inbox
+      - link "Leads":
+        - /url: /app/accounts/1/leads
+        - generic: Leads
+      - link "Bookings":
+        - /url: /app/accounts/1/bookings
+        - generic: Bookings
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - generic: Knowledge
+      - link "Settings":
+        - /url: /app/accounts/1/settings/ai-lead-employee/offers-qualification
+        - generic: Settings
+  - button "Release Operator release-operator@example.test":
+    - generic: Release Operator
+    - generic: release-operator@example.test
+- main:
+  - complementary "Inbox conversations":
+    - heading "Inbox" [level=1]
+    - button "Filters"
+    - generic "Inbox quick queues":
+      - link "All 2":
+        - /url: /app/accounts/1/dashboard?queue=all&q=Grace
+        - generic: All
+        - generic: "2"
+      - link "Needs review 0":
+        - /url: /app/accounts/1/dashboard?queue=review&q=Grace
+        - generic: Needs review
+        - generic: "0"
+      - link "Hot leads 0":
+        - /url: /app/accounts/1/dashboard?queue=hot&q=Grace
+        - generic: Hot leads
+        - generic: "0"
+    - generic: Search name, phone, or message
+    - searchbox "Search name, phone, or message"
+    - button "Clear"
+    - 'button "Open Grace Mrema conversation #2"':
+      - generic: GM
+      - generic: Grace Mrema
+      - generic: 22:57
+      - paragraph: "My second inquiry: is a consultation available?"
+      - generic: Unknown
+    - 'button "Open Grace Mrema conversation #1"':
+      - generic: GM
+      - generic: Grace Mrema
+      - generic: 22:51
+      - paragraph: "Synthetic release check: I would like to learn about your service."
+      - generic: Unknown
+    - generic: 2 conversations
+  - main:
+    - button "Back to list"
+    - heading "Grace Mrema" [level=1]
+    - generic: "+255700000101"
+    - generic: AI Paused
+    - generic: "Assignee: Unassigned"
+    - button "Lead details": Lead details
+    - list:
+      - paragraph: "My second inquiry: is a consultation available?"
+      - time: Sep 9, 10:57 PM
+    - article:
+      - heading "AI proposed next step" [level=2]
+      - generic: Resume AI
+      - paragraph: AI is paused for this conversation.
+      - generic "Technical details"
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - text: Knowledge
+      - button "Assign": Assign
+      - button "Resume AI": Resume AI
+    - button "Reply Private Note":
+      - generic: Reply
+      - generic: Private Note
+    - button "Writing tools"
+    - button "Resize reply editor"
+    - paragraph: Shift + enter for new line. Start with '/' to select a Canned Response.
+    - button "Show emoji selector"
+    - generic "Attach files":
+      - button "Attach files"
+      - button
+    - button "Record audio"
+    - button "Enable signature"
+    - button "Send (⌘ + ↵)" [disabled]:
+      - generic: Send (⌘ + ↵)

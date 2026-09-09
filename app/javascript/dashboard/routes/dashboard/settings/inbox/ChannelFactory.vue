@@ -1,5 +1,6 @@
 <script>
 import { defineComponent, h } from 'vue';
+import CloudWhatsapp from './channels/CloudWhatsapp.vue';
 import Facebook from './channels/Facebook.vue';
 import Website from './channels/Website.vue';
 import Twitter from './channels/Twitter.vue';
@@ -39,7 +40,10 @@ export default defineComponent({
     },
   },
   render() {
-    const ChannelComponent = channelViewList[this.channelName];
+    const ChannelComponent =
+      this.channelName === 'whatsapp' && channelViewList[this.channelName]
+        ? CloudWhatsapp
+        : null;
     return ChannelComponent ? h(ChannelComponent) : null;
   },
 });

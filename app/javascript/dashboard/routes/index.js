@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
+import { isSupportedV1Route } from '../helper/v1Routes';
 import { frontendURL } from '../helper/URLHelper';
 import dashboard from './dashboard/dashboard.routes';
 import store from 'dashboard/store';
@@ -19,6 +20,7 @@ export const validateAuthenticateRoutePermission = async (to, next) => {
   const { isLoggedIn, getCurrentUser: user } = store.getters;
 
   if (!isLoggedIn) {
+    next(false);
     window.location.assign('/app/login');
     return '';
   }
@@ -57,6 +59,13 @@ export const validateAuthenticateRoutePermission = async (to, next) => {
   }
   if (!needsOnboarding && isOnOnboardingView(to)) {
     return next(frontendURL(`accounts/${routeAccountId}/dashboard`));
+  }
+
+  if (userAccount && !isSupportedV1Route(to)) {
+    return next({
+      name: 'v1_unavailable',
+      params: { accountId: routeAccountId },
+    });
   }
 
   const nextRoute = validateLoggedInRoutes(to, store.getters.getCurrentUser);

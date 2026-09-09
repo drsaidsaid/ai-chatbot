@@ -1,0 +1,44 @@
+- main:
+  - complementary "Inbox conversations":
+    - heading "Inbox" [level=1]
+    - button "Filters"
+    - generic "Inbox quick queues":
+      - link "All —":
+        - /url: /app/accounts/1/dashboard?queue=all
+        - generic: All
+        - generic: —
+      - link "Needs review —":
+        - /url: /app/accounts/1/dashboard?queue=review
+        - generic: Needs review
+        - generic: —
+      - link "Hot leads —":
+        - /url: /app/accounts/1/dashboard?queue=hot
+        - generic: Hot leads
+        - generic: —
+    - generic: Search name, phone, or message
+    - searchbox "Search name, phone, or message"
+    - generic: Loading conversations
+    - generic: 0 conversations
+- banner:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+  - link "Notifications":
+    - /url: /app/accounts/1/inbox-view
+  - link "Your profile":
+    - /url: /app/accounts/1/profile/settings
+- navigation "AI Lead Employee mobile navigation":
+  - list:
+    - link "Inbox":
+      - /url: /app/accounts/1/dashboard
+      - generic: Inbox
+    - link "Leads":
+      - /url: /app/accounts/1/leads
+      - generic: Leads
+    - link "Bookings":
+      - /url: /app/accounts/1/bookings
+      - generic: Bookings
+    - button "More":
+      - generic: More

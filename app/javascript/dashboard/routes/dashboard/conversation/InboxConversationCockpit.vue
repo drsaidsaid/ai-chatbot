@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
@@ -12,11 +12,7 @@ import Icon from 'next/icon/Icon.vue';
 import MessagesView from 'dashboard/components/widgets/conversation/MessagesView.vue';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import BookingsAPI from 'dashboard/api/bookings';
-import OperationalDashboardAPI from 'dashboard/api/operationalDashboard';
-import {
-  conversationCockpitQueueFilters,
-  isConversationCockpitQueue,
-} from 'dashboard/components-next/sidebar/aiLeadEmployeeNavigation';
+import InboxConversationsAPI from 'dashboard/api/inboxConversations';
 
 const props = defineProps({
   inboxId: {
@@ -36,7 +32,12 @@ const store = useStore();
 const { accountScopedRoute } = useAccount();
 
 const rows = ref([]);
-const performance = ref({});
+const counts = ref({});
+const pagination = ref({ total: 0, page: 1, pages: 1 });
+const listError = ref(false);
+const listElement = ref(null);
+const isFiltersOpen = ref(false);
+const isDesktopBriefOpen = ref(false);
 const filterOptions = ref({
   qualities: [],
   follow_up_states: [],
@@ -44,17 +45,34 @@ const filterOptions = ref({
   sources: [],
   booking_statuses: [],
 });
-const filters = ref({
-  quality: '',
-  follow_up_state: '',
-  assignee_id: '',
-  source_id: '',
-  booking_status: '',
-  unanswered: false,
-});
-const searchQuery = ref('');
+const updateQuery = changes =>
+  router.replace({
+    name: route.name,
+    params: route.params,
+    query: { ...route.query, page: undefined, ...changes },
+  });
+const queryField = key =>
+  computed({
+    get: () => (typeof route.query[key] === 'string' ? route.query[key] : ''),
+    set: value => updateQuery({ [key]: value || undefined }),
+  });
+const filters = reactive(
+  Object.fromEntries(
+    [
+      'quality',
+      'follow_up_state',
+      'assignee_id',
+      'source_id',
+      'booking_status',
+      'follow_up_status',
+    ].map(key => [key, queryField(key)])
+  )
+);
+const searchQuery = queryField('q');
 const isLoadingRows = ref(false);
 const isLoadingConversation = ref(false);
+const conversationError = ref(false);
+let conversationRequest = 0;
 const isUpdatingAction = ref(false);
 const activeDetailTab = ref('summary');
 const isMobileBriefOpen = ref(false);
@@ -63,31 +81,14 @@ const currentChat = useMapGetter('getSelectedChat');
 const currentUser = useMapGetter('getCurrentUser');
 
 const activeQueue = computed(() =>
-  isConversationCockpitQueue(route.query.queue) ? route.query.queue : 'hot'
+  ['all', 'review', 'hot'].includes(route.query.queue)
+    ? route.query.queue
+    : 'all'
 );
-
 const queueItems = computed(() => [
-  {
-    key: 'hot',
-    label: t('AI_LEAD_EMPLOYEE.INBOX_QUEUE.HOT'),
-    icon: 'i-lucide-flame',
-    count: performance.value.highly_qualified_leads || 0,
-    className: 'border-n-ruby-6 bg-n-ruby-3 text-n-ruby-11',
-  },
-  {
-    key: 'review',
-    label: t('AI_LEAD_EMPLOYEE.INBOX_QUEUE.REVIEW'),
-    icon: 'i-lucide-user-round',
-    count: performance.value.unanswered_questions || 0,
-    className: 'border-n-amber-6 bg-n-amber-3 text-n-amber-11',
-  },
-  {
-    key: 'booked',
-    label: t('AI_LEAD_EMPLOYEE.INBOX_QUEUE.BOOKED'),
-    icon: 'i-lucide-calendar-days',
-    count: performance.value.booked_calls || 0,
-    className: 'border-n-teal-6 bg-n-teal-3 text-n-teal-11',
-  },
+  { key: 'all', label: t('AI_LEAD_EMPLOYEE.INBOX_QUEUE.ALL') },
+  { key: 'review', label: t('AI_LEAD_EMPLOYEE.INBOX_QUEUE.REVIEW') },
+  { key: 'hot', label: t('AI_LEAD_EMPLOYEE.INBOX_QUEUE.HOT') },
 ]);
 
 const detailTabs = computed(() => [
@@ -112,7 +113,7 @@ const selectedRow = computed(() => {
   return (
     rows.value.find(
       row => Number(row.conversation_display_id) === selectedDisplayId.value
-    ) || rows.value[0]
+    ) || null
   );
 });
 
@@ -129,6 +130,7 @@ function humanize(value) {
         .filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ')
+        .replace(/\bAi\b/g, 'AI')
     : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.EMPTY_VALUE');
 }
 
@@ -176,26 +178,35 @@ const strongestEvidence = computed(
     []
 );
 
-const requestFilters = computed(() => {
-  const filledFilters = Object.fromEntries(
-    Object.entries(filters.value).filter(
-      ([, value]) => value !== '' && value !== false
-    )
-  );
-  if (props.inboxId) {
-    filledFilters.source_id = props.inboxId;
-  }
-  return {
-    ...filledFilters,
-    ...conversationCockpitQueueFilters[activeQueue.value],
-  };
-});
-
+const requestFilters = computed(() => ({
+  ...Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => value !== '')
+  ),
+  ...(props.inboxId ? { source_id: props.inboxId } : {}),
+  queue: activeQueue.value,
+  ...(searchQuery.value ? { q: searchQuery.value } : {}),
+  page: route.query.page || '1',
+}));
+const listRoute = computed(() => ({
+  name: props.inboxId ? 'inbox_dashboard' : 'home',
+  params: {
+    accountId: route.params.accountId,
+    ...(props.inboxId ? { inbox_id: props.inboxId } : {}),
+  },
+  query: route.query,
+}));
 const queueRoute = queue => ({
-  name: route.name || 'home',
-  params: route.params,
-  query: { ...route.query, queue },
+  ...listRoute.value,
+  query: { ...route.query, queue, page: undefined },
 });
+const backToList = async () => {
+  const previousId = selectedDisplayId.value;
+  await router.push(listRoute.value);
+  await nextTick();
+  listElement.value
+    ?.querySelector(`[data-conversation-id="${previousId}"]`)
+    ?.focus();
+};
 
 const rowLabel = row =>
   t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.OPEN_CONVERSATION', {
@@ -231,14 +242,6 @@ const qualityToneClass = quality => {
   return 'bg-n-slate-3 text-n-slate-11';
 };
 
-const controlToneClass = controlState => {
-  if (controlState === 'human_active') return 'text-n-slate-12';
-  if (controlState === 'ai_active') return 'text-n-teal-11';
-  if (controlState === 'ai_paused') return 'text-n-amber-11';
-  if (controlState === 'handoff_requested') return 'text-n-blue-11';
-  return 'text-n-slate-11';
-};
-
 const activityIcon = kind => {
   if (kind === 'booking') return 'i-lucide-calendar-days';
   if (kind === 'review') return 'i-lucide-message-square-warning';
@@ -268,8 +271,6 @@ const contactInitials = row =>
 const leadSubtitle = computed(
   () =>
     selectedRow.value?.contact_details?.additional_attributes?.company_name ||
-    selectedRow.value?.location ||
-    selectedRow.value?.phone_number ||
     ''
 );
 
@@ -277,21 +278,9 @@ const phoneNumber = computed(
   () => selectedContact.value?.phone_number || selectedRow.value?.phone_number
 );
 
-const location = computed(
-  () =>
-    selectedRow.value?.location ||
-    selectedContact.value?.additional_attributes?.location ||
-    [
-      selectedContact.value?.additional_attributes?.city,
-      selectedContact.value?.additional_attributes?.country,
-    ]
-      .filter(Boolean)
-      .join(', ')
-);
-
 const queueSummary = computed(() =>
   t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.QUEUE_COUNT', {
-    count: rows.value.length,
+    count: pagination.value.total,
   })
 );
 
@@ -308,65 +297,52 @@ const canResumeAI = computed(
 );
 
 const ensureQueueQuery = () => {
-  if (isConversationCockpitQueue(route.query.queue)) return;
-  router.replace({
-    name: route.name || 'home',
-    params: route.params,
-    query: { ...route.query, queue: activeQueue.value },
+  if (['all', 'review', 'hot'].includes(route.query.queue)) return;
+  updateQuery({
+    queue: 'all',
+    ...(route.query.queue === 'booked' ? { booking_status: 'booked' } : {}),
   });
 };
-
+let listRequest = 0;
 const loadDashboard = async () => {
+  listRequest += 1;
+  const request = listRequest;
   isLoadingRows.value = true;
+  listError.value = false;
   try {
-    const { data } = await OperationalDashboardAPI.get(requestFilters.value);
-    let nextRows = data.leads || [];
-    performance.value = data.performance || {};
+    const { data } = await InboxConversationsAPI.get(requestFilters.value);
+    if (request !== listRequest) return;
+    rows.value = data.conversations || [];
+    counts.value = data.counts || {};
+    pagination.value = {
+      total: data.total ?? rows.value.length,
+      page: data.page || 1,
+      pages: data.pages || 1,
+    };
     filterOptions.value = data.filter_options || filterOptions.value;
-
-    if (searchQuery.value.trim()) {
-      const searchResponse = await ConversationApi.search({
-        q: searchQuery.value.trim(),
-      });
-      const matchingIds = new Set(
-        (searchResponse.data?.payload || []).map(conversation =>
-          Number(conversation.id)
-        )
-      );
-      nextRows = nextRows.filter(row =>
-        matchingIds.has(Number(row.conversation_display_id))
-      );
-    }
-
-    rows.value = nextRows;
+  } catch {
+    if (request === listRequest) listError.value = true;
   } finally {
-    isLoadingRows.value = false;
+    if (request === listRequest) isLoadingRows.value = false;
   }
 };
-
 const openConversation = row => {
   if (!row?.conversation_display_id) return;
   router.push({
-    name: 'inbox_conversation',
+    name: props.inboxId ? 'conversation_through_inbox' : 'inbox_conversation',
     params: {
-      accountId: route.params.accountId,
+      ...listRoute.value.params,
       conversation_id: row.conversation_display_id,
     },
-    query: { ...route.query, queue: activeQueue.value },
+    query: route.query,
   });
 };
 
-const syncSelectedConversation = async () => {
-  if (!rows.value.length) return;
-  const selectedExists = rows.value.some(
-    row => Number(row.conversation_display_id) === selectedDisplayId.value
-  );
-  if (selectedDisplayId.value && selectedExists) return;
-  await nextTick();
-  openConversation(rows.value[0]);
-};
-
 const loadConversation = async displayId => {
+  conversationRequest += 1;
+  const request = conversationRequest;
+  conversationError.value = false;
+  store.dispatch('clearSelectedState');
   if (!displayId) {
     store.dispatch('clearSelectedState');
     return;
@@ -375,6 +351,7 @@ const loadConversation = async displayId => {
   isLoadingConversation.value = true;
   try {
     const { data } = await ConversationApi.show(displayId);
+    if (request !== conversationRequest) return;
     const selectedData = {
       ...data,
       dataFetched: data.messages?.length ? undefined : true,
@@ -389,8 +366,10 @@ const loadConversation = async displayId => {
     });
     activeDetailTab.value = 'summary';
     isMobileBriefOpen.value = false;
+  } catch {
+    if (request === conversationRequest) conversationError.value = true;
   } finally {
-    isLoadingConversation.value = false;
+    if (request === conversationRequest) isLoadingConversation.value = false;
   }
 };
 
@@ -445,13 +424,16 @@ const assignToMe = async () => {
 };
 
 const confirmCallTime = async () => {
-  if (!currentChat.value?.id || isUpdatingAction.value) return;
+  if (
+    !currentChat.value?.id ||
+    !latestBooking.value?.starts_at ||
+    isUpdatingAction.value
+  )
+    return;
 
   isUpdatingAction.value = true;
   try {
-    const startsAt =
-      latestBooking.value?.starts_at ||
-      new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const startsAt = latestBooking.value.starts_at;
     await BookingsAPI.create({
       conversation_id: currentChat.value.id,
       starts_at: startsAt,
@@ -467,30 +449,22 @@ const confirmCallTime = async () => {
   }
 };
 
-const clearFilters = () => {
-  filters.value = {
-    quality: '',
-    follow_up_state: '',
-    assignee_id: '',
-    source_id: '',
-    booking_status: '',
-    unanswered: false,
-  };
-  searchQuery.value = '';
-};
-
+const clearFilters = () =>
+  updateQuery(
+    Object.fromEntries(
+      [...Object.keys(filters), 'q', 'page'].map(key => [key, undefined])
+    )
+  );
+watch(() => route.query.queue, ensureQueueQuery);
 watch(
-  () => route.query.queue,
-  () => {
-    ensureQueueQuery();
-  }
+  [() => route.params.accountId, () => JSON.stringify(requestFilters.value)],
+  loadDashboard
 );
-
-watch(requestFilters, loadDashboard, { deep: true });
-watch(searchQuery, loadDashboard);
-watch(rows, syncSelectedConversation);
-watch(selectedDisplayId, loadConversation, { immediate: true });
-
+watch(
+  [() => route.params.accountId, selectedDisplayId],
+  ([, id]) => loadConversation(id),
+  { immediate: true }
+);
 onMounted(() => {
   store.dispatch('agents/get');
   store.dispatch('inboxes/get');
@@ -505,52 +479,46 @@ onMounted(() => {
     data-testid="inbox-conversation-cockpit"
   >
     <aside
-      class="hidden h-full w-[304px] shrink-0 flex-col border-r border-n-weak bg-n-surface-1 lg:flex 2xl:w-[320px]"
+      ref="listElement"
+      class="h-full w-full shrink-0 flex-col border-r border-n-weak bg-n-surface-1 lg:flex lg:w-[360px]"
+      :class="selectedDisplayId ? 'hidden' : 'flex'"
       :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.INBOX_CONVERSATIONS')"
     >
       <header class="border-b border-n-weak px-3 py-3">
-        <div class="flex h-8 items-center gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <h1 class="text-xl font-semibold">
+            {{ t('AI_LEAD_EMPLOYEE.NAV.INBOX') }}
+          </h1>
           <button
             type="button"
-            class="inline-flex min-w-0 flex-1 items-center gap-1 rounded-md px-1 text-left text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
-          >
-            <span class="truncate">
-              {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.URGENCY') }}
-            </span>
-            <Icon icon="i-lucide-chevron-down" class="size-4 shrink-0" />
-          </button>
-          <button
-            type="button"
-            class="grid size-8 place-items-center rounded-md text-n-slate-11 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
+            class="grid size-10 place-items-center rounded-lg hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
             :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.FILTERS')"
+            :aria-expanded="isFiltersOpen"
+            aria-controls="inbox-filters"
+            @click="isFiltersOpen = !isFiltersOpen"
           >
-            <Icon icon="i-lucide-list-filter" class="size-4" />
-          </button>
-          <button
-            type="button"
-            class="grid size-8 place-items-center rounded-md text-n-slate-11 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
-            :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.SORT')"
-          >
-            <Icon icon="i-lucide-arrow-up-down" class="size-4" />
+            <Icon icon="i-lucide-list-filter" class="size-5" />
           </button>
         </div>
 
-        <div class="mt-3 flex gap-2" role="list">
+        <div
+          class="mt-3 grid grid-cols-3 gap-1"
+          :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_QUEUE.LABEL')"
+        >
           <RouterLink
             v-for="item in queueItems"
             :key="item.key"
             :to="queueRoute(item.key)"
-            class="inline-flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border px-2 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
+            class="inline-flex min-h-11 flex-wrap items-center justify-center gap-1 rounded-lg border px-2 py-2 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
             :class="
               activeQueue === item.key
-                ? item.className
+                ? 'border-n-blue-7 bg-n-blue-2 text-n-blue-11'
                 : 'border-n-weak bg-n-solid-1 text-n-slate-11 hover:bg-n-alpha-2'
             "
             :aria-current="activeQueue === item.key ? 'page' : undefined"
           >
-            <Icon :icon="item.icon" class="size-4" />
             <span>{{ item.label }}</span>
-            <span class="tabular-nums">{{ item.count }}</span>
+            <span class="tabular-nums">{{ counts[item.key] ?? '—' }}</span>
           </RouterLink>
         </div>
 
@@ -567,14 +535,19 @@ onMounted(() => {
               id="cockpit-search"
               v-model="searchQuery"
               type="search"
-              class="h-9 w-full rounded-lg border border-n-weak bg-n-background py-2 pl-8 pr-3 text-sm text-n-slate-12 outline-none placeholder:text-n-slate-10 focus:border-n-brand"
+              class="h-9 w-full rounded-lg border border-n-weak bg-n-background py-2 !pl-9 pr-3 text-sm text-n-slate-12 outline-none placeholder:text-n-slate-10 focus:border-n-brand"
               :placeholder="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.SEARCH')"
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
+          <div
+            v-show="isFiltersOpen"
+            id="inbox-filters"
+            class="grid grid-cols-2 gap-2"
+          >
             <select
               v-model="filters.quality"
+              :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ALL_QUALITY')"
               class="min-w-0 rounded-md border border-n-weak bg-n-background px-2 py-1.5 text-xs text-n-slate-11"
             >
               <option value="">
@@ -590,6 +563,7 @@ onMounted(() => {
             </select>
             <select
               v-model="filters.follow_up_state"
+              :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ALL_STATES')"
               class="min-w-0 rounded-md border border-n-weak bg-n-background px-2 py-1.5 text-xs text-n-slate-11"
             >
               <option value="">
@@ -605,6 +579,7 @@ onMounted(() => {
             </select>
             <select
               v-model="filters.assignee_id"
+              :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ALL_ASSIGNEES')"
               class="min-w-0 rounded-md border border-n-weak bg-n-background px-2 py-1.5 text-xs text-n-slate-11"
             >
               <option value="">
@@ -626,6 +601,7 @@ onMounted(() => {
             </select>
             <select
               v-model="filters.source_id"
+              :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ALL_SOURCES')"
               class="min-w-0 rounded-md border border-n-weak bg-n-background px-2 py-1.5 text-xs text-n-slate-11"
             >
               <option value="">
@@ -641,6 +617,7 @@ onMounted(() => {
             </select>
             <select
               v-model="filters.booking_status"
+              :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ALL_BOOKINGS')"
               class="min-w-0 rounded-md border border-n-weak bg-n-background px-2 py-1.5 text-xs text-n-slate-11"
             >
               <option value="">
@@ -654,8 +631,25 @@ onMounted(() => {
                 {{ humanize(status) }}
               </option>
             </select>
+            <select
+              v-model="filters.follow_up_status"
+              :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.FOLLOW_UP_FILTER')"
+              class="min-w-0 rounded-md border border-n-weak bg-n-background px-2 py-1.5 text-xs"
+            >
+              <option value="">
+                {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ALL_FOLLOW_UPS') }}
+              </option>
+              <option value="due">
+                {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.FOLLOW_UP_DUE') }}
+              </option>
+            </select>
           </div>
           <button
+            v-if="
+              isFiltersOpen ||
+              Object.values(filters).some(Boolean) ||
+              searchQuery
+            "
             type="button"
             class="w-max rounded-md px-2 py-1 text-xs font-medium text-n-blue-11 hover:bg-n-blue-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
             @click="clearFilters"
@@ -666,7 +660,16 @@ onMounted(() => {
       </header>
 
       <div class="min-h-0 flex-1 overflow-y-auto">
-        <div v-if="isLoadingRows" class="px-4 py-5 text-sm text-n-slate-11">
+        <div v-if="listError" role="alert" class="p-4 text-sm">
+          {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LOAD_ERROR') }}
+          <button type="button" class="ml-2 underline" @click="loadDashboard">
+            {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RETRY') }}
+          </button>
+        </div>
+        <div
+          v-else-if="isLoadingRows"
+          class="px-4 py-5 text-sm text-n-slate-11"
+        >
           {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LOADING') }}
         </div>
         <div v-else-if="!rows.length" class="px-4 py-5 text-sm text-n-slate-11">
@@ -675,7 +678,8 @@ onMounted(() => {
         <template v-else>
           <button
             v-for="row in rows"
-            :key="row.id"
+            :key="row.conversation_id || row.conversation_display_id"
+            :data-conversation-id="row.conversation_display_id"
             type="button"
             class="flex w-full gap-3 border-b border-n-weak px-3 py-3 text-left transition-colors hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-n-brand"
             :class="
@@ -733,25 +737,44 @@ onMounted(() => {
         class="border-t border-n-weak px-3 py-3 text-center text-xs text-n-slate-11"
       >
         {{ queueSummary }}
+        <div
+          v-if="pagination.pages > 1"
+          class="mt-2 flex items-center justify-between gap-2"
+        >
+          <button
+            type="button"
+            :disabled="pagination.page <= 1"
+            class="rounded p-2 disabled:opacity-40"
+            @click="updateQuery({ page: String(pagination.page - 1) })"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PREVIOUS') }}
+          </button>
+          <span>{{ pagination.page }} / {{ pagination.pages }}</span>
+          <button
+            type="button"
+            :disabled="pagination.page >= pagination.pages"
+            class="rounded p-2 disabled:opacity-40"
+            @click="updateQuery({ page: String(pagination.page + 1) })"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.NEXT') }}
+          </button>
+        </div>
       </footer>
     </aside>
 
-    <main class="flex min-w-0 flex-1 flex-col bg-n-background">
+    <main
+      class="min-w-0 flex-1 flex-col bg-n-background lg:flex"
+      :class="selectedDisplayId ? 'flex' : 'hidden'"
+    >
       <header
         v-if="currentChat.id"
-        class="flex min-h-[72px] shrink-0 items-center gap-3 border-b border-n-weak bg-n-background px-4 lg:min-h-[82px]"
+        class="flex shrink-0 flex-wrap items-start gap-3 border-b border-n-weak bg-n-background px-4 py-4"
       >
         <button
           type="button"
-          class="grid size-10 place-items-center rounded-lg text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand lg:hidden"
+          class="grid size-10 shrink-0 place-items-center rounded-lg hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
           :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BACK_TO_LIST')"
-          @click="
-            router.push({
-              name: 'home',
-              params: route.params,
-              query: route.query,
-            })
-          "
+          @click="backToList"
         >
           <Icon icon="i-lucide-arrow-left" class="size-5" />
         </button>
@@ -762,100 +785,67 @@ onMounted(() => {
           hide-offline-status
         />
         <div class="min-w-0 flex-1">
-          <div class="flex min-w-0 items-center gap-2">
-            <h1 class="truncate text-base font-semibold text-n-slate-12">
-              {{ selectedContact.name || selectedRow?.name }}
-            </h1>
-            <Icon
-              icon="i-logos-whatsapp-icon"
-              class="size-4 shrink-0"
-              aria-hidden="true"
-            />
-            <span
-              v-if="qualification?.quality"
-              class="hidden rounded-full px-2 py-0.5 text-xs font-medium sm:inline-flex"
-              :class="qualityToneClass(qualification.quality)"
-            >
-              {{ humanize(qualification.quality) }}
-            </span>
+          <h1
+            class="break-words text-lg font-semibold leading-6 text-n-slate-12"
+          >
+            {{ selectedContact.name }}
+          </h1>
+          <div
+            class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-n-slate-11"
+          >
+            <span v-if="phoneNumber">{{ phoneNumber }}</span
+            ><span v-if="leadSubtitle">{{ leadSubtitle }}</span>
           </div>
           <div
-            class="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-n-slate-11"
+            class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-n-slate-11"
           >
-            <span v-if="leadSubtitle" class="truncate">{{ leadSubtitle }}</span>
-            <span v-if="phoneNumber" class="truncate">{{ phoneNumber }}</span>
-            <span v-if="location" class="truncate">{{ location }}</span>
-          </div>
-        </div>
-
-        <div
-          class="hidden items-center gap-4 border-l border-n-weak pl-4 text-sm lg:flex"
-        >
-          <div
-            class="flex items-center gap-2"
-            :class="controlToneClass(currentChat.control_state)"
-          >
-            <Icon icon="i-lucide-user-round" class="size-4" />
             <span>{{ humanize(currentChat.control_state) }}</span>
-            <span class="size-1.5 rounded-full bg-n-teal-9" />
-          </div>
-          <div class="min-w-[116px]">
-            <div class="text-xs text-n-slate-11">
-              {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGNEE') }}
-            </div>
-            <button
-              type="button"
-              class="mt-0.5 inline-flex items-center gap-1 rounded-md text-sm font-medium text-n-slate-12 hover:text-n-blue-11 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
-              @click="assignToMe"
-            >
-              <Avatar
-                :name="currentAssignee?.name || currentUser?.name"
-                :src="currentAssignee?.avatar_url || currentUser?.avatar_url"
-                :size="20"
-                hide-offline-status
-              />
-              <span>{{
+            <span
+              >{{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGNEE') }}:
+              {{
                 currentAssignee?.name ||
                 t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.UNASSIGNED')
-              }}</span>
-              <Icon icon="i-lucide-chevron-down" class="size-3.5" />
-            </button>
+              }}</span
+            >
           </div>
-          <div class="min-w-[148px]">
-            <div class="text-xs text-n-slate-11">
-              {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING') }}
-            </div>
-            <div class="mt-0.5 flex items-center gap-2 text-sm text-n-slate-12">
-              <Icon
-                icon="i-lucide-calendar-days"
-                class="size-4 text-n-slate-11"
-              />
-              <span>{{
-                latestBooking
-                  ? formatTime(latestBooking.starts_at)
-                  : humanize(selectedRow?.booking_state)
-              }}</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            class="grid size-9 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
-            :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.MORE_ACTIONS')"
-          >
-            <Icon icon="i-lucide-more-vertical" class="size-5" />
-          </button>
         </div>
+        <button
+          type="button"
+          class="hidden min-h-10 shrink-0 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand lg:flex"
+          :aria-expanded="isDesktopBriefOpen"
+          @click="isDesktopBriefOpen = !isDesktopBriefOpen"
+        >
+          {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LEAD_DETAILS')
+          }}<Icon icon="i-lucide-panel-right" class="size-4" />
+        </button>
       </header>
 
       <div
         v-if="!currentChat.id"
         class="grid flex-1 place-items-center p-6 text-sm text-n-slate-11"
       >
-        {{
-          isLoadingConversation || isLoadingRows
-            ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LOADING')
-            : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.SELECT_CONVERSATION')
-        }}
+        <div
+          v-if="conversationError"
+          role="alert"
+          class="grid justify-items-center gap-4"
+        >
+          {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONVERSATION_ERROR') }}
+          <button
+            type="button"
+            :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BACK_TO_LIST')"
+            class="min-h-11 rounded-lg border border-n-weak px-4"
+            @click="backToList"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BACK_TO_LIST') }}
+          </button>
+        </div>
+        <template v-else>
+          {{
+            isLoadingConversation || isLoadingRows
+              ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LOADING')
+              : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.SELECT_CONVERSATION')
+          }}
+        </template>
       </div>
 
       <MessagesView
@@ -947,6 +937,7 @@ onMounted(() => {
               </div>
               <div class="mt-4 flex gap-2">
                 <button
+                  v-if="nextAction.kind === 'confirm_booking' && latestBooking"
                   type="button"
                   class="h-10 flex-1 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="isUpdatingAction"
@@ -1033,6 +1024,7 @@ onMounted(() => {
                 </details>
               </div>
               <div
+                v-if="nextAction.kind === 'confirm_booking' && latestBooking"
                 class="mt-3 grid gap-3 text-xs text-n-slate-11 md:grid-cols-3"
               >
                 <div>
@@ -1070,14 +1062,8 @@ onMounted(() => {
                   {{ t('AI_LEAD_EMPLOYEE.NAV.KNOWLEDGE') }}
                   <Icon icon="i-lucide-external-link" class="size-4" />
                 </RouterLink>
-                <RouterLink
-                  :to="accountScopedRoute('owned_test_center_index')"
-                  class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
-                >
-                  {{ t('AI_LEAD_EMPLOYEE.NAV.TEST_CENTER') }}
-                  <Icon icon="i-lucide-external-link" class="size-4" />
-                </RouterLink>
                 <button
+                  v-if="nextAction.kind === 'confirm_booking' && latestBooking"
                   type="button"
                   class="inline-flex h-9 items-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="isUpdatingAction"
@@ -1115,8 +1101,8 @@ onMounted(() => {
     </main>
 
     <aside
-      v-if="currentChat.id"
-      class="hidden h-full w-[356px] shrink-0 flex-col border-l border-n-weak bg-n-background lg:flex 2xl:w-[380px]"
+      v-if="currentChat.id && isDesktopBriefOpen"
+      class="hidden h-full w-[300px] shrink-0 flex-col border-l border-n-weak bg-n-background lg:flex 2xl:w-[340px]"
       :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.LEAD_BRIEF')"
     >
       <div class="flex h-12 shrink-0 border-b border-n-weak px-4">

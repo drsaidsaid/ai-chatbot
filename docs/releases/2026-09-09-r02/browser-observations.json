@@ -1,0 +1,101 @@
+{
+  "captured_at_utc": "2026-09-09T20:36:41.568532+00:00",
+  "browser": "Codex in-app browser, task-owned tab 1 only",
+  "application": "http://127.0.0.1:3212",
+  "environment": "Rails test adapters, production Vite frontend, isolated synthetic data; no provider connections or sends",
+  "screenshots": [
+    {
+      "path": "screenshots/01-normal-filtered-list.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "c1d49ac0801d9e39eece164136b594352791eba0728508f81fe56c82217b0d53"
+    },
+    {
+      "path": "screenshots/02-phone-all-conversations.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "b0f412d5fd9328f911d0432e701dd32b9a651d78b1edde423285636e6f420184"
+    },
+    {
+      "path": "screenshots/03-phone-returned-focus.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "43505c627f82f19b635546278cfea051121dec64c0eb7047e45d6ac0d0a59865"
+    },
+    {
+      "path": "screenshots/04-phone-conversation.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "5e529d5ba2100f51eca2719eb984a780a07860c177095792f302f8c3b1f64923"
+    },
+    {
+      "path": "screenshots/05-phone-test-center.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "5070a794775774e4679ab426f9c108d8b41cd9ee461942255f9c00068e14a59d"
+    },
+    {
+      "path": "screenshots/06-phone-provider-settings.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "d582e8f6b4855348d1dc44c4bb9fdfd6b0e18f55838f15697e9c0a2de5d5df41"
+    },
+    {
+      "path": "screenshots/07-desktop-conversation.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "879cb6da3d1b96393f6b857603af9e5570fe308d1348469f482547479491e7ae"
+    },
+    {
+      "path": "screenshots/08-desktop-filtered-focus.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "b246d5257e71eeb423133e8d0e7c82ee5de58381564f60974ea17049e07761dd"
+    },
+    {
+      "path": "screenshots/09-owned-sign-in.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "986479ee047844a4b8c2308dc6eb6a52af670bf206891d021263e300a339047d"
+    },
+    {
+      "path": "screenshots/10-phone-member-more.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "735cc07a19b59fa02b2ea84cce0306912f17976713b8434a12ad497ca02fee20"
+    },
+    {
+      "path": "screenshots/11-desktop-settings.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "9d6f7627d3849eb65e6874938f8458426b2cda2fb1c9cca1886ccc917f6ae80b"
+    }
+  ],
+  "verified": [
+    "Administrator main menu: Inbox, Leads, Bookings, Knowledge, Settings; phone menu Inbox, Leads, Bookings, More.",
+    "All has 3 Conversations for 2 Leads; Needs review 1; Hot leads 1. Search Grace returns 2 distinct Conversations without Qualification.",
+    "At 390, 1280 and 1440 CSS pixels, open and Back to list preserve the selectable list, search and queue; browser back and direct Conversation refresh work.",
+    "At 1440, q=Grace and quality=unknown survive opening Conversation #1 and returning. Focus returns to the same row with a solid 2px outline; Enter opens the row.",
+    "At 390, Needs review opens Amina #3 and returns focus to her single row. Search Grace and refresh preserve Conversation #2.",
+    "All tested primary pages have document.scrollWidth equal to viewport width; phone Settings and Test Center remain inside 390px.",
+    "All six Settings groups are selectable on phone. Booking fields, Follow-up controls, native Team members, WhatsApp Cloud creation fields and AI-provider controls load without losing the Settings selector.",
+    "Settings AI & testing exposes the full Test Center. Legacy /test-center?scenario=sensitive#report redirects to the Settings path with query and hash preserved; refresh and browser back work.",
+    "Member desktop navigation contains Inbox, Leads and Bookings. Phone More contains only Your profile. A direct Test Center URL returns the member to Inbox.",
+    "Direct unsupported email channel setup goes to the V1 unavailable page; request specs also prove server rejection and public-route 404s.",
+    "Knowledge has Documents, Approved Answers and Drafts & approvals; customer review navigation points to Inbox.",
+    "The sign-in page visually displays AI Lead Employee. Its loaded logo URL contains ?v=8da0a4c82dc4, replacing the previously cached CE logo. Signing in again succeeds without browser errors."
+  ],
+  "final_browser_console_errors": [],
+  "earlier_development_findings": [
+    {
+      "time_utc": "2026-09-09T19:54:43.793Z",
+      "finding": "Invalid navigation guard on unauthenticated navigation",
+      "resolution": "Guard now calls next(false) before leaving for sign-in; regression test passes."
+    },
+    {
+      "time_utc": "2026-09-09T20:04:21.798Z",
+      "finding": "HMR circular initialization during active source editing",
+      "resolution": "Not reproduced after loading the production frontend; no packaged browser errors."
+    }
+  ]
+}

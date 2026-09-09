@@ -6,6 +6,8 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
   before_action :check_authorization, except: [:show]
 
   include Api::V1::Accounts::Concerns::WhatsappHealthManagement
+  include Api::V1::Accounts::Concerns::V1ChannelSetup
+  before_action :ensure_v1_channel_setup, only: [:create]
 
   def index
     @inboxes = policy_scope(Current.account.inboxes)
@@ -102,10 +104,6 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
     return unless allowed_channel_types.include?(permitted_params[:channel][:type])
 
     account_channels_method.create!(permitted_params(channel_type_from_params::EDITABLE_ATTRS)[:channel].except(:type))
-  end
-
-  def allowed_channel_types
-    %w[web_widget api email line telegram whatsapp sms]
   end
 
   def update_inbox_working_hours

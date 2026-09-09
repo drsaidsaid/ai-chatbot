@@ -1,4 +1,16 @@
 class ConversationPolicy < ApplicationPolicy
+  class Scope < ApplicationPolicy::Scope
+    def resolve
+      conversations = scope.where(account: account)
+      return conversations if account_user&.administrator?
+      return conversations.none unless user.is_a?(User)
+
+      inbox_ids = user.inboxes.where(account: account).select(:id)
+      team_ids = user.teams.where(account: account).select(:id)
+      conversations.where(inbox_id: inbox_ids).or(conversations.where(team_id: team_ids))
+    end
+  end
+
   def index?
     true
   end

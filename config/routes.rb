@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Retain CE public source while the standalone V1 exposes no customer portal or widget.
+  match '/widget', '/widget/*path', '/public/*path', '/api/v1/widget/*path', '/hc', '/hc/*path', '/survey/*path',
+        to: 'v1_unavailable#show', via: :all
   # AUTH STARTS
   mount_devise_token_auth_for 'User', at: 'auth', controllers: {
     confirmations: 'devise_overrides/confirmations',
@@ -155,6 +158,7 @@ Rails.application.routes.draw do
           end
           resources :dashboard_apps, only: [:index, :show, :create, :update, :destroy]
           resource :operational_dashboard, only: [:show]
+          resource :inbox_conversations, only: [:show]
           resources :leads, only: [:index, :show, :update] do
             collection do
               post :import
