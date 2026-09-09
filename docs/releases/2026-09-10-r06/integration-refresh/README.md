@@ -3,6 +3,10 @@
 Status: combined regression, lint, schema comparisons and production build passed. Browser acceptance remains pending the owner's existing Mac-unlock
 request. This is a feature-branch merge, not R06 promotion into shared integration.
 
+Merge commit: `d4b2922a89f1d5696c736274141e7c2031245e48`. Normal hooks passed; all 116 runtime
+source hashes remained unchanged. The acceptance-source manifest records all
+55 backend/frontend files used by the saved selections.
+
 ## Parents and merge review
 
 - Prior R06 tip: `e8b5b5da7fb6722d6b0c8e40c74dc296f708b610`.
@@ -55,7 +59,9 @@ owner unlock; do not treat automated checks as that acceptance.
 
 Use the private R06 environment and isolated test database from the parent
 README. The concurrency cases clean committed fixtures, so run the selection
-serially and never against the browser fixture database.
+serially and never against the browser fixture database. The seven frontend
+paths are also recorded in `checks.json`; pass them directly to `pnpm test`
+because the package script already supplies the run flags.
 
 ```sh
 set -a

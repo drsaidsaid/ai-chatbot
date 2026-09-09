@@ -49,5 +49,26 @@
     "reason": "Existing owner Mac-unlock request",
     "new_attempts": 0
   },
-  "external_delivery": "Synthetic tests only; no live provider, customer, AI or calendar delivery"
+  "external_delivery": "Synthetic tests only; no live provider, customer, AI or calendar delivery",
+  "merge_commit": "d4b2922a89f1d5696c736274141e7c2031245e48",
+  "merge_parents": [
+    "e8b5b5da7fb6722d6b0c8e40c74dc296f708b610",
+    "f2b184e1c332f0bf68c31dec460f7e5599657a72"
+  ],
+  "normal_commit_hooks": {
+    "passed": true,
+    "bypassed": false,
+    "runtime_hashes_unchanged": true,
+    "runtime_files": 116,
+    "acceptance_files": 55
+  },
+  "frontend_test_files": [
+    "app/javascript/dashboard/routes/dashboard/settings/agents/specs/AddAgent.spec.js",
+    "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+    "app/javascript/dashboard/helper/specs/actionCable.spec.js",
+    "app/javascript/dashboard/routes/dashboard/conversation/specs/InboxConversationCockpit.spec.js",
+    "app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js",
+    "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/WhatsappConnectionPage.spec.js",
+    "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OwnedSettingsLayout.spec.js"
+  ]
 }

@@ -1,5 +1,7 @@
 {
+  "app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js": "d6e16db5c0a779e8f0dbe6732b18155e97b7afd06bcd15d0c4e097c8b4b7bc6b",
   "app/javascript/dashboard/helper/specs/actionCable.spec.js": "13ec9551ed4513c955542cc1a2de95ccd89f920c0effc3e14af6b5866a3caf63",
+  "app/javascript/dashboard/routes/dashboard/conversation/specs/InboxConversationCockpit.spec.js": "f7f7c8eac1cc04f2c09405cd8f3f0433bbf7c34c9a49f9358ebabfd1c2b2c4d1",
   "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js": "d15cd47bea4545e8e73fc3e3d5e1bf0a9d9784e663940ab88b187f14e1610b30",
   "app/javascript/dashboard/routes/dashboard/settings/agents/specs/AddAgent.spec.js": "b3e661178553a51a0bbbb17953272966353c478085990e09a6a2675e001716ac",
   "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OwnedSettingsLayout.spec.js": "a5cd178ee153d4cbe236f8a15e9816b4018ef6174439d09ec1e273ed5b4b7254",
