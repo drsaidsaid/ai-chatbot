@@ -2,6 +2,12 @@
 
 Published after the September 2026 audits. Prior local Done notes are historical; acceptance must be re-proven for these corrections.
 
+R01 is locally complete and awaiting coordinator review/integration. Its
+[canonical release proof](../../releases/2026-09-09-r01/README.md) and
+[runbook](../../releases/2026-09-09-r01/runbook.md) establish the starting path.
+Use the coordinator's integrated predecessor commit before starting dependent
+work; local completion is not an integration or live-launch approval.
+
 | Ticket | GitHub issue | Blocked by |
 |---|---|---|
 | [R01](./r01-reproduce-and-document-one-canonical-v1-release.md) | [#18](https://github.com/drsaidsaid/ai-chatbot/issues/18) | None |

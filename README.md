@@ -7,6 +7,11 @@ direct Meta WhatsApp connectivity planned inside this repository. It does not
 depend on a Chatwoot cloud account, Chatwoot API token, or Chatwoot webhook
 secret.
 
+Start local standalone V1 work with the [canonical release runbook](docs/releases/2026-09-09-r01/runbook.md)
+and [current acceptance tickets](docs/issues/v1-completion-20260909/README.md).
+The inherited upstream documentation below is provenance, not the owned
+product deployment authority.
+
 The upstream Community Edition MIT notice is retained below. Enterprise source
 is not imported into this owned product.
 

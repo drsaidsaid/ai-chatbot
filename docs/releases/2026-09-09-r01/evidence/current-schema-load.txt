@@ -1,0 +1,2 @@
+Created database 'ale_release_r01_schema_final'
+Loading Installation config

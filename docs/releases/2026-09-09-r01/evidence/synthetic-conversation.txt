@@ -1,0 +1,138 @@
+Browser tab: 2, Title: "AI Lead Employee", URL: "http://127.0.0.1:3211/app/accounts/1/conversations/1?queue=hot".
+1 AXWebArea AI Lead Employee, URL: 127.0.0.1:3211/app/accounts/1/conversations/1?queue=hot
+	2 container app
+		3 container
+			4 link Description: AI Lead Employee, Value: 127.0.0.1:3211/app/accounts/1/dashboard
+			5 container AI Lead Employee primary navigation
+				6 content list
+					7 link Description: Inbox, Value: 127.0.0.1:3211/app/accounts/1/dashboard
+					8 link Description: Leads, Value: 127.0.0.1:3211/app/accounts/1/leads
+					9 link Description: Bookings, Value: 127.0.0.1:3211/app/accounts/1/bookings
+					10 link Description: Knowledge, Value: 127.0.0.1:3211/app/accounts/1/knowledge
+					11 link Description: Test Center, Value: 127.0.0.1:3211/app/accounts/1/test-center
+					12 link Description: Settings, Value: 127.0.0.1:3211/app/accounts/1/settings/ai-lead-employee/offers-qualification
+			13 button Release Operator release-operator@example.test
+				14 text Release Operator
+				15 text release-operator@example.test
+		16 container
+			17 container Inbox conversations
+				18 container
+					19 button Urgent
+					20 button Filters
+					21 button Sort
+					22 content list
+						23 link Description: Hot 0, Value: 127.0.0.1:3211/app/accounts/1/conversations/1?queue=hot
+						24 link Description: Review 0, Value: 127.0.0.1:3211/app/accounts/1/conversations/1?queue=review
+						25 link Description: Booked 0, Value: 127.0.0.1:3211/app/accounts/1/conversations/1?queue=booked
+					26 text Search name, phone, or message
+					27 search text field (settable) Search name, phone, or message
+					28 pop up button (collapsed, settable) Value: All quality, Secondary Actions: Expand
+						29 menu
+							30 (selected) All quality
+							31 Unknown
+							32 Unqualified
+							33 Low Qualified
+							34 Qualified
+							35 Highly Qualified
+					36 pop up button (collapsed, settable) Value: All states, Secondary Actions: Expand
+						37 menu
+							38 (selected) All states
+							39 No Follow Up
+							40 Nurture
+							41 Human Review
+							42 Call Booked
+							43 Closed
+					44 pop up button (collapsed, settable) Value: All assignees, Secondary Actions: Expand
+						45 menu
+							46 (selected) All assignees
+							47 Me
+							48 Unassigned
+					49 pop up button (collapsed, settable) Value: All sources, Secondary Actions: Expand
+						50 menu
+							51 (selected) All sources
+							52 Synthetic baseline — no provider
+					53 pop up button (collapsed, settable) Value: All bookings, Secondary Actions: Expand
+						54 menu
+							55 (selected) All bookings
+							56 Booked
+							57 Not Booked
+					58 button Clear
+				59 text No conversations match this queue
+				60 text 0 conversations
+			61 container
+				62 heading Synthetic Lead, Value: 1
+					63 text Synthetic Lead
+				64 text Ai Paused Assignee
+				65 button Unassigned
+					66 text Unassigned
+				67 text Booked call Not captured
+				68 button More actions
+			69 content list
+				70 container message1
+					71 text Synthetic release check: I would like to learn about your service.
+					72 text Sep 9, 9:54 PM
+			73 container
+				74 container
+					75 heading AI proposed next step, Value: 2
+						76 text AI proposed next step
+					77 text Resume Ai AI is paused for this conversation.
+					78 button (collapsed) Technical details, Secondary Actions: Expand
+						79 text Technical details
+					80 text Proposed time AI is paused for this conversation. Attendee Synthetic Lead Call type Product demo (30 min)
+					81 link Description: Knowledge, Value: 127.0.0.1:3211/app/accounts/1/knowledge
+					82 link Description: Test Center, Value: 127.0.0.1:3211/app/accounts/1/test-center
+					83 button Confirm call time
+					84 button Assign
+					85 button Resume AI
+				86 container
+					87 button Reply Private Note
+						88 text Reply
+						89 text Private Note
+					90 button
+					91 button
+					92 container
+
+						93 container
+							94 text Shift + enter for new line. Start with '/' to select a Canned Response.
+					95 button
+					96 button
+					97 button conversationAttachment
+					98 button
+					99 button
+					100 button (disabled) Send (⌘ + ↵)
+			101 container Lead brief
+				102 button Summary
+				103 button Evidence
+				104 button Activity
+				105 container
+					106 heading Why this lead matters, Value: 2
+						107 text Why this lead matters
+					108 definition list
+						109 container Role fit
+							110 text Role fit
+						111 text Not captured
+						112 container Goal
+							113 text Goal
+						114 text Not captured
+						115 container Buying intent
+							116 text Buying intent
+						117 text Not captured
+						118 container Potential value
+							119 text Potential value
+						120 text Not captured
+						121 container Confidence
+							122 text Confidence
+						123 text Not captured
+					124 heading Strongest evidence, Value: 3
+						125 text Strongest evidence
+					126 heading Missing signals, Value: 3
+						127 text Missing signals
+					128 content list
+						129 container
+							130 AXListMarker •
+							131 text No missing signals
+					132 heading Next recommended action, Value: 3
+						133 text Next recommended action
+					134 text Resume AI when ready AI is paused for this conversation.
+
+The focused UI element is 1 AXWebArea AI Lead Employee, URL: 127.0.0.1:3211/app/accounts/1/conversations/1?queue=hot

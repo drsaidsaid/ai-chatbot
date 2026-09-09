@@ -3,6 +3,14 @@
 This is the required route for agents working on the owned AI Lead Employee
 product. It follows the Ask Matt multi-session flow.
 
+The current programme is [R01–R18](issues/v1-completion-20260909/README.md),
+with integrated predecessor commits supplied by the coordinator's
+`codex/v1-completion-20260909` branch. Start with the
+[R01 runbook](releases/2026-09-09-r01/runbook.md) and
+[ADR 0008](adr/0008-canonical-v1-release-and-schema-provenance.md).
+The foundation sequence below explains dependencies; historical completion
+notes do not replace current release acceptance.
+
 1. **Re-baseline the source:** keep the Community Edition source as the owned
    product foundation, retain the MIT notice, exclude enterprise content, and
    preserve a reviewable upstream reference.

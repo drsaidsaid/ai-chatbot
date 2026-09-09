@@ -1,0 +1,33 @@
+==  AddNameQualificationQuestion: migrating ===================================
+-- execute("UPDATE qualification_questions AS question SET position = position + 1, updated_at = CURRENT_TIMESTAMP WHERE NOT EXISTS ( SELECT 1 FROM qualification_questions AS name_question WHERE name_question.account_id = question.account_id AND name_question.signal = 7 )")
+   -> 0.0016s
+-- execute("INSERT INTO qualification_questions (account_id, signal, prompt, position, enabled, required, validation_key, metadata, created_at, updated_at) SELECT DISTINCT account_id, 7, 'What is your name?', 0, TRUE, TRUE, 'plain_text', '{}'::jsonb, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM qualification_questions WHERE NOT EXISTS ( SELECT 1 FROM qualification_questions AS name_question WHERE name_question.account_id = qualification_questions.account_id AND name_question.signal = 7 )")
+F
+
+Failures:
+
+  1) AddNameQualificationQuestion adds one name question per configured account using only the predecessor schema
+     Failure/Error: 2.times { described_class.new.migrate(:up) }
+
+     ActiveRecord::StatementInvalid:
+       PG::UndefinedColumn: ERROR:  column "required" of relation "qualification_questions" does not exist
+       LINE 1: ...s (account_id, signal, prompt, position, enabled, required, ...
+                                                                    ^
+     # ./db/migrate/20260831000200_add_name_qualification_question.rb:43:in 'AddNameQualificationQuestion#insert_name_questions!'
+     # ./db/migrate/20260831000200_add_name_qualification_question.rb:8:in 'AddNameQualificationQuestion#up'
+     # ./spec/db/migrations/add_name_qualification_question_spec.rb:23:in 'block (3 levels) in <top (required)>'
+     # ./spec/db/migrations/add_name_qualification_question_spec.rb:23:in 'block (2 levels) in <top (required)>'
+     # ------------------
+     # --- Caused by: ---
+     # PG::UndefinedColumn:
+     #   ERROR:  column "required" of relation "qualification_questions" does not exist
+     #   LINE 1: ...s (account_id, signal, prompt, position, enabled, required, ...
+     #                                                                ^
+     #   ./db/migrate/20260831000200_add_name_qualification_question.rb:43:in 'AddNameQualificationQuestion#insert_name_questions!'
+
+Finished in 0.13198 seconds (files took 8.03 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/db/migrations/add_name_qualification_question_spec.rb:7 # AddNameQualificationQuestion adds one name question per configured account using only the predecessor schema

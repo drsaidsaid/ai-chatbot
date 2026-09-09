@@ -2,6 +2,25 @@
 
 AI Lead Employee receives business inquiries, determines whether each person is a suitable buyer, and coordinates the transition from automated conversation to human action.
 
+## Current release scope
+
+The standalone V1 completion programme uses the audited `74d156e3` runtime plus
+integration bootstrap `5c3bbc2f`; exact provenance and schema authority are in
+[ADR 0008](docs/adr/0008-canonical-v1-release-and-schema-provenance.md).
+R01–R18 are the current acceptance tickets; historical Done notes are scoped
+past evidence. The coordinator integrates ticket commits on
+`codex/v1-completion-20260909`.
+
+The main menu is Inbox, Leads, Bookings, Knowledge, Settings. Customer Review
+Requests and Hot Leads are Inbox views; reusable content approvals belong in
+Knowledge. Test Center lives in Settings → AI & testing. Basic business metrics
+remain required within existing workspaces while generic CE Reports stays hidden.
+V1 uses one direct Meta WhatsApp connection per Business Account, Google Calendar
+as first calendar provider and the encrypted OpenRouter-compatible AI boundary.
+Online Profits integration is separate. Business Account maps to CE `Account`
+and tenant scope normally uses `account_id`; conceptual names do not imply new
+tenancy tables. An Offer schema table alone does not prove Offer qualification.
+
 ## Language
 
 **Business Account**:

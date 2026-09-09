@@ -1,0 +1,69 @@
+{
+  "captured_at": "2026-09-09T19:00:34.621563+00:00",
+  "audited_commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+  "integration_bootstrap": "5c3bbc2f900948fcdd6729159701b9cc993b85b5",
+  "branch": "codex/r01-canonical-release-20260909",
+  "frozen_files": 155,
+  "frozen_files_byte_identical": true,
+  "saved_root_dirty_file_checks": {
+    "AGENTS.md": true,
+    "TECHNICAL_DESIGN.md": true,
+    "app/javascript/dashboard/components-next/sidebar/aiLeadEmployeeNavigation.js": true,
+    "app/javascript/dashboard/routes/dashboard/owned/KnowledgeItemsPanel.vue": true,
+    "app/javascript/dashboard/routes/dashboard/owned/OwnedWorkspacePage.vue": true,
+    "app/javascript/dashboard/routes/dashboard/owned/owned.routes.js": true,
+    "app/javascript/dashboard/routes/dashboard/settings/settings.routes.js": true,
+    "app/javascript/entrypoints/dashboard.js": true,
+    "app/javascript/entrypoints/v3app.js": true,
+    "app/models/account.rb": true,
+    "app/models/conversation.rb": true,
+    "app/services/ai_lead_employee/knowledge_answer_service.rb": true,
+    "app/services/ai_lead_employee/whatsapp_auto_reply_service.rb": true,
+    "app/services/conversations/assignment_service.rb": true,
+    "config/routes.rb": true,
+    "db/schema.rb": true,
+    "docs/issues/005-highly-qualified-handoff-and-whatsapp-alert.md": true,
+    "docs/issues/README.md": true,
+    "spec/services/conversations/assignment_service_spec.rb": true,
+    "app/controllers/api/v1/accounts/ai_settings_controller.rb": true,
+    "app/controllers/api/v1/accounts/leads_controller.rb": true,
+    "app/controllers/api/v1/accounts/sandboxes_controller.rb": true,
+    "app/javascript/dashboard/routes/dashboard/owned/HotLeadsPanel.vue": true,
+    "app/javascript/dashboard/routes/dashboard/owned/LeadsPanel.vue": true,
+    "app/javascript/dashboard/routes/dashboard/sandbox/SandboxView.vue": true,
+    "app/javascript/dashboard/routes/dashboard/settings/ai/AiSettings.vue": true,
+    "app/models/lead_handoff.rb": true,
+    "app/services/ai_lead_employee/highly_qualified_handoff_service.rb": true,
+    "app/services/ai_lead_employee/llm_synthesis_service.rb": true,
+    "app/services/ai_lead_employee/open_router_client.rb": true,
+    "db/migrate/20260826000800_create_lead_handoffs.rb": true,
+    "spec/factories/lead_handoffs.rb": true,
+    "spec/services/ai_lead_employee/highly_qualified_handoff_service_spec.rb": true,
+    "spec/services/ai_lead_employee/open_router_client_spec.rb": true,
+    "spec/services/ai_lead_employee/whatsapp_auto_reply_service_spec.rb": true
+  },
+  "saved_root_head": "e2fa25a8db539b9fa3b45533b852d01d4766f14f",
+  "donor_browser_qa": {
+    "commit": "335d994fb57a6bc59f3e091fce69ac30c8d682b9",
+    "divergence_from_rc": "3 donor-only / 23 RC-only commits",
+    "patch_equivalent_donor_commits": [
+      "556f0a1ff926364c59fdd887d21787abe69f2043",
+      "7d35cd2e7aad7340c9033d4462ba47cd16b7b8a6",
+      "335d994fb57a6bc59f3e091fce69ac30c8d682b9"
+    ],
+    "disposition": "All three donor-only commits have patch equivalents in RC; no donor merge needed."
+  },
+  "enterprise_root_exists": false,
+  "mit_license_sha256": "602d38a808315f221a5e72e2e90e40cb9300f09aa4b317a6a8f1a0c7a3d2175d",
+  "lockfiles": {
+    "Gemfile.lock": "b9efc099d923d19a20c74a1c6d292afb009bc31d9495bf12a63a4debe2b66359",
+    "pnpm-lock.yaml": "9aff591bedb980ca3d5d1c9efe23b6b85eaefc28b47cdaf4e55f9e95fea04691",
+    "package.json": "d0b48ec01999be5e1714cd19aa1eac32f598b830874486d498b04ec7bc543d77",
+    ".ruby-version": "a19f5cb2aecb9af1c0ed78cca3bfc0f8a954f1e680cc51bde6d3d7f7b965a79f"
+  },
+  "upstream_tag_verification": {
+    "tag_object": "13e11d59c5d1c01c56b9ad41593e1307dcd30145",
+    "peeled_commit": "b34f5b71a4d7f41fa87cf2b32260e2c887817e54",
+    "method": "git ls-remote upstream-chatwoot refs/tags/v4.17.0 refs/tags/v4.17.0^{}"
+  }
+}

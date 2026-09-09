@@ -10,23 +10,24 @@ and interaction model should carry the owned AI Lead Employee surfaces. V1
 navigation is narrowed and rebranded, but the product must not feel like a
 separate application bolted beside Community Edition.
 
-## Visible V1 areas
+## Five primary V1 areas
 
-- **Inbox:** conversation list, messages, notes, assignment, labels, human
-  takeover, pause, resume, and resolution.
-- **Hot Leads:** highly qualified Leads needing immediate Human Operator action.
-- **Leads:** searchable Lead list and lead detail, including phone number,
-  qualification evidence, quality, reason, assignee, source, and booking state.
-- **Reviews:** unanswered questions and decisions awaiting a Human Operator.
-- **Knowledge:** approved FAQ, offer, pricing, objection, policy, and supporting
-  Knowledge Items with explicit approval.
-- **Bookings:** confirmed and upcoming Booking records with the assigned Human
-  Operator.
-- **Test Center:** admin-only simulation runs, reviewer grading, launch report,
-  and controlled pilot approval for live AI operation.
-- **Settings:** Business Account profile, team invitations, offers,
-  qualification questions and rules, availability, alert routes, and direct
-  Meta WhatsApp connection health.
+- **Inbox:** Conversation list, replies, private notes, assignment, labels,
+  takeover, pause, resume and resolution; All, Needs review and Hot leads views.
+- **Leads:** searchable directory, Lead detail, qualification evidence, assignee,
+  source, next action, permitted import/export and compact basic business metrics.
+- **Bookings:** authoritative reservation agenda/calendar, details, reschedule and
+  cancel; a shortcut opens Settings → Booking hours.
+- **Knowledge:** Documents, Answers and Drafts & approvals for reusable content.
+  Customer Review Requests resolve in Inbox, with links to related knowledge.
+- **Settings:** Business & offers, Team & alerts, Booking hours, Follow-ups,
+  WhatsApp connection and AI & testing. Full Test Center is admin-only here.
+
+Phones keep Inbox, Leads, Bookings and More, with Knowledge and Settings inside
+More. Existing supported deep links must redirect into the correct canonical
+record. R02 implements the approved navigation; this document is a requirement,
+not a claim that the inherited UI has already changed. See
+[the approved specification](v1-completion-plan/2026-09-09/navigation.md).
 
 V1 supports one direct WhatsApp connection per Business Account. Lead messages,
 human replies, AI replies, and alert delivery use that connection.
@@ -66,3 +67,12 @@ must have its own product decision and tests before a hidden surface is enabled.
 - Voice transcription and calling.
 - Multi-calendar routing, CRM sync, and self-service client onboarding.
 - Billing, subscriptions, and usage metering.
+
+## Standalone provider and analytics decisions
+
+Google Calendar is the approved first provider (R13). Basic operational metrics
+are required in Leads and relevant workspaces (R16); hiding generic Reports
+does not defer them. OpenRouter remains the initial encrypted AI connection.
+Online Profits identity, purchases, access and journey integration are separate.
+See [ADR 0008](adr/0008-canonical-v1-release-and-schema-provenance.md) for release
+and schema authority; local boot never approves unattended live delivery.

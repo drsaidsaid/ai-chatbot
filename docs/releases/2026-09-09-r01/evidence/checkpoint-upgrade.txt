@@ -1,0 +1,196 @@
+Created database 'ale_release_r01_checkpoint_final'
+== 20260826000100 CreateMetaWhatsappWebhookEvents: migrating ==================
+-- create_table(:meta_whatsapp_webhook_events)
+   -> 0.0122s
+-- add_index(:meta_whatsapp_webhook_events, :provider_event_id, {unique: true})
+   -> 0.0010s
+== 20260826000100 CreateMetaWhatsappWebhookEvents: migrated (0.0134s) =========
+
+== 20260826000200 AddControlStateToConversations: migrating ===================
+-- add_column(:conversations, :control_state, :integer, {null: false, default: 0})
+   -> 0.0020s
+-- add_column(:conversations, :control_version, :integer, {null: false, default: 0})
+   -> 0.0011s
+== 20260826000200 AddControlStateToConversations: migrated (0.0033s) ==========
+
+== 20260826000300 AddConversationToMetaWhatsappWebhookEvents: migrating =======
+-- add_reference(:meta_whatsapp_webhook_events, :conversation, {foreign_key: true})
+   -> 0.0094s
+== 20260826000300 AddConversationToMetaWhatsappWebhookEvents: migrated (0.0095s)
+
+== 20260826000400 CreateKnowledgeItems: migrating =============================
+-- create_table(:knowledge_items)
+   -> 0.0098s
+-- add_index(:knowledge_items, [:account_id, :status, :source_kind])
+   -> 0.0011s
+== 20260826000400 CreateKnowledgeItems: migrated (0.0111s) ====================
+
+== 20260826000500 CreateLeadQualificationTables: migrating ====================
+-- create_table(:qualification_questions)
+   -> 0.0077s
+-- add_index(:qualification_questions, [:account_id, :signal], {unique: true})
+   -> 0.0010s
+-- add_index(:qualification_questions, [:account_id, :enabled, :position])
+   -> 0.0013s
+-- create_table(:qualification_budget_ranges)
+   -> 0.0070s
+-- add_index(:qualification_budget_ranges, [:account_id, :enabled, :position])
+   -> 0.0014s
+-- create_table(:qualification_evidences)
+   -> 0.0139s
+-- add_index(:qualification_evidences, [:account_id, :contact_id, :signal, :superseded_at], {name: "idx_qualification_evidence_current_lookup"})
+   -> 0.0016s
+-- create_table(:lead_qualifications)
+   -> 0.0135s
+-- add_index(:lead_qualifications, [:account_id, :contact_id], {unique: true})
+   -> 0.0011s
+-- add_index(:lead_qualifications, [:account_id, :quality])
+   -> 0.0011s
+== 20260826000500 CreateLeadQualificationTables: migrated (0.0504s) ===========
+
+== 20260826000600 CreateLeadQualificationDecisions: migrating =================
+-- create_table(:lead_qualification_decisions)
+   -> 0.0122s
+-- add_index(:lead_qualification_decisions, [:account_id, :contact_id, :decided_at], {name: "idx_lead_qualification_decisions_on_lead"})
+   -> 0.0013s
+== 20260826000600 CreateLeadQualificationDecisions: migrated (0.0136s) ========
+
+== 20260826000700 CreateHumanReviewRequests: migrating ========================
+-- create_table(:human_review_requests)
+   -> 0.0148s
+-- add_index(:human_review_requests, [:account_id, :conversation_id, :lead_message_id, :reason], {unique: true, name: "index_human_review_requests_on_deduplication_key"})
+   -> 0.0013s
+-- add_index(:human_review_requests, [:account_id, :status, :created_at])
+   -> 0.0012s
+== 20260826000700 CreateHumanReviewRequests: migrated (0.0175s) ===============
+
+== 20260826000800 CreateLeadHandoffs: migrating ===============================
+-- create_table(:lead_handoffs)
+   -> 0.0189s
+-- add_index(:lead_handoffs, [:account_id, :conversation_id, :lead_qualification_id, :alert_type], {unique: true, name: "index_lead_handoffs_on_logical_handoff"})
+   -> 0.0010s
+== 20260826000800 CreateLeadHandoffs: migrated (0.0201s) ======================
+
+== 20260826000900 CreateBookings: migrating ===================================
+-- enable_extension("btree_gist")
+   -> 0.0590s
+-- create_table(:bookings)
+   -> 0.0153s
+-- add_index(:bookings, [:account_id, :calendar_id, :starts_at], {unique: true, where: "status = 0", name: "index_bookings_on_active_slot"})
+   -> 0.0079s
+-- add_index(:bookings, [:account_id, :idempotency_key], {unique: true, where: "idempotency_key IS NOT NULL", name: "index_bookings_on_idempotency_key"})
+   -> 0.0041s
+-- add_exclusion_constraint(:bookings, "account_id WITH =, calendar_id WITH =, tsrange(starts_at, ends_at, '[)') WITH &&", {where: "status = 0", using: :gist, name: "index_bookings_on_active_slot_overlap"})
+   -> 0.0020s
+== 20260826000900 CreateBookings: migrated (0.0888s) ==========================
+
+== 20260826001000 CreateLeadFollowUps: migrating ==============================
+-- create_table(:lead_follow_up_opt_outs)
+   -> 0.0100s
+-- create_table(:lead_follow_ups)
+   -> 0.0152s
+-- add_index(:lead_follow_up_opt_outs, [:account_id, :contact_id], {unique: true})
+   -> 0.0009s
+-- add_index(:lead_follow_ups, [:account_id, :conversation_id, :status])
+   -> 0.0011s
+-- add_index(:lead_follow_ups, [:account_id, :contact_id, :stage, :attempt_number], {unique: true, name: "idx_lead_follow_ups_on_logical_attempt"})
+   -> 0.0016s
+-- add_index(:lead_follow_ups, [:status, :scheduled_at])
+   -> 0.0013s
+== 20260826001000 CreateLeadFollowUps: migrated (0.0305s) =====================
+
+== 20260827001400 CreateKnowledgeDocuments: migrating =========================
+-- create_table(:knowledge_documents)
+   -> 0.0128s
+-- add_index(:knowledge_documents, [:account_id, :status, :updated_at])
+   -> 0.0011s
+== 20260827001400 CreateKnowledgeDocuments: migrated (0.0141s) ================
+
+== 20260827001410 ExpandHumanReviewRequestsForKnowledgeWorkspace: migrating ===
+-- add_reference(:human_review_requests, :assigned_user, {foreign_key: {to_table: :users}})
+   -> 0.0050s
+-- add_column(:human_review_requests, :operator_answer, :text)
+   -> 0.0009s
+-- add_column(:human_review_requests, :resolution_kind, :string)
+   -> 0.0007s
+-- add_column(:human_review_requests, :rejected_at, :datetime)
+   -> 0.0005s
+== 20260827001410 ExpandHumanReviewRequestsForKnowledgeWorkspace: migrated (0.0074s)
+
+== 20260830000100 CreateAiOrchestrationIntentsAndOutboxEvents: migrating ======
+-- create_table(:ai_orchestration_intents)
+   -> 0.0132s
+-- add_index(:ai_orchestration_intents, [:account_id, :idempotency_key], {unique: true})
+   -> 0.0013s
+-- add_index(:ai_orchestration_intents, [:account_id, :conversation_id, :state])
+   -> 0.0009s
+-- add_index(:ai_orchestration_intents, [:account_id, :conversation_id, :triggering_message_id, :observed_control_version], {unique: true, name: "idx_ai_orchestration_intents_on_logical_trigger"})
+   -> 0.0010s
+-- create_table(:outbox_events)
+   -> 0.0074s
+-- add_index(:outbox_events, [:account_id, :idempotency_key], {unique: true})
+   -> 0.0009s
+-- add_index(:outbox_events, [:account_id, :event_type, :state])
+   -> 0.0009s
+== 20260830000100 CreateAiOrchestrationIntentsAndOutboxEvents: migrated (0.0260s)
+
+== 20260830000200 CreateAiProviderConnections: migrating ======================
+-- create_table(:ai_provider_connections)
+   -> 0.0082s
+== 20260830000200 CreateAiProviderConnections: migrated (0.0094s) =============
+
+== 20260830000300 CreateAiLeadEmployeeEvaluationGate: migrating ===============
+-- table_exists?(:ai_lead_employee_evaluation_runs)
+   -> 0.0011s
+-- create_table(:ai_lead_employee_evaluation_runs)
+   -> 0.0968s
+-- add_index(:ai_lead_employee_evaluation_runs, [:account_id, :scenario_key, :created_at], {name: "idx_ai_lead_eval_runs_on_account_scenario"})
+   -> 0.0011s
+-- add_index(:ai_lead_employee_evaluation_runs, [:account_id, :passed], {name: "idx_ai_lead_eval_runs_on_account_passed"})
+   -> 0.0011s
+-- table_exists?(:ai_lead_employee_launch_gates)
+   -> 0.0005s
+-- create_table(:ai_lead_employee_launch_gates)
+   -> 0.0087s
+== 20260830000300 CreateAiLeadEmployeeEvaluationGate: migrated (0.1099s) ======
+
+== 20260831000100 AddPublishedContentDigestToKnowledgeDocuments: migrating ====
+-- add_column(:knowledge_documents, :published_content_digest, :string)
+   -> 0.0022s
+== 20260831000100 AddPublishedContentDigestToKnowledgeDocuments: migrated (0.0022s)
+
+== 20260831000200 AddNameQualificationQuestion: migrating =====================
+-- execute("UPDATE qualification_questions AS question SET position = position + 1, updated_at = CURRENT_TIMESTAMP WHERE NOT EXISTS ( SELECT 1 FROM qualification_questions AS name_question WHERE name_question.account_id = question.account_id AND name_question.signal = 7 )")
+   -> 0.0029s
+-- execute("INSERT INTO qualification_questions (account_id, signal, prompt, position, enabled, metadata, created_at, updated_at) SELECT DISTINCT account_id, 7, 'What is your name?', 0, TRUE, '{}'::jsonb, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM qualification_questions WHERE NOT EXISTS ( SELECT 1 FROM qualification_questions AS name_question WHERE name_question.account_id = qualification_questions.account_id AND name_question.signal = 7 )")
+   -> 0.0011s
+== 20260831000200 AddNameQualificationQuestion: migrated (0.0051s) ============
+
+== 20260909000100 ReconcileReleaseSchemaProvenance: migrating =================
+-- table_exists?(:ai_lead_employee_offers)
+   -> 0.0048s
+-- create_table(:ai_lead_employee_offers)
+   -> 0.0176s
+-- table_exists?(:qualification_hard_rules)
+   -> 0.0005s
+-- create_table(:qualification_hard_rules)
+   -> 0.0125s
+-- table_exists?(:qualification_score_ranges)
+   -> 0.0005s
+-- create_table(:qualification_score_ranges)
+   -> 0.0107s
+-- column_exists?(:qualification_questions, :required)
+   -> 0.0035s
+-- add_column(:qualification_questions, :required, :boolean, {default: true, null: false})
+   -> 0.0012s
+-- column_exists?(:qualification_questions, :validation_key)
+   -> 0.0016s
+-- add_column(:qualification_questions, :validation_key, :string, {default: "plain_text", null: false})
+   -> 0.0015s
+-- change_column_default(:human_review_requests, :reason, 0)
+   -> 0.0035s
+-- change_column_default(:ai_lead_employee_evaluation_runs, :prompt_version, "ai-orchestration-v1")
+   -> 0.0073s
+== 20260909000100 ReconcileReleaseSchemaProvenance: migrated (0.0671s) ========
+
+Loading Installation config

@@ -1,7 +1,7 @@
 # AI Lead Employee V1 Implementation Spec
 
-**Status:** Replacement planning foundation
-**Date:** 2026-08-30
+**Status:** Standalone completion baseline; R01–R18 acceptance controls current work
+**Date:** 2026-09-09
 **Product boundary:** Owned Community Edition fork, direct Meta WhatsApp Cloud API through the existing WhatsApp channel, durable grounded AI Orchestration
 
 ## Purpose
@@ -10,6 +10,24 @@ This spec replaces the misleading ticket-completion plan with the corrected V1
 foundation. The current code contains useful Community Edition behavior and
 later experiments, but production work must first prove the canonical WhatsApp
 round trip and durable AI boundary.
+
+## Current release and scope
+
+[ADR 0008](../adr/0008-canonical-v1-release-and-schema-provenance.md) selects
+`74d156e327e3ddb2deedd1503c6d1c04b0b1359e` plus documentation bootstrap
+`5c3bbc2f900948fcdd6729159701b9cc993b85b5` as the completion starting point.
+The coordinator integrates focused R01–R18 commits. Older donor experiments and
+000–019 Done notes are historical evidence, not current release approval.
+
+The approved main menu is Inbox, Leads, Bookings, Knowledge, Settings. Customer
+Review Requests and Hot Leads are Inbox views; Knowledge owns reusable content
+approvals; Test Center belongs in Settings → AI & testing. Required basic
+analytics remain within existing workspaces while generic CE Reports stays
+hidden. V1 has one direct Meta WhatsApp connection per Business Account, fixed
+Admin/Team Member roles, and Google Calendar as the selected first provider.
+Online Profits integration is separate. See the
+[active ticket index](../issues/v1-completion-20260909/README.md) and
+[R01 release proof/runbook](../releases/2026-09-09-r01/README.md).
 
 ## Canonical Acceptance Seam
 
@@ -83,7 +101,8 @@ surfaces:
 - Existing Rails account membership, policy, invitation, and dashboard routing
   patterns
 
-These current additions are donor/reference only until reconciled:
+These older saved-root additions remain donor/reference only; they must not
+replace the audited canonical runtime:
 
 - `Webhooks::Meta::WhatsappController`
 - `Meta::Whatsapp::InboundWebhookProcessor`

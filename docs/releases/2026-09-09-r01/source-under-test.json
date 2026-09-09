@@ -1,0 +1,15 @@
+{
+  "base_commit": "5c3bbc2f900948fcdd6729159701b9cc993b85b5",
+  "note": "Exact R01 source bytes under test; all other runtime source is unchanged from the base. The containing commit is reported in the task completion.",
+  "sha256": {
+    "db/migrate/20260831000200_add_name_qualification_question.rb": "132bf8399162911cd8ab49206d39d79ae191d23a7ba6d934462000397f926705",
+    "db/migrate/20260909000100_reconcile_release_schema_provenance.rb": "197de9862f5e3ec7a74d4139debf4ae15db3082ab13147c23f9ab61d3513e872",
+    "db/schema.rb": "a2ba84ffce0149f65d4914973ef8653c82ada99ebd2f98e37286f3e9d7ce5ea8",
+    "script/release/compare_schema.rb": "16ec5f7214a8a1a1b0a415203aca910bbe3c12c372deb42b97ae12441095cd58",
+    "script/release/seed_synthetic.rb": "0d70ed639a6e70cd0348bdcdd2dc8d56ca86ca0aed8678572f3724396c2e4836",
+    "spec/db/migrations/add_name_qualification_question_spec.rb": "8129dd90abe65b4df0e414bc377a257e3541625017de5fd01c6862b852842987",
+    "spec/db/migrations/reconcile_release_schema_provenance_spec.rb": "074b65a9d0e7a9108f38540bacfca70feb0decf8947a81d5f135337943552eaf",
+    "spec/requests/owned_baseline_smoke_spec.rb": "02b502e5ef9263e5aeaecb4f7324cc34ffc458c86960209bf3ab2a49d0d1bb95",
+    "spec/script/release/compare_schema_spec.rb": "7ce87c53c311ac552726f8fb51aafc050ebeebe58efb7d1404851f4259f7aac0"
+  }
+}

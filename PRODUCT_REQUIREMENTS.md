@@ -2,8 +2,8 @@
 
 ## Product Requirements Document
 
-**Status:** Reconciled planning baseline
-**Revision:** 4 (2026-08-30)
+**Status:** Approved standalone V1 completion baseline
+**Revision:** 5 (2026-09-09)
 **Working product name:** AI Lead Employee  
 **Initial channel:** WhatsApp  
 **Initial customer:** Our own online education and AI employee services business  
@@ -45,7 +45,7 @@ The product succeeds when it:
 - Configurable qualification questions and rules.
 - Lead extraction, scoring, and classification.
 - Automatic booking for highly qualified leads.
-- Connected calendar availability plus custom booking hours.
+- Google Calendar availability plus custom booking hours (R13).
 - WhatsApp alerts to configurable human recipients.
 - Shared dashboard inbox and lead list.
 - Per-conversation AI pause, human takeover, and manual resume.
@@ -55,7 +55,7 @@ The product succeeds when it:
 - Follow-up messages for incomplete conversations.
 - Basic analytics, testing tools, audit history, CSV export, and manual lead import.
 - Saved operational queues using owned labels, priorities, snoozing, and filters.
-- Human macros and canned responses for common manual actions.
+- Human replies and private notes; generic macros/canned-response administration stays hidden in V1.
 - Click-to-WhatsApp advertisement attribution when Meta referral data is available.
 - Business-hours-aware human handoff messaging.
 - Optional WhatsApp Business app coexistence when supported by Meta and the connected account.
@@ -81,15 +81,29 @@ The canonical WhatsApp path is:
 6. The existing WhatsApp outbound sender delivers the reply through Meta and
    delivery status webhooks reconcile the Message.
 
-Current ticket 002 implementation records the durable intent, source-reference
-placeholder, private outbound intent record, and outbox event only. It does not
-create lead-facing AI answer text until the approved-knowledge and verified
-Source Reference slice is implemented.
+The current release authority and reproducible schema decision are recorded in
+[ADR 0008](docs/adr/0008-canonical-v1-release-and-schema-provenance.md).
+The chosen runtime starts at audited commit `74d156e327e3ddb2deedd1503c6d1c04b0b1359e`
+plus the documentation-only integration bootstrap `5c3bbc2f900948fcdd6729159701b9cc993b85b5`.
+The canonical CE webhook, durable orchestration and encrypted provider connection
+are present. Historical 000–019 Done notes do not certify the new R01–R18
+acceptance paths. The [active tickets](docs/issues/v1-completion-20260909/README.md)
+control current implementation and proof.
 
-The parallel custom `/webhooks/meta/whatsapp` controller and processor that
-exist in the current code are an unsafe experiment, not the production path.
-They must be retired or quarantined before later AI behavior is treated as
-complete.
+### Approved navigation and standalone boundary
+
+There are five primary destinations: **Inbox, Leads, Bookings, Knowledge,
+Settings**. Phones expose Inbox, Leads, Bookings and More, with Knowledge and
+Settings inside More. Hot Leads and customer Review Requests are Inbox views.
+Knowledge owns reusable content Drafts & approvals. Full Test Center is under
+Settings → AI & testing; contextual test shortcuts open that same system.
+See the [approved navigation specification](docs/v1-completion-plan/2026-09-09/navigation.md).
+
+Basic analytics are required in Leads and relevant workspaces; the generic CE
+Reports suite is hidden. One direct Meta WhatsApp connection serves each
+Business Account, including Human Operator replies and authorized Alerts.
+Google Calendar is the first provider. Fixed Admin and Team Member roles remain;
+Online Profits identity, purchases, access and membership integration are separate.
 
 ### Not Included
 
@@ -103,6 +117,8 @@ complete.
 - Fully autonomous custom pricing, refunds, legal advice, or medical advice.
 - Guaranteed sales or revenue claims.
 - Chatwoot Enterprise features or code requiring a commercial license.
+- Online Profits integration, billing, CRM synchronization and broad marketing campaigns.
+- Additional messaging channels or multiple WhatsApp connections per Business Account.
 
 ## 4. Users and Roles
 
@@ -132,7 +148,7 @@ All human messages are sent through the same WhatsApp business number. The first
 
 ## 5. Lead Data Model
 
-Every record must include a hidden `business_account_id` from the beginning, even though v1 serves one internal business. This prepares the system for future multi-client use without exposing multi-client controls in the initial interface.
+Every tenant-owned record must resolve a hidden Business Account scope from the beginning, even though v1 serves one internal business. In the CE runtime this is normally `account_id` on `Account`, `AccountUser`, `Contact` and related records, not a duplicate tenancy system. This prepares the system for future multi-client use without exposing multi-client controls in the initial interface.
 
 The lead record should support:
 
@@ -420,7 +436,7 @@ The system follows up when a lead stops responding before qualification is compl
 - Visible AI/human control state.
 - Reply, pause, resume, assign, and add-note actions.
 - Saved queues for hot leads, human review, follow-up due, and booked calls.
-- Canned responses and macros for human operators.
+- Human replies and private notes; generic macros and canned-response administration remain gated.
 
 ### Leads
 
@@ -429,12 +445,12 @@ The system follows up when a lead stops responding before qualification is compl
 - Clear qualification explanation and missing signals.
 - CSV export and manual lead import.
 
-### Hot Leads
+### Inbox → Hot leads
 
 - Prioritized list of highly qualified leads and booked calls.
 - Qualification reasons and contact details visible without opening each conversation.
 
-### Human Review
+### Inbox → Needs review
 
 - Unanswered questions.
 - Sensitive or conflicting requests.
@@ -448,7 +464,7 @@ The system follows up when a lead stops responding before qualification is compl
 - Source priority and conflict visibility.
 - Approval workflow for human answers.
 
-### Configuration
+### Settings
 
 - Offers and target customer profiles.
 - Qualification questions, hard rules, scoring, and budget ranges.
@@ -458,7 +474,10 @@ The system follows up when a lead stops responding before qualification is compl
 - Follow-up timing and message rules.
 - Sandbox/test mode.
 
-### Analytics
+### Basic analytics within Leads and relevant workspaces
+
+R16 must define time range, timezone, denominators, role scope and empty states.
+These metrics do not add a sixth main-menu item or enable generic CE Reports.
 
 - Total conversations.
 - Lead quality breakdown.

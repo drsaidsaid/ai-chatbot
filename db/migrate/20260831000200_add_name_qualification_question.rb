@@ -42,8 +42,8 @@ class AddNameQualificationQuestion < ActiveRecord::Migration[7.1]
   def insert_name_questions!
     execute <<~SQL.squish
       INSERT INTO qualification_questions
-        (account_id, signal, prompt, position, enabled, required, validation_key, metadata, created_at, updated_at)
-      SELECT DISTINCT account_id, #{NAME_SIGNAL}, 'What is your name?', 0, TRUE, TRUE, 'plain_text', '{}'::jsonb, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        (account_id, signal, prompt, position, enabled, metadata, created_at, updated_at)
+      SELECT DISTINCT account_id, #{NAME_SIGNAL}, 'What is your name?', 0, TRUE, '{}'::jsonb, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
       FROM qualification_questions
       WHERE NOT EXISTS (
         SELECT 1

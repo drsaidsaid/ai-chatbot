@@ -1,0 +1,171 @@
+{
+  "verified_at": "2026-09-09T19:21:14.684725+00:00",
+  "base_commit": "5c3bbc2f900948fcdd6729159701b9cc993b85b5",
+  "source_inventory": "source-under-test.json",
+  "runtime": {
+    "ruby": "3.4.4",
+    "bundler": "2.5.16",
+    "rails": "7.2.3.1",
+    "node": "24.13.0",
+    "pnpm": "10.2.0",
+    "vue": "3.5.12",
+    "vite": "6.4.2",
+    "postgresql": "18.6",
+    "pgvector": "0.8.6",
+    "redis": "8.0.1",
+    "sidekiq": "7.3.10"
+  },
+  "checks": [
+    {
+      "name": "Ruby clean dependency install",
+      "command": "BUNDLE_FROZEN=true BUNDLE_PATH=/tmp/ale-r01-gems.HdwFNm BUNDLE_BUILD__PG=--with-pg-config=/opt/homebrew/opt/libpq/bin/pg_config bundle install",
+      "exit_code": 0,
+      "result": "152 Gemfile dependencies, 381 gems; a new installation directory with cached .gem archives only; no donor installed gems reused.",
+      "setup_corrections": [
+        "Explicit Homebrew libpq pg_config for native pg gem.",
+        "BUNDLE_PATH with no spaces for Datadog native include paths."
+      ]
+    },
+    {
+      "name": "Fresh frontend dependency install",
+      "command": "pnpm install --frozen-lockfile",
+      "exit_code": 0,
+      "result": "New node_modules directory; Husky runtime initialized; lockfiles unchanged."
+    },
+    {
+      "name": "Fresh checkpoint upgrade",
+      "command": "RAILS_ENV=test POSTGRES_DATABASE=ale_release_r01_checkpoint_final SCHEMA=tmp/r01/checkpoint-final.rb bundle exec rails db:create db:schema:load db:migrate db:schema:dump",
+      "exit_code": 0,
+      "result": "CE import checkpoint from f1bf3cd0604ae610baa675061b0e76dcd49fffcd, then all 18 owned migrations; 194 recorded versions, 121 public tables."
+    },
+    {
+      "name": "Fresh current-schema install",
+      "command": "RAILS_ENV=test POSTGRES_DATABASE=ale_release_r01_schema_final SCHEMA=tmp/r01/current-final.rb bundle exec rails db:create db:schema:load db:migrate db:schema:dump",
+      "exit_code": 0,
+      "result": "Version 20260909000100."
+    },
+    {
+      "name": "Schema convergence",
+      "command": "ruby script/release/compare_schema.rb tmp/r01/checkpoint-final.rb tmp/r01/current-final.rb",
+      "exit_code": 0,
+      "normalized_sha256": "3faa0284635ca26e702b940ec8ed82f9a1c9d24d87159d69ab8a454cdea24c81"
+    },
+    {
+      "name": "Final Ruby regressions with fresh gems",
+      "command": "BUNDLE_PATH=/tmp/ale-r01-gems.HdwFNm RAILS_ENV=test POSTGRES_DATABASE=ale_release_r01_checkpoint_final bundle exec rspec spec/db/migrations spec/requests/owned_baseline_smoke_spec.rb spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb spec/script/release/compare_schema_spec.rb",
+      "exit_code": 0,
+      "examples": 16,
+      "failures": 0,
+      "limits": "Canonical request tests stub external Meta and AI HTTP with WebMock; no real delivery proof."
+    },
+    {
+      "name": "Frontend regressions",
+      "command": "pnpm test app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+      "exit_code": 0,
+      "tests": 14,
+      "failures": 0
+    },
+    {
+      "name": "Production frontend build",
+      "command": "RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 pnpm exec vite build",
+      "exit_code": 0,
+      "modules": 5075,
+      "warnings": [
+        "Outdated Browserslist data",
+        "Large output chunks"
+      ]
+    },
+    {
+      "name": "RuboCop with fresh gems",
+      "command": "bundle exec rubocop db/migrate/20260831000200_add_name_qualification_question.rb db/migrate/20260909000100_reconcile_release_schema_provenance.rb script/release spec/db/migrations spec/script/release spec/requests/owned_baseline_smoke_spec.rb",
+      "environment": {
+        "BUNDLE_PATH": "/tmp/ale-r01-gems.HdwFNm"
+      },
+      "exit_code": 0,
+      "files": 8,
+      "offenses": 0
+    },
+    {
+      "name": "Browser and Rails boot",
+      "database": "ale_release_r01_browser",
+      "url": "http://127.0.0.1:3211/app/login",
+      "browser": "Codex in-app browser",
+      "steps": [
+        "Sign in as synthetic Admin",
+        "Leads contains Synthetic Lead",
+        "Open conversation shows persisted incoming message and AI Paused",
+        "Refresh preserves message and control state"
+      ],
+      "health_http_status": 200,
+      "health_body": {
+        "status": "woot"
+      },
+      "browser_errors": [],
+      "limits": "Synthetic API-only Inbox; no providers configured; inherited navigation/action defects remain for R02/R07/R13."
+    },
+    {
+      "name": "Worker boot with fresh gems",
+      "environment": {
+        "RAILS_ENV": "test",
+        "POSTGRES_DATABASE": "ale_release_r01_browser",
+        "SIDEKIQ_ALIVE_HOST": "127.0.0.1",
+        "SIDEKIQ_ALIVE_PORT": "7431"
+      },
+      "command": "bundle exec sidekiq -q r01_boot_only -c 1",
+      "result": "Rails booted; Redis connected on 6391; dedicated health worker completed; stopped with TERM, exit 0."
+    },
+    {
+      "name": "Vite development startup",
+      "command": "VITE_RUBY_PORT=3091 VITE_RUBY_HOST=127.0.0.1 pnpm exec vite --mode test",
+      "result": "Ready on http://127.0.0.1:3091/vite-test/; stopped deliberately with TERM."
+    }
+  ],
+  "services_stopped": [
+    "Rails 3211",
+    "Vite 3091",
+    "Sidekiq and health 7431",
+    "PostgreSQL 55481",
+    "Redis 6391"
+  ],
+  "remaining_r01_acceptance_gaps": [],
+  "not_proven": [
+    "Production environment and PostgreSQL 16 staging image",
+    "Real Meta delivery and approved templates",
+    "Paid model/limits and answer quality",
+    "Google OAuth and real calendar event lifecycle",
+    "Current-release launch and supervised pilot"
+  ],
+  "evidence_sha256": {
+    "evidence/browser-errors.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "evidence/checkpoint-upgrade.txt": "ef93249764d1098468b2a6dfd00a6e06e6b6aaa0c36e2dbea354d85c4ed06b17",
+    "evidence/current-schema-load.txt": "e8ed0f8053d3259c0ce1e0aad6cc1699e4f6ee39c760224ab30a0947a08baa70",
+    "evidence/frontend-install.txt": "80583bdd05aa2283000d6ef7553da61f971ca77ed233317a3a10a31528430570",
+    "evidence/frontend-tests.txt": "f9f476778ebbaa58b87b85b180f42f3f3f43aea9ca2c5a21c91d75cdb6176aa1",
+    "evidence/migration-regression-before-fix.txt": "8a06c65e7221c2a7c3125244669f161c31efd0edca515cbf1e6c3e037c724565",
+    "evidence/production-build.txt": "00c7378ac6497598689fc0a2f02bd4dd8b1e98b2954f7af4ab992572f930c871",
+    "evidence/ruby-install.txt": "ed280692cbb7245c24ed88ed59d9dd4492c42e3bcdfbecf31cb1a3467ca074ca",
+    "evidence/ruby-lint.txt": "d8367a62aa71f492773071ca3246926f601a105f2caa88ca98538710bac106bd",
+    "evidence/ruby-tests.txt": "1bf8989314e17b21a114260c124bed667a8d88bde56aa99024dc3e3b23efb471",
+    "evidence/schema-drift-before-fix.diff": "7743489119e4c3cbdc8b38b7a50e7f2bb831a8281cbc293b94239abb487b15ee",
+    "evidence/synthetic-conversation.png": "9927ca847ccec4c8b0ae89adc2a2cd016b47b7d3873dc29d8b8afbc9d5978261",
+    "evidence/synthetic-conversation.txt": "48530f2dcbd17ecb3a71866a3657c43b273098d7dc9bca8f937a7101d6fc118d",
+    "evidence/vite-development.txt": "d07c0a35dcb5c6ad8b5728c2ef135029c8d0b4ae14c2757847496540062536f0",
+    "evidence/worker-boot.txt": "5e9935099a87d891e4d0130fb4a3cf5e43b208420628ac717ba4c82c7670a863"
+  },
+  "original_text_evidence_sha256": {
+    "evidence/migration-regression-before-fix.txt": "ecb09339df6227d6ec4af9637319d879c0cbe63cf844ea5c069d0ad6357a2daf",
+    "evidence/production-build.txt": "00c7378ac6497598689fc0a2f02bd4dd8b1e98b2954f7af4ab992572f930c871",
+    "evidence/synthetic-conversation.txt": "f458482bcf5c9fe97c9347e23a17659efd3858f36c94f5a409bbddf72b05e939",
+    "evidence/ruby-install.txt": "ed280692cbb7245c24ed88ed59d9dd4492c42e3bcdfbecf31cb1a3467ca074ca",
+    "evidence/frontend-tests.txt": "fdeb0af1be0867bc5a5f9ce4ad16bc9b59bcb2aa53bc9330137a5e38dc5fbe74",
+    "evidence/frontend-install.txt": "80583bdd05aa2283000d6ef7553da61f971ca77ed233317a3a10a31528430570",
+    "evidence/worker-boot.txt": "5e9935099a87d891e4d0130fb4a3cf5e43b208420628ac717ba4c82c7670a863",
+    "evidence/ruby-tests.txt": "63817114c886dc86c0f4c9167daca15898e650332375e9bee2ca2b6775fbaa67",
+    "evidence/schema-drift-before-fix.diff": "f3573e2ca643aa43f9d6d06e43dfdba661496618a5701e0690121255f1ee478c",
+    "evidence/current-schema-load.txt": "e8ed0f8053d3259c0ce1e0aad6cc1699e4f6ee39c760224ab30a0947a08baa70",
+    "evidence/ruby-lint.txt": "d8367a62aa71f492773071ca3246926f601a105f2caa88ca98538710bac106bd",
+    "evidence/vite-development.txt": "d07c0a35dcb5c6ad8b5728c2ef135029c8d0b4ae14c2757847496540062536f0",
+    "evidence/checkpoint-upgrade.txt": "9a4ec0abde773495ed76370329efddb7c55c07577bde83473c123d0b94642569"
+  },
+  "text_evidence_format": "Trailing whitespace and extra EOF blank lines removed from newly captured text logs and the human-readable drift diff. Frozen audit evidence and screenshot bytes remain unchanged."
+}

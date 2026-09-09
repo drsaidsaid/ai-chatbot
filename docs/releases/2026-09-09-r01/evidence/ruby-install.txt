@@ -1,0 +1,445 @@
+Fetching gem metadata from https://rubygems.org/........
+Installing rake 13.2.1
+Installing base64 0.3.0
+Installing connection_pool 2.5.5
+Installing benchmark 0.5.0
+Installing logger 1.7.0
+Installing drb 2.2.3
+Installing minitest 5.27.0
+Installing bigdecimal 4.1.2 with native extensions
+Installing securerandom 0.4.1
+Installing builder 3.3.0
+Installing erubi 1.13.1
+Installing cgi 0.5.2 with native extensions
+Installing concurrent-ruby 1.3.8
+Installing racc 1.8.1 with native extensions
+Installing crass 1.0.7
+Installing rack 3.2.6
+Installing useragent 0.16.11
+Installing websocket-extensions 0.1.5
+Installing nio4r 2.7.5 with native extensions
+Installing zeitwerk 2.7.5
+Installing timeout 0.6.1
+Installing marcel 1.1.0
+Installing mini_mime 1.1.5
+Installing date 3.5.1 with native extensions
+Installing active_record_query_trace 1.8
+Installing prettyprint 0.2.0
+Installing public_suffix 7.0.5
+Installing erb 6.0.6 with native extensions
+Installing tsort 0.2.0
+Installing io-console 0.8.2 with native extensions
+Installing prism 1.9.0 with native extensions
+Installing thor 1.4.0
+Installing kaminari-core 1.2.2
+Installing tilt 2.3.0
+Installing ffi 1.17.2 (arm64-darwin)
+Installing selectize-rails 0.12.6
+Installing event_stream_parser 1.0.0
+Installing uri 1.1.1
+Installing json 2.19.9 with native extensions
+Installing multipart-post 2.4.1
+Installing ruby_llm-schema 0.3.0
+Installing ast 2.4.3
+Installing attr_extras 7.1.0
+Installing version_gem 1.1.11
+Installing aws-eventstream 1.4.0
+Installing aws-partitions 1.1198.0
+Installing jmespath 1.6.2
+Installing rexml 3.4.4
+Installing statsd-ruby 1.5.0
+Installing multi_json 1.15.0
+Installing bcrypt 3.1.22 with native extensions
+Installing bindex 0.8.1 with native extensions
+Installing msgpack 1.8.3 with native extensions
+Installing browser 5.3.1
+Installing uniform_notifier 1.17.0
+Installing byebug 11.1.3 with native extensions
+Installing climate_control 1.2.0
+Installing coderay 1.1.3
+Installing cld3 3.7.0 with native extensions
+Installing commonmarker 0.23.12 with native extensions
+Installing unicode 0.4.4.5 with native extensions
+Installing csv 3.3.0
+Installing database_cleaner-core 2.0.1
+Installing datadog-ruby_core_source 3.5.3
+Installing declarative 0.0.20
+Installing libdatadog 36.0.0.1.0 (arm64-darwin)
+Installing orm_adapter 0.5.0
+Installing rotp 6.3.0
+Installing diff-lcs 1.5.1
+Installing digest-crc 0.6.5 with native extensions
+Installing docile 1.4.1
+Installing unf_ext 0.0.8.2 with native extensions
+Installing dotenv 3.1.2
+Installing dry-cli 1.1.0
+Installing dry-inflector 1.2.0
+Installing dry-initializer 3.2.0
+Installing regexp_parser 2.10.0
+Installing http-form_data 2.3.0
+Installing ruby2_keywords 0.0.5
+Installing email-provider-info 0.0.1
+Installing email_reply_trimmer 0.1.13
+Installing execjs 2.8.1
+Installing mime-types-data 3.2023.0218.1
+Installing os 1.1.4
+Installing firecrawl-sdk 1.4.1
+Installing flag_shih_tzu 0.3.23
+Installing raabro 1.4.0
+Installing foreman 0.87.2
+Installing google-protobuf 3.25.7 with native extensions
+Installing gemoji 4.1.0
+Installing geocoder 1.8.1
+Installing ostruct 0.6.3
+Installing httpclient 2.8.3
+Installing mutex_m 0.3.0
+Installing trailblazer-option 0.1.2
+Installing uber 0.1.0
+Installing retriable 3.1.2
+Installing google-cloud-errors 1.3.1
+Installing gserver 0.0.1
+Installing haikunator 1.1.1
+Installing sexp_processor 4.17.0
+Installing hana 1.3.7
+Installing hash_diff 1.1.1
+Installing hashdiff 1.1.0
+Installing http-accept 1.7.0
+Installing mini_magick 4.12.0
+Installing uri_template 0.7.0
+Installing judoscale-ruby 1.8.2
+Installing uri-idna 0.3.1
+Installing language_server-protocol 3.17.0.5
+Installing line-bot-api 1.28.0
+Installing lint_roller 1.1.0
+Installing liquid 5.4.0
+Installing rb-fsevent 0.11.2
+Installing maxminddb 0.1.22
+Installing method_source 1.1.0
+Installing netrc 0.11.0
+Installing openssl 3.2.0 with native extensions
+Installing opentelemetry-api 1.7.0
+Installing parallel 1.27.0
+Installing pgvector 0.1.1
+Installing pg 1.5.3 with native extensions
+Installing rack-timeout 0.6.3
+Installing rainbow 3.1.1
+Installing rspec-support 3.13.1
+Installing ruby-progressbar 1.13.0
+Installing unicode-emoji 4.0.4
+Installing sorbet-runtime 0.5.11934
+Installing simplecov-html 0.13.2
+Installing simplecov_json_formatter 0.1.4
+Installing spring 4.1.1
+Installing squasher 0.7.2
+Installing ssrf_filter 1.5.0
+Installing stackprof 0.2.25 with native extensions
+Installing stripe 18.0.1
+Installing telephone_number 1.4.20
+Installing wisper 2.0.0
+Installing jwt 2.10.3
+Installing newrelic_rpm 9.6.0
+Installing redis-client 0.26.4
+Installing childprocess 5.1.0
+Installing hashie 5.1.0
+Installing test-prof 1.6.3
+Installing websocket-driver 0.8.2 with native extensions
+Installing net-protocol 0.2.2
+Installing rack-session 2.1.2
+Installing rack-test 2.1.0
+Installing rackup 2.2.1
+Installing warden 1.2.9
+Installing request_store 1.5.1
+Installing rack-contrib 2.5.0
+Installing rack-protection 4.2.1
+Installing rack-attack 6.7.0
+Installing rack-cors 2.0.0
+Installing rack-mini-profiler 4.0.1
+Installing rack-proxy 0.7.7
+Installing pp 0.6.4
+Installing i18n 1.15.2
+Installing tzinfo 2.0.6
+Installing sprockets 4.2.1
+Installing dry-core 1.1.0
+Installing addressable 2.9.0
+Installing nokogiri 1.19.4 (arm64-darwin)
+Installing brakeman 8.0.5
+Installing bundler-audit 0.9.1
+Installing net-http 0.9.1
+Installing sassc 2.4.0 with native extensions
+Installing libddwaf 1.30.0.0.2 (arm64-darwin)
+Installing ffi-compiler 1.0.1
+Installing ruby-vips 2.1.4
+Installing rb-inotify 0.10.1
+Installing faraday-multipart 1.2.0
+Installing parser 3.3.8.0
+Installing auth-sanitizer 0.2.1
+Installing aws-sigv4 1.12.1
+Installing azure-blob 0.8.0
+Installing barnes 0.0.9
+Installing reline 0.6.3
+Installing puma 7.2.1 with native extensions
+Installing csv-safe 3.3.1
+Installing iso-639 0.3.8
+Installing crack 1.0.0
+Installing multi_xml 0.9.1
+Installing sentry-ruby 5.19.0
+Installing ecma-re-validator 0.4.0
+Installing mock_redis 0.36.0
+Installing uglifier 4.2.0
+Installing mime-types 3.4.1
+Installing bootsnap 1.16.0 with native extensions
+Installing gli 2.22.2
+Installing oj 3.17.3 with native extensions
+Installing representable 3.2.0
+Installing ruby_parser 3.22.0
+Installing json_refs 0.1.8
+Installing json_skooma 0.2.5
+Installing pry 0.14.2
+Installing opentelemetry-common 0.23.0
+Installing opentelemetry-registry 0.4.0
+Installing opentelemetry-semantic_conventions 1.36.0
+Installing unf 0.1.4
+Installing rspec-core 3.13.0
+Installing rspec-expectations 3.13.2
+Installing rspec-mocks 3.13.1
+Installing unicode-display_width 3.1.4
+Installing simplecov 0.22.0
+Installing sidekiq 7.3.10
+Installing redis 5.0.6
+Installing snaky_hash 2.0.5
+Installing net-imap 0.6.4.1
+Installing net-pop 0.1.2
+Installing net-smtp 0.3.4
+Installing omniauth 2.1.4
+Installing vite_ruby 3.10.2
+Installing faker 3.2.0
+Installing activesupport 7.2.3.1
+Installing cronex 0.15.0
+Installing et-orbi 1.2.11
+Installing dry-configurable 1.3.0
+Installing tzinfo-data 1.2023.3
+Installing dry-logic 1.6.0
+Installing down 5.4.0
+Installing launchy 3.1.1
+Installing loofah 2.25.2
+Installing html2text 0.4.0
+Installing ruby-saml 1.18.1
+Installing reverse_markdown 2.1.1
+Installing bundle-audit 0.1.0
+Installing faraday-net_http 3.4.4
+Installing datadog 2.38.0 with native extensions
+Installing llhttp-ffi 0.4.0 with native extensions
+Installing image_processing 1.12.2
+Installing listen 3.8.0
+Installing sass-listen 4.0.0
+Installing scout_apm 5.3.3 with native extensions
+Installing oauth-tty 1.0.8
+Installing aws-sdk-core 3.240.0
+Installing rbs 4.0.3 with native extensions
+Installing rubocop-ast 1.44.1
+Installing webmock 3.23.1
+Installing httparty 0.24.0
+Installing json_schemer 0.2.24
+Installing ruby2ruby 2.5.0
+Installing skooma 0.3.7
+Installing pry-rails 0.3.9
+Installing opentelemetry-sdk 1.10.0
+Installing domain_name 0.5.20190701
+Installing rspec_junit_formatter 0.6.0
+Installing judoscale-sidekiq 1.8.2
+Installing newrelic-sidekiq-metrics 1.6.2
+Installing sentry-sidekiq 5.19.0
+Installing sidekiq_alive 2.5.0
+Installing redis-namespace 1.10.0
+Installing mail 2.9.1
+Installing rails-dom-testing 2.3.0
+Installing globalid 1.2.1
+Installing activemodel 7.2.3.1
+Installing bullet 8.0.7
+Installing factory_bot 6.4.5
+Installing groupdate 6.2.1
+Installing pundit 2.3.0
+Installing shoulda-matchers 5.3.0
+Installing time_diff 0.3.0
+Installing working_hours 1.4.1
+Installing fugit 1.11.1
+Installing dry-types 1.9.1
+Installing letter_opener 1.10.0
+Installing rails-html-sanitizer 1.7.1
+Installing omniauth-saml 2.2.4
+Installing faraday 2.14.3
+Installing googleapis-common-protos-types 1.20.0
+Installing spring-watcher-listen 2.1.0
+Installing sass 3.7.4
+Installing oauth 1.1.6
+Installing aws-sdk-kms 1.118.0
+Installing aws-sdk-sns 1.70.0
+Installing aws-sdk-cloudwatch 1.126.0
+Installing rubocop 1.75.6
+Installing facebook-messenger 2.0.1
+Installing http-cookie 1.0.5
+Installing activejob 7.2.3.1
+Installing activerecord 7.2.3.1
+Installing searchkick 5.5.2
+Installing valid_email2 5.2.6
+Installing sidekiq-cron 2.4.0
+Installing dry-schema 1.14.1
+Installing actionview 7.2.3.1
+Installing faraday-retry 2.4.0
+Installing faraday-mashify 1.0.0
+Installing faraday_middleware-aws-sigv4 1.0.1
+Installing google-cloud-env 2.2.1
+Installing signet 0.17.0
+Installing koala 3.4.0
+Installing oauth2 2.0.22
+Installing opensearch-ruby 3.4.0
+Installing ruby-openai 7.3.1
+Installing twilio-ruby 7.6.0
+Installing opentelemetry-exporter-otlp 0.31.1
+Installing scss_lint 0.60.0
+Installing gmail_xoauth 0.4.3
+Installing twitty 0.1.5
+Installing aws-sdk-s3 1.208.0
+Installing speedshop-cloudwatch 0.2.1
+Installing rubocop-factory_bot 2.27.1
+Installing rubocop-performance 1.25.0
+Installing rubocop-rails 2.32.0
+Installing rubocop-rspec 3.6.0
+Installing http 5.1.1
+Installing grpc 1.72.0 (arm64-darwin)
+Installing rest-client 2.1.0
+Installing activerecord-import 2.1.0
+Installing acts-as-taggable-on 12.0.0
+Installing kaminari-activerecord 1.2.2
+Installing annotaterb 4.20.0
+Installing audited 5.4.1
+Installing database_cleaner-active_record 2.1.0
+Installing hairtrigger 1.3.1
+Installing neighbor 0.2.3
+Installing pg_search 2.3.6
+Installing procore-sift 1.0.0
+Installing seed_dump 3.3.1
+Installing fast-mcp 1.5.0
+Installing actionpack 7.2.3.1
+Installing kaminari-actionview 1.2.2
+Installing jbuilder 2.15.1
+Installing ruby_llm 1.15.0
+Installing slack-ruby-client 2.7.0
+Installing google-cloud-core 1.7.1
+Installing googleauth 1.11.2
+Installing omniauth-oauth2 1.8.0
+Installing elastic-apm 4.6.2
+Installing database_cleaner 2.0.2
+Installing kaminari 1.2.2
+Installing actioncable 7.2.3.1
+Installing activestorage 7.2.3.1
+Installing actionmailer 7.2.3.1
+Installing sprockets-rails 3.4.2
+Installing omniauth-rails_csrf_protection 1.0.2
+Installing fcm 1.0.8
+Installing ai-agents 0.12.0
+Installing google-apis-core 0.15.1
+Installing rdoc 8.0.0
+Installing omniauth-google-oauth2 1.1.3
+Installing actionmailbox 7.2.3.1
+Installing actiontext 7.2.3.1
+Installing google-apis-iamcredentials_v1 0.22.0
+Installing googleapis-common-protos 1.6.0
+Installing google-apis-storage_v1 0.47.0
+Installing aws-actionmailbox-ses 0.1.0
+Installing gapic-common 0.20.0
+Installing irb 1.18.0
+Installing google-cloud-location 0.6.0
+Installing google-cloud-translate-v3 0.10.0
+Installing google-cloud-dialogflow-v2 0.31.0
+Installing debug 1.11.1 with native extensions
+Installing railties 7.2.3.1
+Installing rails 7.2.3.1
+Installing responders 3.1.1
+Installing dotenv-rails 3.1.2
+Installing jquery-rails 4.6.0
+Installing factory_bot_rails 6.4.3
+Installing judoscale-rails 1.8.2
+Installing lograge 0.14.0
+Installing meta_request 0.8.5
+Installing rails-i18n 7.0.10
+Installing rspec-rails 7.0.1
+Installing sentry-rails 5.19.0
+Installing vite_rails 3.10.0
+Installing web-console 4.2.1
+Installing tidewave 0.2.0
+Installing devise 4.9.4
+Installing devise-two-factor 6.1.0
+Installing devise-secure_password 2.2.1
+Installing devise_token_auth 1.2.5
+Installing google-cloud-storage 1.52.0
+Installing web-push 3.0.1
+Installing shopify_api 14.8.0
+Installing sassc-rails 2.1.2
+Installing administrate 0.20.1
+Installing administrate-field-belongs_to_search 0.10.0
+Installing administrate-field-active_storage 1.0.3
+Bundle complete! 152 Gemfile dependencies, 381 gems now installed.
+Bundled gems are installed into `/tmp/ale-r01-gems.HdwFNm`
+Post-install message from minitest:
+NOTE: minitest 5 will be the last in the minitest family to support
+      ruby 1.8 to 2.7. If you need to keep using these versions,
+      you need to pin your dependency to minitest with something
+      like "~> 5.0". See History.rdoc to locate compatible
+      versions.
+
+      Further, minitest 6 will be dropping the following:
+
+      + MiniTest (it's been Minitest for >10 years)
+      + MiniTest::Unit
+      + MiniTest::Unit::TestCase
+      + assert_send (unless you argue for it well)
+      + assert_equal nil, obj
+      + mocks and stubs: moving minitest/mock.rb to its own gem
+Post-install message from ruby_llm:
+RubyLLM 1.15 upgrade note:
+
+  Token accounting is now normalized across providers. `input_tokens` means
+  standard input tokens; prompt cache reads and writes are exposed separately
+  as `cache_read_tokens` and `cache_write_tokens`.
+
+  Need request-side input activity?
+    input_tokens + cache_read_tokens + cache_write_tokens
+
+  New cost helpers:
+    response.cost.total
+    chat.cost.total
+    agent.cost.total
+
+  Upgrading from RubyLLM < 1.15? Read the full upgrade guide:
+    https://rubyllm.com/upgrading/
+Post-install message from datadog:
+JRuby support in the datadog gem is deprecated. Details: https://dtdg.co/jruby-deprecation
+Post-install message from devise:
+
+[DEVISE] Please review the [changelog] and [upgrade guide] for more info on Hotwire / Turbo integration.
+
+  [changelog] https://github.com/heartcombo/devise/blob/main/CHANGELOG.md
+  [upgrade guide] https://github.com/heartcombo/devise/wiki/How-To:-Upgrade-to-Devise-4.9.0-%5BHotwire-Turbo-integration%5D
+  Post-install message from httparty:
+When you HTTParty, you must party hard!
+Post-install message from sass:
+
+Ruby Sass has reached end-of-life and should no longer be used.
+
+* If you use Sass as a command-line tool, we recommend using Dart Sass, the new
+  primary implementation: https://sass-lang.com/install
+
+* If you use Sass as a plug-in for a Ruby web framework, we recommend using the
+  sassc gem: https://github.com/sass/sassc-ruby#readme
+
+* For more details, please refer to the Sass blog:
+  https://sass-lang.com/blog/posts/7828841
+
+Post-install message from vite_ruby:
+Thanks for installing Vite Ruby!
+
+If you upgraded the gem manually, please run:
+	bundle exec vite upgrade
+3 installed gems you directly depend on are looking for funding.
+  Run `bundle fund` for details

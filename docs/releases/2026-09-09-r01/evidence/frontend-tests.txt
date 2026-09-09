@@ -1,0 +1,18 @@
+
+> @chatwoot/chatwoot@4.17.0 test /Users/ghalyasaid/.codex/worktrees/7e4e/AI Chatbot
+> TZ=UTC vitest --no-watch --no-cache --no-coverage --logHeapUsage app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js
+
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/7e4e/AI Chatbot
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js (8 tests) 12ms 52 MB heap used
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (6 tests) 633ms 59 MB heap used
+   ✓ LeadsDirectoryPage > renders filter chips, dense rows, selected detail, and long text truncation 336ms
+
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  18:47:25
+   Duration  6.58s (transform 680ms, setup 1.04s, collect 620ms, tests 645ms, environment 4.24s, prepare 936ms)

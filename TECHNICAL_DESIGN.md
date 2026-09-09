@@ -1,8 +1,8 @@
 # AI Lead Employee Technical Design
 
-**Status:** Reconciled planning baseline
+**Status:** Approved standalone V1 completion baseline (2026-09-09)
 **Product requirements:** `PRODUCT_REQUIREMENTS.md`
-**Architecture decisions:** `docs/adr/0002-owned-inbox-fork.md`, `docs/adr/0005-canonical-whatsapp-path.md`, `docs/adr/0006-durable-grounded-ai-boundary.md`
+**Architecture decisions:** `docs/adr/0002-owned-inbox-fork.md`, `docs/adr/0005-canonical-whatsapp-path.md`, `docs/adr/0006-durable-grounded-ai-boundary.md`, `docs/adr/0008-canonical-v1-release-and-schema-provenance.md`
 
 ## 1. System Boundary
 
@@ -36,7 +36,9 @@ Lead <---- WhatsApp ----> Meta WhatsApp Cloud API
   our owned backend.
 - Rails Action Cable for real-time browser updates.
 - Sidekiq workers and Sidekiq Cron.
-- Our PostgreSQL 16 database with pgvector.
+- PostgreSQL with pgvector. The existing staging compose targets PostgreSQL 16;
+  R01 records the exact locally tested version in its release proof. R18 must
+  validate the actual deployment image and restore path before promotion.
 - Redis for queues, caching, and Action Cable.
 - Rails Active Storage backed by local disk in development and S3-compatible storage in production.
 
@@ -48,8 +50,8 @@ Lead <---- WhatsApp ----> Meta WhatsApp Cloud API
   that must survive retries and re-check Control State.
 - OpenAI-compatible model adapter so the model provider is replaceable;
   OpenRouter is the initial configured provider.
-- A calendar adapter, with Google Calendar as the current leading candidate but
-  not a locked provider decision.
+- A Google Calendar adapter, selected by the owner on 9 September 2026; R13
+  owns OAuth, real availability, event lifecycle and retry proof.
 
 The first deployment uses one application database and Redis namespace under our
 control. Upstream code is an implementation foundation, not a separate service.
@@ -59,8 +61,8 @@ control. Upstream code is an implementation foundation, not a separate service.
 1. HTTPS reverse proxy and public domain.
 2. Owned Rails web service.
 3. Owned Sidekiq worker.
-4. AI Lead Employee web/API service.
-5. AI Lead Employee background worker.
+4. The AI Lead Employee API runs in that same Rails service.
+5. AI Lead Employee jobs run in that same Sidekiq service.
 6. PostgreSQL database under our control.
 7. Redis with isolated namespaces or databases.
 8. S3-compatible attachment storage.
@@ -81,41 +83,31 @@ root. Upstream remains a read-only review remote; upgrades are selected, tested,
 and merged through a dedicated maintenance branch rather than treated as an
 external runtime dependency.
 
-The V1 operator surface is intentionally limited to Inbox, Hot Leads, Leads,
-Reviews, Knowledge, Bookings, and owned settings. Other Community Edition
-capabilities are retained but hidden until a separate product decision enables
-them. `docs/V1_OWNED_INBOX_SCOPE.md` is the authoritative feature boundary.
+The five V1 destinations are Inbox, Leads, Bookings, Knowledge and Settings.
+Customer Review Requests and Hot Leads are Inbox views. Reusable knowledge
+approvals belong to Knowledge. Full Test Center moves to Settings → AI & testing.
+Basic metrics remain required within Leads and relevant workspaces; generic CE
+Reports stays hidden. Phone navigation keeps Inbox, Leads, Bookings and More.
+`docs/V1_OWNED_INBOX_SCOPE.md` and the approved September navigation specify the
+feature boundary; R02 implements it and R16 proves the metrics.
 
-## 4.1 Current Code Reconciliation
+## 4.1 Current release and donor reconciliation
 
-The current branch contains useful Community Edition WhatsApp channel behavior
-and later AI Lead Employee experiments, but it is not a coherent V1 baseline.
-Planning must treat the following as blockers before feature recovery:
+ADR 0008 selects audited runtime `74d156e327e3ddb2deedd1503c6d1c04b0b1359e`
+plus integration bootstrap `5c3bbc2f900948fcdd6729159701b9cc993b85b5`.
+The coordinator alone integrates focused ticket branches. Older saved-root
+experiments and final-browser-qa are preserved donors, not competing authorities.
+The canonical CE webhook and sender, durable `ai_orchestration_intents` and
+`outbox_events`, encrypted AI Provider Connection and grounded processor exist;
+R03–R17 must repair and re-prove their audited deficiencies.
 
-- `Webhooks::WhatsappController`, `Webhooks::WhatsappEventsJob`,
-  `Whatsapp::IncomingMessageWhatsappCloudService`, `Message`, `Conversation`,
-  and `Whatsapp::SendOnWhatsappService` are the production path to retain and
-  extend.
-- `Webhooks::Meta::WhatsappController`,
-  `Meta::Whatsapp::InboundWebhookProcessor`,
-  `Meta::Whatsapp::OutboundMessageSender`, and `Meta::Whatsapp::TextMessageClient`
-  duplicate that path and bypass Community Edition behavior. They are donor
-  code only until retired or folded into the canonical services.
-- The current custom processor calls `AiLeadEmployee::WhatsappAutoReplyService`
-  inline after persistence. V1 requires durable AI Orchestration after commit,
-  not model or answer decisions inside webhook processing.
-- Community Edition already records configured greetings as visible template
-  messages through the message-template hook. V1 must coordinate this greeting
-  with AI Orchestration rather than replacing it or hiding it.
-- Current knowledge and qualification services are deterministic experiments.
-  Ticket 003 adds the production AI provider boundary, encrypted admin
-  configuration, OpenRouter-compatible calls, provider health checks, and
-  provider failure classification. Source References and grounded answer
-  generation remain ticket 004 blockers.
-- Ticket 002 adds the durable `ai_orchestration_intents` and `outbox_events`
-  boundary. Until the grounded-answer slice supplies verified Source References,
-  the worker records a private outbound intent placeholder and does not create a
-  lead-facing AI answer.
+Clean installations use the current schema plus pending migrations. The supported
+upgrade checkpoint is the CE import `f1bf3cd0604ae610baa675061b0e76dcd49fffcd`
+schema at `20260814000000` plus all later owned migrations. R01 repairs missing
+migration provenance for schema-only settings objects and proves convergence.
+Retaining those objects does not establish per-Offer behavior; R09 owns that path.
+See [R01 release evidence](docs/releases/2026-09-09-r01/README.md) for dependency,
+schema, source preservation, checks and successor setup records.
 
 ## 5. State Mapping
 
@@ -150,7 +142,7 @@ that existed when it was created.
 
 ## 6. Draft PostgreSQL Schema
 
-All primary keys are UUIDs unless the table stores an external identifier. Every tenant-owned table includes `business_account_id`. Timestamps use UTC; business display and booking rules use the Business Account timezone.
+The following sections describe the domain responsibilities, not replacement DDL. The authoritative physical schema is `db/schema.rb` and its migrations: CE records use integer/bigint identifiers and `account_id`, with `Account`, `AccountUser`, `Contact`, `Conversation` and `Message` retained. Do not introduce parallel `business_accounts`, memberships or Lead identity tables from these conceptual names. Timestamps use UTC; business display and booking rules use the Business Account timezone.
 
 ### Tenancy and Access
 
@@ -317,9 +309,10 @@ Conversation before sending.
 
 - AI Orchestration intents are persisted after an eligible WhatsApp Inbound
   Message and any Channel Greeting commit. The processor locks the intent and
-  Conversation, re-checks current control authority, records a source-reference
-  placeholder, creates a private outbound intent message, and commits an outbox
-  event atomically. Grounded lead-facing answer generation remains deferred.
+  Conversation, re-checks current control authority, retrieves approved sources,
+  invokes the encrypted provider adapter and records the grounded output and
+  outbox event. R04/R10/R11 repair delivery, provider concurrency and grounding
+  deficiencies identified by the audit; existing code is not launch proof.
 - Conflict-free call bookings are persisted as `bookings`, scoped by account,
   contact, Conversation, Lead Qualification, assignee, calendar, confirmation,
   calendar event, invitation, alert-delivery, and retry idempotency metadata.
@@ -417,6 +410,10 @@ Owned labels initially include `hot-lead`, `needs-review`, `follow-up-due`, and
 - Define retention and deletion before onboarding an external client.
 
 ## 10. Implementation Order
+
+The active completion order is R01–R18 with explicit blockers in
+`docs/issues/v1-completion-20260909/README.md`. The original foundation sequence
+below is historical context, not the current completion frontier.
 
 1. Infrastructure and empty schema migrations.
 2. Owned inbox baseline and access verification against the imported Community Edition source.

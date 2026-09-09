@@ -1,0 +1,125 @@
+--- tmp/r01/rc_schema.rb	2026-09-09 21:46:57
++++ tmp/r01/ce-migrated.rb	2026-09-09 21:51:03
+@@ -193,15 +193,15 @@
+     t.jsonb "expected_results", default: {}, null: false
+     t.jsonb "configuration_snapshot", default: {}, null: false
+     t.jsonb "knowledge_snapshot", default: {}, null: false
+-    t.string "simulation_identifier", null: false
+-    t.datetime "completed_at"
+-    t.datetime "created_at", null: false
+-    t.datetime "updated_at", null: false
+     t.jsonb "provider_snapshot", default: {}, null: false
+-    t.string "prompt_version", default: "ai-orchestration-v1", null: false
++    t.string "prompt_version", null: false
+     t.jsonb "reviewer_decision", default: {}, null: false
+     t.bigint "reviewed_by_id"
+     t.datetime "reviewed_at"
++    t.string "simulation_identifier", null: false
++    t.datetime "completed_at"
++    t.datetime "created_at", null: false
++    t.datetime "updated_at", null: false
+     t.index ["account_id", "passed"], name: "idx_ai_lead_eval_runs_on_account_passed"
+     t.index ["account_id", "scenario_key", "created_at"], name: "idx_ai_lead_eval_runs_on_account_scenario"
+     t.index ["account_id"], name: "index_ai_lead_employee_evaluation_runs_on_account_id"
+@@ -221,22 +221,6 @@
+     t.datetime "updated_at", null: false
+     t.index ["account_id"], name: "index_ai_lead_employee_launch_gates_on_account_id", unique: true
+     t.index ["approved_by_id"], name: "index_ai_lead_employee_launch_gates_on_approved_by_id"
+-  end
+-
+-  create_table "ai_lead_employee_offers", force: :cascade do |t|
+-    t.bigint "account_id", null: false
+-    t.string "name", null: false
+-    t.string "price", default: "", null: false
+-    t.text "best_for", default: "", null: false
+-    t.string "primary_action", default: "", null: false
+-    t.boolean "enabled", default: true, null: false
+-    t.integer "position", default: 0, null: false
+-    t.jsonb "metadata", default: {}, null: false
+-    t.datetime "created_at", null: false
+-    t.datetime "updated_at", null: false
+-    t.index ["account_id", "enabled", "position"], name: "idx_ai_lead_offers_on_account_enabled_position"
+-    t.index ["account_id", "name"], name: "index_ai_lead_employee_offers_on_account_id_and_name", unique: true
+-    t.index ["account_id"], name: "index_ai_lead_employee_offers_on_account_id"
+   end
+
+   create_table "ai_orchestration_intents", force: :cascade do |t|
+@@ -1248,7 +1232,7 @@
+     t.bigint "lead_message_id", null: false
+     t.bigint "human_answer_message_id"
+     t.bigint "knowledge_item_id"
+-    t.integer "reason", default: 0, null: false
++    t.integer "reason", null: false
+     t.integer "status", default: 0, null: false
+     t.string "proposed_source_kind"
+     t.text "question", null: false
+@@ -1768,21 +1752,6 @@
+     t.index ["message_id"], name: "index_qualification_evidences_on_message_id"
+     t.index ["superseded_by_id"], name: "index_qualification_evidences_on_superseded_by_id"
+     t.index ["user_id"], name: "index_qualification_evidences_on_user_id"
+-  end
+-
+-  create_table "qualification_hard_rules", force: :cascade do |t|
+-    t.bigint "account_id", null: false
+-    t.string "key", null: false
+-    t.string "label", null: false
+-    t.text "description", default: "", null: false
+-    t.boolean "enabled", default: true, null: false
+-    t.integer "position", default: 0, null: false
+-    t.jsonb "metadata", default: {}, null: false
+-    t.datetime "created_at", null: false
+-    t.datetime "updated_at", null: false
+-    t.index ["account_id", "enabled", "position"], name: "idx_qualification_hard_rules_on_account_enabled_position"
+-    t.index ["account_id", "key"], name: "index_qualification_hard_rules_on_account_id_and_key", unique: true
+-    t.index ["account_id"], name: "index_qualification_hard_rules_on_account_id"
+   end
+
+   create_table "qualification_questions", force: :cascade do |t|
+@@ -1794,29 +1763,11 @@
+     t.jsonb "metadata", default: {}, null: false
+     t.datetime "created_at", null: false
+     t.datetime "updated_at", null: false
+-    t.boolean "required", default: true, null: false
+-    t.string "validation_key", default: "plain_text", null: false
+     t.index ["account_id", "enabled", "position"], name: "idx_on_account_id_enabled_position_81d2a5e994"
+     t.index ["account_id", "signal"], name: "index_qualification_questions_on_account_id_and_signal", unique: true
+     t.index ["account_id"], name: "index_qualification_questions_on_account_id"
+   end
+
+-  create_table "qualification_score_ranges", force: :cascade do |t|
+-    t.bigint "account_id", null: false
+-    t.string "quality", null: false
+-    t.integer "min_score", null: false
+-    t.integer "max_score", null: false
+-    t.string "label", null: false
+-    t.text "meaning", default: "", null: false
+-    t.text "examples", default: "", null: false
+-    t.integer "position", default: 0, null: false
+-    t.boolean "enabled", default: true, null: false
+-    t.datetime "created_at", null: false
+-    t.datetime "updated_at", null: false
+-    t.index ["account_id", "position"], name: "idx_qualification_score_ranges_on_account_position"
+-    t.index ["account_id"], name: "index_qualification_score_ranges_on_account_id"
+-  end
+-
+   create_table "related_categories", force: :cascade do |t|
+     t.bigint "category_id"
+     t.bigint "related_category_id"
+@@ -2039,7 +1990,6 @@
+   add_foreign_key "ai_lead_employee_evaluation_runs", "users", column: "reviewed_by_id"
+   add_foreign_key "ai_lead_employee_launch_gates", "accounts"
+   add_foreign_key "ai_lead_employee_launch_gates", "users", column: "approved_by_id"
+-  add_foreign_key "ai_lead_employee_offers", "accounts"
+   add_foreign_key "ai_orchestration_intents", "accounts"
+   add_foreign_key "ai_orchestration_intents", "conversations"
+   add_foreign_key "ai_orchestration_intents", "human_review_requests", column: "review_request_id"
+@@ -2097,9 +2047,7 @@
+   add_foreign_key "qualification_evidences", "messages"
+   add_foreign_key "qualification_evidences", "qualification_evidences", column: "superseded_by_id"
+   add_foreign_key "qualification_evidences", "users"
+-  add_foreign_key "qualification_hard_rules", "accounts"
+   add_foreign_key "qualification_questions", "accounts"
+-  add_foreign_key "qualification_score_ranges", "accounts"
+   add_foreign_key "user_sessions", "users"
+   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
+       on("accounts").

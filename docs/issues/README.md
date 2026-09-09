@@ -1,8 +1,9 @@
 # V1 Implementation Tickets
 
-These tickets replace the prior misleading "done" sequence. They are ordered as
-blocker-first tracer-bullet slices and must be worked from
-`codex/reconcile-v1-baseline` or a branch created from it.
+These 000–019 records describe the historical foundation sequence. Current work
+uses [R01–R18](./v1-completion-20260909/README.md), based on integrated predecessor
+commits from `codex/v1-completion-20260909` after coordinator review. Do not start
+new completion work from the older `codex/reconcile-v1-baseline` branch.
 
 Each ticket should deliver a narrow, demonstrable path through the owned
 Community Edition Rails/Vue application. Later experimental code may be used as
