@@ -1,6 +1,6 @@
 # R06 — Invite a team member with access only to assigned Leads
 
-Status: Approved for implementation; blocked by the issues below.
+Status: Implementing on `codex/r06-assigned-access-20260910`; R01 and R02 integrated at `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`. Automated regression, lint and production build passed; browser acceptance remains pending because the Mac is locked. See `docs/releases/2026-09-10-r06/README.md`.
 
 ## Parent
 

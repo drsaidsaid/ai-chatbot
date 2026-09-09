@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::BaseController
+  before_action :check_admin_authorization?, only: :assign
   before_action :check_authorization, only: :index
   before_action :review_request, only: [:show, :resolve, :assign, :reject]
 

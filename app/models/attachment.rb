@@ -53,13 +53,15 @@ class Attachment < ApplicationRecord
     base_data.merge(metadata_for_file_type)
   end
 
-  # NOTE: the URl returned does a 301 redirect to the actual file
+  # Dashboard reads pass through the current session and assignment boundary.
   def file_url
-    file.attached? ? url_for(file) : ''
+    file.attached? ? rails_storage_proxy_url(file) : ''
   end
 
   # NOTE: for External services use this methods since redirect doesn't work effectively in a lot of cases
   def download_url
+    return whatsapp_media_url(token: signed_id(purpose: :whatsapp_media, expires_in: 5.minutes)) if file.attached? && message.inbox.whatsapp?
+
     ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
     file.attached? ? file.blob.url : ''
   end
@@ -68,7 +70,7 @@ class Attachment < ApplicationRecord
     return '' unless file.attached? && image?
 
     begin
-      url_for(file.representation(resize_to_fill: [250, nil]))
+      rails_storage_proxy_url(file.representation(resize_to_fill: [250, nil]))
     rescue ActiveStorage::UnrepresentableError => e
       Rails.logger.warn "Unrepresentable image attachment: #{id} (#{file.filename}) - #{e.message}"
       ''
@@ -118,7 +120,7 @@ class Attachment < ApplicationRecord
   def inline_audio_url
     return '' unless file.attached?
 
-    Rails.application.routes.url_helpers.rails_storage_redirect_url(file, disposition: 'inline')
+    rails_storage_proxy_url(file, disposition: 'inline')
   end
 
   def file_metadata

@@ -64,6 +64,7 @@ module ActiveStorageBareDirectUploadGuard
 end
 
 Rails.application.config.to_prepare do
+  ActiveStorage::BaseController.include(OwnedStorageAccess) unless ActiveStorage::BaseController < OwnedStorageAccess
   unless ActiveStorage::DirectUploadsController < ActiveStorageDirectUploadMetadataFilter
     ActiveStorage::DirectUploadsController.prepend(ActiveStorageDirectUploadMetadataFilter)
   end

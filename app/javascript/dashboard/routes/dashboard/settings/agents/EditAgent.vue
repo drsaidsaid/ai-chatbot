@@ -34,10 +34,6 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  customRoleId: {
-    type: Number,
-    default: null,
-  },
 });
 
 const emit = defineEmits(['close']);
@@ -49,7 +45,7 @@ const { t } = useI18n();
 
 const agentName = ref(props.name);
 const agentAvailability = ref(props.availability);
-const selectedRoleId = ref(props.customRoleId || props.type);
+const selectedRoleId = ref(props.type);
 const agentCredentials = ref({ email: props.email });
 
 const rules = {
@@ -69,37 +65,11 @@ const pageTitle = computed(
 );
 
 const uiFlags = useMapGetter('agents/getUIFlags');
-const getCustomRoles = useMapGetter('customRole/getCustomRoles');
 
-const roles = computed(() => {
-  const defaultRoles = [
-    {
-      id: 'administrator',
-      name: 'administrator',
-      label: t('AGENT_MGMT.AGENT_TYPES.ADMINISTRATOR'),
-    },
-    {
-      id: 'agent',
-      name: 'agent',
-      label: t('AGENT_MGMT.AGENT_TYPES.AGENT'),
-    },
-  ];
-
-  const customRoles = getCustomRoles.value.map(role => ({
-    id: role.id,
-    name: `custom_${role.id}`,
-    label: role.name,
-  }));
-
-  return [...defaultRoles, ...customRoles];
-});
-
-const selectedRole = computed(() =>
-  roles.value.find(
-    role =>
-      role.id === selectedRoleId.value || role.name === selectedRoleId.value
-  )
-);
+const roles = computed(() => [
+  { id: 'administrator', label: t('AGENT_MGMT.AGENT_TYPES.ADMINISTRATOR') },
+  { id: 'agent', label: t('AGENT_MGMT.AGENT_TYPES.AGENT') },
+]);
 
 const statusList = computed(() => {
   return [
@@ -128,12 +98,7 @@ const editAgent = async () => {
       availability: agentAvailability.value,
     };
 
-    if (selectedRole.value.name.startsWith('custom_')) {
-      payload.custom_role_id = selectedRole.value.id;
-    } else {
-      payload.role = selectedRole.value.name;
-      payload.custom_role_id = null;
-    }
+    payload.role = selectedRoleId.value;
 
     await store.dispatch('agents/update', payload);
     useAlert(t('AGENT_MGMT.EDIT.API.SUCCESS_MESSAGE'));

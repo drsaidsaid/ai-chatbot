@@ -56,10 +56,10 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
   end
 
   def base_qualification_scope
-    LeadQualification
-      .where(account: account, contact_id: visible_contact_ids)
-      .includes(contact: { conversations: [:assignee, :inbox, :human_review_requests] })
-      .order(last_evaluated_at: :desc, id: :desc)
+    AiLeadEmployee::AccessScope.new(account: account, user: user).qualifications
+                               .where(contact_id: visible_contact_ids)
+                               .includes(contact: { conversations: [:assignee, :inbox, :human_review_requests] })
+                               .order(last_evaluated_at: :desc, id: :desc)
   end
 
   def apply_filters(scope)
@@ -135,14 +135,7 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
   end
 
   def visible_conversations
-    scope = account.conversations
-    return scope if administrator?
-
-    inbox_ids = user.inboxes.where(account: account).select(:id)
-    team_ids = user.teams.where(account: account).select(:id)
-    scope.where(assignee_id: user.id)
-         .or(scope.where(inbox_id: inbox_ids))
-         .or(scope.where(team_id: team_ids))
+    AiLeadEmployee::AccessScope.new(account: account, user: user).conversations
   end
 
   def row_conversation_scope
@@ -202,7 +195,7 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
   end
 
   def performance
-    visible_scope = LeadQualification.where(account: account, contact_id: visible_contact_ids)
+    visible_scope = AiLeadEmployee::AccessScope.new(account: account, user: user).qualifications
     visible_review_scope = HumanReviewRequest.open.where(account: account, conversation_id: visible_conversations.select(:id))
     qualified_contact_ids = visible_scope.select(:contact_id)
 
@@ -211,7 +204,7 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
       highly_qualified_leads: visible_scope.highly_qualified.count,
       unanswered_questions: visible_review_scope.count,
       booked_calls: visible_scope.call_booked.count,
-      knowledge_approvals: account.knowledge_items.draft.count,
+      knowledge_approvals: administrator? ? account.knowledge_items.draft.count : 0,
       human_active_conversations: active_lead_count(:human_active, qualified_contact_ids),
       ai_active_conversations: active_lead_count(:ai_active, qualified_contact_ids)
     }

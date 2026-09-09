@@ -146,6 +146,12 @@ The following sections describe the domain responsibilities, not replacement DDL
 
 ### Tenancy and Access
 
+R06's concrete CE authorization contract is [ADR 0010](docs/adr/0010-assigned-conversation-access.md):
+AccountUser remains membership authority; Admin/Team Member map to
+administrator/agent. Resource scopes must use current membership and assignment
+at request and asynchronous delivery time. No new conceptual tenancy tables are
+introduced by this feature.
+
 #### `business_accounts`
 
 - `id`, `name`, `timezone`, `status`.

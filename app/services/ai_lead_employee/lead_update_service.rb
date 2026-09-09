@@ -14,6 +14,10 @@ class AiLeadEmployee::LeadUpdateService
   end
 
   def perform
+    access = AiLeadEmployee::AccessScope.new(account: account, user: user)
+    raise Pundit::NotAuthorizedError unless access.contacts.exists?(id: contact.id)
+    raise Pundit::NotAuthorizedError if attributes.key?(:assignee_id) && !access.administrator?
+
     ActiveRecord::Base.transaction do
       update_contact!
       update_assignee!
@@ -121,10 +125,10 @@ class AiLeadEmployee::LeadUpdateService
   end
 
   def latest_conversation
-    @latest_conversation ||= (conversation_scope || account.conversations)
-                             .where(contact: contact)
-                             .order(last_activity_at: :desc, id: :desc)
-                             .first
+    @latest_conversation ||= AiLeadEmployee::AccessScope.new(account: account, user: user).conversations(conversation_scope || account.conversations)
+                                                        .where(contact: contact)
+                                                        .order(last_activity_at: :desc, id: :desc)
+                                                        .first
   end
 
   def next_audit_version

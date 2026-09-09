@@ -39,6 +39,7 @@ class AccountUser < ApplicationRecord
   after_create_commit :notify_creation, :create_notification_setting
   after_destroy :notify_deletion, :remove_user_from_account
   after_save :update_presence_in_redis, if: :saved_change_to_availability?
+  after_commit :invalidate_member_access, on: [:update, :destroy], if: -> { destroyed? || saved_change_to_role? }
   after_commit :invalidate_filtered_unread_count_visibility, on: [:create, :destroy]
   after_update_commit :invalidate_filtered_unread_count_visibility_update, if: :filtered_unread_count_visibility_changed?
 
@@ -69,6 +70,10 @@ class AccountUser < ApplicationRecord
   end
 
   private
+
+  def invalidate_member_access
+    AiLeadEmployee::AccessInvalidation.notify(account_id: account_id, user_ids: [user_id])
+  end
 
   def notify_creation
     Rails.configuration.dispatcher.dispatch(AGENT_ADDED, Time.zone.now, account: account)

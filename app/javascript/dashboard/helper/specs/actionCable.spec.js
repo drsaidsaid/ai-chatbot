@@ -47,6 +47,14 @@ describe('ActionCableConnector - Copilot Tests', () => {
     vi.clearAllTimers();
     vi.useRealTimers();
   });
+  it('reloads the current view when assignment or business membership changes', () => {
+    const reload = vi.fn();
+    vi.stubGlobal('location', { reload });
+    actionCable.events['access.changed']({ account_id: 1 });
+    expect(reload).toHaveBeenCalledOnce();
+    vi.unstubAllGlobals();
+  });
+
   describe('copilot event handlers', () => {
     it('should register the copilot.message.created event handler', () => {
       expect(Object.keys(actionCable.events)).toContain(

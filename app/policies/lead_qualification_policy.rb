@@ -11,15 +11,13 @@ class LeadQualificationPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      return scope.none if account_user.blank?
-
-      scope.where(account_id: account.id)
+      AiLeadEmployee::AccessScope.new(account: account, user: user).qualifications(scope)
     end
   end
 
   private
 
   def same_business_account?
-    account_user.present? && record.account_id == account.id
+    record.account_id == account.id && AiLeadEmployee::AccessScope.new(account: account, user: user).contacts.exists?(id: record.contact_id)
   end
 end

@@ -5,7 +5,7 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
   before_action :ensure_latest_conversation!
 
   def show
-    qualification = contact.lead_qualification || qualification_result.qualification
+    qualification = access.qualification(contact) || LeadQualification.new(account: current_account, contact: contact)
     authorize qualification, :show?
 
     render json: qualification_payload(qualification)
@@ -21,23 +21,24 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
       signal: params.require(:signal),
       value: params.require(:value)
     )
-    qualification = AiLeadEmployee::QualificationService.new(conversation: latest_conversation).perform.qualification
+    AiLeadEmployee::QualificationService.new(conversation: latest_conversation).perform
 
-    render json: qualification_payload(qualification).merge(evidence_id: evidence.id)
+    render json: qualification_payload(access.qualification(contact) || LeadQualification.new(account: current_account,
+                                                                                              contact: contact)).merge(evidence_id: evidence.id)
   end
 
   private
 
+  def access
+    AiLeadEmployee::AccessScope.new(account: current_account, user: Current.user)
+  end
+
   def contact
-    @contact ||= current_account.contacts.find(params[:id])
+    @contact ||= policy_scope(current_account.contacts).find(params[:id])
   end
 
   def latest_conversation
-    @latest_conversation ||= contact.conversations.where(account: current_account).order(last_activity_at: :desc, id: :desc).first
-  end
-
-  def qualification_result
-    @qualification_result ||= AiLeadEmployee::QualificationService.new(conversation: latest_conversation).perform
+    @latest_conversation ||= access.conversations.where(contact: contact).order(last_activity_at: :desc, id: :desc).first
   end
 
   def lead_qualification_for_evidence
@@ -61,16 +62,16 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
       ),
       evidence_records: evidence_records_payload,
       handoffs: handoffs_payload(qualification),
-      follow_ups: qualification.lead_follow_ups.order(created_at: :desc).limit(10).map { |follow_up| follow_up_payload(follow_up) },
+      follow_ups: access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(10).map { |follow_up| follow_up_payload(follow_up) },
       follow_up_opted_out: LeadFollowUpOptOut.exists?(account: current_account, contact: contact)
     }
   end
 
   def evidence_records_payload
-    QualificationEvidence.where(account: current_account, contact: contact)
-                         .order(observed_at: :desc, id: :desc)
-                         .limit(20)
-                         .map { |evidence| evidence_payload(evidence) }
+    access.related(QualificationEvidence).where(contact: contact)
+          .order(observed_at: :desc, id: :desc)
+          .limit(20)
+          .map { |evidence| evidence_payload(evidence) }
   end
 
   def evidence_payload(evidence)
@@ -86,7 +87,7 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
   end
 
   def handoffs_payload(qualification)
-    qualification.lead_handoffs.order(created_at: :desc).limit(5).map do |handoff|
+    access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5).map do |handoff|
       {
         id: handoff.id,
         status: handoff.status,

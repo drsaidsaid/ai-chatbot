@@ -151,14 +151,14 @@ RSpec.describe 'Bookings API', type: :request do
       assignee: agent,
       starts_at: Time.zone.parse('2026-08-27T11:30:00Z'),
       ends_at: Time.zone.parse('2026-08-27T12:00:00Z')
-    )
+    ).tap { |booking| booking.conversation.update!(assignee: booking.assignee) }
     create(
       :booking,
       account: account,
       assignee: agent,
       starts_at: Time.zone.parse('2040-01-01T11:30:00Z'),
       ends_at: Time.zone.parse('2040-01-01T12:00:00Z')
-    )
+    ).tap { |booking| booking.conversation.update!(assignee: booking.assignee) }
 
     get "/api/v1/accounts/#{account.id}/bookings",
         headers: agent.create_new_auth_token,
@@ -168,15 +168,16 @@ RSpec.describe 'Bookings API', type: :request do
     expect(response.parsed_body['bookings'].pluck('id')).to eq([in_range.id])
   end
 
-  it 'limits non-admin operators to their assigned bookings' do
+  it 'limits Team Members to bookings on their assigned conversations' do
     assigned_booking = create(:booking, account: account, assignee: agent)
+    assigned_booking.conversation.update!(assignee: agent)
     create(
       :booking,
       account: account,
       assignee: create(:user, account: account, role: :agent),
       starts_at: assigned_booking.starts_at + 1.hour,
       ends_at: assigned_booking.ends_at + 1.hour
-    )
+    ).tap { |booking| booking.conversation.update!(assignee: booking.assignee) }
 
     get "/api/v1/accounts/#{account.id}/bookings",
         headers: agent.create_new_auth_token,

@@ -1,15 +1,15 @@
 {
   "AGENT_MGMT": {
-    "HEADER": "Agents",
-    "HEADER_BTN_TXT": "Add Agent",
-    "LOADING": "Fetching Agent List",
-    "DESCRIPTION": "An agent is a member of your customer support team who can view and respond to user messages. The list below shows all the agents in your account.",
+    "HEADER": "Team",
+    "HEADER_BTN_TXT": "Invite team member",
+    "LOADING": "Loading team",
+    "DESCRIPTION": "Admins manage the business and its settings. Team Members work only on conversations assigned to them and the related Leads.",
     "LEARN_MORE": "Learn about user roles",
     "AGENT_TYPES": {
-      "ADMINISTRATOR": "Administrator",
-      "AGENT": "Agent"
+      "ADMINISTRATOR": "Admin",
+      "AGENT": "Team Member"
     },
-    "COUNT": "{n} agent | {n} agents",
+    "COUNT": "{n} team member | {n} team members",
     "LIST": {
       "404": "There are no agents associated to this account",
       "TITLE": "Manage agents in your team",
@@ -23,13 +23,13 @@
       "AVAILABLE_CUSTOM_ROLE": "Available custom role permissions"
     },
     "ADD": {
-      "TITLE": "Add agent to your team",
-      "DESC": "You can add people who will be able to handle support for your inboxes.",
+      "TITLE": "Invite team member",
+      "DESC": "Team Members can view and reply to assigned conversations and update their related Leads. Admins can access every conversation and manage business settings.",
       "CANCEL_BUTTON_TEXT": "Cancel",
       "FORM": {
         "NAME": {
-          "LABEL": "Agent Name",
-          "PLACEHOLDER": "Please enter a name of the agent"
+          "LABEL": "Name",
+          "PLACEHOLDER": "Enter a name"
         },
         "AGENT_TYPE": {
           "LABEL": "Role",
@@ -38,34 +38,34 @@
         },
         "EMAIL": {
           "LABEL": "Email Address",
-          "PLACEHOLDER": "Please enter an email address of the agent"
+          "PLACEHOLDER": "Enter an email address"
         },
-        "SUBMIT": "Add Agent"
+        "SUBMIT": "Send invitation"
       },
       "API": {
-        "SUCCESS_MESSAGE": "Agent added successfully",
-        "EXIST_MESSAGE": "Agent email already in use, Please try another email address",
-        "ERROR_MESSAGE": "Could not connect to Woot Server, Please try again later"
+        "SUCCESS_MESSAGE": "Invitation sent",
+        "EXIST_MESSAGE": "This email already belongs to the team",
+        "ERROR_MESSAGE": "Could not send the invitation. Please try again."
       }
     },
     "DELETE": {
-      "BUTTON_TEXT": "Delete",
+      "BUTTON_TEXT": "Revoke access",
       "API": {
-        "SUCCESS_MESSAGE": "Agent deleted successfully",
-        "ERROR_MESSAGE": "Could not connect to Woot Server, Please try again later"
+        "SUCCESS_MESSAGE": "Access revoked",
+        "ERROR_MESSAGE": "Could not revoke access. Please try again."
       },
       "CONFIRM": {
-        "TITLE": "Confirm Deletion",
-        "MESSAGE": "Are you sure to delete ",
-        "YES": "Yes, Delete ",
-        "NO": "No, Keep "
+        "TITLE": "Revoke business access",
+        "MESSAGE": "Revoke access for ",
+        "YES": "Revoke access for",
+        "NO": "Keep access for"
       }
     },
     "EDIT": {
-      "TITLE": "Edit agent",
+      "TITLE": "Edit team member",
       "FORM": {
         "NAME": {
-          "LABEL": "Agent Name",
+          "LABEL": "Name",
           "PLACEHOLDER": "Please enter a name of the agent"
         },
         "AGENT_TYPE": {
@@ -82,7 +82,7 @@
           "PLACEHOLDER": "Please select an availability status",
           "ERROR": "Availability is required"
         },
-        "SUBMIT": "Edit Agent"
+        "SUBMIT": "Save changes"
       },
       "BUTTON_TEXT": "Edit",
       "CANCEL_BUTTON_TEXT": "Cancel",
@@ -97,8 +97,8 @@
         "ERROR_MESSAGE": "Could not connect to Woot Server, Please try again later"
       }
     },
-    "SEARCH_PLACEHOLDER": "Search agents...",
-    "NO_RESULTS": "No agents found matching your search",
+    "SEARCH_PLACEHOLDER": "Search team members...",
+    "NO_RESULTS": "No team members match your search",
     "SEARCH": {
       "NO_RESULTS": "No results found."
     },

@@ -1,0 +1,12 @@
+../../public/vite/assets/index-BDHeTyw-.js                          175.56 kB │ gzip:    48.83 kB │ map:   778.81 kB
+../../public/vite/assets/v3app-9tJUxa6l.js                          270.62 kB │ gzip:    97.78 kB │ map:   435.87 kB
+../../public/vite/assets/index-CINT72J5.js                          339.87 kB │ gzip:   101.90 kB │ map: 1,183.66 kB
+../../public/vite/assets/typing-B7r5d-fe.js                         443.53 kB │ gzip:   138.99 kB │ map: 1,961.98 kB
+../../public/vite/assets/dashboard-BJRSVETZ.js                    3,414.78 kB │ gzip:   945.45 kB │ map: 9,270.70 kB
+../../public/vite/assets/DashboardIcon-xCcsjbFX.js               14,860.31 kB │ gzip: 4,054.60 kB │ map: 3,047.59 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2m 35s

@@ -15,10 +15,10 @@ class Api::V1::Accounts::NotificationsController < Api::V1::Accounts::BaseContro
   def read_all
     # rubocop:disable Rails/SkipsModelValidations
     if @primary_actor
-      current_user.notifications.where(account_id: current_account.id, primary_actor: @primary_actor, read_at: nil)
-                  .update_all(read_at: DateTime.now.utc)
+      notification_finder.visible_scope.where(primary_actor: @primary_actor, read_at: nil)
+                         .update_all(read_at: DateTime.now.utc)
     else
-      current_user.notifications.where(account_id: current_account.id, read_at: nil).update_all(read_at: DateTime.now.utc)
+      notification_finder.visible_scope.where(read_at: nil).update_all(read_at: DateTime.now.utc)
     end
     # rubocop:enable Rails/SkipsModelValidations
     head :ok
@@ -69,7 +69,7 @@ class Api::V1::Accounts::NotificationsController < Api::V1::Accounts::BaseContro
   end
 
   def fetch_notification
-    @notification = current_user.notifications.where(account_id: Current.account.id).find(params[:id])
+    @notification = notification_finder.visible_scope.find(params[:id])
   end
 
   def set_current_page

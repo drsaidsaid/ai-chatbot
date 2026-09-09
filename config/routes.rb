@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get '/whatsapp/media/:token', to: 'whatsapp_media#show', as: :whatsapp_media
   # Retain CE public source while the standalone V1 exposes no customer portal or widget.
   match '/widget', '/widget/*path', '/public/*path', '/api/v1/widget/*path', '/hc', '/hc/*path', '/survey/*path',
         to: 'v1_unavailable#show', via: :all

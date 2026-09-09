@@ -5,9 +5,9 @@ RSpec.describe BulkActionsJob do
 
   let(:account) { create(:account) }
   let!(:agent) { create(:user, account: account, role: :agent) }
-  let!(:conversation_1) { create(:conversation, account_id: account.id, status: :open) }
-  let!(:conversation_2) { create(:conversation, account_id: account.id, status: :open) }
-  let!(:conversation_3) { create(:conversation, account_id: account.id, status: :open) }
+  let!(:conversation_1) { create(:conversation, account_id: account.id, status: :open, assignee: agent) }
+  let!(:conversation_2) { create(:conversation, account_id: account.id, status: :open, assignee: agent) }
+  let!(:conversation_3) { create(:conversation, account_id: account.id, status: :open, assignee: agent) }
   let(:conversation_ids) { [conversation_1.display_id, conversation_2.display_id, conversation_3.display_id] }
   let(:params) { { type: 'Conversation', fields: { status: 'snoozed' }, ids: conversation_ids } }
 
@@ -46,20 +46,16 @@ RSpec.describe BulkActionsJob do
       expect(conversation_3.reload.status).to eq('snoozed')
     end
 
-    it 'bulk updates the assignee_id' do
-      params = {
-        type: 'Conversation',
-        fields: { status: 'snoozed', assignee_id: agent.id },
-        ids: conversation_ids
-      }
-
-      expect(conversation_1.assignee_id).to be_nil
-
+    it 'reserves bulk reassignment to an Admin' do
+      next_member = create(:user, account: account, role: :agent)
+      params = { type: 'Conversation', fields: { assignee_id: next_member.id }, ids: conversation_ids }
       described_class.perform_now(account: account, params: params, user: agent)
-
       expect(conversation_1.reload.assignee_id).to eq(agent.id)
-      expect(conversation_2.reload.assignee_id).to eq(agent.id)
-      expect(conversation_3.reload.assignee_id).to eq(agent.id)
+      agent.account_users.find_by!(account: account).update!(role: :administrator)
+      described_class.perform_now(account: account, params: params, user: agent)
+      expect(conversation_1.reload.assignee_id).to eq(next_member.id)
+      expect(conversation_2.reload.assignee_id).to eq(next_member.id)
+      expect(conversation_3.reload.assignee_id).to eq(next_member.id)
     end
 
     it 'bulk updates the snoozed_until' do
@@ -78,7 +74,7 @@ RSpec.describe BulkActionsJob do
       expect(conversation_3.reload.snoozed_until).to be_present
     end
 
-    it 'skips conversations whose inbox the agent does not belong to' do
+    it 'skips conversations not assigned to the Team Member' do
       forbidden_conversation = create(:conversation, account_id: account.id, status: :open)
       params = {
         type: 'Conversation',

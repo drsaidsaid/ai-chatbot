@@ -1,6 +1,7 @@
 class AgentNotifications::ConversationNotificationsMailer < ApplicationMailer
   def conversation_creation(conversation, agent, _user)
     return unless smtp_config_set_or_development?
+    return unless AiLeadEmployee::AccessScope.new(account: conversation.account, user: agent).conversations.exists?(id: conversation.id)
 
     @agent = agent
     @conversation = conversation
@@ -12,6 +13,7 @@ class AgentNotifications::ConversationNotificationsMailer < ApplicationMailer
 
   def conversation_assignment(conversation, agent, _user)
     return unless smtp_config_set_or_development?
+    return unless AiLeadEmployee::AccessScope.new(account: conversation.account, user: agent).conversations.exists?(id: conversation.id)
 
     @agent = agent
     @conversation = conversation
@@ -22,6 +24,7 @@ class AgentNotifications::ConversationNotificationsMailer < ApplicationMailer
 
   def conversation_mention(conversation, agent, message)
     return unless smtp_config_set_or_development?
+    return unless AiLeadEmployee::AccessScope.new(account: conversation.account, user: agent).conversations.exists?(id: conversation.id)
 
     @agent = agent
     @conversation = conversation
@@ -33,6 +36,7 @@ class AgentNotifications::ConversationNotificationsMailer < ApplicationMailer
 
   def assigned_conversation_new_message(conversation, agent, message)
     return unless smtp_config_set_or_development?
+    return unless AiLeadEmployee::AccessScope.new(account: conversation.account, user: agent).conversations.exists?(id: conversation.id)
     # Don't spam with email notifications if agent is online
     return if ::OnlineStatusTracker.get_presence(message.account_id, 'User', agent.id)
 
@@ -45,6 +49,7 @@ class AgentNotifications::ConversationNotificationsMailer < ApplicationMailer
 
   def participating_conversation_new_message(conversation, agent, message)
     return unless smtp_config_set_or_development?
+    return unless AiLeadEmployee::AccessScope.new(account: conversation.account, user: agent).conversations.exists?(id: conversation.id)
     # Don't spam with email notifications if agent is online
     return if ::OnlineStatusTracker.get_presence(message.account_id, 'User', agent.id)
 

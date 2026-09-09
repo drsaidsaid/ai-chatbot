@@ -55,6 +55,11 @@ class Notification < ApplicationRecord
 
   PRIMARY_ACTORS = ['Conversation'].freeze
 
+  def accessible_to_recipient?
+    primary_actor_type == 'Conversation' &&
+      AiLeadEmployee::AccessScope.new(account: account, user: user).conversations.exists?(id: primary_actor_id)
+  end
+
   def push_event_data
     # Secondary actor could be nil for cases like system assigning conversation
     payload = {

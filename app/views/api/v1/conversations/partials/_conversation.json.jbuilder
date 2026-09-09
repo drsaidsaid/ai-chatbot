@@ -53,8 +53,9 @@ json.status conversation.status
 json.control_state conversation.control_state
 json.control_version conversation.control_version
 json.ai_employee_decision conversation.additional_attributes&.dig('ai_employee_last_decision')
-if conversation.contact&.lead_qualification.present?
-  qualification = conversation.contact.lead_qualification
+access = AiLeadEmployee::AccessScope.new(account: conversation.account, user: Current.user)
+qualification = access.qualification(conversation.contact)
+if qualification.present?
   json.lead_qualification do
     json.quality qualification.quality
     json.follow_up_state qualification.follow_up_state
@@ -67,7 +68,7 @@ if conversation.contact&.lead_qualification.present?
       account: conversation.account,
       evidence_snapshot: qualification.evidence_snapshot
     )
-    json.evidence_records QualificationEvidence.where(account: conversation.account, contact: conversation.contact)
+    json.evidence_records access.related(QualificationEvidence).where(contact: conversation.contact)
                                                .order(observed_at: :desc, id: :desc)
                                                .limit(20) do |evidence|
       json.id evidence.id
@@ -78,7 +79,7 @@ if conversation.contact&.lead_qualification.present?
       json.observed_at evidence.observed_at&.iso8601
       json.superseded evidence.superseded_at.present?
     end
-    json.handoffs qualification.lead_handoffs.order(created_at: :desc).limit(5) do |handoff|
+    json.handoffs access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5) do |handoff|
       json.id handoff.id
       json.status handoff.status
       json.alert_type handoff.alert_type
@@ -88,7 +89,7 @@ if conversation.contact&.lead_qualification.present?
       json.alert_deliveries handoff.alert_deliveries
     end
     json.follow_up_opted_out LeadFollowUpOptOut.exists?(account: conversation.account, contact: conversation.contact)
-    json.follow_ups qualification.lead_follow_ups.order(created_at: :desc).limit(5) do |follow_up|
+    json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
       json.id follow_up.id
       json.status follow_up.status
       json.stage follow_up.stage

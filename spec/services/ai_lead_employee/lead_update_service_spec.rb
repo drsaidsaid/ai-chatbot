@@ -6,7 +6,7 @@ RSpec.describe AiLeadEmployee::LeadUpdateService do
   let(:account) { create(:account) }
   let(:operator) { create(:user, account: account, role: :agent) }
   let(:contact) { create(:contact, :with_phone_number, account: account, name: 'Jane Nkosi') }
-  let(:conversation) { create(:conversation, account: account, contact: contact) }
+  let(:conversation) { create(:conversation, account: account, contact: contact, assignee: operator) }
 
   before do
     Current.user = operator

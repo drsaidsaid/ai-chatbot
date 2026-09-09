@@ -28,6 +28,7 @@ const filterOptions = ref({
   assignees: [],
   sources: [],
 });
+const isAdmin = computed(() => meta.value.visibility === 'admin');
 const isLoading = ref(false);
 const isExporting = ref(false);
 const errorMessage = ref('');
@@ -438,7 +439,7 @@ const saveLead = async () => {
         business_name: editForm.business_name,
         city: editForm.city,
         country: editForm.country,
-        assignee_id: editForm.assignee_id,
+        ...(isAdmin.value ? { assignee_id: editForm.assignee_id } : {}),
         evidence: editForm.evidence,
       },
     });
@@ -508,6 +509,7 @@ watch(showEditModal, async value => {
       </div>
       <div class="ml-auto flex shrink-0 items-center gap-2">
         <input
+          v-if="isAdmin"
           ref="importInput"
           type="file"
           accept=".csv,text/csv"
@@ -515,6 +517,7 @@ watch(showEditModal, async value => {
           @change="importLeads"
         />
         <button
+          v-if="isAdmin"
           type="button"
           class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
           @click="openImportPicker"
@@ -525,6 +528,7 @@ watch(showEditModal, async value => {
           }}</span>
         </button>
         <button
+          v-if="isAdmin"
           type="button"
           class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand disabled:opacity-60"
           :disabled="isExporting"
@@ -1265,7 +1269,10 @@ watch(showEditModal, async value => {
               class="mt-1 h-10 w-full rounded-md border border-n-weak bg-n-background px-3 text-sm text-n-slate-12"
             />
           </label>
-          <label class="block text-xs font-medium text-n-slate-11">
+          <label
+            v-if="isAdmin"
+            class="block text-xs font-medium text-n-slate-11"
+          >
             {{ t('AI_LEAD_EMPLOYEE.LEADS.EDIT.ASSIGNEE') }}
             <select
               v-model="editForm.assignee_id"

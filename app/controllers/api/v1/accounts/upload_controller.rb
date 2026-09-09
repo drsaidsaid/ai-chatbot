@@ -40,7 +40,8 @@ class Api::V1::Accounts::UploadController < Api::V1::Accounts::BaseController
     ActiveStorage::Blob.create_and_upload!(
       io: io,
       filename: filename,
-      content_type: content_type
+      content_type: content_type,
+      metadata: { 'r06_account_id' => Current.account.id, 'r06_user_id' => Current.user.id }
     )
   end
 

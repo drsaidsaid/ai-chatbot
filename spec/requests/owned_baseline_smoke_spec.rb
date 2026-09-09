@@ -92,7 +92,7 @@ RSpec.describe 'Owned Community Edition baseline', type: :request do
 
   it 'keeps background job conversation queries scoped to the Business Account' do
     agent = create(:user, account: account, role: :agent)
-    conversation = create(:conversation, account: account, status: :open)
+    conversation = create(:conversation, account: account, status: :open, assignee: agent)
     other_account = create(:account)
     other_conversation = create(:conversation, account: other_account, status: :open)
     other_conversation.update!(display_id: conversation.display_id)

@@ -136,6 +136,11 @@ The business owner or administrator can:
 
 ### Team Member
 
+R06 enforces these permissions through current Conversation assignment, including
+search, counts, downloads, realtime and queued work. Shared Lead identity never
+grants another Conversation's content; mixed-access Qualification summaries are
+withheld while permitted evidence remains available. See ADR 0010.
+
 A team member can:
 
 - View and respond to assigned leads only.

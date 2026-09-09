@@ -13,8 +13,11 @@ json.last_activity_at resource.last_activity_at.to_i if resource[:last_activity_
 json.created_at resource.created_at.to_i if resource[:created_at].present?
 # we only want to output contact inbox when its /contacts endpoints
 if defined?(with_contact_inboxes) && with_contact_inboxes.present?
+  access = AiLeadEmployee::AccessScope.new(account: Current.account, user: Current.user)
+  contact_inboxes = resource.contact_inboxes
+  contact_inboxes = contact_inboxes.where(id: access.conversations.select(:contact_inbox_id)) unless access.administrator?
   json.contact_inboxes do
-    json.array! resource.contact_inboxes do |contact_inbox|
+    json.array! contact_inboxes do |contact_inbox|
       json.partial! 'api/v1/models/contact_inbox', formats: [:json], resource: contact_inbox
     end
   end

@@ -1,0 +1,11 @@
+
+/Users/ghalyasaid/.codex/worktrees/3a8d/AI Chatbot/app/javascript/dashboard/routes/dashboard/conversation/InboxConversationCockpit.vue
+  754:38  warning  raw text ' / ' is used                                                  @intlify/vue-i18n/no-raw-text
+  798:61  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  805:18  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  806:66  warning  raw text ':
+              ' is used                                     @intlify/vue-i18n/no-raw-text
+  810:23  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+
+✖ 5 problems (0 errors, 5 warnings)
+  0 errors and 3 warnings potentially fixable with the `--fix` option.

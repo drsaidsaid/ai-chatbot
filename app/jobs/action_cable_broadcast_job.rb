@@ -31,14 +31,6 @@ class ActionCableBroadcastJob < ApplicationJob
   end
 
   def broadcast_to_members(members, event_name, broadcast_data)
-    members.each do |member|
-      ActionCable.server.broadcast(
-        member,
-        {
-          event: event_name,
-          data: broadcast_data
-        }
-      )
-    end
+    AiLeadEmployee::RealtimeDelivery.new(members: members, event: event_name, data: broadcast_data).perform
   end
 end

@@ -23,6 +23,11 @@ tenancy tables. An Offer schema table alone does not prove Offer qualification.
 
 ## Language
 
+R06 fixed-role authorization is specified by [ADR 0010](docs/adr/0010-assigned-conversation-access.md).
+Admin (`administrator`) has Business Account-wide access. Team Member (`agent`)
+access requires current membership and Conversation assignment. Lead identity
+access does not grant access to every Conversation or combined Qualification.
+
 **Business Account**:
 The tenant whose offers, knowledge, leads, conversations, rules, team, and integrations are isolated from every other business.
 _Avoid_: Client account, workspace, company account

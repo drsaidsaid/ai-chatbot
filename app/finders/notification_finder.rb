@@ -10,6 +10,12 @@ class NotificationFinder
     set_up
   end
 
+  def visible_scope
+    access = AiLeadEmployee::AccessScope.new(account: current_account, user: current_user)
+    current_user.notifications.where(account_id: current_account.id,
+                                     primary_actor_type: 'Conversation', primary_actor_id: access.conversations.select(:id))
+  end
+
   def notifications
     @notifications.page(current_page).per(RESULTS_PER_PAGE).order(last_activity_at: sort_order)
   end
@@ -37,7 +43,7 @@ class NotificationFinder
   end
 
   def find_all_notifications
-    @notifications = current_user.notifications.where(account_id: @current_account.id)
+    @notifications = visible_scope
   end
 
   def filter_snoozed_notifications

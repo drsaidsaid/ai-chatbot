@@ -28,8 +28,10 @@ class AiLeadEmployee::InboxConversations
     conversations = selected.includes(:inbox, :assignee, :human_review_requests, contact: :lead_qualification)
                             .order(last_activity_at: :desc, id: :desc).limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE).to_a
     previews = latest_public_previews(conversations.map(&:id))
+    qualifications = visible_qualifications.where(contact_id: conversations.map(&:contact_id)).index_by(&:contact_id)
     conversations.map do |conversation|
-      AiLeadEmployee::InboxConversationRow.new(conversation, last_message_preview: previews[conversation.id]).to_h
+      AiLeadEmployee::InboxConversationRow.new(conversation, last_message_preview: previews[conversation.id],
+                                                             qualification: qualifications[conversation.contact_id]).to_h
     end
   end
 
@@ -66,10 +68,15 @@ class AiLeadEmployee::InboxConversations
     result.where(assignee_id: assignee)
   end
 
+  def visible_qualifications
+    account = Account.find_by(id: scope.select(:account_id))
+    AiLeadEmployee::AccessScope.new(account: account, user: user).qualifications
+  end
+
   def filter_qualification(result, field)
     return result if filters[field].blank?
 
-    qualifications = LeadQualification.where(account_id: scope.select(:account_id))
+    qualifications = visible_qualifications
     matches = qualifications.where(field => filters[field]).select(:contact_id)
     filtered = result.where(contact_id: matches)
     return filtered unless (field == :quality && filters[field] == 'unknown') ||
@@ -92,7 +99,7 @@ class AiLeadEmployee::InboxConversations
   def queue_scope(result, queue)
     case queue
     when 'hot'
-      result.where(contact_id: LeadQualification.where(account_id: scope.select(:account_id)).highly_qualified.select(:contact_id))
+      result.where(contact_id: visible_qualifications.highly_qualified.select(:contact_id))
     when 'review'
       result.where(id: HumanReviewRequest.open.where(conversation_id: scope.select(:id)).select(:conversation_id))
     else

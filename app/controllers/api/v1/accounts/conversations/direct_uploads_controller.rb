@@ -33,6 +33,15 @@ class Api::V1::Accounts::Conversations::DirectUploadsController < ActiveStorage:
   end
 
   def conversation
-    @conversation ||= Current.account.conversations.find_by(display_id: params[:conversation_id])
+    @conversation ||= AiLeadEmployee::AccessScope.new(account: Current.account, user: current_user)
+                                                 .conversations.find_by!(display_id: params[:conversation_id])
+  end
+
+  def blob_args
+    super.tap do |args|
+      args[:metadata] = (args[:metadata] || {}).merge(
+        'r06_account_id' => Current.account.id, 'r06_user_id' => current_user.id, 'r06_conversation_id' => @conversation.id
+      )
+    end
   end
 end

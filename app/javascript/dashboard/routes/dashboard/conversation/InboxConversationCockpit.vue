@@ -79,6 +79,8 @@ const isMobileBriefOpen = ref(false);
 
 const currentChat = useMapGetter('getSelectedChat');
 const currentUser = useMapGetter('getCurrentUser');
+const currentRole = useMapGetter('getCurrentRole');
+const isAdmin = computed(() => currentRole.value === 'administrator');
 
 const activeQueue = computed(() =>
   ['all', 'review', 'hot'].includes(route.query.queue)
@@ -1056,6 +1058,7 @@ onMounted(() => {
               </div>
               <div class="mt-3 flex flex-wrap justify-end gap-2">
                 <RouterLink
+                  v-if="isAdmin"
                   :to="accountScopedRoute('owned_knowledge_index')"
                   class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
                 >
@@ -1072,6 +1075,7 @@ onMounted(() => {
                   {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONFIRM_CALL') }}
                 </button>
                 <button
+                  v-if="isAdmin"
                   type="button"
                   class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="isUpdatingAction"

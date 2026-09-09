@@ -22,6 +22,10 @@ class SearchService
 
   private
 
+  def access
+    AiLeadEmployee::AccessScope.new(account: current_account, user: current_user)
+  end
+
   def accessable_inbox_ids
     @accessable_inbox_ids ||= @current_user.assigned_inboxes.pluck(:id)
   end
@@ -31,9 +35,9 @@ class SearchService
   end
 
   def filter_conversations
-    conversations_query = current_account.conversations.where(inbox_id: accessable_inbox_ids)
-                                         .joins('INNER JOIN contacts ON conversations.contact_id = contacts.id')
-                                         .where("cast(conversations.display_id as text) ILIKE :search OR contacts.name ILIKE :search OR contacts.email
+    conversations_query = access.conversations
+                                .joins('INNER JOIN contacts ON conversations.contact_id = contacts.id')
+                                .where("cast(conversations.display_id as text) ILIKE :search OR contacts.name ILIKE :search OR contacts.email
                             ILIKE :search OR contacts.phone_number ILIKE :search OR contacts.identifier ILIKE :search", search: "%#{search_query}%")
 
     if current_account.feature_enabled?('advanced_search')
@@ -105,9 +109,7 @@ class SearchService
   end
 
   def message_base_query
-    query = current_account.messages.where('created_at >= ?', 3.months.ago)
-    query = query.where(inbox_id: accessable_inbox_ids) unless should_skip_inbox_filtering?
-    query
+    current_account.messages.where(conversation_id: access.conversations.select(:id)).where('created_at >= ?', 3.months.ago)
   end
 
   def apply_message_filters(query)
@@ -162,7 +164,7 @@ class SearchService
   end
 
   def filter_contacts
-    contacts_query = current_account.contacts.where(
+    contacts_query = access.contacts.where(
       "name ILIKE :search OR email ILIKE :search OR phone_number
       ILIKE :search OR identifier ILIKE :search", search: "%#{search_query}%"
     )
@@ -175,6 +177,8 @@ class SearchService
   end
 
   def filter_articles
+    return Article.none unless access.administrator?
+
     articles_query = current_account.articles.text_search(search_query)
     articles_query = apply_time_filter(articles_query, 'updated_at') if current_account.feature_enabled?('advanced_search')
 

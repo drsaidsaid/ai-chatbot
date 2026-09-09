@@ -10,6 +10,7 @@ class ApplicationController < ActionController::Base
   before_action :set_current_user, unless: :devise_controller?
   around_action :switch_locale
   around_action :handle_with_exception, unless: :devise_controller?
+  after_action -> { AiLeadEmployee::BrowserSession.capture(cookies: cookies, request: request, response: response) }
 
   private
 

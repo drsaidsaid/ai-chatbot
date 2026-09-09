@@ -1,6 +1,7 @@
 class AiLeadEmployee::InboxConversationRow
-  def initialize(conversation, last_message_preview:)
+  def initialize(conversation, last_message_preview:, qualification:)
     @conversation = conversation
+    @qualification = qualification
     @last_message_preview = last_message_preview
   end
 
@@ -37,13 +38,9 @@ class AiLeadEmployee::InboxConversationRow
     }
   end
 
-  attr_reader :conversation, :last_message_preview
+  attr_reader :conversation, :last_message_preview, :qualification
 
   def contact
     conversation.contact
-  end
-
-  def qualification
-    contact.lead_qualification
   end
 end

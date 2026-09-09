@@ -12,7 +12,12 @@ class AiLeadEmployee::ConversationCockpit::Context
   end
 
   def qualification
-    @qualification ||= contact&.lead_qualification
+    @qualification ||= if Current.user.is_a?(User)
+                         AiLeadEmployee::AccessScope.new(account: account,
+                                                         user: Current.user).qualification(contact)
+                       else
+                         contact&.lead_qualification
+                       end
   end
 
   def evidence_snapshot

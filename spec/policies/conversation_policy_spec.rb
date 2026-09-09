@@ -46,8 +46,8 @@ RSpec.describe ConversationPolicy, type: :policy do
 
       before { create(:inbox_member, user: agent, inbox: inbox) }
 
-      it 'allows access' do
-        expect(subject).to permit(agent_context, conversation)
+      it 'denies access without assignment' do
+        expect(subject).not_to permit(agent_context, conversation)
       end
     end
 
@@ -57,8 +57,8 @@ RSpec.describe ConversationPolicy, type: :policy do
 
       before { create(:team_member, team: team, user: agent) }
 
-      it 'allows access' do
-        expect(subject).to permit(agent_context, conversation)
+      it 'denies access without assignment' do
+        expect(subject).not_to permit(agent_context, conversation)
       end
     end
 
@@ -81,8 +81,8 @@ RSpec.describe ConversationPolicy, type: :policy do
     context 'when agent has inbox access' do
       before { create(:inbox_member, user: agent, inbox: conversation.inbox) }
 
-      it 'allows control changes' do
-        expect(subject).to permit(agent_context, conversation)
+      it 'denies control changes without assignment' do
+        expect(subject).not_to permit(agent_context, conversation)
       end
     end
 
@@ -95,6 +95,12 @@ RSpec.describe ConversationPolicy, type: :policy do
       it 'denies human control changes' do
         expect(subject).not_to permit(agent_bot_context, conversation)
       end
+    end
+  end
+  permissions :show?, :control? do
+    it 'permits the assigned Team Member without inbox or team membership' do
+      conversation.update!(assignee: agent)
+      expect(subject).to permit(agent_context, conversation)
     end
   end
 end

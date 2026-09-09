@@ -107,6 +107,7 @@ RSpec.describe 'Leads API', type: :request do
         account: account,
         inbox: inbox,
         contact: contact,
+        assignee: operator,
         last_activity_at: 2.hours.ago
       )
       hidden_conversation = create(

@@ -28,8 +28,8 @@ RSpec.describe 'Inbox conversations', type: :request do
   it 'applies search and filters to Conversations without leaking hidden rows or counts' do
     agent = create(:user, account: account, role: :agent)
     create(:inbox_member, user: agent, inbox: inbox)
-    visible = create(:conversation, account: account, inbox: inbox, contact: contact)
-    sibling = create(:conversation, account: account, inbox: inbox, contact: contact)
+    visible = create(:conversation, account: account, inbox: inbox, contact: contact, assignee: agent)
+    sibling = create(:conversation, account: account, inbox: inbox, contact: contact, assignee: agent)
     hidden = create(:conversation, account: account)
     create(:human_review_request, account: account, conversation: visible)
     create(:human_review_request, account: account, conversation: visible)

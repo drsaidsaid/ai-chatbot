@@ -7,7 +7,8 @@ class Account::ContactsExportJob < ApplicationJob
   def perform(account_id, user_id, column_names, params)
     @account = Account.find(account_id)
     @params = params
-    @account_user = @account.users.find(user_id)
+    @account_user = User.find_by(id: user_id)
+    return unless AiLeadEmployee::AccessScope.new(account: @account, user: @account_user).administrator?
 
     headers = valid_headers(column_names)
     generate_csv(headers)

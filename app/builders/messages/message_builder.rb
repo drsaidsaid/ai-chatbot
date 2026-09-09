@@ -7,7 +7,6 @@ class Messages::MessageBuilder
 
   def initialize(user, conversation, params)
     @params = params
-    @private = params[:private] || false
     @conversation = conversation
     @user = user
     @account = conversation.account
@@ -52,6 +51,7 @@ class Messages::MessageBuilder
     return if @attachments.blank?
 
     @attachments.each do |uploaded_attachment|
+      AiLeadEmployee::BlobAccess.authorize_upload!(uploaded_attachment, user: @user)
       attachment = @message.attachments.build(
         account_id: @message.account_id,
         file: uploaded_attachment
@@ -145,7 +145,7 @@ class Messages::MessageBuilder
       inbox_id: @conversation.inbox_id,
       message_type: message_type,
       content: @params[:content],
-      private: @private,
+      private: @params[:private] || false,
       sender: sender,
       content_type: @params[:content_type],
       content_attributes: content_attributes.presence,
@@ -161,7 +161,7 @@ class Messages::MessageBuilder
   end
 
   def should_process_email_content?
-    email_inbox? && !@private && @message.content.present?
+    email_inbox? && !@message.private? && @message.content.present?
   end
 
   def build_email_attributes

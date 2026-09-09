@@ -2,6 +2,8 @@ class Notification::EmailNotificationService
   pattr_initialize [:notification!]
 
   def perform
+    return unless notification.accessible_to_recipient?
+
     # don't send emails if user read the push notification already
     return if notification.read_at.present?
     # don't send emails if user is not confirmed

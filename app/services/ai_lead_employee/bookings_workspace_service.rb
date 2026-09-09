@@ -65,15 +65,16 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
     scope.respond_to?(:order) ? scope.order(:starts_at, :id) : scope.sort_by { |booking| [booking.starts_at, booking.id] }
   end
 
-  def visible_bookings
-    scope = Booking.where(account: account)
-    return scope if administrator?
+  def access
+    AiLeadEmployee::AccessScope.new(account: account, user: user)
+  end
 
-    scope.where(assignee: user)
+  def visible_bookings
+    access.related(Booking)
   end
 
   def administrator?
-    user.administrator?
+    access.administrator?
   end
 
   def selected_booking_payload(bookings)
@@ -116,10 +117,10 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
 
   def detail_payload(booking)
     {
-      preparation_brief: preparation_brief_for(booking),
-      strongest_evidence: strongest_evidence_for(booking),
-      likely_objection: likely_objection_for(booking),
-      suggested_opening_question: suggested_opening_question_for(booking),
+      preparation_brief: access.complete_contact?(booking.contact) ? preparation_brief_for(booking) : nil,
+      strongest_evidence: access.complete_contact?(booking.contact) ? strongest_evidence_for(booking) : [],
+      likely_objection: access.complete_contact?(booking.contact) ? likely_objection_for(booking) : nil,
+      suggested_opening_question: access.complete_contact?(booking.contact) ? suggested_opening_question_for(booking) : nil,
       calendar_invitation_sent_at: booking.calendar_invitation_sent_at&.iso8601,
       confirmation_message_id: booking.confirmation_message_id,
       alerts: booking.preparation_alert_deliveries,
@@ -221,7 +222,7 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
   end
 
   def offer_for(booking)
-    booking.qualification_snapshot['offer'].presence ||
+    (access.complete_contact?(booking.contact) && booking.qualification_snapshot['offer'].presence) ||
       account.settings&.dig('ai_lead_employee', 'default_offer').presence ||
       'Product Demo'
   end

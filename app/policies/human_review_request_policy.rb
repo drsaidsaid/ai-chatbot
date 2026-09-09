@@ -6,7 +6,7 @@ class HumanReviewRequestPolicy < ApplicationPolicy
   end
 
   def show?
-    account_user.present? && record.account_id == account.id
+    AiLeadEmployee::AccessScope.new(account: account, user: user).related(HumanReviewRequest).exists?(id: record.id)
   end
 
   def update?
@@ -15,9 +15,7 @@ class HumanReviewRequestPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      return scope.none if account_user.blank?
-
-      scope.where(account_id: account.id)
+      AiLeadEmployee::AccessScope.new(account: account, user: user).related(scope)
     end
   end
 end

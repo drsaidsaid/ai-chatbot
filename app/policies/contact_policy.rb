@@ -1,54 +1,73 @@
 class ContactPolicy < ApplicationPolicy
+  class Scope < ApplicationPolicy::Scope
+    def resolve
+      AiLeadEmployee::AccessScope.new(account: account, user: user).contacts(scope)
+    end
+  end
+
   def index?
-    true
+    allowed_contact?
   end
 
   def active?
-    true
+    allowed_contact?
   end
 
   def import?
-    @account_user.administrator?
+    access.administrator?
   end
 
   def export?
-    @account_user.administrator?
+    access.administrator?
   end
 
   def search?
-    true
+    allowed_contact?
   end
 
   def filter?
-    true
+    allowed_contact?
   end
 
   def update?
-    true
+    allowed_contact?
   end
 
   def contactable_inboxes?
-    true
+    allowed_contact?
   end
 
   def destroy_custom_attributes?
-    true
+    allowed_contact?
   end
 
   def show?
-    true
+    allowed_contact?
   end
 
   def create?
-    true
+    access.administrator?
   end
 
   def avatar?
-    true
+    allowed_contact?
   end
 
   def destroy?
-    @account_user.administrator?
+    access.administrator?
+  end
+
+  private
+
+  def access
+    AiLeadEmployee::AccessScope.new(account: account, user: user)
+  end
+
+  def allowed_contact?
+    return false unless access.membership
+    return true if record == Contact
+
+    access.contacts.exists?(id: record.id)
   end
 end
 

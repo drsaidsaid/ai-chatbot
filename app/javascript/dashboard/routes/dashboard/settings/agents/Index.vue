@@ -4,11 +4,7 @@ import { computed, onMounted, ref } from 'vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import { useI18n } from 'vue-i18n';
 import { picoSearch } from '@chatwoot/pico-search';
-import {
-  useStoreGetters,
-  useStore,
-  useMapGetter,
-} from 'dashboard/composables/store';
+import { useStoreGetters, useStore } from 'dashboard/composables/store';
 
 import AddAgent from './AddAgent.vue';
 import EditAgent from './EditAgent.vue';
@@ -48,31 +44,15 @@ const filteredAgentList = computed(() => {
 
 const uiFlags = computed(() => getters['agents/getUIFlags'].value);
 const currentUserId = computed(() => getters.getCurrentUserID.value);
-const customRoles = useMapGetter('customRole/getCustomRoles');
 
 onMounted(() => {
   store.dispatch('agents/get');
-  store.dispatch('customRole/getCustomRole');
 });
 
-const findCustomRole = agent =>
-  customRoles.value.find(role => role.id === agent.custom_role_id);
-
-const getAgentRoleName = agent => {
-  if (!agent.custom_role_id) {
-    return t(`AGENT_MGMT.AGENT_TYPES.${agent.role.toUpperCase()}`);
-  }
-  const customRole = findCustomRole(agent);
-  return customRole ? customRole.name : '';
-};
-
-const getAgentRolePermissions = agent => {
-  if (!agent.custom_role_id) {
-    return [];
-  }
-  const customRole = findCustomRole(agent);
-  return customRole?.permissions || [];
-};
+const getAgentRoleName = agent =>
+  agent.role === 'administrator'
+    ? t('AGENT_MGMT.AGENT_TYPES.ADMINISTRATOR')
+    : t('AGENT_MGMT.AGENT_TYPES.AGENT');
 
 const verifiedAdministrators = computed(() => {
   return agentList.value.filter(
@@ -204,38 +184,8 @@ const confirmDeletion = () => {
                   {{ agent.email }}
                 </span>
                 <div class="w-px h-3 bg-n-strong rounded-lg" />
-                <span
-                  class="block w-fit text-body-main text-n-slate-11 relative"
-                  :class="{
-                    'hover:text-n-slate-12 group cursor-pointer':
-                      agent.custom_role_id,
-                  }"
-                >
+                <span class="text-body-main text-n-slate-11">
                   {{ getAgentRoleName(agent) }}
-
-                  <div
-                    class="absolute ltr:left-0 rtl:right-0 z-10 hidden w-[300px] bg-n-alpha-3 backdrop-blur-[100px] rounded-xl outline outline-1 outline-n-container shadow-lg top-14 md:top-12"
-                    :class="{ 'group-hover:block': agent.custom_role_id }"
-                  >
-                    <div class="flex flex-col gap-1 p-4">
-                      <span class="text-heading-3 text-n-slate-12">
-                        {{ $t('AGENT_MGMT.LIST.AVAILABLE_CUSTOM_ROLE') }}
-                      </span>
-                      <ul class="ltr:pl-4 rtl:pr-4 mb-0 list-disc">
-                        <li
-                          v-for="permission in getAgentRolePermissions(agent)"
-                          :key="permission"
-                          class="text-body-main text-n-slate-11"
-                        >
-                          {{
-                            $t(
-                              `CUSTOM_ROLE.PERMISSIONS.${permission.toUpperCase()}`
-                            )
-                          }}
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
                 </span>
                 <div class="w-px h-3 bg-n-strong rounded-lg" />
                 <span
@@ -257,6 +207,7 @@ const confirmDeletion = () => {
             <Button
               v-if="showEditAction(agent)"
               v-tooltip.top="$t('AGENT_MGMT.EDIT.BUTTON_TEXT')"
+              :aria-label="`${$t('AGENT_MGMT.EDIT.BUTTON_TEXT')} ${agent.name}`"
               icon="i-woot-edit-pen"
               slate
               sm
@@ -265,6 +216,7 @@ const confirmDeletion = () => {
             <Button
               v-if="showDeleteAction(agent)"
               v-tooltip.top="$t('AGENT_MGMT.DELETE.BUTTON_TEXT')"
+              :aria-label="`${$t('AGENT_MGMT.DELETE.BUTTON_TEXT')} ${agent.name}`"
               icon="i-woot-bin"
               slate
               sm
@@ -290,7 +242,6 @@ const confirmDeletion = () => {
         :type="currentAgent.role"
         :email="currentAgent.email"
         :availability="currentAgent.availability_status"
-        :custom-role-id="currentAgent.custom_role_id"
         @close="hideEditPopup"
       />
     </woot-modal>

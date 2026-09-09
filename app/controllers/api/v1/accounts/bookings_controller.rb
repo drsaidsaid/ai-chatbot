@@ -58,11 +58,14 @@ class Api::V1::Accounts::BookingsController < Api::V1::Accounts::BaseController
   private
 
   def conversation
-    @conversation ||= current_account.conversations.find(params.require(:conversation_id))
+    @conversation ||= policy_scope(current_account.conversations).find(params.require(:conversation_id))
   end
 
   def lead_qualification
-    @lead_qualification ||= conversation.contact.lead_qualification ||
+    access = AiLeadEmployee::AccessScope.new(account: current_account, user: current_user)
+    raise Pundit::NotAuthorizedError unless access.complete_contact?(conversation.contact)
+
+    @lead_qualification ||= access.qualification(conversation.contact) ||
                             AiLeadEmployee::QualificationService.new(conversation: conversation).perform.qualification
   end
 
@@ -82,10 +85,7 @@ class Api::V1::Accounts::BookingsController < Api::V1::Accounts::BaseController
   end
 
   def visible_booking_scope
-    scope = Booking.where(account: current_account)
-    return scope if current_user.administrator?
-
-    scope.where(assignee: current_user)
+    policy_scope(Booking.where(account: current_account))
   end
 
   def reschedule_params

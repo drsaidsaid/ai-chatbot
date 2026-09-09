@@ -10,6 +10,8 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     mb = Messages::MessageBuilder.new(user, @conversation, params)
     @message = mb.perform
     Conversations::ControlService.new(conversation: @conversation).human_reply!(operator: user) if human_public_reply?(user)
+  rescue Pundit::NotAuthorizedError
+    raise
   rescue StandardError => e
     render_could_not_create_error(e.message)
   end

@@ -115,7 +115,7 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
       )
     end
 
-    it 'limits Human Operators to assigned or permitted conversations' do
+    it 'limits Team Members to assigned conversations, including outside their inbox membership' do
       permitted = create(:contact, :with_phone_number, account: account)
       assigned = create(:contact, :with_phone_number, account: account)
       hidden = create(:contact, :with_phone_number, account: account)
@@ -126,7 +126,7 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
 
       payload = described_class.new(account: account, user: operator, params: {}).perform
 
-      expect(payload[:leads].pluck(:id)).to contain_exactly(permitted.id, assigned.id)
+      expect(payload[:leads].pluck(:id)).to contain_exactly(assigned.id)
       expect(payload[:meta][:visibility]).to eq('operator')
     end
 

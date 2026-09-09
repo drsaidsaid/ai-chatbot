@@ -5,7 +5,7 @@ describe SearchService do
 
   let(:search_type) { 'all' }
   let!(:account) { create(:account) }
-  let!(:user) { create(:user, account: account) }
+  let!(:user) { create(:user, account: account, role: :administrator) }
   let!(:inbox) { create(:inbox, account: account, enable_auto_assignment: false) }
   let!(:harry) { create(:contact, name: 'Harry Potter', email: 'test@test.com', account_id: account.id) }
   let!(:conversation) { create(:conversation, contact: harry, inbox: inbox, account: account) }
@@ -83,11 +83,11 @@ describe SearchService do
       it 'searches across message content and return in created_at desc' do
         # random messages in another account
         create(:message, content: 'Harry Potter is a wizard')
-        # random messsage in inbox with out access
-        create(:message, account: account, inbox: create(:inbox, account: account), content: 'Harry Potter is a wizard')
+        # Admins also see messages outside their inbox memberships
+        other_inbox_message = create(:message, account: account, inbox: create(:inbox, account: account), content: 'Harry Potter is a wizard')
         params = { q: 'Harry' }
         search = described_class.new(current_user: user, current_account: account, params: params, search_type: 'Message')
-        expect(search.perform[:messages].map(&:id)).to eq([message2.id, message.id])
+        expect(search.perform[:messages].map(&:id)).to eq([other_inbox_message.id, message2.id, message.id])
       end
 
       context 'with feature flag for search type' do
@@ -394,60 +394,18 @@ describe SearchService do
     end
   end
 
-  describe '#message_base_query' do
-    let(:params) { { q: 'test' } }
+  describe 'assigned Team Member message search' do
+    let(:params) { { q: 'wizard' } }
     let(:search_type) { 'Message' }
 
-    context 'when user is admin' do
-      let(:admin_user) { create(:user) }
-      let(:admin_search) do
-        create(:account_user, account: account, user: admin_user, role: 'administrator')
-        described_class.new(current_user: admin_user, current_account: account, params: params, search_type: search_type)
-      end
-
-      it 'does not filter by inbox_id' do
-        # Testing the private method itself seems like the best way to ensure
-        # that the inboxes are not added to the search query
-        base_query = admin_search.send(:message_base_query)
-
-        # Should only have the time filter, not inbox filter
-        expect(base_query.to_sql).to include('created_at >= ')
-        expect(base_query.to_sql).not_to include('inbox_id')
-      end
-    end
-
-    context 'when user is not admin' do
-      before do
-        account_user = account.account_users.find_or_create_by(user: user)
-        account_user.update!(role: 'agent')
-      end
-
-      it 'filters by accessible inbox_id when user has limited access' do
-        # Create an additional inbox that user is NOT assigned to
-        create(:inbox, account: account)
-
-        base_query = search.send(:message_base_query)
-
-        # Should have both time and inbox filters
-        expect(base_query.to_sql).to include('created_at >= ')
-        expect(base_query.to_sql).to include('inbox_id')
-      end
-
-      context 'when user has access to all inboxes' do
-        before do
-          # Create additional inbox and assign user to all inboxes
-          other_inbox = create(:inbox, account: account)
-          create(:inbox_member, user: user, inbox: other_inbox)
-        end
-
-        it 'skips inbox filtering as optimization' do
-          base_query = search.send(:message_base_query)
-
-          # Should only have the time filter, not inbox filter
-          expect(base_query.to_sql).to include('created_at >= ')
-          expect(base_query.to_sql).not_to include('inbox_id')
-        end
-      end
+    it 'returns only assigned messages even in shared inboxes and without inbox membership' do
+      user.account_users.find_by!(account: account).update!(role: :agent)
+      message.conversation.update!(assignee: user)
+      InboxMember.where(user: user, inbox: inbox).destroy_all
+      create(:message, account: account, inbox: inbox, content: 'Another wizard inquiry')
+      expect(search.perform[:messages].pluck(:id)).to eq([message.id])
+      message.conversation.update!(assignee: nil)
+      expect(search.perform[:messages]).to be_empty
     end
   end
 

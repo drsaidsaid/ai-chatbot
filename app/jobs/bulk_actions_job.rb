@@ -24,6 +24,9 @@ class BulkActionsJob < ApplicationJob
 
   def bulk_conversation_update
     params = available_params(@params)
+    unless AiLeadEmployee::AccessScope.new(account: @account, user: @user).administrator?
+      params = params&.except(:assignee_id, :team_id, :assignee_agent_bot_id)
+    end
     records.each do |conversation|
       bulk_add_labels(conversation)
       bulk_snoozed_until(conversation)

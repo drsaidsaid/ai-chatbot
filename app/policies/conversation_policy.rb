@@ -1,13 +1,7 @@
 class ConversationPolicy < ApplicationPolicy
   class Scope < ApplicationPolicy::Scope
     def resolve
-      conversations = scope.where(account: account)
-      return conversations if account_user&.administrator?
-      return conversations.none unless user.is_a?(User)
-
-      inbox_ids = user.inboxes.where(account: account).select(:id)
-      team_ids = user.teams.where(account: account).select(:id)
-      conversations.where(inbox_id: inbox_ids).or(conversations.where(team_id: team_ids))
+      AiLeadEmployee::AccessScope.new(account: account, user: user).conversations(scope)
     end
   end
 
@@ -20,43 +14,27 @@ class ConversationPolicy < ApplicationPolicy
   end
 
   def show?
-    administrator? || agent_bot? || agent_can_view_conversation?
+    return false unless record.account_id == account&.id
+
+    agent_bot? || access.conversations.exists?(id: record.id)
   end
 
   def control?
-    user.is_a?(User) && (administrator? || agent_can_view_conversation?)
+    user.is_a?(User) && show?
   end
 
   private
 
-  def agent_can_view_conversation?
-    inbox_access? || team_access?
+  def administrator?
+    access.administrator? && record.account_id == account&.id
   end
 
-  def administrator?
-    account_user&.administrator?
+  def access
+    AiLeadEmployee::AccessScope.new(account: account, user: user)
   end
 
   def agent_bot?
     user.is_a?(AgentBot)
-  end
-
-  def inbox_access?
-    user.inboxes.where(account_id: account&.id).exists?(id: record.inbox_id)
-  end
-
-  def team_access?
-    return false if record.team_id.blank?
-
-    user.teams.where(account_id: account&.id).exists?(id: record.team_id)
-  end
-
-  def assigned_to_user?
-    record.assignee_id == user.id
-  end
-
-  def participant?
-    record.conversation_participants.exists?(user_id: user.id)
   end
 end
 

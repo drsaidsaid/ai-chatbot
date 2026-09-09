@@ -11,7 +11,9 @@ class InboxPolicy < ApplicationPolicy
     end
 
     def resolve
-      user.assigned_inboxes
+      access = AiLeadEmployee::AccessScope.new(account: account, user: user)
+      inboxes = scope.where(account_id: account.id)
+      access.administrator? ? inboxes : inboxes.where(id: access.conversations.select(:inbox_id))
     end
   end
 
@@ -23,7 +25,7 @@ class InboxPolicy < ApplicationPolicy
     # FIXME: for agent bots, lets bring this validation to policies as well in future
     return true if @user.is_a?(AgentBot)
 
-    Current.user.assigned_inboxes.include? record
+    Scope.new({ user: user, account: account }, Inbox.all).resolve.exists?(id: record.id)
   end
 
   def assignable_agents?

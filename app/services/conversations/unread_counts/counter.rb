@@ -155,16 +155,10 @@ class Conversations::UnreadCounts::Counter
   end
 
   def permission_mode
-    @permission_mode ||=
-      if !custom_role_agent? || permissions.include?(MANAGE_ALL_PERMISSION)
-        :base
-      elsif permissions.include?(UNASSIGNED_PERMISSION)
-        :unassigned_and_mine
-      elsif permissions.include?(PARTICIPATING_PERMISSION)
-        :mine
-      else
-        :none
-      end
+    member = account.account_users.find_by(user_id: user.id)
+    return :none unless member
+
+    member.administrator? ? :base : :mine
   end
 
   def custom_role_agent?
@@ -183,7 +177,7 @@ class Conversations::UnreadCounts::Counter
     @visible_inbox_ids ||= if account_user&.administrator?
                              account.inboxes.pluck(:id)
                            else
-                             user.inboxes.where(account_id: account.id).pluck(:id)
+                             AiLeadEmployee::AccessScope.new(account: account, user: user).conversations.distinct.pluck(:inbox_id)
                            end
   end
 
@@ -195,7 +189,8 @@ class Conversations::UnreadCounts::Counter
     @visible_team_ids ||= if account_user&.administrator?
                             account.teams.pluck(:id)
                           else
-                            user.teams.where(account_id: account.id).pluck(:id)
+                            AiLeadEmployee::AccessScope.new(account: account,
+                                                            user: user).conversations.where.not(team_id: nil).distinct.pluck(:team_id)
                           end
   end
 

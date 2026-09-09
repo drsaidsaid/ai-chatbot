@@ -253,6 +253,7 @@ const defaultResponse = overrides => ({
       sources: [{ id: 3, name: 'WhatsApp sales' }],
     },
     meta: {
+      visibility: 'admin',
       page: 1,
       per_page: 25,
       total_count: 100,
@@ -410,6 +411,31 @@ describe('LeadsDirectoryPage', () => {
       expect.objectContaining({
         lead: expect.objectContaining({ name: 'Jane Nkosi Updated' }),
       })
+    );
+  });
+
+  it('lets a Team Member edit assigned details without offering imports, exports or reassignment', async () => {
+    const response = defaultResponse();
+    response.data.meta.visibility = 'operator';
+    LeadsAPI.update.mockResolvedValue({ data: leadPayload });
+    const { wrapper } = await mountPage({ response });
+    expect(
+      wrapper.findAll('button').some(button => button.text() === 'Import')
+    ).toBe(false);
+    expect(
+      wrapper.findAll('button').some(button => button.text() === 'Export')
+    ).toBe(false);
+    await wrapper
+      .findAll('button')
+      .find(button => button.text().includes('Edit lead'))
+      .trigger('click');
+    await flushPromises();
+    expect(wrapper.find('form select').exists()).toBe(false);
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+    expect(LeadsAPI.update).toHaveBeenCalled();
+    expect(LeadsAPI.update.mock.calls[0][1].lead).not.toHaveProperty(
+      'assignee_id'
     );
   });
 

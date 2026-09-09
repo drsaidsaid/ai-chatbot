@@ -80,25 +80,15 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def accessible_contacts
-    return current_account.contacts.resolved_contacts(use_crm_v2: current_account.feature_enabled?('crm_v2')) if administrator?
-
-    current_account.contacts.where(id: visible_conversations.select(:contact_id))
+    policy_scope(current_account.contacts)
   end
 
   def accessible_conversations
-    return current_account.conversations if administrator?
-
-    visible_conversations
+    policy_scope(current_account.conversations)
   end
 
   def visible_conversations
-    scope = current_account.conversations
-    inbox_ids = Current.user.inboxes.where(account: current_account).select(:id)
-    team_ids = Current.user.teams.where(account: current_account).select(:id)
-
-    scope.where(assignee_id: Current.user.id)
-         .or(scope.where(inbox_id: inbox_ids))
-         .or(scope.where(team_id: team_ids))
+    accessible_conversations
   end
 
   def administrator?

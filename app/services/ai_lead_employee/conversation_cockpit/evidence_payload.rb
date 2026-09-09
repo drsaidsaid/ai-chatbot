@@ -19,8 +19,10 @@ class AiLeadEmployee::ConversationCockpit::EvidencePayload
   attr_reader :context
 
   def records
+    scope = QualificationEvidence.all
+    scope = AiLeadEmployee::AccessScope.new(account: context.account, user: Current.user).related(scope) if Current.user.is_a?(User)
     @records ||=
-      QualificationEvidence
+      scope
       .where(account: context.account, contact: context.contact)
       .where(conversation_id: [context.conversation.id, nil])
       .includes(:message, :user)

@@ -43,6 +43,7 @@ class ActionCableConnector extends BaseActionCableConnector {
       'conversation.status_changed': this.onStatusChange,
       'user:logout': this.onLogout,
       'page:reload': this.onReload,
+      'access.changed': this.onReload,
       'assignee.changed': this.onAssigneeChanged,
       'conversation.typing_on': this.onTypingOn,
       'conversation.typing_off': this.onTypingOff,

@@ -1,0 +1,8 @@
+
+enum :follow_up_state, {"no_follow_up" => 0, "nurture" => 1, "human_review" => 2, "call_booked" => 3, "closed" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/3a8d/AI Chatbot/app/models/lead_qualification_decision.rb:41)
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+...................................................................................................................................................
+
+Finished in 5 minutes 46 seconds (files took 26.41 seconds to load)
+186 examples, 0 failures

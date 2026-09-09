@@ -1,4 +1,4 @@
-json.settings resource.settings
+json.settings(AiLeadEmployee::AccessScope.new(account: resource, user: Current.user).administrator? ? resource.settings : {})
 json.created_at resource.created_at
 if resource.custom_attributes.present?
   json.custom_attributes do
