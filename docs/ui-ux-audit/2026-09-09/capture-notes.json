@@ -1,0 +1,234 @@
+[
+  {
+    "name": "01-login",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/01-login.jpg",
+    "notes": "In-app browser, fresh default RC installation. Chatwoot wordmark conflicts with product heading.",
+    "capturedAt": "2026-09-09T16:33:42.974Z",
+    "step": 1,
+    "accepted": true
+  },
+  {
+    "name": "02-conversation-tablet",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/02-conversation-tablet.jpg",
+    "notes": "Default in-app viewport 772×695: mobile shell; message area compressed between navigation and composer.",
+    "capturedAt": "2026-09-09T16:34:47.014Z",
+    "step": 2,
+    "accepted": true
+  },
+  {
+    "name": "03-conversation-desktop",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/03-conversation-desktop.jpg",
+    "notes": "Desktop breakpoint test at 1440×1000, synthetic booked lead selected.",
+    "capturedAt": "2026-09-09T16:34:53.362Z",
+    "step": 2,
+    "accepted": true
+  },
+  {
+    "name": "04-review-conversation",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/04-review-conversation.jpg",
+    "notes": "Review queue selects correct lead, but answer-review card shows Proposed time filled with refund question and Confirm call time CTA. Verify source versus fixture.",
+    "capturedAt": "2026-09-09T16:35:22.919Z",
+    "step": 2,
+    "accepted": true
+  },
+  {
+    "name": "05-leads",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/05-leads.jpg",
+    "notes": "Lead list, populated synthetic account. Inspect hierarchy, search and filter discoverability.",
+    "capturedAt": "2026-09-09T16:36:00.613Z",
+    "step": 3,
+    "accepted": true
+  },
+  {
+    "name": "06-leads-empty",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/06-leads-empty.jpg",
+    "notes": "Search correctly returns No leads match these filters. Visible focus ring and clear icon; no prominent reset-all action; empty detail pane remains.",
+    "capturedAt": "2026-09-09T16:36:35.397Z",
+    "step": 3,
+    "accepted": true
+  },
+  {
+    "name": "07-bookings",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/07-bookings.jpg",
+    "notes": "Synthetic booking list and detail. Any date difference against conversation prose is fixture inconsistency, excluded from app findings.",
+    "capturedAt": "2026-09-09T16:36:43.995Z",
+    "step": 4,
+    "accepted": true
+  },
+  {
+    "name": "08-availability",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/08-availability.jpg",
+    "notes": "Disconnected-provider state: Failed provider load and No available slots displayed together, with no visible connect/retry guidance. Failure expected under isolated environment; recovery UX assessed only.",
+    "capturedAt": "2026-09-09T16:37:00.240Z",
+    "step": 4,
+    "accepted": true
+  },
+  {
+    "name": "09-knowledge",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/09-knowledge.jpg",
+    "notes": "Document editor with distinct Documents, Approved Answers and Needs Review tabs. Helpful sensitive-topic explanation. Save/publish/status/access toggles compete; default test prompt mentions Online Profits in standalone workspace.",
+    "capturedAt": "2026-09-09T16:37:07.742Z",
+    "step": 5,
+    "accepted": true
+  },
+  {
+    "name": "10-approved-answers",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/10-approved-answers.jpg",
+    "notes": "Draft item appears under Approved Answers; detail labels draft text Approved answer. Approve/Reject/Archive available.",
+    "capturedAt": "2026-09-09T16:37:33.480Z",
+    "step": 6,
+    "accepted": true
+  },
+  {
+    "name": "11-answer-form",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/11-answer-form.jpg",
+    "notes": "New answer empty submission focuses required title via native validation; placeholder-only visible fields, aria labels present. Right detail remains for old item.",
+    "capturedAt": "2026-09-09T16:37:49.749Z",
+    "step": 6,
+    "accepted": true
+  },
+  {
+    "name": "12-knowledge-review",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/12-knowledge-review.jpg",
+    "notes": "Resolve defaults to sending answer to lead AND proposing reusable approved answer. Button does not disclose these effects; draft note placeholder also allows internal resolution. No message sent.",
+    "capturedAt": "2026-09-09T16:38:00.870Z",
+    "step": 7,
+    "accepted": true
+  },
+  {
+    "name": "13-test-center",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/13-test-center.jpg",
+    "notes": "Fresh default Test Center, no test runs or live providers connected.",
+    "capturedAt": "2026-09-09T16:38:08.678Z",
+    "step": 8,
+    "accepted": true
+  },
+  {
+    "name": "14-release-check",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/14-release-check.jpg",
+    "notes": "Launch is clearly locked, but machine identifiers in blocking checks and 0% safety failures with no runs can mislead.",
+    "capturedAt": "2026-09-09T16:38:24.378Z",
+    "step": 8,
+    "accepted": true
+  },
+  {
+    "name": "15-settings-qualification",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/15-settings-qualification.jpg",
+    "notes": "Budget range visibly shows 20000000 under TZS 200,000–500,000. Source directly binds min_cents; raw money units leak into form. No controls to add/edit offers on this page.",
+    "capturedAt": "2026-09-09T16:38:32.728Z",
+    "step": 9,
+    "accepted": true
+  },
+  {
+    "name": "16-settings-booking",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/16-settings-booking.jpg",
+    "notes": "Readable short form, but timezone is free text; no calendar connection, weekday selector, exceptions or preview on this page.",
+    "capturedAt": "2026-09-09T16:38:49.757Z",
+    "step": 9,
+    "accepted": true
+  },
+  {
+    "name": "17-settings-team",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/17-settings-team.jpg",
+    "notes": "Intermediate page points to Open teams and exposes existing Chatwoot account configuration wording. Target team editor not inspected.",
+    "capturedAt": "2026-09-09T16:39:12.669Z",
+    "step": 10,
+    "accepted": true
+  },
+  {
+    "name": "18-settings-followups",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/18-settings-followups.jpg",
+    "notes": "Delay displayed as 1440 minutes, with no natural-language schedule or message preview. Enabled is configuration only; live dispatch not exercised.",
+    "capturedAt": "2026-09-09T16:39:23.257Z",
+    "step": 9,
+    "accepted": true
+  },
+  {
+    "name": "19-settings-alerts",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/19-settings-alerts.jpg",
+    "notes": "Alerts leads to generic Open inboxes without alert recipients, triggers or delivery-status guidance on this page.",
+    "capturedAt": "2026-09-09T16:39:31.567Z",
+    "step": 10,
+    "accepted": true
+  },
+  {
+    "name": "20-settings-whatsapp",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/20-settings-whatsapp.jpg",
+    "notes": "WhatsApp entry is a generic Open inboxes handoff with Chatwoot wording, no connection status summary.",
+    "capturedAt": "2026-09-09T16:39:38.084Z",
+    "step": 10,
+    "accepted": true
+  },
+  {
+    "name": "21-inbox-settings",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/21-inbox-settings.jpg",
+    "notes": "Settings subnavigation disappears; generic multichannel explanation and unlabeled edit/delete icon controls.",
+    "capturedAt": "2026-09-09T16:39:55.347Z",
+    "step": 10,
+    "accepted": true
+  },
+  {
+    "name": "22-add-inbox",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/22-add-inbox.jpg",
+    "notes": "WhatsApp V1 setup exposes Website, SMS, Email, API, Telegram and Line alongside WhatsApp; no setup submitted.",
+    "capturedAt": "2026-09-09T16:40:08.647Z",
+    "step": 10,
+    "accepted": true
+  },
+  {
+    "name": "23-ai-provider",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/23-ai-provider.jpg",
+    "notes": "AI provider configuration in disconnected local test environment.",
+    "capturedAt": "2026-09-09T16:40:21.514Z",
+    "step": 11,
+    "accepted": true
+  },
+  {
+    "name": "24-phone-inbox",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/24-phone-inbox.jpg",
+    "notes": "Phone 390×844, Inbox opens selected conversation. Lead name readable but repeated phone; AI/Human owner status hidden until expanding details; next action truncates. Composer occupies ~230px.",
+    "capturedAt": "2026-09-09T16:40:34.458Z",
+    "step": 12,
+    "accepted": true
+  },
+  {
+    "name": "25-phone-brief",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/25-phone-brief.jpg",
+    "notes": "Expanded phone brief: still no explicit Human Active or assignee; disabled Resume AI has no visible explanation.",
+    "capturedAt": "2026-09-09T16:40:52.211Z",
+    "step": 12,
+    "accepted": true
+  },
+  {
+    "name": "26-phone-queue",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/26-phone-queue.jpg",
+    "notes": "Confirmed visible dead end after Back to list: Select a conversation but no list or selection control at 390px. This is loaded application state, not a blank capture.",
+    "capturedAt": "2026-09-09T16:41:00.108Z",
+    "step": 12,
+    "accepted": true
+  },
+  {
+    "name": "27-phone-leads",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/27-phone-leads.jpg",
+    "notes": "At 390×844, expanded filters and stacked headers leave only part of first lead visible before fixed pagination. Import/export lose accessible names in DOM.",
+    "capturedAt": "2026-09-09T16:41:10.696Z",
+    "step": 12,
+    "accepted": true
+  },
+  {
+    "name": "28-phone-bookings",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/28-phone-bookings.jpg",
+    "notes": "Phone booking cards reflow and keep names readable, but tall toolbar/filters reduce available space; virtual keyboard and actual touch not tested.",
+    "capturedAt": "2026-09-09T16:41:36.419Z",
+    "step": 12,
+    "accepted": true
+  },
+  {
+    "name": "29-phone-settings",
+    "path": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/ui-ux-audit/2026-09-09/screenshots/29-phone-settings.jpg",
+    "notes": "Phone Settings loses all section navigation; Save changes wraps and clips in fixed height. Viewport and document width both390, so this is not page-wide overflow.",
+    "capturedAt": "2026-09-09T16:42:06.242Z",
+    "step": 12,
+    "accepted": true
+  }
+]

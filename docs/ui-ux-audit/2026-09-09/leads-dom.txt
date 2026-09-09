@@ -1,0 +1,336 @@
+- complementary:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - navigation "AI Lead Employee primary navigation":
+    - list:
+      - link "Inbox":
+        - /url: /app/accounts/1/dashboard
+        - generic: Inbox
+      - link "Leads" [active]:
+        - /url: /app/accounts/1/leads
+        - generic: Leads
+      - link "Bookings":
+        - /url: /app/accounts/1/bookings
+        - generic: Bookings
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - generic: Knowledge
+      - link "Test Center":
+        - /url: /app/accounts/1/test-center
+        - generic: Test Center
+      - link "Settings":
+        - /url: /app/accounts/1/settings/ai-lead-employee/offers-qualification
+        - generic: Settings
+  - button "Alex ui-audit@example.test":
+    - generic: Alex
+    - generic: ui-audit@example.test
+- main:
+  - heading "Leads" [level=1]
+  - generic: Search leads by name, phone, or business
+  - searchbox "Search leads by name, phone, or business"
+  - button "Choose File"
+  - button "Import":
+    - generic: Import
+  - button "Export":
+    - generic: Export
+  - button "More actions"
+  - main:
+    - button "All 7":
+      - generic: All
+      - generic: "7"
+    - button "Highly Qualified 2":
+      - generic: Highly Qualified
+      - generic: "2"
+    - button "Qualified 1":
+      - generic: Qualified
+      - generic: "1"
+    - button "Low Qualified 1":
+      - generic: Low Qualified
+      - generic: "1"
+    - button "Unqualified 1":
+      - generic: Unqualified
+      - generic: "1"
+    - button "Unknown 2":
+      - generic: Unknown
+      - generic: "2"
+    - combobox:
+      - option "Assignee" [selected]
+      - option "Mine"
+      - option "Unassigned"
+      - option "Alex Morgan"
+    - combobox:
+      - option "Source" [selected]
+      - option "Business WhatsApp"
+    - combobox:
+      - option "Follow-up state" [selected]
+      - option "No Follow Up"
+      - option "Nurture"
+      - option "Human Review"
+      - option "Call Booked"
+      - option "Closed"
+    - combobox:
+      - option "Booking status" [selected]
+      - option "Booked"
+      - option "No Booking"
+      - option "Canceled"
+      - option "Completed"
+    - button "More filters": More filters
+    - table:
+      - rowgroup:
+        - row "Select all leads Lead Business Lead Quality Score Source Assignee Last contact Next action Booking":
+          - columnheader "Select all leads":
+            - checkbox "Select all leads"
+          - columnheader "Lead":
+            - button "Lead"
+          - columnheader "Business":
+            - button "Business"
+          - columnheader "Lead Quality":
+            - button "Lead Quality"
+          - columnheader "Score":
+            - button "Score"
+          - columnheader "Source"
+          - columnheader "Assignee"
+          - columnheader "Last contact":
+            - button "Last contact": Last contact
+          - columnheader "Next action"
+          - columnheader "Booking"
+      - rowgroup:
+        - row "Select Fatima Ally FA Fatima Ally +15550100007 Not captured Unqualified 5 Business WhatsApp U Unassigned 19:13 9 Sept Closed Not captured No booking":
+          - cell "Select Fatima Ally":
+            - checkbox "Select Fatima Ally"
+          - cell "FA Fatima Ally +15550100007":
+            - generic: FA
+            - generic: Fatima Ally
+            - generic: "+15550100007"
+          - cell "Not captured":
+            - generic: Not captured
+          - cell "Unqualified":
+            - generic: Unqualified
+          - cell "5"
+          - cell "Business WhatsApp":
+            - generic: Business WhatsApp
+          - cell "U Unassigned":
+            - generic: U
+            - generic: Unassigned
+          - cell "19:13 9 Sept":
+            - generic: 19:13
+            - generic: 9 Sept
+          - cell "Closed Not captured":
+            - generic: Closed
+            - generic: Not captured
+          - cell "No booking":
+            - generic: No booking
+        - row "Select Peter Wilson PW Peter Wilson +15550100006 Not captured Unknown 0 Business WhatsApp U Unassigned 19:14 9 Sept Capture missing signals Not captured No booking":
+          - cell "Select Peter Wilson":
+            - checkbox "Select Peter Wilson"
+          - cell "PW Peter Wilson +15550100006":
+            - generic: PW
+            - generic: Peter Wilson
+            - generic: "+15550100006"
+          - cell "Not captured":
+            - generic: Not captured
+          - cell "Unknown":
+            - generic: Unknown
+          - cell "0"
+          - cell "Business WhatsApp":
+            - generic: Business WhatsApp
+          - cell "U Unassigned":
+            - generic: U
+            - generic: Unassigned
+          - cell "19:14 9 Sept":
+            - generic: 19:14
+            - generic: 9 Sept
+          - cell "Capture missing signals Not captured":
+            - generic: Capture missing signals
+            - generic: Not captured
+          - cell "No booking":
+            - generic: No booking
+        - row "Select Grace Mrema GM Grace Mrema +15550100005 Not captured Highly Qualified 90 Business WhatsApp AM Alex Morgan 19:15 9 Sept Prepare booked demo 10 Sept, 17:00 Demo 10 Sept, 17:00":
+          - cell "Select Grace Mrema":
+            - checkbox "Select Grace Mrema"
+          - cell "GM Grace Mrema +15550100005":
+            - generic: GM
+            - generic: Grace Mrema
+            - generic: "+15550100005"
+          - cell "Not captured":
+            - generic: Not captured
+          - cell "Highly Qualified":
+            - generic: Highly Qualified
+          - cell "90"
+          - cell "Business WhatsApp":
+            - generic: Business WhatsApp
+          - cell "AM Alex Morgan":
+            - generic: AM
+            - generic: Alex Morgan
+          - cell "19:15 9 Sept":
+            - generic: 19:15
+            - generic: 9 Sept
+          - cell "Prepare booked demo 10 Sept, 17:00":
+            - generic: Prepare booked demo
+            - generic: 10 Sept, 17:00
+          - cell "Demo 10 Sept, 17:00":
+            - generic: Demo
+            - generic: 10 Sept, 17:00
+        - row "Select James Kato JK James Kato +15550100004 Not captured Low Qualified 35 Business WhatsApp U Unassigned 19:16 9 Sept Send proposal Not captured No booking":
+          - cell "Select James Kato":
+            - checkbox "Select James Kato"
+          - cell "JK James Kato +15550100004":
+            - generic: JK
+            - generic: James Kato
+            - generic: "+15550100004"
+          - cell "Not captured":
+            - generic: Not captured
+          - cell "Low Qualified":
+            - generic: Low Qualified
+          - cell "35"
+          - cell "Business WhatsApp":
+            - generic: Business WhatsApp
+          - cell "U Unassigned":
+            - generic: U
+            - generic: Unassigned
+          - cell "19:16 9 Sept":
+            - generic: 19:16
+            - generic: 9 Sept
+          - cell "Send proposal Not captured":
+            - generic: Send proposal
+            - generic: Not captured
+          - cell "No booking":
+            - generic: No booking
+        - row "Select Neema Joseph NJ Neema Joseph +15550100003 Not captured Unknown 0 Business WhatsApp AM Alex Morgan 19:17 9 Sept Human review Not captured No booking":
+          - cell "Select Neema Joseph":
+            - checkbox "Select Neema Joseph"
+          - cell "NJ Neema Joseph +15550100003":
+            - generic: NJ
+            - generic: Neema Joseph
+            - generic: "+15550100003"
+          - cell "Not captured":
+            - generic: Not captured
+          - cell "Unknown":
+            - generic: Unknown
+          - cell "0"
+          - cell "Business WhatsApp":
+            - generic: Business WhatsApp
+          - cell "AM Alex Morgan":
+            - generic: AM
+            - generic: Alex Morgan
+          - cell "19:17 9 Sept":
+            - generic: 19:17
+            - generic: 9 Sept
+          - cell "Human review Not captured":
+            - generic: Human review
+            - generic: Not captured
+          - cell "No booking":
+            - generic: No booking
+        - row "Select David Mushi DM David Mushi +15550100002 Not captured Qualified 65 Business WhatsApp U Unassigned 19:18 9 Sept Send proposal Not captured No booking":
+          - cell "Select David Mushi":
+            - checkbox "Select David Mushi"
+          - cell "DM David Mushi +15550100002":
+            - generic: DM
+            - generic: David Mushi
+            - generic: "+15550100002"
+          - cell "Not captured":
+            - generic: Not captured
+          - cell "Qualified":
+            - generic: Qualified
+          - cell "65"
+          - cell "Business WhatsApp":
+            - generic: Business WhatsApp
+          - cell "U Unassigned":
+            - generic: U
+            - generic: Unassigned
+          - cell "19:18 9 Sept":
+            - generic: 19:18
+            - generic: 9 Sept
+          - cell "Send proposal Not captured":
+            - generic: Send proposal
+            - generic: Not captured
+          - cell "No booking":
+            - generic: No booking
+        - row "Select Amina Kileo AK Amina Kileo +15550100001 Not captured Highly Qualified 85 Business WhatsApp AM Alex Morgan 19:19 9 Sept Human review Not captured No booking":
+          - cell "Select Amina Kileo":
+            - checkbox "Select Amina Kileo"
+          - cell "AK Amina Kileo +15550100001":
+            - generic: AK
+            - generic: Amina Kileo
+            - generic: "+15550100001"
+          - cell "Not captured":
+            - generic: Not captured
+          - cell "Highly Qualified":
+            - generic: Highly Qualified
+          - cell "85"
+          - cell "Business WhatsApp":
+            - generic: Business WhatsApp
+          - cell "AM Alex Morgan":
+            - generic: AM
+            - generic: Alex Morgan
+          - cell "19:19 9 Sept":
+            - generic: 19:19
+            - generic: 9 Sept
+          - cell "Human review Not captured":
+            - generic: Human review
+            - generic: Not captured
+          - cell "No booking":
+            - generic: No booking
+    - generic: Showing 1-7 of 7 leads
+    - button "Previous page" [disabled]
+    - generic: "1"
+    - button "Next page" [disabled]
+    - complementary "Selected Lead detail":
+      - generic: FA
+      - heading "Fatima Ally" [level=2]
+      - paragraph: "+15550100007"
+      - paragraph
+      - heading "Contact channels" [level=3]
+      - paragraph:
+        - generic: Phone
+        - generic: "+15550100007"
+      - paragraph:
+        - generic: Email
+        - generic: lead7@example.test
+      - paragraph:
+        - generic: Source
+        - generic: Business WhatsApp
+      - heading "Qualification" [level=3]
+      - generic: Lead Quality
+      - generic: Unqualified
+      - generic: Score
+      - generic: 5 / 100
+      - heading "Why this lead matters" [level=3]
+      - paragraph: Needs additional information before the next action
+      - heading "Strongest evidence" [level=3]
+      - paragraph: Not captured
+      - heading "Missing signals" [level=3]
+      - paragraph:
+        - generic: Budget
+      - paragraph:
+        - generic: Urgency
+      - heading "Conversation summary" [level=3]
+      - paragraph: Last message 9 Sept, 19:13
+      - paragraph: We have decided to postpone this project. Please do not send any more follow-ups.
+      - paragraph: "Total messages: 3"
+      - term: Conversation status
+      - definition: Open
+      - term: AI control state
+      - definition: AI Active
+      - heading "Owner & follow-up" [level=3]
+      - term: Assignee
+      - definition: Unassigned
+      - term: Follow-up state
+      - definition: Closed
+      - term: Next action
+      - definition: Closed
+      - term: Due
+      - definition: Not captured
+      - heading "Related" [level=3]
+      - link "#7 9 Sept, 19:13":
+        - /url: /app/accounts/1/conversations/7
+        - generic: "#7"
+        - generic: 9 Sept, 19:13
+      - heading "Bookings" [level=4]
+      - paragraph: No related bookings
+      - heading "Actions" [level=3]
+      - link "Open conversation":
+        - /url: /app/accounts/1/conversations/7
+        - text: Open conversation
+      - button "Edit lead": Edit lead

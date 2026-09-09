@@ -1,0 +1,234 @@
+[
+  {
+    "file": "01-login.jpg",
+    "format": "JPEG",
+    "width": 772,
+    "height": 695,
+    "sha256": "631cb2fae51467f56c30c85e0e00af6cf413693e740e91d9525119cf9ca47a9c",
+    "bytes": 20000
+  },
+  {
+    "file": "02-conversation-tablet.jpg",
+    "format": "JPEG",
+    "width": 772,
+    "height": 695,
+    "sha256": "61cdc9b198b1b5150fa85c21ee663577396b4213f158bf400393f482cea838db",
+    "bytes": 41682
+  },
+  {
+    "file": "03-conversation-desktop.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "f75bce8c8acb2f8aa3aecd3aab4d3cb0449ff5867c1c455ea791e11c89f5d54e",
+    "bytes": 95166
+  },
+  {
+    "file": "04-review-conversation.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "f4512f68fc612054ddd556ef0448a9d60182cdc8fa365b33c08c56baf150aadb",
+    "bytes": 103516
+  },
+  {
+    "file": "05-leads.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "f1f296674b1555e008dca99bfe15ff545f1fe25d69620057e9049047f879ea84",
+    "bytes": 106831
+  },
+  {
+    "file": "06-leads-empty.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "37cc8b52e28c1ed76f6a54904edc764577afcb395f423d36f4fa5a2ffa54250c",
+    "bytes": 38255
+  },
+  {
+    "file": "07-bookings.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "0a2f004ea1ce769b49e32e562b181801f335f1789289333f2fcbe0b9019074b2",
+    "bytes": 64993
+  },
+  {
+    "file": "08-availability.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "4f1903e3b1ac5085870d100a861a5e3a3b8283e194de9c56eddcde04b3837fac",
+    "bytes": 64475
+  },
+  {
+    "file": "09-knowledge.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "e149d52cc432542cc0fd3b407f38beafd0d1968e374f8e0edb4720e062e40308",
+    "bytes": 81832
+  },
+  {
+    "file": "10-approved-answers.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "500a7ac3e71aa0d624172c881ec4fe63016054b01f38d0916007e60b8b2da725",
+    "bytes": 56659
+  },
+  {
+    "file": "11-answer-form.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "d6a4bb11d6a6f2eb6bd81f2cb6ff1582383a8de893d5279bd86e64766a34c245",
+    "bytes": 72358
+  },
+  {
+    "file": "12-knowledge-review.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "943753e6d96b2ff82e159fd1656367533d9c1042042d4fc25bea62dfd69f21ea",
+    "bytes": 52766
+  },
+  {
+    "file": "13-test-center.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "f7a805c518ad8b4942f22f6aded909b07737fde19dd4d9706c113e1ebc83bdb1",
+    "bytes": 61935
+  },
+  {
+    "file": "14-release-check.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "2e52d3248679519c7d2286311a51f13e53996a7c160c93004f2cd4f446b4beb2",
+    "bytes": 83145
+  },
+  {
+    "file": "15-settings-qualification.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "dfaeef53730478e99a686858edf1db0a52ed845cd6ef556d0ff0b9e79939e4c8",
+    "bytes": 47478
+  },
+  {
+    "file": "16-settings-booking.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "18139bb23c780dc4f8a64a0ec9b70018be6c60acc7e4e5735b2424b181039264",
+    "bytes": 38124
+  },
+  {
+    "file": "17-settings-team.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "7f2e7a7cda57b8e2b891ccf3c3569a10f0cc9bf9d34c81d9df0bda5837d6859f",
+    "bytes": 36526
+  },
+  {
+    "file": "18-settings-followups.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "54a25262725fe48161f3b9a27ce2cc3028129a700585f5fbfae03dd3a6b983f7",
+    "bytes": 34543
+  },
+  {
+    "file": "19-settings-alerts.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "8eaab0bd2c97550a7c69aff0d1a20cb163cc881e8c257631f928b6f28343b8bc",
+    "bytes": 35778
+  },
+  {
+    "file": "20-settings-whatsapp.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "4dd3b8d66c5118bc398c9990624a150687ccff51b9364f40b0cd4938632bcd4c",
+    "bytes": 36977
+  },
+  {
+    "file": "21-inbox-settings.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "79a76caa8114a90994a6e4e86dc78777c2fac77795823932aa8126df332e607c",
+    "bytes": 30619
+  },
+  {
+    "file": "22-add-inbox.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "0530a9b7983e7b128db8d0716451aa7972b235248303216ea80d09787b0b8cee",
+    "bytes": 59794
+  },
+  {
+    "file": "23-ai-provider.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "5a25a0eabe228bd6171526014862fb15fcd7db9043654954e331c85bcebd09cb",
+    "bytes": 35249
+  },
+  {
+    "file": "24-phone-inbox.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "bd2a8e5438cd707224ef1ea29c6c42faa9a7cb404f21e0896108289369741659",
+    "bytes": 36254
+  },
+  {
+    "file": "25-phone-brief.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "0fb3f24ce62103f2448cf75516d2d2c76fe6c8977ac6619146213cda1e875b93",
+    "bytes": 37655
+  },
+  {
+    "file": "26-phone-queue.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "02b45d3259b5634eecb2c7ef01a62c171a62c2f9b9e90d98720a3e54096e5af0",
+    "bytes": 12298
+  },
+  {
+    "file": "27-phone-leads.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "1c2082785658fbec30d0a3e54449f505ab4c131f7298f70981f032c71e015174",
+    "bytes": 25768
+  },
+  {
+    "file": "28-phone-bookings.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "577a3db0b3b39176740e39e33d1f1fad3dd37a3014184ea3b51fb7938fe5db85",
+    "bytes": 26806
+  },
+  {
+    "file": "29-phone-settings.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "6356dfd7913d75d53138f18588df0d8416d2df7221808650c40beb7610093b27",
+    "bytes": 27872
+  }
+]

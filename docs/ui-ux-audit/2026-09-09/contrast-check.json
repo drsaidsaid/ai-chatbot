@@ -1,0 +1,21 @@
+{
+  "element": "Settings Save changes, enabled",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "foreground": [
+    255,
+    255,
+    255
+  ],
+  "background": [
+    39,
+    129,
+    246
+  ],
+  "fontSizePx": 14,
+  "contrastRatio": 3.7789263780256745,
+  "requiredNormalTextRatio": 4.5,
+  "source": "Rendered getComputedStyle values observed through in-app browser"
+}

@@ -1,0 +1,38 @@
+# R10 — Connect and control the AI provider with visible health and limits
+
+Status: Draft for breakdown review; not published and not assigned.
+
+## Parent
+
+https://github.com/drsaidsaid/ai-chatbot/issues/7
+
+This is a focused completion/correction slice under the existing feature. Do not close or modify that parent as part of ticket publication.
+
+## User story covered
+
+An administrator can configure the AI Employee and stop or limit its use with confidence.
+
+## What to build
+
+Complete the AI & testing connection panel, encrypted credentials, usage information and operational limits while retaining the owned provider boundary.
+
+Work within the owned Community Edition Rails/Vue product. Deliver the real narrow path across every relevant storage, API, job/provider and UI boundary; do not mark a screen or sandbox stub as completion of the behavior.
+
+## Acceptance criteria
+
+- [ ] Save, rotate, test and disable the supported provider through an admin-only account-scoped path, without exposing stored keys.
+- [ ] Persist and display health and failure reasons in plain language, with safe retry guidance and no false connected status.
+- [ ] Bound timeouts/retries and collect actual usage where the provider supplies it; unavailable cost data is shown as unknown.
+- [ ] An administrator can set a documented usage/spend guardrail or conservative enforceable equivalent and see why automation was paused.
+- [ ] Disabling or exhausting the permitted limit blocks new model work and pending automated delivery through the common boundary.
+- [ ] Model/configuration changes invalidate relevant launch evidence; test with fake provider responses before any separately authorized paid calls.
+
+## Blocked by
+
+- R01 (replace with the published GitHub issue reference after approval).
+- R02 (replace with the published GitHub issue reference after approval).
+- R06 (replace with the published GitHub issue reference after approval).
+
+## Evidence and scope
+
+Based on the 9 September 2026 standalone UI/UX audit and the standalone portions of the functional/integration audit. Apply relevant product requirements and ADRs before building. Current UI audit fixtures do not prove production behavior. Test behavior changes first, run the relevant checks/build, inspect the in-app browser path, review the diff and record evidence before completion.

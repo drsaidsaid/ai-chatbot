@@ -1,0 +1,49 @@
+{
+  "OptOutService.new": [
+    {
+      "path": "app/services/ai_lead_employee/evaluation/sandbox_runner.rb",
+      "line": 521,
+      "text": "AiLeadEmployee::OptOutService.new(conversation: conversation, message: incoming_message).perform.present?"
+    }
+  ],
+  "FollowUpScheduler.new": [],
+  "MetaWhatsappWebhookEvent": [
+    {
+      "path": "app/models/meta_whatsapp_webhook_event.rb",
+      "line": 35,
+      "text": "class MetaWhatsappWebhookEvent < ApplicationRecord"
+    },
+    {
+      "path": "app/services/meta/whatsapp/inbound_webhook_processor.rb",
+      "line": 42,
+      "text": "MetaWhatsappWebhookEvent.transaction do"
+    },
+    {
+      "path": "app/services/meta/whatsapp/inbound_webhook_processor.rb",
+      "line": 59,
+      "text": "MetaWhatsappWebhookEvent.transaction do"
+    },
+    {
+      "path": "app/services/meta/whatsapp/inbound_webhook_processor.rb",
+      "line": 76,
+      "text": "MetaWhatsappWebhookEvent.create_or_find_by!(provider_event_id: message_payload[:id]) do |record|"
+    },
+    {
+      "path": "app/services/meta/whatsapp/inbound_webhook_processor.rb",
+      "line": 84,
+      "text": "MetaWhatsappWebhookEvent.create_or_find_by!(provider_event_id: status_event_id(status_payload)) do |record|"
+    },
+    {
+      "path": "db/migrate/20260826000100_create_meta_whatsapp_webhook_events.rb",
+      "line": 3,
+      "text": "class CreateMetaWhatsappWebhookEvents < ActiveRecord::Migration[7.1]"
+    },
+    {
+      "path": "db/migrate/20260826000300_add_conversation_to_meta_whatsapp_webhook_events.rb",
+      "line": 3,
+      "text": "class AddConversationToMetaWhatsappWebhookEvents < ActiveRecord::Migration[7.1]"
+    }
+  ],
+  "ai_lead_employee_offers": [],
+  "online_profits_person_id": []
+}

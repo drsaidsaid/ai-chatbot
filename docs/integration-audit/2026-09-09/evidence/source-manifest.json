@@ -1,0 +1,612 @@
+[
+  {
+    "source": "op",
+    "path": "src/services/webinar.ts",
+    "origin_path": "/Users/ghalyasaid/Documents/projects/AI OS/business/online-profits/websites/online-profits-next/src/services/webinar.ts",
+    "copy_path": "online-profits-source/src/services/webinar.ts",
+    "commit": "1da99f006941c24afba8eba8eb3fc407e09ac2e8",
+    "working_tree_content": true,
+    "sha256": "c055af57d2eebce577e253f3712e59cff42fe9dcd38cd7dc891d4995dfb9d80c"
+  },
+  {
+    "source": "op",
+    "path": "src/services/whatsappCrm.ts",
+    "origin_path": "/Users/ghalyasaid/Documents/projects/AI OS/business/online-profits/websites/online-profits-next/src/services/whatsappCrm.ts",
+    "copy_path": "online-profits-source/src/services/whatsappCrm.ts",
+    "commit": "1da99f006941c24afba8eba8eb3fc407e09ac2e8",
+    "working_tree_content": true,
+    "sha256": "ebbb499425ce9b15a6dd38aa4ded2229667c0fd0c96136c211f260abe6ea887a"
+  },
+  {
+    "source": "op",
+    "path": "supabase/functions/whatsapp-send/index.ts",
+    "origin_path": "/Users/ghalyasaid/Documents/projects/AI OS/business/online-profits/websites/online-profits-next/supabase/functions/whatsapp-send/index.ts",
+    "copy_path": "online-profits-source/supabase/functions/whatsapp-send/index.ts",
+    "commit": "1da99f006941c24afba8eba8eb3fc407e09ac2e8",
+    "working_tree_content": true,
+    "sha256": "78cc210cb6bad6374ec21297692acee5a3957f08dc139c6298c5b1099b2d0952"
+  },
+  {
+    "source": "op",
+    "path": "supabase/migrations/20260519110000_create_whatsapp_crm_foundation.sql",
+    "origin_path": "/Users/ghalyasaid/Documents/projects/AI OS/business/online-profits/websites/online-profits-next/supabase/migrations/20260519110000_create_whatsapp_crm_foundation.sql",
+    "copy_path": "online-profits-source/supabase/migrations/20260519110000_create_whatsapp_crm_foundation.sql",
+    "commit": "1da99f006941c24afba8eba8eb3fc407e09ac2e8",
+    "working_tree_content": true,
+    "sha256": "8d7584734092ac66d5e9d280c1cb0e87d85121a8ff51b401b545cb5aed3979de"
+  },
+  {
+    "source": "rc",
+    "path": "app/builders/contact_inbox_with_contact_builder.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/builders/contact_inbox_with_contact_builder.rb",
+    "copy_path": "source/app/builders/contact_inbox_with_contact_builder.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "5aa308a916fcb811ded2a4d630e4a329e63cababf9421f6a78def721e3e3be61"
+  },
+  {
+    "source": "rc",
+    "path": "app/controllers/api/v1/accounts/inboxes_controller.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/controllers/api/v1/accounts/inboxes_controller.rb",
+    "copy_path": "source/app/controllers/api/v1/accounts/inboxes_controller.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "cc77ca547c333d3be03340f83096b933b3b393a22c631e9a87e490d8fa377f77"
+  },
+  {
+    "source": "rc",
+    "path": "app/controllers/api/v1/accounts/leads_controller.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/controllers/api/v1/accounts/leads_controller.rb",
+    "copy_path": "source/app/controllers/api/v1/accounts/leads_controller.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "216d1b8ef7fc855ff6afd4d2bb4fb7ca2374faa593f29ffcc5129156a0ff80f6"
+  },
+  {
+    "source": "rc",
+    "path": "app/controllers/concerns/ensure_current_account_helper.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/controllers/concerns/ensure_current_account_helper.rb",
+    "copy_path": "source/app/controllers/concerns/ensure_current_account_helper.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "b9bcda2ef09908d5269e0b5e46eb2aba260299af4a2b3035ccc6e500bc0f4149"
+  },
+  {
+    "source": "rc",
+    "path": "app/controllers/concerns/meta_token_verify_concern.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/controllers/concerns/meta_token_verify_concern.rb",
+    "copy_path": "source/app/controllers/concerns/meta_token_verify_concern.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "1331fdafe09d3435809fdd927f66ffd4ac9dc06c134c663a13dc096cce5e57c3"
+  },
+  {
+    "source": "rc",
+    "path": "app/controllers/webhooks/whatsapp_controller.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/controllers/webhooks/whatsapp_controller.rb",
+    "copy_path": "source/app/controllers/webhooks/whatsapp_controller.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "5b14e6f658b99cc9949600cf38b6b600738f5657ad173b7d1a063318262febd2"
+  },
+  {
+    "source": "rc",
+    "path": "app/javascript/dashboard/routes/dashboard/settings/inbox/FinishSetup.vue",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/javascript/dashboard/routes/dashboard/settings/inbox/FinishSetup.vue",
+    "copy_path": "source/app/javascript/dashboard/routes/dashboard/settings/inbox/FinishSetup.vue",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "53fdda9764a12b67b70cf5461e30bd6e39a965b046abb21a818afb1931c9cb93"
+  },
+  {
+    "source": "rc",
+    "path": "app/javascript/dashboard/routes/dashboard/settings/inbox/channels/CloudWhatsapp.vue",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/javascript/dashboard/routes/dashboard/settings/inbox/channels/CloudWhatsapp.vue",
+    "copy_path": "source/app/javascript/dashboard/routes/dashboard/settings/inbox/channels/CloudWhatsapp.vue",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "bc4db7eaa191cbe347b6e9e8611b68a9f25a6ddea07d228a21bea09b35b50b83"
+  },
+  {
+    "source": "rc",
+    "path": "app/jobs/ai_lead_employee/outbox_dispatch_job.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/jobs/ai_lead_employee/outbox_dispatch_job.rb",
+    "copy_path": "source/app/jobs/ai_lead_employee/outbox_dispatch_job.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "4e18670e0449388471ef5e38c97a1a312a4d387b3f3ad707898251a2dd02e0b2"
+  },
+  {
+    "source": "rc",
+    "path": "app/jobs/send_reply_job.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/jobs/send_reply_job.rb",
+    "copy_path": "source/app/jobs/send_reply_job.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "8beaf0b6ff088e0c73e062f7c5b184c242ca00077c149d02cd4e19a317c7701e"
+  },
+  {
+    "source": "rc",
+    "path": "app/jobs/webhooks/whatsapp_events_job.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/jobs/webhooks/whatsapp_events_job.rb",
+    "copy_path": "source/app/jobs/webhooks/whatsapp_events_job.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "8d63ee000c1e02173e9fbca494d574a1c610fef0192611d49ace320cc9f14862"
+  },
+  {
+    "source": "rc",
+    "path": "app/models/ai_lead_employee/ai_provider_connection.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/models/ai_lead_employee/ai_provider_connection.rb",
+    "copy_path": "source/app/models/ai_lead_employee/ai_provider_connection.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "58c9bba4c1b228984e37940564d18fab17ef2a25f61cd80bb739486f43d6a50c"
+  },
+  {
+    "source": "rc",
+    "path": "app/models/ai_lead_employee/launch_gate.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/models/ai_lead_employee/launch_gate.rb",
+    "copy_path": "source/app/models/ai_lead_employee/launch_gate.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "b3c36130c099af03f85f34e6e78032db9b0ff2435b5b900c0e7f8fd7f7c13322"
+  },
+  {
+    "source": "rc",
+    "path": "app/models/channel/whatsapp.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/models/channel/whatsapp.rb",
+    "copy_path": "source/app/models/channel/whatsapp.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "d72ea4de6ed6ff6adc9058ef4b79cabe561e13b5fe02b6efb06baa1e4fd80493"
+  },
+  {
+    "source": "rc",
+    "path": "app/models/contact.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/models/contact.rb",
+    "copy_path": "source/app/models/contact.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "717eb184327598dfe45321138dc7ff94f3e10976a4e4d542187f125c374ad245"
+  },
+  {
+    "source": "rc",
+    "path": "app/models/knowledge_document.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/models/knowledge_document.rb",
+    "copy_path": "source/app/models/knowledge_document.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "7c6e0af9f1ef70e63e77523d6f7bc1e7976ca493de5866a32f32650c09dac4c9"
+  },
+  {
+    "source": "rc",
+    "path": "app/models/knowledge_item.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/models/knowledge_item.rb",
+    "copy_path": "source/app/models/knowledge_item.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "a466eff4848422bd4371802e33173eaed79ae7da2d42e363935796ecab763248"
+  },
+  {
+    "source": "rc",
+    "path": "app/models/meta_whatsapp_webhook_event.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/models/meta_whatsapp_webhook_event.rb",
+    "copy_path": "source/app/models/meta_whatsapp_webhook_event.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "ec87977b80a99577a5035b4a81fdd6749fd8111c53b2acf5d86ae9dae22e35c5"
+  },
+  {
+    "source": "rc",
+    "path": "app/policies/contact_policy.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/policies/contact_policy.rb",
+    "copy_path": "source/app/policies/contact_policy.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "de13a60956afbdd068a483e29655edc7bdec84db3309a6c90c6e79875a21881e"
+  },
+  {
+    "source": "rc",
+    "path": "app/policies/conversation_policy.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/policies/conversation_policy.rb",
+    "copy_path": "source/app/policies/conversation_policy.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "76a5c227865fe32b84969a22034dd960e8ba90aeebc7d0da0bc4f22028404290"
+  },
+  {
+    "source": "rc",
+    "path": "app/policies/lead_qualification_policy.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/policies/lead_qualification_policy.rb",
+    "copy_path": "source/app/policies/lead_qualification_policy.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "afab4328f98e3edb65bfd0272bd908715832cebc7e53d93a6c53ba6b9166514d"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/ai_provider/open_router_adapter.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/ai_provider/open_router_adapter.rb",
+    "copy_path": "source/app/services/ai_lead_employee/ai_provider/open_router_adapter.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "0805a8df133f3ab976932f97fc47d2f608f24bf3c4a45ab857aa00dcad7907c9"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/booking_calendar_client.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/booking_calendar_client.rb",
+    "copy_path": "source/app/services/ai_lead_employee/booking_calendar_client.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "37a2ca3b5475974138b574f697333a586a1147f56e2400cc227f226aecbc8f09"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb",
+    "copy_path": "source/app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "7422c97fae5b8290dd4efdd6255393fcb1c265c126815124ec59adca53822468"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/evaluation/report_builder.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/evaluation/report_builder.rb",
+    "copy_path": "source/app/services/ai_lead_employee/evaluation/report_builder.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "1bd9ba698c270302681ba587461c8d2b66cf58fe233d4a502e1f1859cae778f7"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/evaluation/sandbox_runner.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/evaluation/sandbox_runner.rb",
+    "copy_path": "source/app/services/ai_lead_employee/evaluation/sandbox_runner.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "a40bf85339c2e71ee232b0cd3bc24b9651114b3acffb037e83134c0cf5695a57"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/follow_up_config.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/follow_up_config.rb",
+    "copy_path": "source/app/services/ai_lead_employee/follow_up_config.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "886351a0c974a3d2620ba28cabf153dd1e37957b491ca281c318a7b66e4094c2"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/follow_up_delivery_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/follow_up_delivery_service.rb",
+    "copy_path": "source/app/services/ai_lead_employee/follow_up_delivery_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "5a7cc5d63c2affee77d3fa503a2dc570e5a4408bb87cd336b6bbcf2e148a8d40"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/follow_up_scheduler.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/follow_up_scheduler.rb",
+    "copy_path": "source/app/services/ai_lead_employee/follow_up_scheduler.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "4948410d6e0be736242c596d0963120600af1d2577f20e78665950f5eeca860c"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/highly_qualified_handoff_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/highly_qualified_handoff_service.rb",
+    "copy_path": "source/app/services/ai_lead_employee/highly_qualified_handoff_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "272c5a38dc9e8639c09c962d0f4545ccd39e1ec6d0f4a7e06b38f1cb8c9fefb3"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/human_review_request_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/human_review_request_service.rb",
+    "copy_path": "source/app/services/ai_lead_employee/human_review_request_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "b1508ba17a7dff78726ec49e8414f63cddcd593c0829f9f645f669b87dfe18df"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/knowledge_answer_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/knowledge_answer_service.rb",
+    "copy_path": "source/app/services/ai_lead_employee/knowledge_answer_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "85fee86540cf8cff4464255b0d6997bc334fc9cfd204db7af50243b56035b63d"
+  },
+  {
+    "path": "app/services/ai_lead_employee/language_detector.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "sha256": "f99fc57b145826c59fe3b62e1660a40286bbae1d2cf2793a4a1f7c159d6750a6",
+    "source": "rc",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/language_detector.rb",
+    "copy_path": "source/app/services/ai_lead_employee/language_detector.rb"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/leads_directory_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/leads_directory_service.rb",
+    "copy_path": "source/app/services/ai_lead_employee/leads_directory_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "d0f8e3c9e84ead709ec919545bf8800e35a08e6a0d55e759fbb77e55c5424df0"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/opt_out_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/opt_out_service.rb",
+    "copy_path": "source/app/services/ai_lead_employee/opt_out_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "941855bc171a4b445d4401e728d277e734680af4d660da6b5569a024985e18dc"
+  },
+  {
+    "path": "app/services/ai_lead_employee/orchestration/decision_placeholder.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "sha256": "79fb9483e3a20a4a32c814c72cdb8aec3efe31ed9e22d96d4f228b2e6ccc1b23",
+    "source": "rc",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/orchestration/decision_placeholder.rb",
+    "copy_path": "source/app/services/ai_lead_employee/orchestration/decision_placeholder.rb"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/orchestration/intent_processor.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/orchestration/intent_processor.rb",
+    "copy_path": "source/app/services/ai_lead_employee/orchestration/intent_processor.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "c3592f6fe7cc0bd9b607445868e523a623ad63735efb95c1ba79c0f0463e156a"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/orchestration_intent_recorder.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/orchestration_intent_recorder.rb",
+    "copy_path": "source/app/services/ai_lead_employee/orchestration_intent_recorder.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "0690664ffbbc72aba6dda081e81505360276e29f8655487289699abe36e60c91"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/persisted_qualification_evidence_extractor.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/persisted_qualification_evidence_extractor.rb",
+    "copy_path": "source/app/services/ai_lead_employee/persisted_qualification_evidence_extractor.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "e018f85ed1778528882fa72c1a0c821c85729bebf6f3117c8c6578d636df58ce"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/qualification_budget_classifier.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/qualification_budget_classifier.rb",
+    "copy_path": "source/app/services/ai_lead_employee/qualification_budget_classifier.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "38b8281d6d910de77ef3d6cdf5574f5369ab39237b768747812c6c364060982b"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/qualification_evidence_extractor.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/qualification_evidence_extractor.rb",
+    "copy_path": "source/app/services/ai_lead_employee/qualification_evidence_extractor.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "323c03a9949150c9ea22d44adce8b37985e4f551af268595212f48ac8efd2e3d"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/qualification_evidence_snapshot.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/qualification_evidence_snapshot.rb",
+    "copy_path": "source/app/services/ai_lead_employee/qualification_evidence_snapshot.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "6199dee8aebacbe798570fb867e541909304eb657586013e976a6214d7587835"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/ai_lead_employee/qualification_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/ai_lead_employee/qualification_service.rb",
+    "copy_path": "source/app/services/ai_lead_employee/qualification_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "ab400c1305696ea66ce80b6f0f2df647607047e79f971689827042374c54dae8"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/base/send_on_channel_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/base/send_on_channel_service.rb",
+    "copy_path": "source/app/services/base/send_on_channel_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "f4006490ac594a59c6fccb4bd6e0cad89305fec4d5974a802e2c6ee8a8290258"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/contact_inbox_source_id_resolver.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/contact_inbox_source_id_resolver.rb",
+    "copy_path": "source/app/services/contact_inbox_source_id_resolver.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "5b2e944e38b2913c08f94fcb59763cd2dd95a046f5ced564a24f85cb2f29bf19"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/conversations/control_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/conversations/control_service.rb",
+    "copy_path": "source/app/services/conversations/control_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "ab74e4acd25e74e18a1d4f24510a269de53bfe5a55a8883dbe5116d013b282d1"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/conversations/message_window_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/conversations/message_window_service.rb",
+    "copy_path": "source/app/services/conversations/message_window_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "4cedc740164717bb7b5f2f5f38702f09d81dcad53da366577173065bc5278e5f"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/search_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/search_service.rb",
+    "copy_path": "source/app/services/search_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "2a71e674d6d4915161215d1178329fbc19477fee53844ff22e24d4c0f1f9ed18"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/whatsapp/incoming_message_base_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/whatsapp/incoming_message_base_service.rb",
+    "copy_path": "source/app/services/whatsapp/incoming_message_base_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "1d05a19ec479f87936cce3009bb70aa74178293537cb219cd76cc65198b3d29d"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/whatsapp/incoming_message_identifier_helper.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/whatsapp/incoming_message_identifier_helper.rb",
+    "copy_path": "source/app/services/whatsapp/incoming_message_identifier_helper.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "119244377adb509f54ac7f67ea54b971aeda3db40c7a60d5049a5acca567098e"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/whatsapp/incoming_message_service_helpers.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/whatsapp/incoming_message_service_helpers.rb",
+    "copy_path": "source/app/services/whatsapp/incoming_message_service_helpers.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "f421656c85fcdf7ebd7199508248ead999d6be2744b6f17cabcb9f6ddbd32828"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/whatsapp/incoming_message_whatsapp_cloud_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/whatsapp/incoming_message_whatsapp_cloud_service.rb",
+    "copy_path": "source/app/services/whatsapp/incoming_message_whatsapp_cloud_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "c5454e3c15e83d58158eede8f365ad43eac27c8041c93ece7f56af1e669e00c6"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/whatsapp/message_dedup_lock.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/whatsapp/message_dedup_lock.rb",
+    "copy_path": "source/app/services/whatsapp/message_dedup_lock.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "af5176b24b4c43155022a1a917aa439c4530be2dbc94fa8da6bb4c7f1070e6e7"
+  },
+  {
+    "source": "rc",
+    "path": "app/services/whatsapp/send_on_whatsapp_service.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/services/whatsapp/send_on_whatsapp_service.rb",
+    "copy_path": "source/app/services/whatsapp/send_on_whatsapp_service.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "237c01998ecee8ebc07c1a5355874648ff1e463378f4ae33c03e49daf1f49c88"
+  },
+  {
+    "source": "rc",
+    "path": "app/views/api/v1/models/_inbox.json.jbuilder",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/app/views/api/v1/models/_inbox.json.jbuilder",
+    "copy_path": "source/app/views/api/v1/models/_inbox.json.jbuilder",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "b634404a2f5ac5d98e4c33edb85f53005ca7db08a1f515dfb7086877d53be5d8"
+  },
+  {
+    "source": "rc",
+    "path": "config/schedule.yml",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/config/schedule.yml",
+    "copy_path": "source/config/schedule.yml",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "2ad2277071a4d52a31ae83da84eb902074605b26d45d489582ba11102963afa2"
+  },
+  {
+    "source": "rc",
+    "path": "db/schema.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/db/schema.rb",
+    "copy_path": "source/db/schema.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "d1f0702fcd13b19415a15ba1b1ba6fe7a236569e01b3499d7535b91a7ca3e832"
+  },
+  {
+    "source": "rc",
+    "path": "docs/adr/0002-owned-inbox-fork.md",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/docs/adr/0002-owned-inbox-fork.md",
+    "copy_path": "source/docs/adr/0002-owned-inbox-fork.md",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "7abf9fee7d6b4da665e0b1ab11f7482f3a1db30a26b6a437eaab23d97385cc07"
+  },
+  {
+    "source": "rc",
+    "path": "docs/adr/0005-canonical-whatsapp-path.md",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/docs/adr/0005-canonical-whatsapp-path.md",
+    "copy_path": "source/docs/adr/0005-canonical-whatsapp-path.md",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "62a0b4b85af6c01948a6d1737478b119629f8590755a7f0179fae88ef7751c6a"
+  },
+  {
+    "source": "rc",
+    "path": "docs/issues/016-settings-offers-and-qualification.md",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/docs/issues/016-settings-offers-and-qualification.md",
+    "copy_path": "source/docs/issues/016-settings-offers-and-qualification.md",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "ce8f12be70f29241fc33527bcef8cd77243bcde9f5a5aba46b1c5895f89e2698"
+  },
+  {
+    "source": "rc",
+    "path": "docs/issues/019-final-visual-parity-and-end-to-end-browser-gate.md",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/docs/issues/019-final-visual-parity-and-end-to-end-browser-gate.md",
+    "copy_path": "source/docs/issues/019-final-visual-parity-and-end-to-end-browser-gate.md",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "712b5c23457968563d08432a88d622e2f2b163fd1fc49934ba80efd7217ff860"
+  },
+  {
+    "source": "rc",
+    "path": "docs/issues/README.md",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/docs/issues/README.md",
+    "copy_path": "source/docs/issues/README.md",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "b15d912523a6f3d496073ff74ea5e97200eacfcf2743b831385264308c12e4c8"
+  },
+  {
+    "source": "rc",
+    "path": "docs/launch_proofs/006-end-to-end-canonical-launch-proof.md",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/docs/launch_proofs/006-end-to-end-canonical-launch-proof.md",
+    "copy_path": "source/docs/launch_proofs/006-end-to-end-canonical-launch-proof.md",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "ae2c493a7d94c35ec236011add93e7acc5248bb7891e43498c8c462786426e6d"
+  },
+  {
+    "source": "rc",
+    "path": "spec/controllers/webhooks/whatsapp_controller_spec.rb",
+    "origin_path": "/private/tmp/ai-chatbot-pilot-audit/spec/controllers/webhooks/whatsapp_controller_spec.rb",
+    "copy_path": "source/spec/controllers/webhooks/whatsapp_controller_spec.rb",
+    "commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "working_tree_content": false,
+    "sha256": "ada04b7dbd501833b4f8b1654c433fe5baaa5f75af2cca55453508e6ac346cff"
+  }
+]

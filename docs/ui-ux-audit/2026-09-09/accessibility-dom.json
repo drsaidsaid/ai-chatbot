@@ -1,0 +1,36 @@
+{
+  "rows": [
+    {
+      "role": null,
+      "tabindex": null,
+      "text": "\t\nFA\nFatima Ally\n+15550100007\n\t\nNot captured\n\tUnqualified\t5\t\nBusiness WhatsApp\n\t\nU\nUnassigned\n\t\n19:13\n9 Sept\n\t\nClosed\nNot captured\n\tNo booking"
+    },
+    {
+      "role": null,
+      "tabindex": null,
+      "text": "\t\nPW\nPeter Wilson\n+15550100006\n\t\nNot captured\n\tUnknown\t0\t\nBusiness WhatsApp\n\t\nU\nUnassigned\n\t\n19:14\n9 Sept\n\t\nCapture missing signals\nNot captured\n\tNo b"
+    }
+  ],
+  "selects": [
+    {
+      "ariaLabel": null,
+      "labels": [],
+      "selected": "Assignee"
+    },
+    {
+      "ariaLabel": null,
+      "labels": [],
+      "selected": "Source"
+    },
+    {
+      "ariaLabel": null,
+      "labels": [],
+      "selected": "Follow-up state"
+    },
+    {
+      "ariaLabel": null,
+      "labels": [],
+      "selected": "Booking status"
+    }
+  ]
+}

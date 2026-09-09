@@ -35,7 +35,3 @@ durable AI Orchestration boundary.
 Tickets 000-009 form the secure runtime baseline. Tickets 010-019 are integrated
 onto that baseline in order; UI donor branches must not replace the canonical
 WhatsApp, durable orchestration, provider, or launch-gate implementation.
-
-## Active audit completion programme
-
-The owner approved 18 focused corrections and completion paths after the 9 September 2026 audits. See [the active issue index](./v1-completion-20260909/README.md). Earlier Done claims above remain historical, not proof that the new acceptance criteria pass.

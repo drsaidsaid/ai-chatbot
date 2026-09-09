@@ -1,0 +1,77 @@
+{
+  "ruby": "3.4.4",
+  "active_support": "7.2.3.1",
+  "isolation": "Actual copied methods with in-memory doubles; no Rails boot, database, network, workers or provider calls.",
+  "observations": [
+    {
+      "name": "compact_thousands_budget",
+      "facts": {
+        "input": "50k",
+        "parsed_cents": 5000,
+        "out_of_range": true
+      }
+    },
+    {
+      "name": "concurrent_dispatch_claim",
+      "facts": {
+        "same_message_sender_calls": 2,
+        "attempts": 2
+      }
+    },
+    {
+      "name": "dispatch_without_final_ai_control_check",
+      "facts": {
+        "human_active": true,
+        "simulated_sender_calls": 1,
+        "outbox_state": "delivered"
+      }
+    },
+    {
+      "name": "manual_cloud_without_channel_secret",
+      "facts": {
+        "signature_verification_required": false
+      }
+    },
+    {
+      "name": "negated_buying_evidence",
+      "facts": {
+        "input": "I do not need help now. I am not the decision maker. My budget is $500.",
+        "evidence": {
+          "problem": "i do not need help now. i am not the decision maker. my budget is $500.",
+          "urgency": "urgent",
+          "budget": "$500",
+          "decision_authority": "decision maker"
+        },
+        "score": 80,
+        "quality": "highly_qualified"
+      }
+    },
+    {
+      "name": "opt_out_language_coverage",
+      "facts": {
+        "STOP": true,
+        "Please stop messaging me": false,
+        "acha kunitumia": true,
+        "Tafadhali usinitumie ujumbe tena": false
+      }
+    },
+    {
+      "name": "status_batch_and_order",
+      "facts": {
+        "processed_message_ids": [
+          "a"
+        ],
+        "before_status": "read",
+        "after_status": "sent"
+      }
+    },
+    {
+      "name": "swahili_tzs_intent",
+      "facts": {
+        "input": "Nataka kujiunga leo, nina bajeti ya TZS 150,000 na nitalipa mwenyewe.",
+        "language": "swahili",
+        "extracted_evidence": {}
+      }
+    }
+  ]
+}

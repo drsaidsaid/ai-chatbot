@@ -1,0 +1,55 @@
+{
+  "checked_at": "2026-09-09T15:34:02.351834+00:00",
+  "remote_heads": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e\trefs/heads/codex/release-candidate",
+  "github_actions_for_release_candidate": [],
+  "offline_command": "ruby docs/integration-audit/2026-09-09/evidence/offline_reproductions.rb --seed 904",
+  "offline_result": "8 runs, 14 assertions, 0 failures, 0 errors, 0 skips. Assertions reproduce defects, not a production-readiness pass.",
+  "rc_enterprise_check": {
+    "tracked_files": 0,
+    "directory_present": false,
+    "method": "git ls-tree for RC commit and directory presence only; no enterprise code imported or read"
+  },
+  "artifact_source_integrity": {
+    "copied_sources": 68,
+    "rc_commit": "74d156e327e3ddb2deedd1503c6d1c04b0b1359e",
+    "op_note": "Four current working-tree source files copied; not a clean commit-only OP assessment."
+  },
+  "source_reference_validation": "Every cited source file exists and each line anchor is within the copied source.",
+  "final_preservation_check": {
+    "checked_at": "2026-09-09T15:50:59.279361+00:00",
+    "repositories": {
+      "task": {
+        "head_unchanged": true,
+        "original_hashed_files": 0,
+        "original_hashed_files_changed": [],
+        "status_unchanged": false,
+        "expected_status_change": "Only untracked docs/integration-audit/ created; git diff --stat empty."
+      },
+      "saved": {
+        "head_unchanged": true,
+        "original_hashed_files": 35,
+        "original_hashed_files_changed": [],
+        "status_unchanged": true
+      },
+      "browser_qa": {
+        "head_unchanged": true,
+        "original_hashed_files": 0,
+        "original_hashed_files_changed": [],
+        "status_unchanged": true
+      },
+      "release_candidate": {
+        "head_unchanged": true,
+        "original_hashed_files": 0,
+        "original_hashed_files_changed": [],
+        "status_unchanged": true
+      },
+      "online_profits": {
+        "head_unchanged": true,
+        "original_hashed_files": 421,
+        "original_hashed_files_changed": [],
+        "status_unchanged": true
+      }
+    },
+    "artifact_links_and_source_hashes": "Validated; no missing paths, invalid line anchors, or source hash mismatches."
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "repository": "drsaidsaid/ai-chatbot",
+  "approval": "User: Proceed with all tickets with each in their own threads until completion",
+  "calendar": "Google Calendar",
+  "tickets": [
+    {
+      "id": "R01",
+      "title": "[V1 R01] Reproduce and document one canonical V1 release",
+      "number": 18,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/18",
+      "blockers": [],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/01-reproduce-and-document-one-canonical-v1-release.md"
+    },
+    {
+      "id": "R02",
+      "title": "[V1 R02] Sign in and navigate the simplified app on desktop and phone",
+      "number": 19,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/19",
+      "blockers": [
+        "R01"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/02-sign-in-and-navigate-the-simplified-app-on-desktop-and-phone.md"
+    },
+    {
+      "id": "R03",
+      "title": "[V1 R03] Connect WhatsApp and receive one verified durable conversation",
+      "number": 20,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/20",
+      "blockers": [
+        "R01",
+        "R02"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/03-connect-whatsapp-and-receive-one-verified-durable-conversation.md"
+    },
+    {
+      "id": "R04",
+      "title": "[V1 R04] Deliver an eligible reply once and recover safely",
+      "number": 21,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/21",
+      "blockers": [
+        "R03"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/04-deliver-an-eligible-reply-once-and-recover-safely.md"
+    },
+    {
+      "id": "R05",
+      "title": "[V1 R05] Honor a natural-language stop request in the live conversation",
+      "number": 22,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/22",
+      "blockers": [
+        "R03",
+        "R04"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/05-honor-a-natural-language-stop-request-in-the-live-conversation.md"
+    },
+    {
+      "id": "R06",
+      "title": "[V1 R06] Invite a team member with access only to assigned Leads",
+      "number": 23,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/23",
+      "blockers": [
+        "R01",
+        "R02"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/06-invite-a-team-member-with-access-only-to-assigned-leads.md"
+    },
+    {
+      "id": "R07",
+      "title": "[V1 R07] Understand and control a Conversation without misleading actions",
+      "number": 24,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/24",
+      "blockers": [
+        "R02",
+        "R04",
+        "R05",
+        "R06"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/07-understand-and-control-a-conversation-without-misleading-actions.md"
+    },
+    {
+      "id": "R08",
+      "title": "[V1 R08] Find, inspect and maintain a Lead without losing context",
+      "number": 25,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/25",
+      "blockers": [
+        "R02",
+        "R06"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/08-find-inspect-and-maintain-a-lead-without-losing-context.md"
+    },
+    {
+      "id": "R09",
+      "title": "[V1 R09] Configure an Offer and qualify a Lead from supported evidence",
+      "number": 26,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/26",
+      "blockers": [
+        "R02",
+        "R03",
+        "R05",
+        "R06"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/09-configure-an-offer-and-qualify-a-lead-from-supported-evidence.md"
+    },
+    {
+      "id": "R10",
+      "title": "[V1 R10] Connect and control the AI provider with visible health and limits",
+      "number": 27,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/27",
+      "blockers": [
+        "R01",
+        "R02",
+        "R06"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/10-connect-and-control-the-ai-provider-with-visible-health-and-limits.md"
+    },
+    {
+      "id": "R11",
+      "title": "[V1 R11] Publish knowledge that answers only the relevant question and Offer",
+      "number": 28,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/28",
+      "blockers": [
+        "R09",
+        "R10"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/11-publish-knowledge-that-answers-only-the-relevant-question-and-offer.md"
+    },
+    {
+      "id": "R12",
+      "title": "[V1 R12] Resolve a Review Request and optionally propose knowledge",
+      "number": 29,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/29",
+      "blockers": [
+        "R07",
+        "R11"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/12-resolve-a-review-request-and-optionally-propose-knowledge.md"
+    },
+    {
+      "id": "R13",
+      "title": "[V1 R13] Book and manage one genuinely available call",
+      "number": 30,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/30",
+      "blockers": [
+        "R04",
+        "R07",
+        "R09",
+        "R11"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/13-book-and-manage-one-genuinely-available-call.md"
+    },
+    {
+      "id": "R14",
+      "title": "[V1 R14] Assign human work and deliver one useful Alert",
+      "number": 31,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/31",
+      "blockers": [
+        "R03",
+        "R04",
+        "R06",
+        "R09",
+        "R12"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/14-assign-human-work-and-deliver-one-useful-alert.md"
+    },
+    {
+      "id": "R15",
+      "title": "[V1 R15] Schedule one permitted follow-up and stop it when circumstances change",
+      "number": 32,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/32",
+      "blockers": [
+        "R04",
+        "R05",
+        "R07",
+        "R09",
+        "R11"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/15-schedule-one-permitted-follow-up-and-stop-it-when-circumstances-change.md"
+    },
+    {
+      "id": "R16",
+      "title": "[V1 R16] See trustworthy basic business results without another main menu",
+      "number": 33,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/33",
+      "blockers": [
+        "R06",
+        "R08",
+        "R09",
+        "R13",
+        "R14"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/16-see-trustworthy-basic-business-results-without-another-main-menu.md"
+    },
+    {
+      "id": "R17",
+      "title": "[V1 R17] Approve launch only from current test and pilot evidence",
+      "number": 34,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/34",
+      "blockers": [
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R16"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/17-approve-launch-only-from-current-test-and-pilot-evidence.md"
+    },
+    {
+      "id": "R18",
+      "title": "[V1 R18] Deploy a recoverable release and complete a supervised V1 pilot",
+      "number": 35,
+      "url": "https://github.com/drsaidsaid/ai-chatbot/issues/35",
+      "blockers": [
+        "R17"
+      ],
+      "body_file": "/Users/ghalyasaid/.codex/worktrees/9b7a/AI Chatbot/docs/v1-completion-plan/2026-09-09/published/18-deploy-a-recoverable-release-and-complete-a-supervised-v1-pilot.md"
+    }
+  ]
+}
