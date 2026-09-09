@@ -1,0 +1,19 @@
+ (called from <class:QualificationEvidence> at /Users/ghalyasaid/.codex/worktrees/3a8d/AI Chatbot/app/models/qualification_evidence.rb:50)
+F
+
+Failures:
+
+  1) First Team Member assignment offers current account members before their first assignment, then grants only that Lead
+     Failure/Error: expect(response.parsed_body.dig('filter_options', 'assignees').pluck('id')).to contain_exactly(admin.id, member.id)
+
+       expected collection contained:  [1336, 1337]
+       actual collection contained:    []
+       the missing elements were:      [1336, 1337]
+     # ./spec/requests/r06_assignment_options_spec.rb:16:in 'block (2 levels) in <top (required)>'
+
+Finished in 1.96 seconds (files took 6.38 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/requests/r06_assignment_options_spec.rb:4 # First Team Member assignment offers current account members before their first assignment, then grants only that Lead

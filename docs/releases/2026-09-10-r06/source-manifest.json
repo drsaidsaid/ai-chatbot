@@ -58,7 +58,7 @@
   "app/services/ai_lead_employee/inbox_conversation_row.rb": "52c3594b9fbfa849e860f75aac20c67ed6a316842c5ec4c834591e8243aeb55b",
   "app/services/ai_lead_employee/inbox_conversations.rb": "8759a17c96a7972d138f5f80845f17dafd5d7f03a208b35532e4f3c7ff2e3a61",
   "app/services/ai_lead_employee/lead_update_service.rb": "2fc42c36f222b1c5b5d5699ef71b731b064b74957d7726ef4352ba1cd624f207",
-  "app/services/ai_lead_employee/leads_directory_service.rb": "8b09bc10ced303e882a4d765e50aed1466952b0304c20a931d499e6268f59154",
+  "app/services/ai_lead_employee/leads_directory_service.rb": "b8c8b161ad0b24bba2e95b6d70d784208555f411a7f1dc37536a5b46edad6915",
   "app/services/ai_lead_employee/operational_dashboard_service.rb": "f9bb8f2ee0c51616feced816fa4e431ecf96bc9ea8e9d54cae2f3a87f59abbb4",
   "app/services/ai_lead_employee/realtime_delivery.rb": "7c5517ae9fa6ffbdffda660eac2428bf9172afc5a8451181c16b8ab00b81dac9",
   "app/services/contacts/filter_service.rb": "e18a7864c54883a324234dbbdf422e0625ecfe19d77604453535c30b5d04c00b",

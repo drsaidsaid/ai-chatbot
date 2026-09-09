@@ -7,6 +7,7 @@ production launch approval.
 ## Source and decision
 
 - Branch: `codex/r06-assigned-access-20260910`.
+- Main implementation commit: `461c1405b2a6d64ac3da2b4e7416b49efaf93f78`.
 - Integrated R01/R02 base: `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`.
 - Decision: [ADR 0010](../../adr/0010-assigned-conversation-access.md).
 - The pinned CE version, MIT notice, lockfiles, schema and frozen audit files are unchanged.
@@ -21,7 +22,9 @@ remains scoped, and combined Qualification/booking preparation is withheld when
 another Conversation for that Lead is inaccessible. Stored AI evaluations remain
 unchanged for display.
 
-The Team screen offers two roles and the existing invitation flow. Expired,
+The Team screen offers two roles and the existing invitation flow. Admin Lead
+editing lists every current account member, including a new member with no prior
+assignment; revocation removes that member from the selector. Expired,
 replayed and revoked invitations are rejected. Account revocation preserves the
 User and other Business Account memberships. Members cannot reassign work,
 import/export Leads, approve Knowledge or manage business/provider settings.
@@ -43,6 +46,12 @@ Leads, search, policies, booking/team controllers, native attachments, unread
 counts, bulk work and realtime listeners. A separate final media run passed **5 examples, 0 failures**, including a real
 image thumbnail response and stale current/legacy URL denial after reassignment.
 The local test needed native `vips` installed; no application workaround was used.
+
+A final first-assignment regression initially failed because the new member was
+missing from the Admin selector. After correcting its account-members query, the
+focused request and Lead regression run passed **15 examples, 0 failures**, with
+clean lint on both affected Ruby files. This backend-only follow-up leaves the
+validated frontend build inputs unchanged.
 
 The Vue suites passed **29 tests**, and the R02 navigation suite passed **8 tests**.
 They cover fixed-role invitation submission, member editing without reassignment

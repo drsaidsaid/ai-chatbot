@@ -417,9 +417,8 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def assignee_options
-    User.where(id: visible_conversations.where.not(assignee_id: nil).select(:assignee_id))
-        .order(:name)
-        .map { |assignee| user_payload(assignee) }
+    scope = administrator? ? account.users : User.where(id: visible_conversations.select(:assignee_id))
+    scope.order(:name).map { |assignee| user_payload(assignee) }
   end
 
   def source_options
