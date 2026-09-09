@@ -1,0 +1,72 @@
+Run options: include {full_description: /fresh\ callback\ registration/}
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/contact.rb:74)
+F
+
+Failures:
+
+  1) WhatsApp connection requires fresh callback registration after a provider-verified phone-only change
+     Failure/Error:
+       expect(response.parsed_body).to include('phone_number' => '+255700000004', 'webhook_registered_at' => nil,
+                                              'webhook_error_code' => 'registration_failed', 'status' => 'needs_attention')
+
+       expected {"api_key_configured" => true, "app_secret_configured" => true, "awaiting_delivery_count" => 0, "busi...l, "webhook_registered_at" => "2026-09-09T22:59:29.586Z", "webhook_verify_token_configured" => true} to include {"webhook_registered_at" => nil, "webhook_error_code" => "registration_failed", "status" => "needs_attention"}
+       Diff:
+
+       @@ -1,5 +1,22 @@
+       +"api_key_configured" => true,
+       +"app_secret_configured" => true,
+       +"awaiting_delivery_count" => 0,
+       +"business_account_id" => "9003",
+       +"callback_url" => "http://127.0.0.1:3213/webhooks/whatsapp/+255700000004",
+       +"failed_count" => 0,
+       +"health_checked_at" => "2026-09-09T22:59:29.714Z",
+       +"health_error_code" => nil,
+       +"inbox_id" => 642,
+       +"last_accepted_at" => nil,
+       +"last_processed_at" => nil,
+       +"name" => "WhatsApp",
+       +"pending_count" => 0,
+        "phone_number" => "+255700000004",
+       -"status" => "needs_attention",
+       -"webhook_error_code" => "registration_failed",
+       -"webhook_registered_at" => nil,
+       +"phone_number_id" => "3003",
+       +"provider_status" => "CONNECTED",
+       +"receiving_error_code" => nil,
+       +"status" => "awaiting_message",
+       +"webhook_error_code" => nil,
+       +"webhook_registered_at" => "2026-09-09T22:59:29.586Z",
+       +"webhook_verify_token_configured" => true,
+     # ./spec/requests/whatsapp_connection_spec.rb:122:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r03-gems.l84_q2p9/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+Finished in 1.28 seconds (files took 4.78 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/requests/whatsapp_connection_spec.rb:110 # WhatsApp connection requires fresh callback registration after a provider-verified phone-only change

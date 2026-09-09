@@ -1,0 +1,30 @@
+[
+  {
+    "boundary": "phone identity",
+    "red_log": "evidence/phone-red.txt",
+    "observed_failure": "Expected 422 for a phone-only typo; received 200.",
+    "initial_green_log": "evidence/phone-green.txt",
+    "final_regression_log": "evidence/ruby-tests.txt"
+  },
+  {
+    "boundary": "phone registration",
+    "red_log": "evidence/registration-red.txt",
+    "observed_failure": "Expected fresh registration failure; old registered_at and awaiting_message were retained.",
+    "initial_green_log": "evidence/registration-green.txt",
+    "final_regression_log": "evidence/ruby-tests.txt"
+  },
+  {
+    "boundary": "saved readiness",
+    "red_log": "evidence/readiness-red.txt",
+    "observed_failure": "Expected check_required for a saved routing mismatch; received receiving.",
+    "initial_green_log": "evidence/connection-green.txt",
+    "final_regression_log": "evidence/ruby-tests.txt"
+  },
+  {
+    "boundary": "legacy delivery projection",
+    "red_log": "evidence/legacy-red.txt",
+    "observed_failure": "Expected delivered after replaying an older raw-hash sent job; received sent.",
+    "initial_green_log": "evidence/legacy-green.txt",
+    "final_regression_log": "evidence/ruby-tests.txt"
+  }
+]

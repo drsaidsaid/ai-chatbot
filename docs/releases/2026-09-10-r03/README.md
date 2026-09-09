@@ -6,6 +6,8 @@ ticket #20 remain open for coordinator review and integration.
 Base: `5577a37ddae5f6d08b33b0b33aefe6d933d7003c` (integrated R01/R02).
 Branch: `codex/r03-whatsapp-ingress-20260910`.
 Implementation commit: `cf83fd9b097fd62d37eff8ca5b66b5fa33543662`.
+Review correction commit: `7511872fa4e5de33b72b6849aa10f2021fef2c4e`.
+Latest correction checks and source hashes: [review corrections](review-corrections/README.md).
 Decision: [ADR 0009](../../adr/0009-verified-whatsapp-receipts-and-recovery.md).
 The frozen September 9 audit evidence, approved completion plan, MIT notice and
 enterprise source are unchanged.
@@ -67,8 +69,9 @@ test queue does not run workers automatically.
 Screenshot files are genuine JPEGs. `screenshot-manifest.json` records verified
 byte format, dimensions and SHA-256; the extension is not used to infer format.
 The adjacent text snapshots preserve visible state, and
-`browser-console-errors.json` records the browser result. Final source hashes
-are recorded independently in `runtime-source-sha256.json`.
+`browser-console-errors.json` records the browser result. Original implementation
+source hashes are recorded independently in `runtime-source-sha256.json`; the
+correction evidence above pins the updated source separately.
 
 No production credentials, Meta test assets, live customer, AI provider or
 calendar service was used. The browser Business Account has no live AI launch
