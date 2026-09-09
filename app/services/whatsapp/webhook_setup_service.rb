@@ -26,6 +26,7 @@ class Whatsapp::WebhookSetupService
 
   def validate_parameters!
     raise ArgumentError, 'Channel is required' if @channel.blank?
+    raise ArgumentError, 'Signing secret is required' if @channel.signing_secrets.empty?
     raise ArgumentError, 'WABA ID is required' if @waba_id.blank?
     raise ArgumentError, 'Access token is required' if @access_token.blank?
     raise ArgumentError, 'Phone number ID is required' if @channel.provider_config['phone_number_id'].blank?
@@ -37,8 +38,8 @@ class Whatsapp::WebhookSetupService
 
     @api_client.register_phone_number(phone_number_id, pin)
     store_pin(pin)
-  rescue StandardError => e
-    Rails.logger.warn("[WHATSAPP] Phone registration failed but continuing: #{e.message}")
+  rescue StandardError
+    raise 'Phone registration failed'
   end
 
   def fetch_or_create_pin
@@ -62,9 +63,12 @@ class Whatsapp::WebhookSetupService
     phone_number_id = @channel.provider_config['phone_number_id']
 
     @api_client.subscribe_phone_number_webhook(@waba_id, phone_number_id, callback_url, verify_token, subscribed_fields: subscribed_fields)
-  rescue StandardError => e
-    Rails.logger.error("[WHATSAPP] Webhook setup failed: #{e.message}")
-    raise "Webhook setup failed: #{e.message}"
+    # Persist the provider result without running provider validation or callback registration again.
+    @channel.update_columns(webhook_registered_at: Time.current, webhook_error_code: nil) # rubocop:disable Rails/SkipsModelValidations
+  rescue StandardError
+    # Persist the provider result without running provider validation or callback registration again.
+    @channel.update_columns(webhook_error_code: 'registration_failed') # rubocop:disable Rails/SkipsModelValidations
+    raise 'Webhook registration failed'
   end
 
   # Subscribe to `calls` only when voice calling is enabled on the inbox
@@ -104,9 +108,9 @@ class Whatsapp::WebhookSetupService
     Rails.logger.info("[WHATSAPP] Phone number #{phone_number_id} code verification status: #{verified}")
 
     verified
-  rescue StandardError => e
+  rescue StandardError
     # If verification check fails, assume not verified to be safe
-    Rails.logger.error("[WHATSAPP] Phone verification status check failed: #{e.message}")
+    Rails.logger.error('[WHATSAPP] Phone verification status check failed: provider_unavailable')
     false
   end
 
@@ -116,8 +120,8 @@ class Whatsapp::WebhookSetupService
 
     phone_number_in_pending_state?
 
-  rescue StandardError => e
-    Rails.logger.error("[WHATSAPP] Phone registration check failed: #{e.message}")
+  rescue StandardError
+    Rails.logger.error('[WHATSAPP] Phone registration check failed: provider_unavailable')
     # Conservative approach: don't register if we can't determine the state
     false
   end
@@ -133,8 +137,8 @@ class Whatsapp::WebhookSetupService
     health_data[:platform_type] == 'NOT_APPLICABLE' ||
       health_data.dig(:throughput, :level) == 'NOT_APPLICABLE'
 
-  rescue StandardError => e
-    Rails.logger.error("[WHATSAPP] Health status check failed: #{e.message}")
+  rescue StandardError
+    Rails.logger.error('[WHATSAPP] Health status check failed: provider_unavailable')
     # If health check fails, assume registration is not needed to avoid errors
     false
   end

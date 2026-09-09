@@ -379,6 +379,15 @@ Owned labels initially include `hot-lead`, `needs-review`, `follow-up-due`, and
 
 ## 8. Event Processing Invariants
 
+R03 implements the receipt and recovery boundary in ADR 0009. The canonical
+controller persists authenticated envelopes with verified routing, then durable
+channel-scoped logical events drive the existing CE normalization service.
+Event row locks commit normalization and eligible orchestration intent together;
+recovery resubmits unfinished work after queue/process failure. Delivery events
+retain provider timestamps and tenant-scoped correlation independently of their
+monotonic Message projection. Channel secrets are encrypted separately from
+queryable provider identifiers and all browser payloads are explicitly redacted.
+
 1. Verify the Meta webhook signature before accepting an event.
 2. Use the existing Community Edition WhatsApp webhook, event job, and channel
    service as the only production inbound Meta path.

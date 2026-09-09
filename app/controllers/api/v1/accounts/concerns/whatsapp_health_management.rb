@@ -3,7 +3,7 @@ module Api::V1::Accounts::Concerns::WhatsappHealthManagement
 
   included do
     skip_before_action :check_authorization, only: [:health, :register_webhook]
-    before_action :check_admin_authorization?, only: [:register_webhook]
+    before_action :check_admin_authorization?, only: [:health, :register_webhook]
     before_action :validate_whatsapp_cloud_channel, only: [:health, :register_webhook]
   end
 
@@ -34,28 +34,28 @@ module Api::V1::Accounts::Concerns::WhatsappHealthManagement
     health_data = Whatsapp::HealthService.new(@inbox.channel).sync_health_status!
     render json: health_data
   rescue Whatsapp::HealthService::ApiError => e
-    Rails.logger.error "[INBOX HEALTH] Error fetching health data: #{e.message}"
+    Rails.logger.warn '[INBOX HEALTH] Provider check failed'
     render json: {
       error: {
         type: e.authorization_error? ? 'authorization' : 'api',
-        message: e.message,
+        message: 'Check the WhatsApp credentials and try again.',
         http_status: e.http_status,
         code: e.code,
         subcode: e.subcode
       }.compact
     }, status: :unprocessable_entity
-  rescue StandardError => e
-    Rails.logger.error "[INBOX HEALTH] Error fetching health data: #{e.message}"
-    render json: { error: e.message }, status: :unprocessable_entity
+  rescue StandardError
+    Rails.logger.warn '[INBOX HEALTH] Provider check failed'
+    render json: { error: 'Check the WhatsApp connection and try again.' }, status: :unprocessable_entity
   end
 
   def register_webhook
     Whatsapp::WebhookSetupService.new(@inbox.channel).register_callback
 
     render json: { message: 'Webhook registered successfully' }, status: :ok
-  rescue StandardError => e
-    Rails.logger.error "[INBOX WEBHOOK] Webhook registration failed: #{e.message}"
-    render json: { error: e.message }, status: :unprocessable_entity
+  rescue StandardError
+    Rails.logger.warn '[INBOX WEBHOOK] Registration failed'
+    render json: { error: 'Check the WhatsApp credentials and signing secret, then retry registration.' }, status: :unprocessable_entity
   end
 
   def whatsapp_business_management_token

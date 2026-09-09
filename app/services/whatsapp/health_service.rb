@@ -86,16 +86,14 @@ class Whatsapp::HealthService
 
   def fetch_graph_data(resource_id, fields)
     response = HTTParty.get(
-      "#{BASE_URI}/#{@api_version}/#{resource_id}",
-      query: {
-        fields: fields,
-        access_token: @access_token
-      }
+      "#{ENV.fetch('WHATSAPP_CLOUD_BASE_URL', BASE_URI)}/#{@api_version}/#{resource_id}",
+      query: { fields: fields },
+      headers: { 'Authorization' => "Bearer #{@access_token}" }, timeout: 10
     )
 
     handle_response(response)
   rescue StandardError => e
-    Rails.logger.error "[WHATSAPP HEALTH] Error fetching health data: #{e.message}"
+    Rails.logger.warn "[WHATSAPP HEALTH] #{failure_code(e)} channel_id=#{@channel&.id}"
     raise
   end
 
@@ -128,7 +126,7 @@ class Whatsapp::HealthService
     parsed_response = response.parsed_response
     error_data = parsed_response.is_a?(Hash) ? parsed_response['error'].to_h : {}
     error = ApiError.new(
-      message: error_data['message'].presence || 'WhatsApp API request failed',
+      message: 'WhatsApp connection check failed',
       http_status: response.code,
       code: error_data['code'],
       subcode: error_data['error_subcode']
@@ -136,7 +134,7 @@ class Whatsapp::HealthService
 
     Rails.logger.error(
       "[WHATSAPP HEALTH] WhatsApp API request failed: http_status=#{error.http_status} " \
-      "code=#{error.code} subcode=#{error.subcode} message=#{error.message}"
+      "code=#{error.code} subcode=#{error.subcode}"
     )
     raise error
   end
@@ -152,7 +150,7 @@ class Whatsapp::HealthService
       status: phone_response['status'],
       account_mode: phone_response['account_mode'],
       code_verification_status: phone_response['code_verification_status'],
-      webhook_configuration: phone_response['webhook_configuration'],
+      webhook_configuration: phone_response['webhook_configuration']&.slice('application', 'whatsapp_business_account', 'phone_number'),
       expected_webhook_url: build_expected_webhook_url,
       throughput: phone_response['throughput'],
       throughput_level: phone_response.dig('throughput', 'level'),
@@ -186,7 +184,7 @@ class Whatsapp::HealthService
     updated_rows = health_attempt_scope(attempted_at).update_all(
       phone_number_health: health_status.slice(*PERSISTED_FIELDS),
       phone_number_health_checked_at: attempted_at,
-      phone_number_health_error: error&.message&.truncate(500)
+      phone_number_health_error: error ? failure_code(error) : nil
     )
     # rubocop:enable Rails/SkipsModelValidations
 
@@ -200,7 +198,7 @@ class Whatsapp::HealthService
     # rubocop:disable Rails/SkipsModelValidations
     health_attempt_scope(attempted_at).update_all(
       phone_number_health_checked_at: attempted_at,
-      phone_number_health_error: error.message.truncate(500)
+      phone_number_health_error: failure_code(error)
     )
     # rubocop:enable Rails/SkipsModelValidations
   end
@@ -208,6 +206,10 @@ class Whatsapp::HealthService
   def health_attempt_scope(attempted_at)
     Channel::Whatsapp.where(id: @channel.id)
                      .where('phone_number_health_checked_at < ? OR phone_number_health_checked_at IS NULL', attempted_at)
+  end
+
+  def failure_code(error)
+    error.is_a?(ApiError) && error.authorization_error? ? 'authorization' : 'provider_unavailable'
   end
 
   def log_risky_transition(previous_health, health_status)

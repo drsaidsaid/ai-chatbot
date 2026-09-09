@@ -43,6 +43,12 @@ _Avoid_: Chat, thread, session
 A message sent by a Lead to the Business Account through a configured channel.
 _Avoid_: Webhook payload, event, user message
 
+**WhatsApp Receipt**:
+An internal durable copy of an authenticated Meta envelope and verified routing,
+recorded before acknowledgement. Its channel-scoped logical events track
+normalization, recovery and delivery history (ADR 0009); a receipt is not a
+Conversation or proof that processing has completed.
+
 **Outbound Message**:
 A visible message sent by the Business Account to a Lead through the same channel conversation.
 _Avoid_: Reply event, response payload

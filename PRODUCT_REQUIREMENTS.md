@@ -19,6 +19,14 @@ The first version will be built and tested internally. Once it performs reliably
 
 ## 2. Product Goal
 
+R03 connection acceptance follows ADR 0009: administrators configure one direct
+Meta connection in Settings, with encrypted credentials and saved actionable
+health. All supported callbacks require signatures. Authenticated receipts,
+complete batch normalization and recoverable processing precede any claim of
+successful receiving; late delivery updates cannot regress delivered/read.
+Local proof uses an isolated fake provider; real Meta delivery is a separate
+authorized-assets check.
+
 The v1 goal is to prove that an AI employee can reliably handle incoming WhatsApp inquiries and hand off only the right leads without losing strong prospects or creating harmful answers.
 
 The product succeeds when it:

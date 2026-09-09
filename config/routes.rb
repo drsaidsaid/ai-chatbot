@@ -202,6 +202,10 @@ Rails.application.routes.draw do
             post :health_check
           end
           resource :qualification_configuration, only: [:show, :update]
+          resource :whatsapp_connection, only: [:show, :update] do
+            post :health_check
+            post :retry_receiving
+          end
           resources :lead_qualifications, only: [:show] do
             post :evidence, on: :member
           end

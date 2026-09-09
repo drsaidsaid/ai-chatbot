@@ -174,7 +174,7 @@ RSpec.describe Whatsapp::HealthService do
           channel.reload
           expect(channel.phone_number_health).to eq('quality_rating' => 'GREEN', 'status' => 'CONNECTED')
           expect(channel.phone_number_health_checked_at).to eq(Time.current)
-          expect(channel.phone_number_health_error).to eq('The access token cannot authorize this request.')
+          expect(channel.phone_number_health_error).to eq('authorization')
         end
       end
     end
@@ -210,7 +210,7 @@ RSpec.describe Whatsapp::HealthService do
           'messaging_limit_tier' => 'TIER_250',
           'status' => 'CONNECTED'
         )
-        expect(channel.phone_number_health_error).to eq('(#200) You do not have permission to access this field.')
+        expect(channel.phone_number_health_error).to eq('provider_unavailable')
       end
 
       it 'preserves the phone health when the enrichment request times out' do
@@ -255,7 +255,7 @@ RSpec.describe Whatsapp::HealthService do
           'quality_rating' => 'GREEN',
           'status' => 'CONNECTED'
         )
-        expect(channel.phone_number_health_error).to eq('(#200) You do not have permission to access this field.')
+        expect(channel.phone_number_health_error).to eq('provider_unavailable')
       end
     end
 
@@ -302,7 +302,7 @@ RSpec.describe Whatsapp::HealthService do
         end
 
         travel_to(attempted_at) do
-          expect { service.sync_health_status! }.to raise_error(described_class::ApiError, 'Older request failed')
+          expect { service.sync_health_status! }.to raise_error(described_class::ApiError, 'WhatsApp connection check failed')
         end
         channel.reload
 

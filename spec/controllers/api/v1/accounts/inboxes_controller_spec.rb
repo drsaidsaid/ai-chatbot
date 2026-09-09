@@ -1501,16 +1501,15 @@ RSpec.describe 'Inboxes API', type: :request do
           )
         end
 
-        it 'returns health data for agent with inbox access' do
+        it 'denies connection health access to an agent with inbox access' do
           create(:inbox_member, user: agent, inbox: whatsapp_inbox)
 
           get "/api/v1/accounts/#{account.id}/inboxes/#{whatsapp_inbox.id}/health",
               headers: agent.create_new_auth_token,
               as: :json
 
-          expect(response).to have_http_status(:success)
-          json_response = response.parsed_body
-          expect(json_response['display_phone_number']).to eq('+1234567890')
+          expect(response).to have_http_status(:unauthorized)
+          expect(response.body).not_to include('Test Business', '+1234567890')
         end
 
         it 'returns unauthorized for agent without inbox access' do
@@ -1541,7 +1540,7 @@ RSpec.describe 'Inboxes API', type: :request do
 
           expect(response).to have_http_status(:unprocessable_entity)
           json_response = response.parsed_body
-          expect(json_response['error']).to include('API Error')
+          expect(json_response['error']).to eq('Check the WhatsApp connection and try again.')
         end
 
         it 'classifies Meta authorization failures for the recovery UI' do
@@ -1560,7 +1559,7 @@ RSpec.describe 'Inboxes API', type: :request do
           expect(response).to have_http_status(:unprocessable_entity)
           expect(response.parsed_body['error']).to eq(
             'type' => 'authorization',
-            'message' => 'The access token cannot authorize this request.',
+            'message' => 'Check the WhatsApp credentials and try again.',
             'http_status' => 400,
             'code' => 190,
             'subcode' => 464
@@ -1579,16 +1578,14 @@ RSpec.describe 'Inboxes API', type: :request do
           expect(json_response['error']).to eq('Health data only available for WhatsApp Cloud API channels')
         end
 
-        it 'returns bad request error for agent' do
+        it 'denies the health endpoint to an agent before exposing channel metadata' do
           create(:inbox_member, user: agent, inbox: non_whatsapp_inbox)
 
           get "/api/v1/accounts/#{account.id}/inboxes/#{non_whatsapp_inbox.id}/health",
               headers: agent.create_new_auth_token,
               as: :json
 
-          expect(response).to have_http_status(:bad_request)
-          json_response = response.parsed_body
-          expect(json_response['error']).to eq('Health data only available for WhatsApp Cloud API channels')
+          expect(response).to have_http_status(:unauthorized)
         end
       end
 

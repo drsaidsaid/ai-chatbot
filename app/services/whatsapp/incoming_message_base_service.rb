@@ -5,7 +5,7 @@ class Whatsapp::IncomingMessageBaseService
   include ::Whatsapp::IncomingMessageServiceHelpers
   include ::Whatsapp::IncomingMessageIdentifierHelper
 
-  pattr_initialize [:inbox!, :params!, :outgoing_echo]
+  pattr_initialize [:inbox!, :params!, :outgoing_echo, :durable_event]
 
   def perform
     processed_params
@@ -18,9 +18,7 @@ class Whatsapp::IncomingMessageBaseService
   end
 
   # Returns messages array for both regular messages and echo events
-  def messages_data
-    @processed_params&.dig(:messages) || @processed_params&.dig(:message_echoes)
-  end
+  def messages_data = @processed_params&.dig(:messages) || @processed_params&.dig(:message_echoes)
 
   private
 
@@ -170,6 +168,7 @@ class Whatsapp::IncomingMessageBaseService
       status: outgoing_echo ? :delivered : :sent,
       sender: outgoing_echo ? nil : @contact,
       source_id: (source_id || message[:id]).to_s,
+      provider_created_at: durable_event&.provider_created_at,
       content_attributes: message_content_attributes(content_attributes_source)
     )
   end

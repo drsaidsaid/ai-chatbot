@@ -14,6 +14,12 @@ trigger_scheduled_items_job:
   class: 'TriggerScheduledItemsJob'
   queue: scheduled_jobs
 
+# Recovers authenticated receipts, incomplete normalization and durable AI intents.
+whatsapp_receipt_recovery_job:
+  cron: '*/1 * * * *'
+  class: 'Whatsapp::RecoveryJob'
+  queue: scheduled_jobs
+
 # Reconciles durable AI outbound events that were committed without an enqueued delivery job.
 ai_lead_employee_outbox_dispatch_job:
   cron: '*/1 * * * *'

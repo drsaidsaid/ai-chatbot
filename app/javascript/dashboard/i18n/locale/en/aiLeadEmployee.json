@@ -818,6 +818,65 @@
     "UNAVAILABLE": {
       "TITLE": "This area is not available in V1",
       "DESCRIPTION": "Use the main menu to return to your supported work areas."
+    },
+    "WHATSAPP_CONNECTION": {
+      "TITLE": "WhatsApp connection",
+      "INTRO": "Connect the WhatsApp number for this Business Account and track incoming messages.",
+      "HEALTH": "Connection health",
+      "LOADING": "Loading connection…",
+      "LOAD_ERROR": "Unable to load the saved connection. Refresh before making changes.",
+      "ACTION_ERROR": "The change could not be completed. Check the connection details and try again.",
+      "REFRESH": "Refresh",
+      "SAVED": "Connection saved.",
+      "NOT_YET": "Not yet",
+      "ACCEPTED": "Last verified receipt",
+      "PROCESSED": "Last message stored in Inbox",
+      "CHECKED": "Last connection check",
+      "PENDING": "Messages or updates waiting for processing",
+      "AWAITING_DELIVERY": "{count} delivery updates are waiting for their outgoing message. They will be checked again automatically.",
+      "CHECK": "Check connection",
+      "CHECK_COMPLETE": "Connection check finished. Review the saved status above.",
+      "RETRY": "Retry receiving",
+      "RETRY_QUEUED": "Retry requested. Accepted incoming work remains saved; refresh to see whether processing has resumed.",
+      "DETAILS": "Connection details",
+      "FIELDS": {
+        "name": "Connection name",
+        "phone_number": "WhatsApp number (with country code)",
+        "phone_number_id": "Meta phone number ID",
+        "business_account_id": "Meta WhatsApp Business Account ID",
+        "api_key": "Meta access token",
+        "app_secret": "Meta app secret"
+      },
+      "SECRET_SAVED": "Saved securely. Leave blank to keep the current value.",
+      "SECRET_HELP": "The access token and app secret are stored encrypted and are never shown again. Saving registers the callback using the server-held verification token.",
+      "SAVE": "Save and check connection",
+      "WORKING": "Working…",
+      "CALLBACK": "Registered callback address",
+      "CALLBACK_HELP": "Callback registration is handled by the server. No stored verification token needs to be copied from this page.",
+      "STATUS": {
+        "not_connected": "Connect WhatsApp",
+        "incomplete": "Setup is incomplete",
+        "needs_attention": "Connection needs attention",
+        "check_required": "Connection check required",
+        "awaiting_message": "Waiting for the first message",
+        "receiving": "Receiving messages"
+      },
+      "GUIDANCE": {
+        "not_connected": "Enter the Meta details for the number your business will use.",
+        "incomplete": "Add the missing access token, app secret or number details. The connection cannot accept unverified messages.",
+        "needs_attention": "Check the saved credentials and connection. Retry receiving if incoming work is waiting; accepted receipts remain saved.",
+        "check_required": "Check the connection to register the callback and refresh provider health.",
+        "awaiting_message": "The connection check passed. Send a message from your designated test phone, then refresh to confirm it was stored.",
+        "receiving": "A verified incoming message has been stored in Inbox. Receipt and processing times below come from saved records."
+      },
+      "ERRORS": {
+        "authorization": "Meta rejected the access token. Update the token and check that it has access to this WhatsApp number.",
+        "provider_unavailable": "Meta could not be reached or returned an incomplete check. Try Check connection again.",
+        "registration_failed": "The callback could not be registered. Check the number details, Meta permissions and public callback address, then check the connection again.",
+        "signing_missing": "Add the Meta app secret so incoming messages can be verified.",
+        "queue_unavailable": "Your incoming receipts are saved. Retry receiving to resume processing when the service is available.",
+        "processing_failed": "Some accepted incoming work could not be processed. Check the connection, then retry receiving."
+      }
     }
   }
 }

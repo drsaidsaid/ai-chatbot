@@ -57,7 +57,7 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
       end
 
       it 'persists the lead message before one visible greeting and replays without side effects' do
-        perform_enqueued_jobs do
+        perform_enqueued_jobs(only: SendReplyJob) do
           described_class.new(inbox: whatsapp_channel.inbox, params: text_params).perform
           described_class.new(inbox: whatsapp_channel.inbox, params: text_params).perform
         end
@@ -232,19 +232,11 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
         expect_message_has_attachment
       end
 
-      it 'increments reauthorization count if fetching attachment fails' do
-        stub_request(
-          :get,
-          whatsapp_channel.media_url('b1c68f38-8734-4ad3-b4a1-ef0c10d683')
-        ).to_return(
-          status: 401
-        )
-
-        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
-        expect(whatsapp_channel.inbox.conversations.count).not_to eq(0)
-        expect_contact_name
-        expect(whatsapp_channel.inbox.messages.first.content).to eq('Check out my product!')
-        expect(whatsapp_channel.inbox.messages.first.attachments.present?).to be false
+      it 'raises a retryable error if fetching an attachment fails' do
+        stub_request(:get, whatsapp_channel.media_url('b1c68f38-8734-4ad3-b4a1-ef0c10d683')).to_return(status: 401)
+        expect { described_class.new(inbox: whatsapp_channel.inbox, params: params).perform }
+          .to raise_error(described_class::MediaUnavailable)
+        expect(whatsapp_channel.inbox.messages.count).to eq(0)
         expect(whatsapp_channel.authorization_error_count).to eq(1)
       end
     end
@@ -794,6 +786,6 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
     lead_message = conversation.messages.incoming.find_by!(source_id: text_message_id)
     expect(conversation.messages.outgoing.count).to eq(0)
     expect(OutboxEvent.where(event_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE).count).to eq(0)
-    expect(HumanReviewRequest.where(conversation: conversation, lead_message: lead_message, reason: :no_approved_knowledge).count).to eq(1)
+    expect(AiLeadEmployee::OrchestrationIntent.pending.where(triggering_message: lead_message).count).to eq(1)
   end
 end

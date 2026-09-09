@@ -8,7 +8,6 @@ import InboxHome from './Index.vue';
 import Settings from './Settings.vue';
 import InboxChannel from './InboxChannels.vue';
 import AddAgents from './AddAgents.vue';
-import FinishSetup from './FinishSetup.vue';
 
 export default {
   routes: [
@@ -67,7 +66,11 @@ export default {
             {
               path: ':inbox_id/finish',
               name: 'settings_inbox_finish',
-              component: FinishSetup,
+              redirect: to => ({
+                name: 'ai_lead_employee_settings_whatsapp_connection',
+                params: to.params,
+                query: to.query,
+              }),
               meta: {
                 featureFlag: FEATURE_FLAGS.INBOX_MANAGEMENT,
                 permissions: ['administrator'],

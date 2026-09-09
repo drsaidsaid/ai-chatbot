@@ -15,7 +15,7 @@ it('keeps every Settings section reachable from provider deep links and restores
     'agent_list',
     'ai_lead_employee_settings_booking_business_hours',
     'ai_lead_employee_settings_follow_ups',
-    'settings_inbox_list',
+    'ai_lead_employee_settings_whatsapp_connection',
     'ai_lead_employee_settings_ai_testing',
     'owned_ai_provider_settings',
     'owned_test_center_index',
@@ -45,7 +45,9 @@ it('keeps every Settings section reachable from provider deep links and restores
   expect(wrapper.text()).toContain('Provider settings');
   await wrapper.get('select').setValue('whatsapp');
   await flushPromises();
-  expect(router.currentRoute.value.name).toBe('settings_inbox_list');
+  expect(router.currentRoute.value.name).toBe(
+    'ai_lead_employee_settings_whatsapp_connection'
+  );
   router.back();
   await flushPromises();
   expect(router.currentRoute.value.name).toBe('owned_ai_provider_settings');

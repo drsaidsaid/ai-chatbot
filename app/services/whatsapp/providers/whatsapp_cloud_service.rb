@@ -63,12 +63,12 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
 
   def validate_provider_config?
     config = whatsapp_channel.provider_config
-    response = HTTParty.get("#{business_account_path}/message_templates?access_token=#{config['api_key']}")
+    response = HTTParty.get("#{business_account_path}/message_templates", headers: api_headers, timeout: 10)
     return log_transfer_failure('waba_or_token_check', response) unless response.success?
     # The templates check only proves the WABA/token pair, so verify the phone_number_id belongs to this WABA when it changes.
     return true unless whatsapp_channel.provider_config_changed?
 
-    phone_response = HTTParty.get("#{business_account_path}/phone_numbers?fields=id&limit=100&access_token=#{config['api_key']}")
+    phone_response = HTTParty.get("#{business_account_path}/phone_numbers?fields=id&limit=100", headers: api_headers, timeout: 10)
     ids = phone_response.parsed_response.is_a?(Hash) ? Array(phone_response.parsed_response['data']) : []
     return true if phone_response.success? && ids.any? { |number| number['id'] == config['phone_number_id'].to_s }
 
@@ -102,9 +102,8 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
   def log_transfer_failure(check, response)
     return false unless whatsapp_channel.embedded_to_manual_transfer_pending?
 
-    error_message = response.parsed_response.is_a?(Hash) ? response.parsed_response.dig('error', 'message') : nil
     Rails.logger.warn("[WHATSAPP_EMBEDDED_TO_MANUAL] failure account_id=#{whatsapp_channel.account_id} channel_id=#{whatsapp_channel.id} " \
-                      "check=#{check} http_status=#{response.code} meta_error=#{error_message}")
+                      "check=#{check} http_status=#{response.code}")
     false
   end
 

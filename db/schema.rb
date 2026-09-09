@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_09_000100) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_10_000304) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -886,6 +886,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_000100) do
     t.jsonb "phone_number_health", default: {}, null: false
     t.datetime "phone_number_health_checked_at"
     t.string "phone_number_health_error", limit: 500
+    t.text "provider_secrets"
+    t.datetime "webhook_registered_at"
+    t.string "webhook_error_code"
+    t.index ["account_id"], name: "index_whatsapp_cloud_one_per_account", unique: true, where: "((provider)::text = 'whatsapp_cloud'::text)"
     t.index ["phone_number"], name: "index_channel_whatsapp_on_phone_number", unique: true
     t.index ["phone_number_health_checked_at"], name: "index_channel_whatsapp_on_phone_number_health_checked_at"
   end
@@ -1573,6 +1577,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_000100) do
     t.jsonb "additional_attributes", default: {}
     t.text "processed_message_content"
     t.jsonb "sentiment", default: {}
+    t.datetime "provider_created_at"
     t.index "((additional_attributes -> 'campaign_id'::text))", name: "index_messages_on_additional_attributes_campaign_id", using: :gin
     t.index ["account_id", "content_type", "created_at"], name: "idx_messages_account_content_created"
     t.index ["account_id", "created_at", "message_type"], name: "index_messages_on_account_created_type"
@@ -2016,6 +2021,45 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_000100) do
     t.index ["account_id", "url"], name: "index_webhooks_on_account_id_and_url", unique: true
   end
 
+  create_table "whatsapp_webhook_events", force: :cascade do |t|
+    t.bigint "receipt_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "inbox_id", null: false
+    t.bigint "channel_id", null: false
+    t.string "event_key", null: false
+    t.string "kind", null: false
+    t.string "provider_message_id"
+    t.datetime "provider_created_at"
+    t.jsonb "payload", null: false
+    t.integer "state", default: 0, null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "processed_at"
+    t.datetime "next_attempt_at"
+    t.string "error_code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_whatsapp_webhook_events_on_account_id"
+    t.index ["channel_id", "event_key"], name: "index_whatsapp_webhook_events_on_channel_id_and_event_key", unique: true
+    t.index ["channel_id"], name: "index_whatsapp_webhook_events_on_channel_id"
+    t.index ["inbox_id", "provider_message_id"], name: "idx_on_inbox_id_provider_message_id_ca9b0cb7d9"
+    t.index ["inbox_id"], name: "index_whatsapp_webhook_events_on_inbox_id"
+    t.index ["receipt_id"], name: "index_whatsapp_webhook_events_on_receipt_id"
+    t.index ["state", "next_attempt_at"], name: "index_whatsapp_webhook_events_on_state_and_next_attempt_at"
+  end
+
+  create_table "whatsapp_webhook_receipts", force: :cascade do |t|
+    t.text "raw_body", null: false
+    t.string "body_digest", null: false
+    t.jsonb "verified_routes", default: [], null: false
+    t.datetime "expanded_at"
+    t.string "error_code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["body_digest"], name: "index_whatsapp_webhook_receipts_on_body_digest", unique: true
+    t.index ["expanded_at"], name: "index_whatsapp_webhook_receipts_on_expanded_at"
+    t.index ["verified_routes"], name: "index_whatsapp_webhook_receipts_on_verified_routes", using: :gin
+  end
+
   create_table "working_hours", force: :cascade do |t|
     t.bigint "inbox_id"
     t.bigint "account_id"
@@ -2101,6 +2145,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_000100) do
   add_foreign_key "qualification_questions", "accounts"
   add_foreign_key "qualification_score_ranges", "accounts"
   add_foreign_key "user_sessions", "users"
+  add_foreign_key "whatsapp_webhook_events", "accounts"
+  add_foreign_key "whatsapp_webhook_events", "channel_whatsapp", column: "channel_id"
+  add_foreign_key "whatsapp_webhook_events", "inboxes"
+  add_foreign_key "whatsapp_webhook_events", "whatsapp_webhook_receipts", column: "receipt_id"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
       after(:insert).
