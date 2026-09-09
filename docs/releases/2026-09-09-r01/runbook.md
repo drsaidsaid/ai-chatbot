@@ -64,11 +64,15 @@ redis-server --bind 127.0.0.1 --port 6392 --dir "$PWD/tmp/release/redis" \
 
 Trust authentication here is for the disposable loopback-only local cluster.
 Use deployed authentication and secrets only under R18's environment plan.
-Save a private local environment file; the creation check protects existing work:
+Create a private local environment file. Noclobber opens it exclusively before
+writing configuration or generating keys; an existing file is refused:
 
 ```sh
-test ! -e tmp/release.env
-(umask 077; cat > tmp/release.env <<'ENV'
+if (
+  umask 077
+  set -C
+  {
+    cat <<'ENV'
 RAILS_ENV=test
 POSTGRES_HOST=127.0.0.1
 POSTGRES_PORT=55482
@@ -85,11 +89,17 @@ ENABLE_ACCOUNT_SIGNUP=false
 ENABLE_TELEMETRY=false
 RELEASE_ADMIN_PASSWORD=Local-synthetic-only-Pass1!
 ENV
-ruby -rsecurerandom -e '%w[SECRET_KEY_BASE ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT].each { |key| puts "#{key}=#{SecureRandom.hex(32)}" }' >> tmp/release.env)
-unset DATABASE_URL REDIS_SENTINELS
-set -a
-. tmp/release.env
-set +a
+    ruby -rsecurerandom -e '%w[SECRET_KEY_BASE ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT].each { |key| puts "#{key}=#{SecureRandom.hex(32)}" }'
+  } > tmp/release.env
+); then
+  unset DATABASE_URL REDIS_SENTINELS
+  set -a
+  . tmp/release.env
+  set +a
+else
+  printf '%s\n' 'Refusing to create tmp/release.env: file exists or creation failed. Existing contents were not overwritten.' >&2
+  false
+fi
 ```
 
 Append the chosen dependency path once, then load the file in each terminal:
