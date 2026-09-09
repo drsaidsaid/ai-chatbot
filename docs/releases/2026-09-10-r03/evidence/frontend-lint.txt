@@ -1,0 +1,38 @@
+
+/Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OwnedSettingsLayout.vue
+   87:14  warning  '`AI_LEAD_EMPLOYEE.SETTINGS_NAV.${section.key}`' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
+  107:16  warning  '`AI_LEAD_EMPLOYEE.SETTINGS_NAV.${section.key}`' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
+  128:14  warning  '`AI_LEAD_EMPLOYEE.SETTINGS_NAV.${name}`' dynamic key is used'         @intlify/vue-i18n/no-dynamic-keys
+
+/Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/WhatsappConnectionPage.vue
+   46:19  warning  '`${prefix}.LOAD_ERROR`' dynamic key is used'                           @intlify/vue-i18n/no-dynamic-keys
+   58:20  warning  '`${prefix}.${message}`' dynamic key is used'                           @intlify/vue-i18n/no-dynamic-keys
+   61:19  warning  '`${prefix}.ACTION_ERROR`' dynamic key is used'                         @intlify/vue-i18n/no-dynamic-keys
+   77:46  warning  '`${prefix}.NOT_YET`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+   86:12  warning  '`${prefix}.TITLE`' dynamic key is used'                                @intlify/vue-i18n/no-dynamic-keys
+   89:12  warning  '`${prefix}.INTRO`' dynamic key is used'                                @intlify/vue-i18n/no-dynamic-keys
+   93:42  warning  '`${prefix}.LOADING`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+  106:14  warning  '`${prefix}.REFRESH`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+  115:24  warning  '`${prefix}.HEALTH`' dynamic key is used'                               @intlify/vue-i18n/no-dynamic-keys
+  120:20  warning  '`${prefix}.STATUS.${connection.status}`' dynamic key is used'          @intlify/vue-i18n/no-dynamic-keys
+  123:20  warning  '`${prefix}.GUIDANCE.${connection.status}`' dynamic key is used'        @intlify/vue-i18n/no-dynamic-keys
+  132:18  warning  '`${prefix}.REFRESH`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+  144:16  warning  '`${prefix}.ERRORS.${code}`' dynamic key is used'                       @intlify/vue-i18n/no-dynamic-keys
+  149:48  warning  '`${prefix}.ACCEPTED`' dynamic key is used'                             @intlify/vue-i18n/no-dynamic-keys
+  155:48  warning  '`${prefix}.PROCESSED`' dynamic key is used'                            @intlify/vue-i18n/no-dynamic-keys
+  161:48  warning  '`${prefix}.CHECKED`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+  165:48  warning  '`${prefix}.PENDING`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+  174:17  warning  '`${prefix}.AWAITING_DELIVERY`' dynamic key is used'                    @intlify/vue-i18n/no-dynamic-keys
+  188:20  warning  '`${prefix}.CHECK`' dynamic key is used'                                @intlify/vue-i18n/no-dynamic-keys
+  204:20  warning  '`${prefix}.RETRY`' dynamic key is used'                                @intlify/vue-i18n/no-dynamic-keys
+  214:16  warning  '`${prefix}.DETAILS`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+  223:18  warning  '`${prefix}.FIELDS.${field}`' dynamic key is used'                      @intlify/vue-i18n/no-dynamic-keys
+  239:21  warning  '`${prefix}.SECRET_SAVED`' dynamic key is used'                         @intlify/vue-i18n/no-dynamic-keys
+  239:57  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  244:16  warning  '`${prefix}.SECRET_HELP`' dynamic key is used'                          @intlify/vue-i18n/no-dynamic-keys
+  251:16  warning  '`${prefix}.${busy?'WORKING':'SAVE'}`' dynamic key is used'             @intlify/vue-i18n/no-dynamic-keys
+  258:38  warning  '`${prefix}.CALLBACK`' dynamic key is used'                             @intlify/vue-i18n/no-dynamic-keys
+  262:46  warning  '`${prefix}.CALLBACK_HELP`' dynamic key is used'                        @intlify/vue-i18n/no-dynamic-keys
+
+✖ 31 problems (0 errors, 31 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.

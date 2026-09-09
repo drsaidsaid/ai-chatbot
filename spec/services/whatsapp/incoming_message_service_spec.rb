@@ -280,7 +280,8 @@ describe Whatsapp::IncomingMessageService do
         expect(message.status).to eq('sent')
         described_class.new(inbox: whatsapp_channel.inbox, params: status_params).perform
         expect(message.reload.status).to eq('failed')
-        expect(message.external_error).to eq('123: abc')
+        expect(message.external_error).to eq('WhatsApp could not deliver this message. Check the connection before retrying.')
+        expect(message.content_attributes['whatsapp_delivery_error_code']).to eq('123')
       end
 
       it 'will not throw error if unsupported status' do

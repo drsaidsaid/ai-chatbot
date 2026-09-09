@@ -1,0 +1,80 @@
+[
+  {
+    "path": "evidence/phone-red.txt",
+    "raw_output_sha256": "8d4fb310557dabba519f1abc00865294333d5450aa2faef6ce0f7977809bb6d6",
+    "exported_sha256": "385576ca2d50c57f2ec5157a84e82b3fc912df4387ce1877a72f33286bb02d9f",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/phone-green.txt",
+    "raw_output_sha256": "16dbf77ea1b73a5be30d99b35e3d6766871ab8fe02151e0f22f6c5523a44784b",
+    "exported_sha256": "29d9f09ce34630cbd6fd13d152fd21e3f25ab9cf4438588fb3a89548d98bae9d",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/registration-red.txt",
+    "raw_output_sha256": "aa7dca60401afae500286332341edcadfc915e089bc3b344f43b51bae5859332",
+    "exported_sha256": "28b02eaf19d186ec9aae6cbc723528d7dc4bb504bdd8b238953d2cd84f98dc55",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/registration-green.txt",
+    "raw_output_sha256": "69f15f333434aa95fe0b1f5d9a6d71125bcabdbf15fa02f93f9bfe31b4f740f5",
+    "exported_sha256": "3c0e488968d1afe3b7d5e8ea51d6eb0cd1fd12deae0f1254c84ebe7eab7c5fcd",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/readiness-red.txt",
+    "raw_output_sha256": "1387c923c843848dda12cc57874fde5d6f864355a5b26cca111defdf57495e22",
+    "exported_sha256": "539af95e816e3e0134fdf59010c63382e1678461945dbf806c924ffe795c2b65",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/connection-green.txt",
+    "raw_output_sha256": "aa35293432e063ceb48817d1dad68b35031da03b3ddb4c56283c4f3bf1ad9766",
+    "exported_sha256": "9ae6bf6a94a57fd122b17890dafa18d585e32bbf0bcdc3f6f37e88658bb7b372",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/legacy-red.txt",
+    "raw_output_sha256": "0387a5fcabd1f90be2c51d5a2621841043de41f4d4747d1b90f2da770b33b135",
+    "exported_sha256": "8781d576695fb165af3a41abc5eb734f57240888da94aca9848641026d9fd751",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/legacy-green.txt",
+    "raw_output_sha256": "44ae6af2e1ac4e0919e6399f7e4474d363b6c7fa14bcafa353d443e5052599be",
+    "exported_sha256": "e64109c71089c82355e58c73cfa27d51a8fbe36fa23aac8ab450bcb6e148d968",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/focused-tests.txt",
+    "raw_output_sha256": "7f3dd37d72e76acf5342b527975fbd109335a39e66e98789bc86c3e23f4b53b1",
+    "exported_sha256": "517ef10937374a156503c59df21add8b17c8b180728a9498f920f96b6dc096d3",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/ruby-tests.txt",
+    "raw_output_sha256": "07a29632371fb0a5230b8cdffae0a59fce1431062422666f1d2e542a07e1cb37",
+    "exported_sha256": "67483b1181b7fc86efd779ba415fcb8b0106b88b670d7988cb3de2765c605e57",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/ruby-lint.txt",
+    "raw_output_sha256": "da6097d7f6c72d0f824d4afd99b25083bba14680f32b6f41e7c0db13f010cb37",
+    "exported_sha256": "da6097d7f6c72d0f824d4afd99b25083bba14680f32b6f41e7c0db13f010cb37",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/implementation-commit.txt",
+    "raw_output_sha256": "9a0616b931fb00b3412b1dddc9c73323da48a95ab00dea42ecdfe2de64f018c4",
+    "exported_sha256": "9a0616b931fb00b3412b1dddc9c73323da48a95ab00dea42ecdfe2de64f018c4",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  },
+  {
+    "path": "evidence/static-checks.txt",
+    "raw_output_sha256": "f7a60fc5c036858b334072fc198b05dc32e3efc812a9dfc9be63cc21e1c13f06",
+    "exported_sha256": "f7a60fc5c036858b334072fc198b05dc32e3efc812a9dfc9be63cc21e1c13f06",
+    "normalization": "Trailing whitespace and extra blank lines at EOF removed; command output otherwise unchanged."
+  }
+]

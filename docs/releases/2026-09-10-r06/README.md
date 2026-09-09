@@ -1,6 +1,7 @@
 # R06 — Assigned Team Member access
 
-Status: implementation verified by automated checks; browser acceptance pending.
+Status: implementation and review fixes verified by automated checks; R03
+integration refresh passed all automated checks. Browser acceptance remains pending.
 Issue #23 remains open for coordinator review and integration. This is not a
 production launch approval.
 
@@ -8,9 +9,13 @@ production launch approval.
 
 - Branch: `codex/r06-assigned-access-20260910`.
 - Main implementation commit: `461c1405b2a6d64ac3da2b4e7416b49efaf93f78`.
-- Integrated R01/R02 base: `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`.
+- Original integrated R01/R02 base: `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`.
+- Accepted R03 predecessor: `f2b184e1c332f0bf68c31dec460f7e5599657a72`.
+- Combined refresh: [merge and verification evidence](integration-refresh/README.md).
 - Decision: [ADR 0010](../../adr/0010-assigned-conversation-access.md).
-- The pinned CE version, MIT notice, lockfiles, schema and frozen audit files are unchanged.
+- The pinned CE version, MIT notice, lockfiles and frozen audit files are unchanged.
+  R06 adds no schema changes; the refresh inherits R03's accepted schema and
+  migrations unchanged.
 - R03 owns WhatsApp health authorization/redaction. R04 owns final-send gates.
 
 Admin and Team Member map to the existing CE roles. Membership and current
@@ -40,7 +45,7 @@ normal safe content types. It is never returned as a dashboard attachment URL.
 
 ## Automated evidence
 
-The combined Rails run passed **186 examples, 0 failures**. It includes the R06
+Before the R03 refresh, the combined R06 Rails run passed **186 examples, 0 failures**. It includes the R06
 request/job/session scenarios, R02 Inbox rows and batched message previews,
 Leads, search, policies, booking/team controllers, native attachments, unread
 counts, bulk work and realtime listeners. A separate final media run passed **5 examples, 0 failures**, including a real
@@ -59,7 +64,8 @@ or import/export controls, access invalidation reload, cockpit selection and
 five-destination navigation. Frontend lint has no errors; five pre-existing
 cockpit formatting/i18n warnings remain.
 
-The final production Vite build passed: **5,078 modules, 2m35s**.
+The pre-refresh production Vite build passed: **5,078 modules, 2m35s**.
+The combined R03/R06 build passed: **5,078 modules, 3m36s**.
 Ruby lint passed across 79 changed/new files with no offenses. Whitespace checks
 passed. Exact commands and results are recorded in `checks.txt`.
 
@@ -112,7 +118,8 @@ Set `RAILS_ENV=test`, the isolated PostgreSQL/Redis variables, `FRONTEND_URL` to
 `RELEASE_ADMIN_PASSWORD`. Keep secrets outside Git. Install native `vips` for
 real thumbnail rendering; the production Dockerfile already installs it.
 
-Load the current schema into an empty disposable database, then run
+Load the current schema into an empty disposable database (or apply R03's
+accepted migrations to the existing isolated fixture), then run
 `bundle exec rails runner script/release/r06_seed_synthetic.rb` against the
 browser database. The script refuses other databases and refuses existing
 accounts through the baseline seed guard. Start the browser fixture using

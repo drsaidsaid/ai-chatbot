@@ -1,0 +1,58 @@
+[
+  {
+    "path": "screenshots/01-desktop-empty.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "70aa31b6745b8c5f2568089679e51f74cc046f603c357a50e023af65dcd9beb1",
+    "file_inspection": "JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1440x1000, components 3"
+  },
+  {
+    "path": "screenshots/02-desktop-saved.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "cf5c5def060174f242819fa296b5f2c80210d7d19ab7b7abdca77694d45ff846",
+    "file_inspection": "JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1440x1000, components 3"
+  },
+  {
+    "path": "screenshots/03-desktop-provider-error.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "b6d80fcc6eb55b772b8be16dc16fbfc7b8cb0d4835cc53b37ffa5a9d0f21b702",
+    "file_inspection": "JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1440x1000, components 3"
+  },
+  {
+    "path": "screenshots/04-phone-saved.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "f39af92620da1bb184c402f4858626d33feae90cc15bdce84f25c8dc3cf1ed76",
+    "file_inspection": "JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 390x844, components 3"
+  },
+  {
+    "path": "screenshots/05-phone-receiving.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "0b23b55d9c40c4d85eeaf67cdf0c2999dcc7d9d54f75905fb53f01027ba3efa5",
+    "file_inspection": "JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 390x844, components 3"
+  },
+  {
+    "path": "screenshots/06-phone-conversation.jpg",
+    "format": "JPEG",
+    "width": 390,
+    "height": 844,
+    "sha256": "8d3b3b04e1cfcc060831df8be2403353a219224b1ea07198324c7e71cd0eda83",
+    "file_inspection": "JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 390x844, components 3"
+  },
+  {
+    "path": "screenshots/07-desktop-conversation-reloaded.jpg",
+    "format": "JPEG",
+    "width": 1440,
+    "height": 1000,
+    "sha256": "4567506448b06816636c3bdc554510e72892e5dede77d7537b2626b2da130180",
+    "file_inspection": "JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1440x1000, components 3"
+  }
+]

@@ -10,13 +10,13 @@ class Whatsapp::WebhookChannelFinderService
   end
 
   def perform
-    return if digits.blank?
+    candidates = phone_numbers.map { |number| Channel::Whatsapp.find_by(phone_number: number) }
+    candidates.compact.find { |channel| matches?(channel) }
+  end
 
-    candidates = [
-      Channel::Whatsapp.find_by(phone_number: "+#{digits}"),
-      channel_by_normalized_number
-    ]
-    candidates.compact.find { |channel| channel.provider_config['phone_number_id'] == @phone_number_id }
+  # Setup and health must prove the same identity that incoming callbacks route by.
+  def matches?(channel)
+    phone_numbers.include?(channel.phone_number) && channel.provider_config['phone_number_id'] == @phone_number_id
   end
 
   private
@@ -25,11 +25,11 @@ class Whatsapp::WebhookChannelFinderService
     @digits ||= @display_phone_number.to_s.gsub(/[^0-9]/, '')
   end
 
-  def channel_by_normalized_number
+  def phone_numbers
+    return [] if digits.blank?
+
     normalizer = Whatsapp::PhoneNumberNormalizationService::NORMALIZERS
                  .lazy.map(&:new).find { |n| n.handles_country?(digits) }
-    return unless normalizer
-
-    Channel::Whatsapp.find_by(phone_number: "+#{normalizer.normalize(digits)}")
+    ["+#{digits}", ("+#{normalizer.normalize(digits)}" if normalizer)].compact.uniq
   end
 end

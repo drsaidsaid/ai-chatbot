@@ -1,0 +1,75 @@
+Failures:
+
+  1) Assigned attachment downloads gives the WhatsApp sender a separate expiring capability for only its public outgoing attachment
+     Failure/Error: channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud')
+
+     ActiveRecord::RecordInvalid:
+       Validation failed: Provider config Invalid Credentials
+     # ./spec/requests/r06_attachment_access_spec.rb:53:in 'block (2 levels) in <top (required)>'
+
+  2) Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for image attachment message messages
+     Failure/Error: return whatsapp_media_url(token: signed_id(purpose: :whatsapp_media, expires_in: 5.minutes)) if file.attached? && message.inbox.whatsapp?
+
+     ArgumentError:
+       Cannot get a signed_id for a new record
+     # ./app/models/attachment.rb:63:in 'Attachment#download_url'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:191:in 'Whatsapp::Providers::WhatsappCloudService#build_attachment_content'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:150:in 'Whatsapp::Providers::WhatsappCloudService#send_attachment_message'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:6:in 'Whatsapp::Providers::WhatsappCloudService#send_message'
+     # ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:82:in 'block (4 levels) in <main>'
+
+  3) Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for document attachment message messages
+     Failure/Error: return whatsapp_media_url(token: signed_id(purpose: :whatsapp_media, expires_in: 5.minutes)) if file.attached? && message.inbox.whatsapp?
+
+     ArgumentError:
+       Cannot get a signed_id for a new record
+     # ./app/models/attachment.rb:63:in 'Attachment#download_url'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:191:in 'Whatsapp::Providers::WhatsappCloudService#build_attachment_content'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:150:in 'Whatsapp::Providers::WhatsappCloudService#send_attachment_message'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:6:in 'Whatsapp::Providers::WhatsappCloudService#send_message'
+     # ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:101:in 'block (4 levels) in <main>'
+
+  4) Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for audio voice message with voice flag
+     Failure/Error: return whatsapp_media_url(token: signed_id(purpose: :whatsapp_media, expires_in: 5.minutes)) if file.attached? && message.inbox.whatsapp?
+
+     ArgumentError:
+       Cannot get a signed_id for a new record
+     # ./app/models/attachment.rb:63:in 'Attachment#download_url'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:191:in 'Whatsapp::Providers::WhatsappCloudService#build_attachment_content'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:150:in 'Whatsapp::Providers::WhatsappCloudService#send_attachment_message'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:6:in 'Whatsapp::Providers::WhatsappCloudService#send_message'
+     # ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:118:in 'block (4 levels) in <main>'
+
+  5) Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for regular audio attachment without voice flag
+     Failure/Error: return whatsapp_media_url(token: signed_id(purpose: :whatsapp_media, expires_in: 5.minutes)) if file.attached? && message.inbox.whatsapp?
+
+     ArgumentError:
+       Cannot get a signed_id for a new record
+     # ./app/models/attachment.rb:63:in 'Attachment#download_url'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:191:in 'Whatsapp::Providers::WhatsappCloudService#build_attachment_content'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:150:in 'Whatsapp::Providers::WhatsappCloudService#send_attachment_message'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:6:in 'Whatsapp::Providers::WhatsappCloudService#send_message'
+     # ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:135:in 'block (4 levels) in <main>'
+
+  6) Whatsapp::Providers::WhatsappCloudService when the recipient is a Business-Scoped User ID (BSUID) sends an attachment via the recipient field instead of to
+     Failure/Error: return whatsapp_media_url(token: signed_id(purpose: :whatsapp_media, expires_in: 5.minutes)) if file.attached? && message.inbox.whatsapp?
+
+     ArgumentError:
+       Cannot get a signed_id for a new record
+     # ./app/models/attachment.rb:63:in 'Attachment#download_url'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:191:in 'Whatsapp::Providers::WhatsappCloudService#build_attachment_content'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:150:in 'Whatsapp::Providers::WhatsappCloudService#send_attachment_message'
+     # ./app/services/whatsapp/providers/whatsapp_cloud_service.rb:6:in 'Whatsapp::Providers::WhatsappCloudService#send_message'
+     # ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:288:in 'block (3 levels) in <main>'
+
+Finished in 3 minutes 41 seconds (files took 28.16 seconds to load)
+493 examples, 6 failures
+
+Failed examples:
+
+rspec ./spec/requests/r06_attachment_access_spec.rb:49 # Assigned attachment downloads gives the WhatsApp sender a separate expiring capability for only its public outgoing attachment
+rspec ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:68 # Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for image attachment message messages
+rspec ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:85 # Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for document attachment message messages
+rspec ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:104 # Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for audio voice message with voice flag
+rspec ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:121 # Whatsapp::Providers::WhatsappCloudService#send_message when called calls message endpoints for regular audio attachment without voice flag
+rspec ./spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb:280 # Whatsapp::Providers::WhatsappCloudService when the recipient is a Business-Scoped User ID (BSUID) sends an attachment via the recipient field instead of to

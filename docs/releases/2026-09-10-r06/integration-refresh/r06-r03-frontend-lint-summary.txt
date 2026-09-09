@@ -1,0 +1,13 @@
+188:20  warning  '`${prefix}.CHECK`' dynamic key is used'                                @intlify/vue-i18n/no-dynamic-keys
+  204:20  warning  '`${prefix}.RETRY`' dynamic key is used'                                @intlify/vue-i18n/no-dynamic-keys
+  214:16  warning  '`${prefix}.DETAILS`' dynamic key is used'                              @intlify/vue-i18n/no-dynamic-keys
+  223:18  warning  '`${prefix}.FIELDS.${field}`' dynamic key is used'                      @intlify/vue-i18n/no-dynamic-keys
+  239:21  warning  '`${prefix}.SECRET_SAVED`' dynamic key is used'                         @intlify/vue-i18n/no-dynamic-keys
+  239:57  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  244:16  warning  '`${prefix}.SECRET_HELP`' dynamic key is used'                          @intlify/vue-i18n/no-dynamic-keys
+  251:16  warning  '`${prefix}.${busy?'WORKING':'SAVE'}`' dynamic key is used'             @intlify/vue-i18n/no-dynamic-keys
+  258:38  warning  '`${prefix}.CALLBACK`' dynamic key is used'                             @intlify/vue-i18n/no-dynamic-keys
+  262:46  warning  '`${prefix}.CALLBACK_HELP`' dynamic key is used'                        @intlify/vue-i18n/no-dynamic-keys
+
+✖ 36 problems (0 errors, 36 warnings)
+  0 errors and 4 warnings potentially fixable with the `--fix` option.

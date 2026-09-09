@@ -1,0 +1,14 @@
+-- add_column(:messages, :provider_created_at, :datetime)
+   -> 0.0033s
+== 20260910000303 CreateWhatsappWebhookEvents: migrated (0.0367s) =============
+
+== 20260910000304 AddWhatsappConnectionHealth: migrating ======================
+-- add_column(:channel_whatsapp, :webhook_registered_at, :datetime)
+   -> 0.0020s
+-- add_column(:channel_whatsapp, :webhook_error_code, :string)
+   -> 0.0012s
+-- add_index(:whatsapp_webhook_receipts, :verified_routes, {using: :gin})
+   -> 0.0028s
+== 20260910000304 AddWhatsappConnectionHealth: migrated (0.0062s) =============
+
+Loading Installation config

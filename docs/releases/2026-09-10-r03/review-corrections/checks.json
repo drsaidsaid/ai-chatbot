@@ -1,0 +1,72 @@
+{
+  "recorded_at_utc": "2026-09-09T23:11:19.164577+00:00",
+  "issue": 20,
+  "implementation_commit": "7511872fa4e5de33b72b6849aa10f2021fef2c4e",
+  "implementation_tree": "eac8f8df3186e784c0cc9e0654572863e6005f83",
+  "prior_commits_preserved": [
+    "cf83fd9b097fd62d37eff8ca5b66b5fa33543662",
+    "3e2450f878a070595976f14ffbe3f6ccb2209f64"
+  ],
+  "ruby_regressions": {
+    "result": "passed",
+    "examples": 248,
+    "failures": 0,
+    "evidence": "evidence/ruby-tests.txt",
+    "notes": "Includes prior R03 selection, 11 native health examples, five new correction examples, and the retained 360dialog incoming service suite."
+  },
+  "ruby_lint": {
+    "result": "passed",
+    "files": 11,
+    "offenses": 0,
+    "evidence": "evidence/ruby-lint.txt"
+  },
+  "normal_commit_hooks": {
+    "result": "passed",
+    "bypassed": false,
+    "source_hashes_unchanged": true,
+    "evidence": "evidence/implementation-commit.txt"
+  },
+  "static_checks": {
+    "result": "passed",
+    "evidence": "evidence/static-checks.txt",
+    "source_hashes": 60
+  },
+  "test_files": [
+    "spec/controllers/webhooks/whatsapp_controller_spec.rb",
+    "spec/jobs/webhooks/whatsapp_events_job_spec.rb",
+    "spec/services/whatsapp/incoming_message_whatsapp_cloud_service_spec.rb",
+    "spec/services/whatsapp/providers/whatsapp_cloud_service_spec.rb",
+    "spec/models/channel/whatsapp_spec.rb",
+    "spec/services/whatsapp/health_service_spec.rb",
+    "spec/services/whatsapp/webhook_setup_service_spec.rb",
+    "spec/services/whatsapp/channel_creation_service_spec.rb",
+    "spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb",
+    "spec/services/ai_lead_employee/orchestration_intent_recorder_spec.rb",
+    "spec/requests/whatsapp_ingress_spec.rb",
+    "spec/requests/whatsapp_connection_spec.rb",
+    "spec/requests/whatsapp_concurrency_spec.rb",
+    "spec/services/whatsapp/incoming_message_service_spec.rb",
+    "spec/controllers/api/v1/accounts/inboxes_controller_spec.rb:1442"
+  ],
+  "browser_and_build": {
+    "rerun": false,
+    "reason": "Coordinator explicitly permitted skipping when UI/build inputs are unchanged; frontend inputs are unchanged.",
+    "original_implementation_commit": "cf83fd9b097fd62d37eff8ca5b66b5fa33543662",
+    "existing_evidence": "../checks.json"
+  },
+  "schema": {
+    "rerun": false,
+    "reason": "No schema or migration changes; prior three-path schema and credential upgrade proof remains pinned to original implementation."
+  },
+  "protected_inputs": {
+    "result": "unchanged from base",
+    "paths": [
+      "docs/integration-audit",
+      "docs/ui-ux-audit",
+      "docs/v1-completion-plan",
+      "LICENSE",
+      "enterprise"
+    ]
+  },
+  "external_boundary": "Synthetic isolated R03 test services only. No real Meta assets, recipients, AI providers, calendar delivery or launch approval."
+}

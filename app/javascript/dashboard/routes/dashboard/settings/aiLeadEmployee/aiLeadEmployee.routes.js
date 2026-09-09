@@ -1,5 +1,6 @@
 import { frontendURL } from 'dashboard/helper/URLHelper';
 import AiTestingPage from './AiTestingPage.vue';
+import WhatsappConnectionPage from './WhatsappConnectionPage.vue';
 import AiLeadEmployeeSettingsShell from './AiLeadEmployeeSettingsShell.vue';
 
 const ADMIN_PERMISSIONS = ['administrator'];
@@ -64,11 +65,7 @@ export default {
         'accounts/:accountId/settings/ai-lead-employee/whatsapp-connection'
       ),
       name: 'ai_lead_employee_settings_whatsapp_connection',
-      redirect: to => ({
-        name: 'settings_inbox_list',
-        params: to.params,
-        query: to.query,
-      }),
+      component: WhatsappConnectionPage,
       meta: { permissions: ADMIN_PERMISSIONS },
     },
     {

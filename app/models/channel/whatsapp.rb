@@ -25,6 +25,7 @@
 class Channel::Whatsapp < ApplicationRecord
   include Channelable
   include Reauthorizable
+  include WhatsappCredentials
 
   self.table_name = 'channel_whatsapp'
   EDITABLE_ATTRS = [:phone_number, :provider, { provider_config: {} }].freeze
@@ -33,12 +34,14 @@ class Channel::Whatsapp < ApplicationRecord
   # default at the moment is 360dialog lets change later.
   PROVIDERS = %w[default whatsapp_cloud].freeze
   before_validation :ensure_webhook_verify_token
+  after_create :sync_templates
+  before_update :invalidate_connection_health, if: :connection_configuration_changed?
 
   validates :provider, inclusion: { in: PROVIDERS }
   validates :phone_number, presence: true, uniqueness: true
+  validates :account_id, uniqueness: { conditions: -> { where(provider: 'whatsapp_cloud') } }, if: -> { provider == 'whatsapp_cloud' }
   validate :validate_provider_config
 
-  after_create :sync_templates
   after_update_commit :log_credentials_transfer, if: :saved_change_to_provider_config?
   before_destroy :teardown_webhooks
   after_commit :setup_webhooks, on: :create, if: :should_auto_setup_webhooks?
@@ -83,7 +86,7 @@ class Channel::Whatsapp < ApplicationRecord
   end
 
   def serializable_hash(options = nil)
-    super.except('business_management_token')
+    super.except('business_management_token', 'provider_secrets').merge('provider_config' => safe_provider_config)
   end
 
   # Enables voice: turns calling on at Meta (idempotent), then re-registers webhooks
@@ -138,12 +141,28 @@ class Channel::Whatsapp < ApplicationRecord
 
   def setup_webhooks
     perform_webhook_setup
-  rescue StandardError => e
-    Rails.logger.error "[WHATSAPP] Webhook setup failed: #{e.message}"
+  rescue StandardError
+    # Failure recording must not re-enter credential validation or provider calls.
+    update_columns(webhook_error_code: signing_secrets.empty? ? 'signing_missing' : 'registration_failed') # rubocop:disable Rails/SkipsModelValidations
+    Rails.logger.warn "[WHATSAPP] registration_failed channel_id=#{id}"
     prompt_reauthorization!
   end
 
+  def connection_configured?
+    provider == 'whatsapp_cloud' && Chatwoot.encryption_configured? && signing_secrets.present? &&
+      provider_config.values_at('api_key', 'phone_number_id', 'business_account_id', 'webhook_verify_token').all?(&:present?)
+  end
+
+  def connection_configuration_changed? = provider_config_changed? || phone_number_changed?
+
   private
+
+  def invalidate_connection_health
+    self.webhook_registered_at = nil
+    self.webhook_error_code = nil
+    self.phone_number_health_checked_at = nil
+    self.phone_number_health_error = nil
+  end
 
   def ensure_webhook_verify_token
     provider_config['webhook_verify_token'] ||= SecureRandom.hex(16) if provider == 'whatsapp_cloud'

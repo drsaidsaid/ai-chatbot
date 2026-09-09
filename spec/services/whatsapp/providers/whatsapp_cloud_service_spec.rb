@@ -28,7 +28,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
   let(:whatsapp_response) { { messages: [{ id: 'message_id' }] } }
 
   before do
-    stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates?access_token=test_key')
+    stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates')
   end
 
   describe '#send_message' do
@@ -66,7 +66,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
       end
 
       it 'calls message endpoints for image attachment message messages' do
-        attachment = message.attachments.new(account_id: message.account_id, file_type: :image)
+        attachment = message.attachments.create!(account_id: message.account_id, file_type: :image)
         attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
 
         stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
@@ -75,7 +75,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
                                    messaging_product: 'whatsapp',
                                    to: '+123456789',
                                    type: 'image',
-                                   image: WebMock::API.hash_including({ caption: message.content, link: anything })
+                                   image: WebMock::API.hash_including({ caption: message.content, link: %r{/whatsapp/media/} })
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
@@ -83,7 +83,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
       end
 
       it 'calls message endpoints for document attachment message messages' do
-        attachment = message.attachments.new(account_id: message.account_id, file_type: :file)
+        attachment = message.attachments.create!(account_id: message.account_id, file_type: :file)
         attachment.file.attach(io: Rails.root.join('spec/assets/sample.pdf').open, filename: 'sample.pdf', content_type: 'application/pdf')
 
         # ref: https://github.com/bblimke/webmock/issues/900
@@ -94,7 +94,8 @@ describe Whatsapp::Providers::WhatsappCloudService do
                                    messaging_product: 'whatsapp',
                                    to: '+123456789',
                                    type: 'document',
-                                   document: WebMock::API.hash_including({ filename: 'sample.pdf', caption: message.content, link: anything })
+                                   document: WebMock::API.hash_including({ filename: 'sample.pdf', caption: message.content,
+                                                                           link: %r{/whatsapp/media/} })
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
@@ -102,7 +103,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
       end
 
       it 'calls message endpoints for audio voice message with voice flag' do
-        attachment = message.attachments.new(account_id: message.account_id, file_type: :audio, meta: { 'is_voice_message' => true })
+        attachment = message.attachments.create!(account_id: message.account_id, file_type: :audio, meta: { 'is_voice_message' => true })
         attachment.file.attach(io: Rails.root.join('spec/assets/sample.ogg').open, filename: 'voice.ogg', content_type: 'audio/ogg')
 
         stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
@@ -111,7 +112,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
                                    messaging_product: 'whatsapp',
                                    to: '+123456789',
                                    type: 'audio',
-                                   audio: WebMock::API.hash_including({ link: anything, voice: true })
+                                   audio: WebMock::API.hash_including({ link: %r{/whatsapp/media/}, voice: true })
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
@@ -119,7 +120,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
       end
 
       it 'calls message endpoints for regular audio attachment without voice flag' do
-        attachment = message.attachments.new(account_id: message.account_id, file_type: :audio)
+        attachment = message.attachments.create!(account_id: message.account_id, file_type: :audio)
         attachment.file.attach(io: Rails.root.join('spec/assets/sample.ogg').open, filename: 'audio.ogg', content_type: 'audio/ogg')
 
         stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
@@ -127,7 +128,8 @@ describe Whatsapp::Providers::WhatsappCloudService do
             body: hash_including({
                                    messaging_product: 'whatsapp',
                                    to: '+123456789',
-                                   type: 'audio'
+                                   type: 'audio',
+                                   audio: WebMock::API.hash_including({ link: %r{/whatsapp/media/} })
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
@@ -278,11 +280,12 @@ describe Whatsapp::Providers::WhatsappCloudService do
     end
 
     it 'sends an attachment via the recipient field instead of to' do
-      attachment = message.attachments.new(account_id: message.account_id, file_type: :image)
+      attachment = message.attachments.create!(account_id: message.account_id, file_type: :image)
       attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
 
       stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
-        .with(body: hash_including({ messaging_product: 'whatsapp', recipient_type: 'individual', recipient: bsuid, type: 'image' }))
+        .with(body: hash_including({ messaging_product: 'whatsapp', recipient_type: 'individual', recipient: bsuid, type: 'image',
+                                     image: WebMock::API.hash_including({ link: %r{/whatsapp/media/} }) }))
         .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
 
       expect(service.send_message(bsuid, message)).to eq 'message_id'
@@ -357,7 +360,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
               data: [{ id: '123456789', name: 'test_template' }],
               paging: {
                 cursors: { after: 'cursor-1' },
-                next: 'https://graph.facebook.com/v14.0/123456789/message_templates?after=cursor-1&access_token=test_key'
+                next: 'https://graph.facebook.com/v14.0/123456789/message_templates?after=cursor-1'
               }
             }.to_json
           )
@@ -370,7 +373,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
               data: [{ id: '123456789', name: 'next_template' }],
               paging: {
                 cursors: { after: 'cursor-2' },
-                next: 'https://graph.facebook.com/v14.0/123456789/message_templates?after=cursor-2&access_token=test_key'
+                next: 'https://graph.facebook.com/v14.0/123456789/message_templates?after=cursor-2'
               }
             }.to_json
           )
@@ -415,13 +418,13 @@ describe Whatsapp::Providers::WhatsappCloudService do
   describe '#validate_provider_config' do
     context 'when called' do
       it 'returns true if valid' do
-        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates?access_token=test_key')
+        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates')
         expect(subject.validate_provider_config?).to be(true)
         expect(whatsapp_channel.errors.present?).to be(false)
       end
 
       it 'returns false if invalid' do
-        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates?access_token=test_key').to_return(status: 401)
+        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates').to_return(status: 401)
         expect(subject.validate_provider_config?).to be(false)
       end
     end

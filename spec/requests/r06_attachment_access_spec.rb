@@ -48,9 +48,12 @@ RSpec.describe 'Assigned attachment downloads', type: :request do
 
   it 'gives the WhatsApp sender a separate expiring capability for only its public outgoing attachment' do
     stub_request(:get, %r{https://graph.facebook.com/}).to_return(status: 200, body: '{"data":[]}', headers: { 'Content-Type' => 'application/json' })
-    stub_request(:get, %r{https://graph.facebook.com/.*/phone_numbers}).to_return(status: 200, body: '{"data":[{"id":"123456789"}]}',
-                                                                                  headers: { 'Content-Type' => 'application/json' })
-    channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud')
+    stub_request(:get, %r{https://graph.facebook.com/.*/phone_numbers}).to_return(
+      status: 200,
+      body: '{"data":[{"id":"123456789","display_phone_number":"+255700000006"}]}',
+      headers: { 'Content-Type' => 'application/json' }
+    )
+    channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', phone_number: '+255700000006')
     conversation.inbox.update!(channel: channel)
     message.update!(message_type: :outgoing, private: false, sender: member)
     url = attachment.download_url

@@ -172,7 +172,7 @@ describe Whatsapp::WebhookSetupService do
       end
     end
 
-    context 'when phone registration fails (not blocking)' do
+    context 'when phone registration fails' do
       before do
         allow(api_client).to receive(:phone_number_verified?).with('123456789').and_return(false)
         allow(SecureRandom).to receive(:random_number).with(900_000).and_return(123_456)
@@ -181,11 +181,11 @@ describe Whatsapp::WebhookSetupService do
         allow(channel).to receive(:save!)
       end
 
-      it 'continues with webhook setup even if registration fails' do
+      it 'refuses callback readiness when phone registration fails' do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
           expect(api_client).to receive(:register_phone_number)
-          expect(api_client).to receive(:subscribe_phone_number_webhook)
-          expect { service.perform }.not_to raise_error
+          expect(api_client).not_to receive(:subscribe_phone_number_webhook)
+          expect { service.perform }.to raise_error('Phone registration failed')
         end
       end
     end
@@ -202,7 +202,7 @@ describe Whatsapp::WebhookSetupService do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
           expect(api_client).to receive(:register_phone_number)
           expect(api_client).to receive(:subscribe_phone_number_webhook)
-          expect { service.perform }.to raise_error(/Webhook setup failed/)
+          expect { service.perform }.to raise_error(/Webhook registration failed/)
         end
       end
     end
@@ -250,14 +250,14 @@ describe Whatsapp::WebhookSetupService do
 
       it 'raises error with webhook setup failure message' do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
-          expect { service.perform }.to raise_error(/Webhook setup failed: Invalid access token/)
+          expect { service.perform }.to raise_error(/Webhook registration failed/)
         end
       end
 
       it 'logs the webhook setup failure' do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
-          expect(Rails.logger).to receive(:error).with('[WHATSAPP] Webhook setup failed: Invalid access token')
-          expect { service.perform }.to raise_error(/Webhook setup failed/)
+          expect(Rails.logger).not_to receive(:error).with(/Invalid access token/)
+          expect { service.perform }.to raise_error(/Webhook registration failed/)
         end
       end
     end

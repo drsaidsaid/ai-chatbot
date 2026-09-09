@@ -1,0 +1,9 @@
+Correction implementation: 7511872fa4e5de33b72b6849aa10f2021fef2c4e
+Correction tree: eac8f8df3186e784c0cc9e0654572863e6005f83
+60 runtime and acceptance-source hashes match the tested files after normal commit hooks.
+git diff --check from the integrated base: passed.
+Both prior implementation and evidence commits remain ancestors: passed.
+Protected audit/plan paths, LICENSE and enterprise unchanged from base: passed.
+Frontend source, package lockfiles, Vite inputs and database schema/migrations unchanged by corrections: passed.
+Original release evidence and screenshot bytes preserved at this implementation commit: passed.
+node --check script/release/whatsapp/fake_meta.mjs: passed.

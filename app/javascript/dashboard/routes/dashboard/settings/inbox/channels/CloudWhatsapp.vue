@@ -27,6 +27,7 @@ export default {
       inboxName: '',
       phoneNumber: '',
       apiKey: '',
+      appSecret: '',
       phoneNumberId: '',
       businessAccountId: '',
     };
@@ -38,6 +39,7 @@ export default {
     inboxName: { required },
     phoneNumber: { required, isPhoneE164OrEmpty },
     apiKey: { required },
+    appSecret: { required },
     phoneNumberId: { required, isNumber },
     businessAccountId: { required, isNumber },
   },
@@ -59,6 +61,7 @@ export default {
               provider: 'whatsapp_cloud',
               provider_config: {
                 api_key: this.apiKey,
+                app_secret: this.appSecret,
                 phone_number_id: this.phoneNumberId,
                 business_account_id: this.businessAccountId,
               },
@@ -75,11 +78,7 @@ export default {
         }
 
         router.replace({
-          name: 'settings_inboxes_add_agents',
-          params: {
-            page: 'new',
-            inbox_id: whatsappChannel.id,
-          },
+          name: 'ai_lead_employee_settings_whatsapp_connection',
         });
       } catch (error) {
         useAlert(
@@ -168,7 +167,8 @@ export default {
         </span>
         <input
           v-model="apiKey"
-          type="text"
+          type="password"
+          autocomplete="new-password"
           :placeholder="$t('INBOX_MGMT.ADD.WHATSAPP.API_KEY.PLACEHOLDER')"
           @blur="v$.apiKey.$touch"
         />
@@ -178,6 +178,16 @@ export default {
       </label>
     </div>
 
+    <label :class="{ error: v$.appSecret.$error }">
+      {{ $t('AI_LEAD_EMPLOYEE.WHATSAPP_CONNECTION.FIELDS.app_secret') }}
+      <input
+        v-model="appSecret"
+        type="password"
+        autocomplete="new-password"
+        required
+        @blur="v$.appSecret.$touch"
+      />
+    </label>
     <div class="w-full mt-4">
       <NextButton
         :disabled="uiFlags.isCreating"

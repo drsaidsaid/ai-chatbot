@@ -1,0 +1,53 @@
+{
+  "recorded_at_utc": "2026-09-09T23:32:55.728978+00:00",
+  "pre_merge_r06_tip": "e8b5b5da7fb6722d6b0c8e40c74dc296f708b610",
+  "accepted_r03_tip": "f2b184e1c332f0bf68c31dec460f7e5599657a72",
+  "branch": "codex/r06-assigned-access-20260910",
+  "merge_conflicts": [],
+  "ruby_tests": {
+    "examples": 493,
+    "failures": 0,
+    "duration_seconds": 118.08,
+    "load_seconds": 6.27,
+    "selection": "test-selection.json"
+  },
+  "media_fixture_followup": {
+    "examples": 35,
+    "failures": 0,
+    "production_runtime_changes": false
+  },
+  "frontend_tests": {
+    "tests": 39,
+    "files": 7,
+    "failed": 0
+  },
+  "ruby_lint": {
+    "files": 131,
+    "offenses": 0,
+    "final_fixture_files": 2,
+    "final_fixture_offenses": 0
+  },
+  "frontend_lint": {
+    "errors": 0,
+    "inherited_warnings": 36
+  },
+  "production_build": {
+    "passed": true,
+    "modules": 5078,
+    "duration": "3m36s",
+    "build_slot_released": true
+  },
+  "schema": {
+    "version": "20260910000304",
+    "spec_matches_accepted": true,
+    "browser_matches_accepted": true,
+    "normalized_sha256": "438329e761330cb7e9654cfcd78f22a6b0337873e1a881770fe2d7aafbfb9489",
+    "r06_schema_changes": false
+  },
+  "browser_acceptance": {
+    "status": "pending",
+    "reason": "Existing owner Mac-unlock request",
+    "new_attempts": 0
+  },
+  "external_delivery": "Synthetic tests only; no live provider, customer, AI or calendar delivery"
+}

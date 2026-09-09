@@ -135,11 +135,7 @@ if resource.whatsapp?
   message_templates = resource.channel.try(:message_templates)
   json.message_templates message_templates.is_a?(Array) ? message_templates : []
   if Current.account_user&.administrator?
-    provider_config = resource.channel.try(:provider_config).to_h
-    safe_provider_config = provider_config.except('api_key', 'webhook_verify_token')
-    safe_provider_config['api_key_configured'] = provider_config['api_key'].present?
-    safe_provider_config['webhook_verify_token_configured'] = provider_config['webhook_verify_token'].present?
-    json.provider_config safe_provider_config
+    json.provider_config resource.channel.safe_provider_config
   end
   if Current.account_user&.administrator? &&
      ChatwootApp.chatwoot_cloud? &&

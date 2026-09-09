@@ -1,0 +1,13 @@
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, rejected: 2}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/.codex/worktrees/3a8d/AI Chatbot/app/models/human_review_request.rb:66)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, completed: 1, canceled: 2}
+ (called from <class:LeadHandoff> at /Users/ghalyasaid/.codex/worktrees/3a8d/AI Chatbot/app/models/lead_handoff.rb:46)
+...................................
+
+Finished in 9.35 seconds (files took 6.61 seconds to load)
+35 examples, 0 failures

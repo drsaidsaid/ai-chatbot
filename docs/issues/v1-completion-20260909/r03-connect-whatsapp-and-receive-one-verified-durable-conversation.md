@@ -1,6 +1,16 @@
 # R03 — Connect WhatsApp and receive one verified durable conversation
 
-Status: Approved for implementation; blocked by the issues below.
+Status: Implemented and locally verified from integrated R01/R02
+`5577a37ddae5f6d08b33b0b33aefe6d933d7003c`; awaiting coordinator integration.
+GitHub #20 remains open.
+
+Evidence and R04 handoff: [R03 release proof](../../releases/2026-09-10-r03/README.md).
+
+Implementation decision: [ADR 0009](../../adr/0009-verified-whatsapp-receipts-and-recovery.md).
+Approved test boundaries: administrator connection API and Settings UI; canonical
+signed webhook through persisted Conversations; real database concurrent replay
+and crash/queue recovery; immutable delivery history and status projection.
+R01/R02 blockers were integrated and verified by the coordinator on 10 September.
 
 ## Parent
 
@@ -20,15 +30,19 @@ Work within the owned Community Edition Rails/Vue product. Deliver the real narr
 
 ## Acceptance criteria
 
-- [ ] One direct Meta WhatsApp connection per Business Account; setup has actual connection controls, saved state and actionable health information.
-- [ ] All supported setup paths reject invalid or missing message signatures; incomplete signing configuration cannot be presented as ready.
-- [ ] Credentials are encrypted appropriately and responses expose safe status fields instead of stored secrets; setup still works after removing credential reflection.
-- [ ] Multi-entry, multi-change and multi-sender batches produce all expected conversations/messages with correct Business Account routing.
-- [ ] Duplicate receipts and crashes between receipt, normalization and queue creation recover without lost or duplicate logical messages.
-- [ ] Delivery updates do not regress a delivered/read state when older updates arrive; errors have safe user-facing recovery actions.
-- [ ] Exercise the canonical route with an isolated fake provider; later real test delivery requires authorized test assets.
+- [x] One direct Meta WhatsApp connection per Business Account; setup has actual connection controls, saved state and actionable health information.
+- [x] All supported setup paths reject invalid or missing message signatures; incomplete signing configuration cannot be presented as ready.
+- [x] Credentials are encrypted appropriately and responses expose safe status fields instead of stored secrets; setup still works after removing credential reflection.
+- [x] Multi-entry, multi-change and multi-sender batches produce all expected conversations/messages with correct Business Account routing.
+- [x] Duplicate receipts and crashes between receipt, normalization and queue creation recover without lost or duplicate logical messages.
+- [x] Delivery updates do not regress a delivered/read state when older updates arrive; errors have safe user-facing recovery actions.
+- [x] Exercise the canonical route with an isolated fake provider; later real test delivery requires authorized test assets.
+- [x] Review correction: phone-only edits validate the provider phone identity and
+  invalidate registration; previously saved mismatches cannot report receiving.
+- [x] Review correction: legacy queued statuses share locked monotonic projection
+  and safe errors with new receipts, including stale sent/failure ordering.
 
-## Blocked by
+## Resolved blockers
 
 - https://github.com/drsaidsaid/ai-chatbot/issues/18 (R01).
 - https://github.com/drsaidsaid/ai-chatbot/issues/19 (R02).

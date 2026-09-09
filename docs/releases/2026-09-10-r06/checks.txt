@@ -21,10 +21,10 @@ bundle exec rspec spec/requests/r06_assignment_options_spec.rb spec/services/ai_
 Ruby lint: 2 files, no offenses. Frontend/build inputs unchanged.
 
 Frontend regression — PASS: 29 tests, 4 files
-pnpm test --no-watch --no-cache --no-coverage --logHeapUsage app/javascript/dashboard/routes/dashboard/settings/agents/specs/AddAgent.spec.js app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js app/javascript/dashboard/helper/specs/actionCable.spec.js app/javascript/dashboard/routes/dashboard/conversation/specs/InboxConversationCockpit.spec.js
+pnpm test app/javascript/dashboard/routes/dashboard/settings/agents/specs/AddAgent.spec.js app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js app/javascript/dashboard/helper/specs/actionCable.spec.js app/javascript/dashboard/routes/dashboard/conversation/specs/InboxConversationCockpit.spec.js
 
 Navigation — PASS: 8 tests
-pnpm test --no-watch --no-cache --no-coverage --logHeapUsage app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js
+pnpm test app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js
 
 Ruby lint — PASS: 79 files, no offenses
 bundle exec rubocop --force-exclusion <all changed/new Ruby files>
@@ -45,3 +45,12 @@ Alternative-path review — PASS: 79 examples, 0 failures
 bundle exec rspec spec/requests/r06* spec/jobs/r06* spec/controllers/api/v1/accounts/macros_controller_spec.rb spec/controllers/api/v1/accounts/actions/contact_merges_controller_spec.rb spec/controllers/api/v1/accounts/bulk_actions_controller_spec.rb spec/jobs/contacts/bulk_action_job_spec.rb spec/services/contacts/bulk* spec/services/macros/execution_service_spec.rb
 Ruby lint: 11 files, no offenses. Frontend/build inputs unchanged.
 See review-follow-up.md for the reproduced red failures and final behavior.
+
+Accepted R03 refresh — PASS
+Exact predecessor: f2b184e1c332f0bf68c31dec460f7e5599657a72
+Combined backend: 493 examples, 0 failures; selection in integration-refresh/test-selection.json.
+Combined frontend: 39 tests passed; lint 0 errors and 36 inherited warnings.
+Combined Ruby lint: 131 files clean, plus final 2-file fixture lint clean.
+Combined production build: 5078 modules, 3m36s. Build slot released.
+Both isolated R06 migrated schemas equal accepted R03 schema, including triggers.
+See integration-refresh/README.md and checks.json. Browser acceptance remains pending.

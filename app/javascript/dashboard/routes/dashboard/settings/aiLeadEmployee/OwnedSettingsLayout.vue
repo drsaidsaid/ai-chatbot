@@ -38,7 +38,7 @@ const sections = [
   },
   {
     key: 'whatsapp',
-    route: 'settings_inbox_list',
+    route: 'ai_lead_employee_settings_whatsapp_connection',
     matches: ['settings_inbox', 'whatsapp_connection'],
   },
   {

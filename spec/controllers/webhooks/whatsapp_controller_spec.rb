@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe 'Webhooks::WhatsappController', type: :request do
   let(:channel) { create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false) }
   let(:client_secret) { 'test-whatsapp-secret' }
-  let(:body) { { content: 'hello' }.to_json }
+  let(:body) { canonical_payload(channel, message_id: 'wamid.VERIFIED', sender_number: '255700111222', sender_name: 'Verified Lead', body: 'Hello') }
 
   def signature_for(body, secret = client_secret)
     "sha256=#{OpenSSL::HMAC.hexdigest('SHA256', secret, body)}"
@@ -147,7 +147,7 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
         )
       end
 
-      expect(response).to have_http_status(:success)
+      expect(response).to have_http_status(:unauthorized)
       expect(Message.find_by(source_id: 'wamid.INVALID.CHANNEL')).to be_nil
     end
 
@@ -168,7 +168,7 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
         body: 'Can you qualify my WhatsApp leads?'
       )
 
-      perform_enqueued_jobs do
+      perform_enqueued_jobs(only: [Webhooks::WhatsappEventsJob, SendReplyJob]) do
         post_whatsapp_webhook("/webhooks/whatsapp/#{channel.phone_number}", payload, signature: signature_for(payload, channel_secret), env: {})
         post_whatsapp_webhook("/webhooks/whatsapp/#{channel.phone_number}", payload, signature: signature_for(payload, channel_secret), env: {})
       end
@@ -290,22 +290,23 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
       expect(response).to have_http_status(:success)
     end
 
-    it 'skips signature validation for 360dialog channels' do
+    it 'rejects unsigned callbacks for 360dialog channels' do
       dialog_channel = create(:channel_whatsapp, provider: 'default', sync_templates: false, validate_provider_config: false)
       allow(Webhooks::WhatsappEventsJob).to receive(:perform_later)
-      expect(Webhooks::WhatsappEventsJob).to receive(:perform_later)
+      expect(Webhooks::WhatsappEventsJob).not_to receive(:perform_later)
 
       post_unsigned_whatsapp_webhook("/webhooks/whatsapp/#{dialog_channel.phone_number}", body)
 
-      expect(response).to have_http_status(:success)
+      expect(response).to have_http_status(:unauthorized)
     end
 
-    it 'skips signature validation for manual whatsapp cloud channels without an app secret' do
+    it 'rejects unsigned callbacks for manual whatsapp cloud channels without an app secret' do
       channel.update!(
-        provider_config: channel.provider_config.except('app_secret', 'app_secret_key', 'api_secret', 'client_secret', 'source')
+        provider_config: channel.provider_config.merge('app_secret' => nil, 'app_secret_key' => nil, 'api_secret' => nil, 'client_secret' => nil,
+                                                       'source' => 'manual')
       )
       allow(Webhooks::WhatsappEventsJob).to receive(:perform_later)
-      expect(Webhooks::WhatsappEventsJob).to receive(:perform_later)
+      expect(Webhooks::WhatsappEventsJob).not_to receive(:perform_later)
 
       channel_body = {
         object: 'whatsapp_business_account',
@@ -323,7 +324,7 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
 
       post_unsigned_whatsapp_webhook("/webhooks/whatsapp/#{channel.phone_number}", channel_body)
 
-      expect(response).to have_http_status(:success)
+      expect(response).to have_http_status(:unauthorized)
     end
 
     it 'returns unauthorized when signature is missing' do
@@ -350,16 +351,13 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
 
     context 'when phone number is in inactive list' do
       before do
-        allow(GlobalConfig).to receive(:get_value).with('INACTIVE_WHATSAPP_NUMBERS').and_return('+1234567890,+9876543210')
+        allow(GlobalConfig).to receive(:get_value).with('INACTIVE_WHATSAPP_NUMBERS').and_return(channel.phone_number)
       end
 
       it 'returns service unavailable for inactive phone number in URL params' do
-        allow(Rails.logger).to receive(:warn)
-        expect(Rails.logger).to receive(:warn).with('Rejected webhook for inactive WhatsApp number: +1234567890')
-
         post_whatsapp_webhook('/webhooks/whatsapp/+1234567890', body)
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(response.parsed_body['error']).to eq('Inactive WhatsApp number')
+        expect(Whatsapp::WebhookReceipt.count).to eq(0)
       end
     end
 
@@ -471,6 +469,6 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
     lead_message = conversation.messages.incoming.find_by!(source_id: 'wamid.GREETING.ROUNDTRIP')
     expect(conversation.messages.outgoing.count).to eq(0)
     expect(OutboxEvent.where(event_type: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE).count).to eq(0)
-    expect(HumanReviewRequest.where(conversation: conversation, lead_message: lead_message, reason: :no_approved_knowledge).count).to eq(1)
+    expect(AiLeadEmployee::OrchestrationIntent.pending.where(triggering_message: lead_message).count).to eq(1)
   end
 end

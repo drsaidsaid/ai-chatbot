@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::OrchestrationIntentRecorder
-  def initialize(message:, enqueue_review_alerts: true, enforce_launch_gate: true)
+  def initialize(message:, enqueue_review_alerts: true, enforce_launch_gate: true, enqueue: true)
     @message = message
     @enqueue_review_alerts = enqueue_review_alerts
     @enforce_launch_gate = enforce_launch_gate
+    @enqueue = enqueue
   end
 
   def perform
@@ -12,7 +13,7 @@ class AiLeadEmployee::OrchestrationIntentRecorder
     return unless eligible_message?
 
     intent = find_or_create_intent
-    enqueue_intent(intent) if @created_intent
+    enqueue_intent(intent) if @created_intent && @enqueue
     intent
   end
 

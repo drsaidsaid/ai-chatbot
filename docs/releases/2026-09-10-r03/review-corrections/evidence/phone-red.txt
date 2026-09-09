@@ -1,0 +1,43 @@
+Run options: include {full_description: /phone\-only\ typo/}
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/406f/AI Chatbot/app/models/contact.rb:74)
+/private/tmp/ale-r03-gems.l84_q2p9/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+F
+
+Failures:
+
+  1) WhatsApp connection rejects a phone-only typo without replacing the provider-verified receiving number
+     Failure/Error: expect(response).to have_http_status(:unprocessable_entity)
+       expected the response to have status code :unprocessable_entity (422) but it was :ok (200)
+     # ./spec/requests/whatsapp_connection_spec.rb:103:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r03-gems.l84_q2p9/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+Finished in 1.62 seconds (files took 5.45 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/requests/whatsapp_connection_spec.rb:96 # WhatsApp connection rejects a phone-only typo without replacing the provider-verified receiving number

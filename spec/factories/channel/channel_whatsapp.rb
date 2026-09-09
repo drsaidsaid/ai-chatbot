@@ -104,6 +104,7 @@ FactoryBot.define do
           'phone_number_id' => '123456789',
           'business_account_id' => '123456789'
         }
+        default_config['app_secret'] = 'test-app-secret' unless channel_whatsapp.provider_config.key?('app_secret')
         default_config['source'] = 'embedded_signup' unless channel_whatsapp.provider_config.key?('source')
         channel_whatsapp.provider_config = channel_whatsapp.provider_config.merge(default_config)
       end

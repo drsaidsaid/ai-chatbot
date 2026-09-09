@@ -47,3 +47,15 @@ Coordinator review identified retained macro execution, Lead merge, and Contact
 bulk label/deletion paths. Their HTTP/job fixes passed 79 regression examples and clean Ruby lint.
 See `docs/releases/2026-09-10-r06/review-follow-up.md`; existing browser acceptance
 remains pending Mac unlock.
+
+## Accepted R03 predecessor refresh
+
+Merge exact shared tip `f2b184e1c332f0bf68c31dec460f7e5599657a72` into this feature
+branch, retaining the existing R06 commits. The merge applies without conflicts.
+Preserve R03's direct Settings setup, encrypted credentials, phone identity,
+safe health/registration and shared status projection alongside R06's minimal
+member Inbox payload, assigned access and authenticated media. ADRs 0009/0010
+remain separate; R04 final-send work is not part of this refresh.
+
+Combined test/build evidence lives under `docs/releases/2026-09-10-r06/integration-refresh/`.
+Browser acceptance is still required before shared integration or closing #23.

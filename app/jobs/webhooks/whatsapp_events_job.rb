@@ -6,6 +6,8 @@ class Webhooks::WhatsappEventsJob < MutexApplicationJob
   retry_on LockAcquisitionError, wait: 2.seconds, attempts: 20
 
   def perform(params = {})
+    return Whatsapp::ReceiptProcessor.new(Whatsapp::WebhookReceipt.find(params)).perform if params.is_a?(Integer)
+
     channel = find_channel_from_whatsapp_business_payload(params)
 
     if channel_is_inactive?(channel)
