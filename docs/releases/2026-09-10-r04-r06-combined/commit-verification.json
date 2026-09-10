@@ -1,0 +1,25 @@
+{
+  "mergeCommit": "11c0bb6c3b22776107b5d4267c11729659f09178",
+  "parents": [
+    "7161f8fef7902ed239f6d52c83f4661b1e533a96",
+    "e1158876814e18617432065ee3b821048aedf4d6"
+  ],
+  "normalHooks": {
+    "exitCode": 0,
+    "bypassed": false,
+    "rubyFilesInspected": 57,
+    "schemaFileExcludedByProjectLint": true,
+    "rubyOffenses": 0,
+    "sourceFilesUnchanged": 7997
+  },
+  "evidenceHashesVerified": 15,
+  "schemaMigrationsLocks": "identical to R04 parent",
+  "acceptedIntegration": {
+    "head": "f2b184e1c332f0bf68c31dec460f7e5599657a72",
+    "clean": true,
+    "unchanged": true
+  },
+  "diffCheck": "passed",
+  "browserAcceptance": "pending",
+  "ticketsClosed": false
+}

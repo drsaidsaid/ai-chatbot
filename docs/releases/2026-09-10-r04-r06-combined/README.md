@@ -1,6 +1,6 @@
 # Combined R04 and R06 verification
 
-Status: combined automated checks and independent code reviews passed. The normal-hook verification merge is being recorded. In-app browser acceptance is pending the existing owner Mac-unlock request. Neither ticket is complete or promoted to the accepted integration branch by this work.
+Status: combined automated checks and independent code reviews passed. The normal-hook verification merge is `11c0bb6c3b22776107b5d4267c11729659f09178`. In-app browser acceptance is pending the existing owner Mac-unlock request. Neither ticket is complete or promoted to the accepted integration branch by this work.
 
 The coordinator owns this isolated verification checkout and branch `codex/v1-r04-r06-verification-20260910`. The shared accepted integration remains `f2b184e1c332f0bf68c31dec460f7e5599657a72`.
 
@@ -52,4 +52,6 @@ For the combined Ruby selection, load the private R04 environment without loggin
 - Both Standards and Spec reviews: zero findings for the runtime resolution and the fixture follow-up.
 - Browser acceptance: pending, not represented by any automated result here.
 
-`source-sha256.json` records tracked runtime, spec, release script, dependency, and configuration source before normal commit hooks. `SHA256SUMS` covers the verification evidence except itself and the commit log, which cannot be finalized until the commit finishes. Source hashes are checked again after the hooks. Captured logs have trailing whitespace normalized without changing their substantive content.
+Normal commit hooks passed without bypassing them. Frontend lint completed; Ruby lint inspected 57 files without offenses and excluded the generated schema according to the existing project configuration. All 7,997 recorded source hashes remained identical after the hooks. The merge parents, protected inputs and unchanged clean accepted integration were verified again. `commit-verification.json` and `commit-hooks.txt` record that result.
+
+`source-sha256.json` records tracked runtime, spec, release script, dependency, and configuration source before normal commit hooks. `SHA256SUMS` covers all verification evidence except itself. Captured logs have trailing whitespace normalized without changing their substantive content. This final evidence update contains documentation only and does not change the tested runtime or specs.

@@ -1,5 +1,7 @@
-40eb7925b37e346fd81a11e7d4d55da4fe53c58c095bc0573f66fa79098823eb  docs/releases/2026-09-10-r04-r06-combined/README.md
+d77ea0bc241c878f997f68760a54152d1271cc1192ef5ae093d612bbb2d53cce  docs/releases/2026-09-10-r04-r06-combined/README.md
 f3c318bba12943174e2e26e4984d77f2dadb66b6246f3641b4994c14492d66d7  docs/releases/2026-09-10-r04-r06-combined/checks.json
+c9b2956826365fe17bab3c63b28815ebd7ab4c76c253480482a4781f896a7b40  docs/releases/2026-09-10-r04-r06-combined/commit-hooks.txt
+c94e05de733d96016a5a9487eb3b86f6ebbdea7c1777f589e6e60dfb33e5b3b7  docs/releases/2026-09-10-r04-r06-combined/commit-verification.json
 fc2c1e5f03efb994cd587edc9ca187e38000eea9aab6b2333e3419d9bec77d4f  docs/releases/2026-09-10-r04-r06-combined/fixture-followup.txt
 61f547147bd6de2549c71b2e15824acfb07e2797d3d910f42b73b2d50d4c3667  docs/releases/2026-09-10-r04-r06-combined/fixture-rubocop-final.json
 060ae72d5fe8dfa2080956e772a267726cbdaee3c9b1306c44117208065da5a3  docs/releases/2026-09-10-r04-r06-combined/fixture-rubocop.json
