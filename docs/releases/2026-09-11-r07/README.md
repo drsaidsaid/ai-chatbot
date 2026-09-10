@@ -41,8 +41,11 @@ pending for that recovery batch instead of falsely marking it delivered.
 
 The prior corrected integration candidate was commit
 `680609f94187b790243d33bf6eb38de439a1fc7f`, with tree
-`7915e1d1585f340a13bc34834e2bac408ecbc040`. Final source and build identities
-are recorded after the last independent review corrections are committed.
+`7915e1d1585f340a13bc34834e2bac408ecbc040`. The final independently reviewed
+source is commit `89d96dadb660ae35600cd4bbe64c595aa9debe8f`, with tree
+`c2aef6014239449b4e0cbb73a3c5034f089a14a5`. The staged tree before normal
+commit hooks had the same identity, so the production build used the exact
+reviewed source.
 
 The Conversation cockpit keeps identity, phone, control and assignee visible;
 shows review and booking actions only when their records exist; persists takeover,
@@ -107,10 +110,12 @@ failed. Those logs are retained at `tmp/release-r07/red-final-backend.log` and
   `6814f62e42adf4eaf8e5be5f646fd2d6224a9f7ccb9014079bbcb29d05a74a2c`).
   The corrected `public/vite/.vite/manifest.json` SHA-256 is
   `adad158ba0e39edc896fa412fe1c71b100771f6b1ab2b80c2dce4941ff117d2e`.
-- The final independently reviewed source requires a new shared build allocation.
-  Its commit, tree, build-log hash and manifest hash remain intentionally
-  unrecorded until the normal commit hooks and production build run from that
-  exact source.
+- The final independently reviewed production build transformed 5,078 modules
+  and completed in 2 minutes 59 seconds with a 4 GiB Node heap. Its local log is
+  `tmp/release-r07/build-final.log` (SHA-256
+  `088c1051e8b231e0441f54fe8ac874dfc30190f8820c6bbbe909375aa178c3e4`).
+  The final `public/vite/.vite/manifest.json` SHA-256 is
+  `f051781f2afd3383cb4fe12c3b5f8c0cbdbc4783b6a0b09c38f9241b60f65a91`.
 - The first-candidate production Vite build transformed 5,078 modules with a 4 GiB Node heap.
   Its full output is preserved locally at `tmp/release-r07/build.log` (SHA-256
   `91ae2187086ad698b7a045b11b0ab198ba1a1bde80a8ade94ddca9a69f5ad27b`).

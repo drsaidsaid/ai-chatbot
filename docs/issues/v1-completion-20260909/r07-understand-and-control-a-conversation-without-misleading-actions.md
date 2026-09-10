@@ -46,8 +46,8 @@ build completed for the prior immutable source candidate, and an isolated synthe
 runtime was prepared without provider credentials or outbound traffic. Independent
 review then required durable handoff recovery and false-enqueue handling. Those
 corrections pass the final automated checks and both final reviews, while their
-normal commit hooks and exact-source production build await the next shared
-allocation. The
+normal commit hooks left the reviewed tree unchanged and the exact-source
+production build passed. The
 in-app browser could not be used because the host reported that the Mac was
 locked and automatic unlock failed. The final criterion remains open until the
 final source candidate completes the required desktop, phone and keyboard walk.
