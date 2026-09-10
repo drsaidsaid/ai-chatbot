@@ -429,117 +429,131 @@ const loadConversation = async displayId => {
   }
 };
 
-const reloadCurrentConversation = async () => {
-  if (currentChat.value?.id) {
-    await loadConversation(currentChat.value.id);
+const currentConversationIdentity = () => ({
+  accountId: route.params.accountId,
+  conversationId: currentChat.value?.id,
+});
+
+const isConversationSelected = ({ accountId, conversationId }) =>
+  String(route.params.accountId) === String(accountId) &&
+  Number(currentChat.value?.id) === Number(conversationId);
+
+const reloadConversationIfSelected = async selection => {
+  if (isConversationSelected(selection)) {
+    await loadConversation(selection.conversationId);
+  }
+};
+
+const runConversationAction = async ({
+  dispatch,
+  successMessage,
+  onSuccess,
+}) => {
+  const selection = currentConversationIdentity();
+  const { conversationId } = selection;
+  if (!conversationId || isUpdatingAction.value) return;
+
+  actionStatus.value = '';
+  actionError.value = '';
+  isUpdatingAction.value = true;
+  try {
+    const succeeded = await dispatch(conversationId);
+    if (!isConversationSelected(selection)) {
+      await loadDashboard();
+      return;
+    }
+    if (succeeded === false) throw new Error('conversation_action_failed');
+
+    if (onSuccess) {
+      await onSuccess({ selection, successMessage });
+    } else {
+      await reloadConversationIfSelected(selection);
+    }
+    if (isConversationSelected(selection)) {
+      actionStatus.value = successMessage;
+    }
+  } catch {
+    if (isConversationSelected(selection)) {
+      actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
+    } else {
+      await loadDashboard();
+    }
+  } finally {
+    isUpdatingAction.value = false;
   }
 };
 
 const pauseAI = async () => {
   if (!canPauseAI.value) return;
-  actionStatus.value = '';
-  actionError.value = '';
-  isUpdatingAction.value = true;
-  try {
-    const succeeded = await store.dispatch('pauseAI', {
-      conversationId: currentChat.value.id,
-    });
-    if (succeeded === false) throw new Error('pause_failed');
-    await reloadCurrentConversation();
-    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_SUCCESS');
-  } catch {
-    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
-  } finally {
-    isUpdatingAction.value = false;
-  }
+  await runConversationAction({
+    dispatch: conversationId =>
+      store.dispatch('pauseAI', {
+        conversationId,
+        accountId: route.params.accountId,
+      }),
+    successMessage: t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_SUCCESS'),
+  });
 };
 
 const resumeAI = async () => {
   if (!canResumeAI.value) return;
-  actionStatus.value = '';
-  actionError.value = '';
-  isUpdatingAction.value = true;
-  try {
-    const succeeded = await store.dispatch('resumeAI', {
-      conversationId: currentChat.value.id,
-    });
-    if (succeeded === false) throw new Error('resume_failed');
-    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_SUCCESS');
-    if (!isAdmin.value) {
-      useAlert(actionStatus.value);
-      await backToList();
-      await loadDashboard();
-      return;
-    }
-    await reloadCurrentConversation();
-  } catch {
-    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
-  } finally {
-    isUpdatingAction.value = false;
-  }
+  await runConversationAction({
+    dispatch: conversationId =>
+      store.dispatch('resumeAI', {
+        conversationId,
+        accountId: route.params.accountId,
+      }),
+    successMessage: t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_SUCCESS'),
+    onSuccess: async ({ selection, successMessage }) => {
+      if (!isAdmin.value) {
+        useAlert(successMessage);
+        await backToList();
+        await loadDashboard();
+        return;
+      }
+      await reloadConversationIfSelected(selection);
+    },
+  });
 };
 
 const takeOver = async () => {
   if (!canTakeOver.value) return;
-  actionStatus.value = '';
-  actionError.value = '';
-  isUpdatingAction.value = true;
-  try {
-    const succeeded = await store.dispatch('toggleStatus', {
-      conversationId: currentChat.value.id,
-      status: 'open',
-    });
-    if (succeeded === false) throw new Error('takeover_failed');
-    await reloadCurrentConversation();
-    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER_SUCCESS');
-  } catch {
-    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
-  } finally {
-    isUpdatingAction.value = false;
-  }
+  await runConversationAction({
+    dispatch: conversationId =>
+      store.dispatch('toggleStatus', {
+        conversationId,
+        status: 'open',
+        accountId: route.params.accountId,
+      }),
+    successMessage: t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER_SUCCESS'),
+  });
 };
 
 const resolveConversation = async () => {
   if (!canResolve.value) return;
-  actionStatus.value = '';
-  actionError.value = '';
-  isUpdatingAction.value = true;
-  try {
-    const succeeded = await store.dispatch('toggleStatus', {
-      conversationId: currentChat.value.id,
-      status: 'resolved',
-    });
-    if (succeeded === false) throw new Error('resolve_failed');
-    await reloadCurrentConversation();
-    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE_SUCCESS');
-  } catch {
-    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
-  } finally {
-    isUpdatingAction.value = false;
-  }
+  await runConversationAction({
+    dispatch: conversationId =>
+      store.dispatch('toggleStatus', {
+        conversationId,
+        status: 'resolved',
+        accountId: route.params.accountId,
+      }),
+    successMessage: t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE_SUCCESS'),
+  });
 };
 
 const assignConversation = async event => {
-  if (!currentChat.value?.id || isUpdatingAction.value) return;
-
   const agentId = Number(event.target.value) || 0;
-  actionStatus.value = '';
-  actionError.value = '';
-  isUpdatingAction.value = true;
-  try {
-    const succeeded = await store.dispatch('assignAgent', {
-      conversationId: currentChat.value.id,
-      agentId,
-      assigneeType: agentId ? 'User' : null,
-    });
-    if (succeeded === false) throw new Error('assignment_failed');
-    await reloadCurrentConversation();
-    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_SUCCESS');
-  } catch {
-    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
-  } finally {
-    isUpdatingAction.value = false;
-  }
+  await runConversationAction({
+    dispatch: conversationId =>
+      store.dispatch('assignAgent', {
+        conversationId,
+        agentId,
+        assigneeType: agentId ? 'User' : null,
+        accountId: route.params.accountId,
+      }),
+    successMessage: t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_SUCCESS'),
+  });
 };
 
 const startReviewReply = () => {
@@ -561,7 +575,16 @@ watch(
 );
 watch(
   [() => route.params.accountId, selectedDisplayId],
-  ([, id]) => loadConversation(id),
+  ([accountId, id], [previousAccountId, previousId] = []) => {
+    if (
+      String(accountId || '') !== String(previousAccountId || '') ||
+      String(id || '') !== String(previousId || '')
+    ) {
+      actionStatus.value = '';
+      actionError.value = '';
+    }
+    loadConversation(id);
+  },
   { immediate: true }
 );
 onMounted(() => {

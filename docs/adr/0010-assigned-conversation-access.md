@@ -41,6 +41,21 @@ Public control requests recheck the actor's current account membership and
 Conversation assignment inside the same Conversation row lock that changes
 control. A request authorized before reassignment cannot clear or alter the new
 operator's ownership.
+Takeover and resolution also change the owned Inbox status inside that locked
+transition. They persist Inbox status, Control State, assignment, control version,
+and pending-work invalidation as one transaction. Pause, resume and handoff reject
+a resolved Conversation regardless of its Control State, and handoff begins only
+from AI Active, so the public API cannot reopen its control lifecycle indirectly.
+Human pending and snoozed changes also recheck access while holding the
+Conversation lock. Dashboard action responses carry their originating account;
+the store discards a delayed response after account navigation, including when
+both accounts reuse the same Conversation display ID.
+Bot handoff creates a uniquely keyed Outbox Event in the locked transition. The
+dispatch job locks that record and marks it delivered, so failed, duplicate and
+concurrent jobs cannot repeat the state transition. Notification and reporting
+consumers claim unique database receipts with their effects so replay after a
+worker interruption cannot apply an effect twice. The existing scheduled outbox
+dispatcher also recovers committed handoffs whose immediate enqueue is lost.
 
 Queued revocation cleanup must serialize its membership recheck and mutations
 with invitation creation under the Account row lock. Cleanup uses

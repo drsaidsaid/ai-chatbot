@@ -81,8 +81,13 @@ const contactId = computed(
 );
 const decisionSources = computed(() => aiEmployeeDecision.value?.sources || []);
 const canPauseAI = computed(() => controlState.value === 'ai_active');
-const canResumeAI = computed(
-  () => !['ai_active', 'closed'].includes(controlState.value)
+const canResumeAI = computed(() =>
+  ['human_active', 'ai_paused'].includes(controlState.value)
+);
+const resumeUnavailableExplanation = computed(() =>
+  controlState.value === 'handoff_requested'
+    ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.HANDOFF_CONTROL_EXPLANATION')
+    : ''
 );
 const canRequestHandoff = computed(() => controlState.value === 'ai_active');
 const stateLabel = computed(() => {
@@ -228,6 +233,14 @@ const saveEvidenceCorrection = async () => {
         {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.HANDOFF') }}
       </button>
     </div>
+
+    <p
+      v-if="resumeUnavailableExplanation"
+      class="text-xs text-n-slate-11"
+      data-testid="ai-control-resume-explanation"
+    >
+      {{ resumeUnavailableExplanation }}
+    </p>
 
     <div class="flex flex-col gap-1 text-xs text-n-slate-11">
       <div class="flex items-center justify-between gap-2">

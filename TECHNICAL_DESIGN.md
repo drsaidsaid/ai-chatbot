@@ -140,6 +140,22 @@ Assignment, human reply, pause, and resolution events are authoritative even whe
 an AI job was queued earlier. A queued job must not infer permission from the state
 that existed when it was created.
 
+Public takeover and resolution write Inbox Conversation Status and Control State
+through one actor-aware service transaction. The service locks the Conversation,
+rechecks current account membership and assignment, invalidates pending work, and
+then persists status, assignment and the incremented control version. A resolved
+Conversation cannot be paused, resumed, or handed off even if legacy data has an
+inconsistent Control State. Handoff begins only from AI Active.
+Pending and snoozed status changes use the same locked actor recheck. Bot handoff
+creates one uniquely keyed Outbox Event in the state transition transaction. Its
+locked dispatch job can retry without repeating the transition or incrementing
+the control version. Notification and reporting listeners claim a unique receipt
+for their Outbox Event and consumer in the same database transaction as their
+effect, so replay after a worker interruption cannot apply an effect twice. The
+scheduled outbox dispatcher recovers a committed handoff when its immediate job
+enqueue is lost. An asynchronous dispatcher rejection is recorded as a failed
+attempt and leaves the event pending for recovery.
+
 Explicit resume from Human Active clears the Human Operator assignment as it
 returns the Conversation to AI Active. This preserves the assigned-only access
 boundary: a Team Member returns to their permitted Inbox list after handing the

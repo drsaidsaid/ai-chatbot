@@ -147,6 +147,19 @@ RSpec.describe 'Conversations API', type: :request do
       expect(response).to have_http_status(:unauthorized)
       expect(conversation.reload).to be_ai_active
     end
+
+    it 'does not pause a closed Conversation' do
+      conversation.update!(status: :resolved, control_state: :closed, control_version: 9)
+
+      post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/pause_ai",
+           headers: agent.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(conversation.reload).to have_attributes(
+        status: 'resolved', control_state: 'closed', control_version: 9, assignee: agent
+      )
+    end
   end
 
   describe 'POST /api/v1/accounts/{account.id}/conversations/:id/resume_ai' do
@@ -205,7 +218,7 @@ RSpec.describe 'Conversations API', type: :request do
   end
 
   describe 'POST /api/v1/accounts/{account.id}/conversations/:id/handoff_ai' do
-    let(:agent) { create(:user, account: account, role: :agent) }
+    let(:administrator) { create(:user, account: account, role: :administrator) }
     let(:agent_bot) { create(:agent_bot, account: account) }
     let(:conversation) do
       create(:conversation,
@@ -224,14 +237,12 @@ RSpec.describe 'Conversations API', type: :request do
              observed_control_version: 2)
     end
 
-    before do
-      create(:inbox_member, user: agent, inbox: conversation.inbox)
-    end
-
     it 'opens the conversation for Human Operators without allowing more automation' do
-      post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/handoff_ai",
-           headers: agent.create_new_auth_token,
-           as: :json
+      expect do
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/handoff_ai",
+             headers: administrator.create_new_auth_token,
+             as: :json
+      end.to have_enqueued_job(AiLeadEmployee::BotHandoffDispatchJob)
 
       expect(response).to have_http_status(:success)
       expect(response.parsed_body).to include(
@@ -241,6 +252,21 @@ RSpec.describe 'Conversations API', type: :request do
       )
       expect(conversation.reload).to have_attributes(status: 'open', control_state: 'handoff_requested', assignee_agent_bot: nil)
       expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'incompatible_control_state')
+    end
+
+    it 'does not reopen a closed Conversation' do
+      conversation.update!(status: :resolved, control_state: :closed, control_version: 7)
+      prior_intent_state = intent.reload.state
+
+      post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/handoff_ai",
+           headers: administrator.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(conversation.reload).to have_attributes(
+        status: 'resolved', control_state: 'closed', control_version: 7, assignee_agent_bot: agent_bot
+      )
+      expect(intent.reload.state).to eq(prior_intent_state)
     end
   end
 
@@ -942,6 +968,75 @@ RSpec.describe 'Conversations API', type: :request do
 
       before do
         create(:inbox_member, user: agent, inbox: conversation.inbox)
+        conversation.update!(assignee: agent)
+      end
+
+      def reassign_before_control_lock(conversation, new_operator)
+        reassigned = false
+        allow(Conversations::ControlService).to receive(:new).and_wrap_original do |original, **arguments|
+          unless reassigned
+            # rubocop:disable Rails/SkipsModelValidations -- Deterministically model reassignment after controller authorization.
+            Conversation.where(id: conversation.id).update_all(assignee_id: new_operator.id)
+            # rubocop:enable Rails/SkipsModelValidations
+            reassigned = true
+          end
+          original.call(**arguments)
+        end
+      end
+
+      it 'rejects stale-assignee takeover without changing status, control, version, or pending work' do
+        new_operator = create(:user, account: account, role: :agent)
+        conversation.update!(status: :pending, control_state: :ai_paused, control_version: 6, assignee: agent)
+        pending_intent = create(:ai_orchestration_intent, account: account, conversation: conversation)
+        reassign_before_control_lock(conversation, new_operator)
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/toggle_status",
+             headers: agent.create_new_auth_token,
+             params: { status: 'open' },
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(conversation.reload).to have_attributes(
+          status: 'pending', control_state: 'ai_paused', control_version: 6, assignee: new_operator
+        )
+        expect(pending_intent.reload).to have_attributes(state: 'pending')
+      end
+
+      it 'rejects stale-assignee resolution without changing status, control, version, or pending work' do
+        new_operator = create(:user, account: account, role: :agent)
+        conversation.update!(status: :open, control_state: :human_active, control_version: 6, assignee: agent)
+        pending_intent = create(:ai_orchestration_intent, account: account, conversation: conversation)
+        reassign_before_control_lock(conversation, new_operator)
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/toggle_status",
+             headers: agent.create_new_auth_token,
+             params: { status: 'resolved' },
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(conversation.reload).to have_attributes(
+          status: 'open', control_state: 'human_active', control_version: 6, assignee: new_operator
+        )
+        expect(pending_intent.reload).to have_attributes(state: 'pending')
+      end
+
+      %w[pending snoozed].each do |requested_status|
+        it "rejects a stale-assignee #{requested_status} status change" do
+          new_operator = create(:user, account: account, role: :agent)
+          conversation.update!(status: :open, control_state: :human_active, control_version: 6, assignee: agent)
+          reassign_before_control_lock(conversation, new_operator)
+
+          post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/toggle_status",
+               headers: agent.create_new_auth_token,
+               params: { status: requested_status, snoozed_until: 2.hours.from_now.to_i },
+               as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(conversation.reload).to have_attributes(
+            status: 'open', control_state: 'human_active', control_version: 6,
+            assignee: new_operator, snoozed_until: nil
+          )
+        end
       end
 
       it 'toggles the conversation status if status is empty' do
@@ -1063,9 +1158,78 @@ RSpec.describe 'Conversations API', type: :request do
         expect(pending_conversation.reload.status).to eq('open')
         expect(pending_conversation).to be_handoff_requested
         expect(pending_conversation.control_version).to eq(3)
+        event = OutboxEvent.find_by!(aggregate: pending_conversation,
+                                     event_type: Conversations::ControlService::BOT_HANDOFF_EVENT_TYPE)
+        expect(event).to be_pending
+
+        AiLeadEmployee::BotHandoffDispatchJob.perform_now(event.id)
+
         expect(Rails.configuration.dispatcher).to have_received(:dispatch)
           .with(Events::Types::CONVERSATION_BOT_HANDOFF, kind_of(Time), conversation: pending_conversation, notifiable_assignee_change: false,
-                                                                        changed_attributes: anything, performed_by: anything)
+                                                                        changed_attributes: anything, performed_by: anything,
+                                                                        outbox_event_id: event.id)
+      end
+
+      it 'does not change Inbox status or dispatch handoff when the locked transition fails' do
+        create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
+        pending_conversation.update!(control_state: :ai_active, control_version: 2, assignee_agent_bot: agent_bot)
+        service = instance_double(Conversations::ControlService)
+        allow(Conversations::ControlService).to receive(:new).and_return(service)
+        allow(service).to receive(:handoff_requested!).and_raise(
+          Conversations::ControlService::InvalidTransition, 'transition failed'
+        )
+        allow(Rails.configuration.dispatcher).to receive(:dispatch)
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{pending_conversation.display_id}/toggle_status",
+             headers: { api_access_token: agent_bot.access_token.token },
+             params: { status: 'open' },
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(pending_conversation.reload).to have_attributes(
+          status: 'pending', control_state: 'ai_active', control_version: 2, assignee_agent_bot: agent_bot
+        )
+        expect(OutboxEvent.where(aggregate: pending_conversation)).to be_empty
+        expect(Rails.configuration.dispatcher).not_to have_received(:dispatch)
+      end
+
+      it 'deduplicates handoff requests and retries the durable event once' do
+        create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
+        pending_conversation.update!(control_state: :ai_active, control_version: 2, assignee_agent_bot: agent_bot)
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{pending_conversation.display_id}/toggle_status",
+             headers: { api_access_token: agent_bot.access_token.token },
+             params: { status: 'open' },
+             as: :json
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{pending_conversation.display_id}/toggle_status",
+             headers: { api_access_token: agent_bot.access_token.token },
+             params: { status: 'open' },
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(pending_conversation.reload).to have_attributes(
+          status: 'open', control_state: 'handoff_requested', control_version: 3, assignee_agent_bot: nil
+        )
+        event = OutboxEvent.find_by!(aggregate: pending_conversation,
+                                     event_type: Conversations::ControlService::BOT_HANDOFF_EVENT_TYPE)
+        expect(OutboxEvent.where(aggregate: pending_conversation).count).to eq(1)
+
+        dispatch_attempts = 0
+        allow(Rails.configuration.dispatcher).to receive(:dispatch) do
+          dispatch_attempts += 1
+          raise 'dispatcher unavailable' if dispatch_attempts == 1
+        end
+
+        expect do
+          AiLeadEmployee::BotHandoffDispatchJob.perform_now(event.id)
+        end.to raise_error(RuntimeError, 'dispatcher unavailable')
+        expect(event.reload).to have_attributes(state: 'pending', attempts: 1, failure_class: 'RuntimeError')
+
+        2.times { AiLeadEmployee::BotHandoffDispatchJob.perform_now(event.id) }
+
+        expect(dispatch_attempts).to eq(2)
+        expect(event.reload).to have_attributes(state: 'delivered', attempts: 2, failure_class: nil)
       end
     end
   end

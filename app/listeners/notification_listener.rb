@@ -1,5 +1,11 @@
 class NotificationListener < BaseListener
   def conversation_bot_handoff(event)
+    return consume_bot_handoff_once(event) { notify_bot_handoff(event) } if event.data[:outbox_event_id]
+
+    notify_bot_handoff(event)
+  end
+
+  def notify_bot_handoff(event)
     conversation, account = extract_conversation_and_account(event)
     return if conversation.pending?
 
@@ -11,6 +17,10 @@ class NotificationListener < BaseListener
         primary_actor: conversation
       ).perform
     end
+  end
+
+  def consume_bot_handoff_once(event, &)
+    OutboxEffectReceipt.consume_once!(outbox_event_id: event.data[:outbox_event_id], consumer: self.class.name, &)
   end
 
   def conversation_created(event)

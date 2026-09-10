@@ -443,6 +443,14 @@ const clickButton = async (wrapper, label) => {
   await flushPromises();
 };
 
+const deferred = () => {
+  let resolve;
+  const promise = new Promise(resolvePromise => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+};
+
 describe('InboxConversationCockpit', () => {
   beforeEach(() => {
     InboxConversationsAPI.get.mockImplementation(params => {
@@ -673,6 +681,7 @@ describe('InboxConversationCockpit', () => {
 
     expect(actions.resumeAI).toHaveBeenCalledWith(expect.any(Object), {
       conversationId: 101,
+      accountId: '1',
     });
     expect(
       wrapper.get('[data-testid="conversation-control-state"]').text()
@@ -761,6 +770,7 @@ describe('InboxConversationCockpit', () => {
     expect(actions.toggleStatus).toHaveBeenCalledWith(expect.any(Object), {
       conversationId: 101,
       status: 'open',
+      accountId: '1',
     });
     expect(
       wrapper.get('[data-testid="conversation-control-state"]').text()
@@ -787,6 +797,7 @@ describe('InboxConversationCockpit', () => {
 
     expect(actions.pauseAI).toHaveBeenCalledWith(expect.any(Object), {
       conversationId: 101,
+      accountId: '1',
     });
     expect(
       wrapper.get('[data-testid="conversation-control-state"]').text()
@@ -822,6 +833,7 @@ describe('InboxConversationCockpit', () => {
     expect(actions.toggleStatus).toHaveBeenCalledWith(expect.any(Object), {
       conversationId: 101,
       status: 'resolved',
+      accountId: '1',
     });
     expect(
       wrapper.get('[data-testid="conversation-control-state"]').text()
@@ -864,6 +876,7 @@ describe('InboxConversationCockpit', () => {
       conversationId: 101,
       agentId: 10,
       assigneeType: 'User',
+      accountId: '1',
     });
     expect(wrapper.text()).toContain('Assignee: Musa Operator');
     expect(
@@ -905,6 +918,107 @@ describe('InboxConversationCockpit', () => {
     ).toBe(false);
   });
 
+  it('does not apply a delayed assignment result to the same display ID in another account', async () => {
+    const assignment = deferred();
+    const nextConversation = {
+      ...conversationPayload,
+      meta: {
+        ...conversationPayload.meta,
+        sender: { ...conversationPayload.meta.sender, name: 'Ravi Review' },
+      },
+    };
+    ConversationApi.show
+      .mockResolvedValueOnce({ data: conversationPayload })
+      .mockResolvedValueOnce({ data: nextConversation });
+
+    const { wrapper, router, actions } = await mountCockpit();
+    actions.assignAgent.mockReturnValueOnce(assignment.promise);
+    await wrapper.get('[data-testid="assignee-control"]').setValue('10');
+    await router.push({
+      name: 'inbox_conversation',
+      params: { accountId: 2, conversation_id: 101 },
+    });
+    await flushPromises();
+
+    assignment.resolve(true);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Ravi Review');
+    expect(ConversationApi.show).toHaveBeenCalledTimes(2);
+    expect(wrapper.find('[role="status"]').exists()).toBe(false);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+  });
+
+  it('clears completed action feedback for the same display ID in another account', async () => {
+    const nextConversation = {
+      ...conversationPayload,
+      meta: {
+        ...conversationPayload.meta,
+        sender: { ...conversationPayload.meta.sender, name: 'Ravi Review' },
+      },
+    };
+    const { wrapper, router } = await mountCockpit();
+
+    await clickButton(wrapper, 'Pause AI');
+    expect(wrapper.find('[role="status"]').exists()).toBe(true);
+    ConversationApi.show.mockResolvedValueOnce({ data: nextConversation });
+
+    await router.push({
+      name: 'inbox_conversation',
+      params: { accountId: 2, conversation_id: 101 },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Ravi Review');
+    expect(wrapper.find('[role="status"]').exists()).toBe(false);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+  });
+
+  it.each([
+    ['pause failure', 'pause-ai-action', 'pauseAI', false, 'administrator'],
+    ['takeover failure', 'take-over-action', 'toggleStatus', false, 'agent'],
+    [
+      'resolution failure',
+      'resolve-conversation-action',
+      'toggleStatus',
+      false,
+      'administrator',
+    ],
+  ])(
+    'does not apply a delayed %s result to a newly selected Conversation',
+    async (_label, testId, actionName, actionResult, role) => {
+      const action = deferred();
+      const nextConversation = {
+        ...conversationPayload,
+        id: 202,
+        meta: {
+          ...conversationPayload.meta,
+          sender: { ...conversationPayload.meta.sender, name: 'Ravi Review' },
+        },
+      };
+      ConversationApi.show
+        .mockResolvedValueOnce({ data: conversationPayload })
+        .mockResolvedValueOnce({ data: nextConversation });
+
+      const { wrapper, router, actions } = await mountCockpit({ role });
+      actions[actionName].mockReturnValueOnce(action.promise);
+      await wrapper.get(`[data-testid="${testId}"]`).trigger('click');
+      await router.push({
+        name: 'inbox_conversation',
+        params: { accountId: 1, conversation_id: 202 },
+      });
+      await flushPromises();
+
+      action.resolve(actionResult);
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('Ravi Review');
+      expect(ConversationApi.show).toHaveBeenCalledTimes(2);
+      expect(wrapper.find('[role="status"]').exists()).toBe(false);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    }
+  );
+
   it('renders detail tabs, mobile brief disclosure, and AI handoff controls', async () => {
     const { wrapper, actions } = await mountCockpit({
       query: { queue: 'hot' },
@@ -945,6 +1059,7 @@ describe('InboxConversationCockpit', () => {
 
     expect(actions.pauseAI).toHaveBeenCalledWith(expect.any(Object), {
       conversationId: 101,
+      accountId: '1',
     });
   });
 });

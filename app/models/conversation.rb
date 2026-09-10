@@ -195,8 +195,8 @@ class Conversation < ApplicationRecord
     dispatch_bot_handoff_event if dispatch_event
   end
 
-  def dispatch_bot_handoff_event
-    dispatcher_dispatch(CONVERSATION_BOT_HANDOFF)
+  def dispatch_bot_handoff_event(outbox_event_id: nil)
+    dispatcher_dispatch(CONVERSATION_BOT_HANDOFF, nil, outbox_event_id: outbox_event_id)
   end
 
   def unread_messages
@@ -412,10 +412,11 @@ class Conversation < ApplicationRecord
     end
   end
 
-  def dispatcher_dispatch(event_name, changed_attributes = nil)
+  def dispatcher_dispatch(event_name, changed_attributes = nil, event_data = {})
     Rails.configuration.dispatcher.dispatch(event_name, Time.zone.now, conversation: self, notifiable_assignee_change: notifiable_assignee_change?,
                                                                        changed_attributes: changed_attributes,
-                                                                       performed_by: Current.executed_by)
+                                                                       performed_by: Current.executed_by,
+                                                                       **event_data)
   end
 
   def set_unread_count_deletion_data

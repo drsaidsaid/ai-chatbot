@@ -17,10 +17,32 @@ history, treats only a currently confirmed Booking as read-only â€œCall bookedâ€
 information, and lets an administrator choose an actual operator while hiding
 assignment controls from Team Members.
 
-The corrected integration candidate is commit
+A subsequent concurrency review found that public takeover and resolution wrote
+Inbox status before acquiring the control lock, pause accepted a closed
+Conversation, and an action completing after navigation could replace the newly
+selected Conversation with the prior result. The final source performs the full
+takeover/resolution transition under the actor-aware Conversation lock, rejects
+control changes for any resolved Conversation, and binds every cockpit action
+result to the account and Conversation on which it started. It also exposes the
+existing AI handoff controller action through its missing public route, permits
+handoff only from AI Active, and dispatches bot handoff only after the atomic
+transition commits. Both control surfaces disable Resume during Handoff Requested
+and explain the required takeover or assignment.
+Pending and snoozed status changes now use the same actor-aware lock. A delayed
+store response cannot mutate a same-display-ID Conversation in another account,
+and bot handoff records a uniquely keyed durable Outbox Event in the transition
+transaction. Failed and duplicate jobs retry without repeating the transition or
+delivering duplicate handoff effects. Each asynchronous notification and
+reporting consumer claims a database-enforced receipt before applying its
+effect, so a worker crash after dispatch can safely replay the Outbox Event. The
+scheduled outbox recovery batch also picks up a committed handoff whose original
+job enqueue was interrupted. A rejected asynchronous enqueue leaves the event
+pending for that recovery batch instead of falsely marking it delivered.
+
+The prior corrected integration candidate was commit
 `680609f94187b790243d33bf6eb38de439a1fc7f`, with tree
-`7915e1d1585f340a13bc34834e2bac408ecbc040`. The normal commit hooks completed
-before the final production build, so the build used that exact clean tree.
+`7915e1d1585f340a13bc34834e2bac408ecbc040`. Final source and build identities
+are recorded after the last independent review corrections are committed.
 
 The Conversation cockpit keeps identity, phone, control and assignee visible;
 shows review and booking actions only when their records exist; persists takeover,
@@ -49,10 +71,27 @@ current access inside the same row lock as the transition.
 Logs are retained locally at `tmp/release-r07/red-rails.log` and
 `tmp/release-r07/red-frontend.log`.
 
+The later concurrency regressions were also proven red against immutable commit
+`2c62fbc`: all four focused backend examples and all four focused cockpit examples
+failed. Those logs are retained at `tmp/release-r07/red-final-backend.log` and
+`tmp/release-r07/red-final-frontend.log`.
+
 ## Automated evidence
 
 - Corrected frontend: 75 focused tests passed across the cockpit, reply-mode toggle and
   Conversation store actions.
+- Final frontend regression run: 89 focused tests passed, including route changes
+  during assignment, pause, takeover and resolution requests, same-display-ID
+  account changes, feedback clearing and the secondary AI control panel.
+- Final public control run: 37 focused examples passed, including stale-assignee
+  takeover/resolution rejection, resolved-state cross-product rejection, atomic
+  bot handoff failure preservation, consumer receipt rollback/replay and the
+  routed AI handoff.
+- Final combined R07 backend run: 41 examples passed after adding scheduled
+  recovery for a lost immediate enqueue and pending retry for an explicitly
+  rejected asynchronous enqueue.
+- Final authority integration run: 18 examples passed across control access,
+  orchestration, consent, outbound delivery and assigned-resource boundaries.
 - Corrected Rails: 28 focused authority examples passed. They cover control transitions,
   future-only resume, stale delayed-worker cancellation, opt-out persistence,
   public/private message handling, Review/Booking action priority, and
@@ -62,12 +101,16 @@ Logs are retained locally at `tmp/release-r07/red-rails.log` and
   warnings remain in the cockpit template.
 - Both English locale JSON files parsed successfully and `git diff --check`
   passed.
-- The corrected production build transformed 5,078 modules and completed in
+- The prior corrected-candidate production build transformed 5,078 modules and completed in
   1 minute 51 seconds with a 4 GiB Node heap. Its local log is
   `tmp/release-r07/build-corrected.log` (SHA-256
   `6814f62e42adf4eaf8e5be5f646fd2d6224a9f7ccb9014079bbcb29d05a74a2c`).
   The corrected `public/vite/.vite/manifest.json` SHA-256 is
   `adad158ba0e39edc896fa412fe1c71b100771f6b1ab2b80c2dce4941ff117d2e`.
+- The final independently reviewed source requires a new shared build allocation.
+  Its commit, tree, build-log hash and manifest hash remain intentionally
+  unrecorded until the normal commit hooks and production build run from that
+  exact source.
 - The first-candidate production Vite build transformed 5,078 modules with a 4 GiB Node heap.
   Its full output is preserved locally at `tmp/release-r07/build.log` (SHA-256
   `91ae2187086ad698b7a045b11b0ab198ba1a1bde80a8ade94ddca9a69f5ad27b`).

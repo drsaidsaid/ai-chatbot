@@ -41,12 +41,16 @@ Based on the 9 September 2026 standalone UI/UX audit and the standalone portions
 
 ## Implementation evidence
 
-The ticket branch implements automated coverage for the first six criteria. The production
-build completed for the immutable source candidate, and an isolated synthetic
-runtime was prepared without provider credentials or outbound traffic. The
+The ticket branch implements automated coverage for the first six criteria. A production
+build completed for the prior immutable source candidate, and an isolated synthetic
+runtime was prepared without provider credentials or outbound traffic. Independent
+review then required durable handoff recovery and false-enqueue handling. Those
+corrections pass the final automated checks and both final reviews, while their
+normal commit hooks and exact-source production build await the next shared
+allocation. The
 in-app browser could not be used because the host reported that the Mac was
 locked and automatic unlock failed. The final criterion remains open until the
-same source candidate completes the required desktop, phone and keyboard walk.
+final source candidate completes the required desktop, phone and keyboard walk.
 The first and sixth criteria remain unchecked because their readability and
 visual-priority clauses require that browser evidence.
 

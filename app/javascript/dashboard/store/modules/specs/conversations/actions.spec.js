@@ -17,6 +17,13 @@ import { dataReceived } from './testConversationResponse';
 
 const commit = vi.fn();
 const dispatch = vi.fn();
+const deferred = () => {
+  let resolve;
+  const promise = new Promise(resolvePromise => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+};
 global.axios = axios;
 vi.mock('axios');
 
@@ -466,6 +473,24 @@ describe('#actions', () => {
       await expect(
         actions.pauseAI({ commit }, { conversationId: 1 })
       ).resolves.toBe(false);
+    });
+
+    it('captures caller account and does not commit a delayed response after it changes', async () => {
+      const response = deferred();
+      const rootGetters = { getCurrentAccountId: 1 };
+      axios.post.mockReturnValueOnce(response.promise);
+
+      const action = actions.pauseAI(
+        { commit, rootGetters },
+        { conversationId: 101 }
+      );
+      rootGetters.getCurrentAccountId = 2;
+      response.resolve({
+        data: { control_state: 'ai_paused', control_version: 2 },
+      });
+
+      await expect(action).resolves.toBe(true);
+      expect(commit).not.toHaveBeenCalled();
     });
   });
 

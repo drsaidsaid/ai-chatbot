@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_11_000100) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -1699,6 +1699,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
+  create_table "outbox_effect_receipts", force: :cascade do |t|
+    t.bigint "outbox_event_id", null: false
+    t.string "consumer", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["outbox_event_id", "consumer"], name: "index_outbox_effect_receipts_on_event_and_consumer", unique: true
+    t.index ["outbox_event_id"], name: "index_outbox_effect_receipts_on_outbox_event_id"
+  end
+
   create_table "outbox_events", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "aggregate_type", null: false
@@ -2193,6 +2202,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
   add_foreign_key "meta_whatsapp_webhook_events", "channel_whatsapp"
   add_foreign_key "meta_whatsapp_webhook_events", "conversations"
   add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
+  add_foreign_key "outbox_effect_receipts", "outbox_events", on_delete: :cascade
   add_foreign_key "outbox_events", "accounts"
   add_foreign_key "qualification_budget_ranges", "accounts"
   add_foreign_key "qualification_evidences", "accounts"

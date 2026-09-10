@@ -31,6 +31,10 @@ export const hasMessageFailedWithExternalError = pendingMessage => {
   return status === MESSAGE_STATUS.FAILED && externalError !== '';
 };
 
+const isExpectedAccount = (rootGetters, accountId) =>
+  accountId === undefined ||
+  String(rootGetters?.getCurrentAccountId) === String(accountId);
+
 // actions
 const actions = {
   getConversation: async ({ commit }, conversationId) => {
@@ -210,15 +214,17 @@ const actions = {
   },
 
   assignAgent: async (
-    { dispatch },
-    { conversationId, agentId, assigneeType }
+    { dispatch, rootGetters },
+    { conversationId, agentId, assigneeType, accountId }
   ) => {
+    const requestAccountId = accountId ?? rootGetters?.getCurrentAccountId;
     try {
       const response = await ConversationApi.assignAgent({
         conversationId,
         agentId,
         assigneeType,
       });
+      if (!isExpectedAccount(rootGetters, requestAccountId)) return true;
       dispatch('setCurrentChatAssignee', {
         conversationId,
         assignee: response.data,
@@ -254,9 +260,16 @@ const actions = {
   },
 
   toggleStatus: async (
-    { commit },
-    { conversationId, status, snoozedUntil = null, customAttributes = null }
+    { commit, rootGetters },
+    {
+      conversationId,
+      status,
+      snoozedUntil = null,
+      customAttributes = null,
+      accountId,
+    }
   ) => {
+    const requestAccountId = accountId ?? rootGetters?.getCurrentAccountId;
     try {
       // Update custom attributes first if provided
       if (customAttributes) {
@@ -264,6 +277,7 @@ const actions = {
           conversationId,
           customAttributes,
         });
+        if (!isExpectedAccount(rootGetters, requestAccountId)) return true;
         commit(types.UPDATE_CONVERSATION_CUSTOM_ATTRIBUTES, {
           conversationId,
           customAttributes,
@@ -284,6 +298,7 @@ const actions = {
         status,
         snoozedUntil,
       });
+      if (!isExpectedAccount(rootGetters, requestAccountId)) return true;
       commit(types.CHANGE_CONVERSATION_STATUS, {
         conversationId,
         status: updatedStatus,
@@ -302,9 +317,11 @@ const actions = {
     }
   },
 
-  pauseAI: async ({ commit }, { conversationId }) => {
+  pauseAI: async ({ commit, rootGetters }, { conversationId, accountId }) => {
+    const requestAccountId = accountId ?? rootGetters?.getCurrentAccountId;
     try {
       const { data } = await ConversationApi.pauseAI({ conversationId });
+      if (!isExpectedAccount(rootGetters, requestAccountId)) return true;
       commit(types.CHANGE_CONVERSATION_CONTROL, {
         conversationId,
         controlState: data.control_state,
@@ -316,9 +333,11 @@ const actions = {
     }
   },
 
-  resumeAI: async ({ commit }, { conversationId }) => {
+  resumeAI: async ({ commit, rootGetters }, { conversationId, accountId }) => {
+    const requestAccountId = accountId ?? rootGetters?.getCurrentAccountId;
     try {
       const { data } = await ConversationApi.resumeAI({ conversationId });
+      if (!isExpectedAccount(rootGetters, requestAccountId)) return true;
       commit(types.CHANGE_CONVERSATION_CONTROL, {
         conversationId,
         controlState: data.control_state,
@@ -330,9 +349,11 @@ const actions = {
     }
   },
 
-  handoffAI: async ({ commit }, { conversationId }) => {
+  handoffAI: async ({ commit, rootGetters }, { conversationId, accountId }) => {
+    const requestAccountId = accountId ?? rootGetters?.getCurrentAccountId;
     try {
       const { data } = await ConversationApi.handoffAI({ conversationId });
+      if (!isExpectedAccount(rootGetters, requestAccountId)) return true;
       commit(types.CHANGE_CONVERSATION_STATUS, {
         conversationId,
         status: data.status,
@@ -343,8 +364,9 @@ const actions = {
         controlState: data.control_state,
         controlVersion: data.control_version,
       });
+      return true;
     } catch (error) {
-      // Handle error
+      return false;
     }
   },
 

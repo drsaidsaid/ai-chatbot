@@ -72,6 +72,12 @@ class ReportingEventListener < BaseListener
   end
 
   def conversation_bot_handoff(event)
+    return consume_bot_handoff_once(event) { record_bot_handoff(event) } if event.data[:outbox_event_id]
+
+    record_bot_handoff(event)
+  end
+
+  def record_bot_handoff(event)
     conversation = extract_conversation_and_account(event)[0]
     event_end_time = event.timestamp
 
@@ -96,6 +102,10 @@ class ReportingEventListener < BaseListener
     )
     reporting_event.save!
     safe_rollup(reporting_event)
+  end
+
+  def consume_bot_handoff_once(event, &)
+    OutboxEffectReceipt.consume_once!(outbox_event_id: event.data[:outbox_event_id], consumer: self.class.name, &)
   end
 
   def conversation_opened(event)
