@@ -8,6 +8,7 @@ external messaging was used.
 Branch: `codex/r04-outbound-delivery-20260910`.
 Base: integrated R03 `f2b184e1c332f0bf68c31dec460f7e5599657a72`.
 Implementation commit: `4b5379610dafb948f5ff83fc347bc9355c9d4a5f` (normal repository hooks ran).
+Coordinator correction commit: `ca117f6bb37731ef104e797a85adc90ba107777f` (normal repository hooks ran).
 Decision: [ADR 0011](../../adr/0011-owned-whatsapp-outbound-delivery.md).
 The coordinator alone integrates this branch.
 

@@ -3,5 +3,17 @@
   "normal_repository_hooks_exit": 0,
   "hooks_bypassed": false,
   "browser_acceptance": "pending coordinator allocation",
-  "integration_performed": false
+  "integration_performed": false,
+  "follow_up_commit": "ca117f6bb37731ef104e797a85adc90ba107777f",
+  "follow_up_normal_repository_hooks_exit": 0,
+  "follow_up_hooks_bypassed": false,
+  "follow_up_validation": {
+    "ruby_examples": 291,
+    "ruby_failures": 0,
+    "vue_tests": 8,
+    "vue_failures": 0,
+    "production_build": "passed",
+    "rubocop_offenses": 0,
+    "eslint_errors": 0
+  }
 }

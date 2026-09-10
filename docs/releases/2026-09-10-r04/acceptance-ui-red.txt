@@ -95,7 +95,7 @@ Received: "Sep 10, 4:42 AM"
      87|     expect(wrapper.text()).toContain('Accepted by WhatsApp; awaiting d…
        |                            ^
      88|     expect(wrapper.findComponent(MessageStatus).exists()).toBe(false);
-     89| 
+     89|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
