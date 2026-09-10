@@ -196,4 +196,3 @@ enum :medium, {sms: 0, whatsapp: 1}
 
 Finished in 1 minute 43.03 seconds (files took 4.92 seconds to load)
 235 examples, 0 failures
-

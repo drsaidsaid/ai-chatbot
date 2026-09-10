@@ -3,4 +3,3 @@
   51:16  warning  'key' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
 
 ✖ 1 problem (0 errors, 1 warning)
-

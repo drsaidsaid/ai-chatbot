@@ -158,4 +158,3 @@ enum :status, {draft: 0, published: 1, archived: 2, import_failed: 3}
 
 Finished in 4.17 seconds (files took 4.52 seconds to load)
 2 examples, 0 failures
-

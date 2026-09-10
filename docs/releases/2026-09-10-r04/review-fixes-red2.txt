@@ -170,4 +170,3 @@ Failed examples:
 
 rspec './spec/requests/whatsapp_outbound_delivery_spec.rb[1:30]' # Canonical WhatsApp outgoing delivery checks current Review Request alert authority when current_formatted
 rspec ./spec/requests/whatsapp_outbound_delivery_spec.rb:464 # Canonical WhatsApp outgoing delivery fails malformed template preparation durably and lets recovery advance to a valid reply
-

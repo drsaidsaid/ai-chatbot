@@ -68,4 +68,3 @@ stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery
       Tests  5 passed (5)
    Start at  03:30:30
    Duration  2.83s (transform 326ms, setup 312ms, collect 968ms, tests 90ms, environment 1.00s, prepare 130ms)
-

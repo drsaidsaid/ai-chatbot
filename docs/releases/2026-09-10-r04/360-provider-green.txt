@@ -112,4 +112,3 @@ enum :status, {open: 0, resolved: 1, rejected: 2}
 
 Finished in 1.39 seconds (files took 3.92 seconds to load)
 3 examples, 0 failures
-

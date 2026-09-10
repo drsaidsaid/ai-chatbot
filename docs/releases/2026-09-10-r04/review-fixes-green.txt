@@ -178,4 +178,3 @@ enum :status, {confirmed: 0, canceled: 1, completed: 2}
 
 Finished in 39.24 seconds (files took 3.99 seconds to load)
 36 examples, 0 failures
-

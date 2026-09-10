@@ -174,4 +174,3 @@ Finished in 3.38 seconds (files took 6.48 seconds to load)
 Failed examples:
 
 rspec ./spec/requests/whatsapp_outbound_delivery_spec.rb:513 # Canonical WhatsApp outgoing delivery allows a fresh answer after resume without reviving a canceled greeting from an earlier control version
-
