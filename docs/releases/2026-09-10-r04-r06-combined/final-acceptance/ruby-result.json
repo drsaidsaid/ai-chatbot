@@ -1,0 +1,14 @@
+{
+  "commit": "b02e88a8dd6c434d1106d30570ebfdab2022afdb",
+  "selection_entries": 69,
+  "exit": 0,
+  "seconds": 736.63,
+  "counts": [
+    "745",
+    "0",
+    ""
+  ],
+  "log_sha256": "72943403fb26064c8910b0962e5b67b901bdfe1aee59b6d8a1d572232e531837",
+  "smtp_address_absent_before_boot": true,
+  "synthetic_database": "ale_release_combined_final_20260910_spec"
+}

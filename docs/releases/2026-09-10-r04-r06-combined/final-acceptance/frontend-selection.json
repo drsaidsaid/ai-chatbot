@@ -1,0 +1,11 @@
+[
+  "app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js",
+  "app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js",
+  "app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js",
+  "app/javascript/dashboard/helper/specs/actionCable.spec.js",
+  "app/javascript/dashboard/routes/dashboard/conversation/specs/InboxConversationCockpit.spec.js",
+  "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+  "app/javascript/dashboard/routes/dashboard/settings/agents/specs/AddAgent.spec.js",
+  "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OwnedSettingsLayout.spec.js",
+  "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/WhatsappConnectionPage.spec.js"
+]

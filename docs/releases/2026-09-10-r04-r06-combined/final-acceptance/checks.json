@@ -1,0 +1,56 @@
+{
+  "tested_commit": "b02e88a8dd6c434d1106d30570ebfdab2022afdb",
+  "status": "accepted_combined_R04_R06_source_pending_integration_commit",
+  "ruby": {
+    "examples": 745,
+    "failures": 0,
+    "selection_entries": 69,
+    "exit": 0,
+    "total_seconds": 736.63,
+    "seed": 34197,
+    "smtp_address_absent_before_boot": true
+  },
+  "frontend": {
+    "tests": 71,
+    "files": 9,
+    "failures": 0,
+    "seconds": 48.7
+  },
+  "production_build": {
+    "exit": 0,
+    "seconds": 2324.5,
+    "input_tree": "f2dc31d4bf678ae5b8ac049f08c7b7a42b2149ec",
+    "frontend_delta_since_build": false
+  },
+  "source_hashes": 8607,
+  "r04_final": "089def2eee773472c56ef0d6163ae96d455f8b1f",
+  "r06_final": "4ebfa3bb5b85535db0a6de7238d859ccfabbcfb7",
+  "r06_mailer_source": "58adb4b904ab8b480c7723288bce7ebec900f8de",
+  "reviews": {
+    "combined_runtime": {
+      "standards": [],
+      "spec": []
+    },
+    "broadcast_fixtures": {
+      "standards": [],
+      "spec": []
+    },
+    "r06_cleanup_fk": {
+      "standards": [],
+      "spec": []
+    },
+    "r06_mailer": {
+      "standards": [],
+      "spec": []
+    }
+  },
+  "browser_acceptance": {
+    "r04": "completed in its recorded desktop/phone synthetic provider fixture",
+    "r06": "completed in its recorded desktop/phone assigned-access fixture",
+    "owner_unlock_pending": false
+  },
+  "live_whatsapp_verified": false,
+  "emergency_qualification_included": false,
+  "emergency_acknowledgment_included": false,
+  "known_follow_up": "R09/R11 emergency source is separately unaccepted; the new qualification Contact-mutex concurrency finding is assigned to a separate R04 repair branch and is not part of this tested candidate."
+}

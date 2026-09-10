@@ -1,3 +1,5 @@
+Current result: this development checkpoint is superseded by [final combined acceptance](final-acceptance/README.md). The historical checkpoint below is preserved for provenance.
+
 # Final R04/R06 source refresh checkpoint
 
 This is a development checkpoint, not final combined acceptance or a V1 release. The accepted integration remains f2b184e1. R04/R06 issues stay open until the final broad suite and integration checks pass.

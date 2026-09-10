@@ -1,0 +1,12 @@
+{
+  "README.md": "15285deaeb6d66085e2cad225f100ef6e8e3e48abc89dfe3fced0a4bfc563e1a",
+  "build-result.json": "ef0a00cb5b1aa749d5a1c9a13a9e0e5e2b130967be4f053f03f2c724fcd93687",
+  "checks.json": "7e4d4251f382a37b704a0f50539e024e82dfa3fed2d314bb43c28e49584852a2",
+  "frontend-result.json": "5b6f57b443ba98e72d23ab596e02ce14e7168cb50fb0b298dba8b591651ea4d0",
+  "frontend-selection.json": "f46145137b8ee3aedacad18db8a8c8efe6d4304716fc7c0ed5402eec510437a7",
+  "mailer-review.json": "b9c13d5b30c9b6c6d56238d3c3b310c5a976c49ee09feb2753efd533ab8ad6b2",
+  "ruby-final.txt": "868779a038f18d9189434a04cdf5bf7a66820b474770a950f307b944dafc20b3",
+  "ruby-result.json": "21cb39a7e3276bbc89403072b259f52443fa390102f8581cd1df93ba87ddbfe2",
+  "ruby-selection.json": "048fd86d7c8e1e0e28688e78311f0281b6da66ae3cdd784e1bf89909ec551d59",
+  "source-sha256.json": "b670eb9cc68cc7b9ef71c3c1fce2c65273a5c19726a1e5d528b008d2249950ec"
+}

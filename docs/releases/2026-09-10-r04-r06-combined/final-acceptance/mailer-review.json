@@ -1,0 +1,17 @@
+{
+  "base": "86f207f5ba4130b6f52e194b8fec90097a7fcd47",
+  "reviewed_commit": "58adb4b904ab8b480c7723288bce7ebec900f8de",
+  "combined_candidate": "c003e869dff147239c65b6c13168831fff6abbe9",
+  "standards": [],
+  "spec": [],
+  "verified_source_hashes": 2,
+  "source_mismatches": 0,
+  "r06_reported_checks": {
+    "examples": 14,
+    "failures": 0,
+    "lint_files": 2,
+    "lint_offenses": 0,
+    "smtp_absent_before_boot": true
+  },
+  "root_broad_check": "pending"
+}
