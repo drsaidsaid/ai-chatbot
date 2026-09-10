@@ -1,7 +1,11 @@
 # R06 — Assigned Team Member access
 
 Status: implementation and review fixes verified by automated checks; R03
-integration refresh passed all automated checks. Browser acceptance remains pending.
+integration refresh passed all automated checks. Real browser acceptance found a
+Lead reassignment invalidation defect, a phone Team layout issue and public
+streaming media cache headers. Corrections pass focused checks; real two-session
+reassignment and fresh stale-image denial now pass. Remaining browser acceptance
+is pending the coordinator's browser allocation.
 Issue #23 remains open for coordinator review and integration. This is not a
 production launch approval.
 
@@ -88,22 +92,25 @@ frontend build inputs changed. The upstream macro implementation is retained;
 its HTTP specs now assert the V1 unavailable contract, while the legacy executor
 service tests still run. See `review-follow-up.md` for the red/green evidence.
 
-## Browser evidence — pending
+## Browser evidence — in progress
 
-The coordinator granted the in-app browser slot. The task opened its isolated
-login page, but inspection timed out. Computer-use inventory then reported that
-the Mac was locked and automatic unlocking failed. The user has been asked to
-unlock it. These timeouts are not classified as an application defect.
+The earlier Mac-lock report is obsolete. On 10 September the in-app browser
+completed Admin sign-in, invitation, local email acceptance, member Lead editing,
+assigned replies, private notes and image rendering. The member directory and
+related Conversation list were scoped to assigned work.
 
-No invitation, acceptance, role or responsive browser flow has yet been proved.
-No screenshot is presented as acceptance evidence. Remaining proof:
-
-- Admin invitation and acceptance through the captured local email link.
-- Member assigned reply, private note and Lead edit; hidden same-account and
-  cross-account direct links/settings denied.
-- Reassignment and membership revocation while a member view is open.
-- Authorized attachment read followed by stale-link denial.
-- Admin/member desktop and phone layouts; R02 URL/back/focus behavior.
+The real Admin Lead reassignment path left an old member view visible. Fresh
+Conversation reads correctly denied access. A separate phone check found Team
+actions offscreen by default, though horizontal scrolling could reach them.
+An actual HTTP probe also found public media headers committed before the
+after-action. The corrections pass 43 Ruby examples, 37 frontend tests, lint and
+the Team layout production build. In the corrected browser, reassignment clears
+the member view automatically and the same newly uploaded image URL makes a
+fresh request that returns 403. Phone layout and membership revocation acceptance
+remain to be completed.
+See [browser evidence and correction](browser-acceptance/README.md) for exact
+provenance, screenshots, pending cases and regression evidence. Issue #23 remains
+open until correction acceptance and coordinator integration.
 
 ## Isolated reproduction
 

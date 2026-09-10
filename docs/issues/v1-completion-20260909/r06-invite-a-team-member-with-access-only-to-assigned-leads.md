@@ -1,6 +1,6 @@
 # R06 — Invite a team member with access only to assigned Leads
 
-Status: Implementing on `codex/r06-assigned-access-20260910`; R01 and R02 integrated at `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`. Automated regression, lint and production build passed; browser acceptance remains pending because the Mac is locked. See `docs/releases/2026-09-10-r06/README.md`.
+Status: Implementing on `codex/r06-assigned-access-20260910`; R01 and R02 integrated at `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`. Real browser acceptance found stale-view invalidation on Admin Lead reassignment, offscreen phone Team actions and public streaming media cache headers. Corrections pass 43 Ruby examples, 37 frontend tests, lint and production build. Corrected live reassignment clears the member view and a fresh stale-image request returns 403. Remaining phone and membership revocation acceptance awaits the coordinator browser allocation. The earlier Mac-lock blocker is obsolete. See `docs/releases/2026-09-10-r06/README.md`.
 
 ## Parent
 
@@ -46,7 +46,7 @@ The owner approved implementation of all 18 completion tickets in separate Codex
 Coordinator review identified retained macro execution, Lead merge, and Contact
 bulk label/deletion paths. Their HTTP/job fixes passed 79 regression examples and clean Ruby lint.
 See `docs/releases/2026-09-10-r06/review-follow-up.md`; existing browser acceptance
-remains pending Mac unlock.
+remains pending the browser correction and remaining acceptance cases.
 
 ## Accepted R03 predecessor refresh
 
