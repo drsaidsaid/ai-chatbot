@@ -12,6 +12,7 @@ Coordinator correction commit: `ca117f6bb37731ef104e797a85adc90ba107777f` (norma
 Receipt alias correction commit: `562c6f407d2f489ee13c39a68837b1feb5ed0ca1` (normal repository hooks ran).
 Browser correction commit: `4c5ce8e6c0dec222bcd40d300cd18a270c8c2eaa` (normal repository hooks ran).
 Delayed creation correction commit: `3ade7aa34cc863ba2043e4a90f4bca79291abdbc` (normal repository hooks ran).
+Completed browser acceptance commit: `f974a63b642ace5c551bf641631d0fc66bfe23ca` (normal repository hooks ran).
 Decision: [ADR 0011](../../adr/0011-owned-whatsapp-outbound-delivery.md).
 The coordinator alone integrates this branch.
 

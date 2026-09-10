@@ -96,5 +96,8 @@
     "browser_slot_released": true,
     "launch_approved": false,
     "integration_performed": false
-  }
+  },
+  "browser_acceptance_commit": "f974a63b642ace5c551bf641631d0fc66bfe23ca",
+  "browser_acceptance_normal_repository_hooks_exit": 0,
+  "browser_acceptance_hooks_bypassed": false
 }
