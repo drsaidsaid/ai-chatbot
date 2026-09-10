@@ -3,8 +3,9 @@
 Correction commit: `dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f`.
 The final serial check passed 20 examples with zero failures in 20.26 seconds
 after a 13.61-second Rails load, using `LOG_LEVEL=warn`. Deadlines are unchanged.
-Both Ruby files and normal commit hooks passed. The heavy-check slot is released;
-independent coordinator review of this correction is pending.
+Both Ruby files and normal commit hooks passed. Independent coordinator
+Standards and Spec reviews of `842ef46...dd49ef9` both returned zero findings.
+The heavy-check slot is released.
 
 The accepted local browser evidence remains at runtime
 `323d381291a51ae573e0f840cec12dab2d0784bc` and evidence tip

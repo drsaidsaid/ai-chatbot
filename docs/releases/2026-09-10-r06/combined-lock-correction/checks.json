@@ -1,5 +1,5 @@
 {
-  "recorded_at_utc": "2026-09-10T09:52:59.205332+00:00",
+  "recorded_at_utc": "2026-09-10T09:58:57.422301+00:00",
   "base_tip": "842ef4663d73aaa3528e8a3d9d2929823393e16f",
   "reported_combined_tree": "f2dc31d4",
   "red": {
@@ -55,8 +55,11 @@
   "combined_checkout_changed": false,
   "external_delivery": false,
   "independent_review": {
-    "status": "requested",
-    "code_tip": "dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f"
+    "status": "passed",
+    "base_tip": "842ef4663d73aaa3528e8a3d9d2929823393e16f",
+    "code_tip": "dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f",
+    "standards_findings": 0,
+    "spec_findings": 0
   },
   "regression_boundary": "Actual cleanup job and HumanReviewRequest Account foreign key on separate connections while Conversation lock is held; shared-model provider_failed reason, not R04 dispatch invocation",
   "code_tip": "dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f",
@@ -79,5 +82,6 @@
     "standards_findings": 0,
     "spec_findings": 0,
     "scope": "Job lock strength, unchanged membership guard/mutations, concrete FK cycle and both invitation orderings"
-  }
+  },
+  "whitespace_check": "passed"
 }

@@ -15,8 +15,9 @@ operator-review creation. The backend correction at
 strength and passes all 20 focused membership examples, including a real
 two-connection deadlock regression and both re-invitation orderings. See
 [combined lock correction](combined-lock-correction/README.md) for the preserved
-red proof and final green result. Independent review of this later correction
-is pending. The accepted browser evidence and fixture are unchanged.
+red proof and final green result. Independent Standards and Spec reviews of
+this later correction both have zero findings. The accepted browser evidence
+and fixture are unchanged.
 
 ## Source and decision
 

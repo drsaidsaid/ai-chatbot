@@ -70,6 +70,7 @@ Correction `dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f` uses Account
 foreign-key checks. The actual two-connection regression fails with a PostgreSQL
 deadlock before correction; the final serial suite passes 20 examples, including
 both existing cleanup/invitation orderings. Lint and normal hooks pass.
-Independent coordinator review is pending; issue #23 stays open. Accepted browser
-fixtures/evidence are preserved, with no extra build or browser run.
+Independent coordinator Standards and Spec reviews both have zero findings;
+issue #23 stays open for combined integration. Accepted browser fixtures/evidence
+are preserved, with no extra build or browser run.
 See `docs/releases/2026-09-10-r06/combined-lock-correction/README.md`.
