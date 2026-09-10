@@ -1,0 +1,76 @@
+⚠ Some of your tasks use `git add` command. Please remove it from the config since all modifications made by tasks will be automatically added to the git commit index.
+
+[STARTED] Backing up original state...
+[COMPLETED] Backed up original state in git stash (e2e9c2b)
+[STARTED] Running tasks for staged files...
+[STARTED] package.json — 31 files
+[STARTED] app/**/*.{js,vue} — 2 files
+[STARTED] *.scss — 0 files
+[SKIPPED] *.scss — no files
+[STARTED] eslint --fix
+[COMPLETED] eslint --fix
+[STARTED] git add
+[COMPLETED] git add
+[COMPLETED] app/**/*.{js,vue} — 2 files
+[COMPLETED] package.json — 31 files
+[COMPLETED] Running tasks for staged files...
+[STARTED] Applying modifications from tasks...
+[COMPLETED] Applying modifications from tasks...
+[STARTED] Cleaning up temporary files...
+[COMPLETED] Cleaning up temporary files...
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+[codex/r04-outbound-delivery-20260910 4c5ce8e] Keep live WhatsApp delivery outcomes current and visible
+ 31 files changed, 3330 insertions(+), 13 deletions(-)
+ create mode 100644 app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js
+ create mode 100644 docs/releases/2026-09-10-r04/browser-corrections.md
+ create mode 100644 docs/releases/2026-09-10-r04/browser-desktop-dispatch.json
+ create mode 100644 docs/releases/2026-09-10-r04/browser-fixes-eslint.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser-fixes-production-build.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser-fixes-rubocop.json
+ create mode 100644 docs/releases/2026-09-10-r04/browser-fixes-ruby-final.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser-grouping-green.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser-grouping-red.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser-live-broadcast-red.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser-stale-attachment-red.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser/action.rb.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser/desktop-accepted-after-reload.jpg
+ create mode 100644 docs/releases/2026-09-10-r04/browser/desktop-broadcast-and-grouping-red.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser/desktop-new-pending.jpg
+ create mode 100644 docs/releases/2026-09-10-r04/browser/desktop-reloaded-accepted-red.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser/desktop-seeded-states.jpg
+ create mode 100644 docs/releases/2026-09-10-r04/browser/desktop-stale-pending-red.jpg
+ create mode 100644 docs/releases/2026-09-10-r04/browser/runtime.rb.txt
+ create mode 100644 docs/releases/2026-09-10-r04/browser/server.rb.txt
+ create mode 100644 spec/jobs/action_cable_broadcast_job_spec.rb
