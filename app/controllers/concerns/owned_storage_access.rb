@@ -4,6 +4,7 @@ module OwnedStorageAccess
   extend ActiveSupport::Concern
 
   included do
+    before_action :private_media_cache
     before_action :authorize_owned_blob
     after_action :private_media_cache
   end
@@ -36,6 +37,13 @@ module OwnedStorageAccess
 
   def private_media_cache
     response.headers['Cache-Control'] = 'private, no-store'
+  end
+
+  # ActiveStorage's proxy helper otherwise commits public headers while the
+  # body is still streaming, before an after_action can replace them.
+  def http_cache_forever(**_options)
+    private_media_cache
+    yield
   end
 
   def redirect_legacy_download(blob)

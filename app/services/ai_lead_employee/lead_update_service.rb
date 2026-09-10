@@ -77,7 +77,7 @@ class AiLeadEmployee::LeadUpdateService
       conversation: latest_conversation,
       assignee_id: attributes[:assignee_id].presence
     ).perform
-    return if previous_assignee_id == latest_conversation.reload.assignee_id
+    return if previous_assignee_id == latest_conversation.assignee_id
 
     changed_fields['assignee_id'] = [previous_assignee_id, latest_conversation.assignee_id]
   end

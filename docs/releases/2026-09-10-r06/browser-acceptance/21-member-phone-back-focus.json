@@ -1,0 +1,10 @@
+{
+  "url": "http://127.0.0.1:3216/app/accounts/1/dashboard?queue=all",
+  "focus": [
+    {
+      "label": "Open Asha Synthetic Lead conversation #2",
+      "text": "ASAsha Synthetic Lead7:34Synthetic R06 reply: your demo request is assigned to Neema.Unknown"
+    }
+  ],
+  "snapshot": "- main:\n  - complementary \"Inbox conversations\":\n    - heading \"Inbox\" [level=1]\n    - button \"Filters\"\n    - generic \"Inbox quick queues\":\n      - link \"All 1\":\n        - /url: /app/accounts/1/dashboard?queue=all\n        - generic: All\n        - generic: \"1\"\n      - link \"Needs review 0\":\n        - /url: /app/accounts/1/dashboard?queue=review\n        - generic: Needs review\n        - generic: \"0\"\n      - link \"Hot leads 0\":\n        - /url: /app/accounts/1/dashboard?queue=hot\n        - generic: Hot leads\n        - generic: \"0\"\n    - generic: Search name, phone, or message\n    - searchbox \"Search name, phone, or message\"\n    - 'button \"Open Asha Synthetic Lead conversation #2\" [active]':\n      - generic: AS\n      - generic: Asha Synthetic Lead\n      - generic: 7:34\n      - paragraph: \"Synthetic R06 reply: your demo request is assigned to Neema.\"\n      - generic: Unknown\n    - generic: 1 conversations\n- banner:\n  - link \"AI Lead Employee\":\n    - /url: /app/accounts/1/dashboard\n    - text: AI\n  - link \"AI Lead Employee\":\n    - /url: /app/accounts/1/dashboard\n  - link \"Notifications\":\n    - /url: /app/accounts/1/inbox-view\n  - link \"Your profile\":\n    - /url: /app/accounts/1/profile/settings\n- navigation \"AI Lead Employee mobile navigation\":\n  - list:\n    - link \"Inbox\":\n      - /url: /app/accounts/1/dashboard\n      - generic: Inbox\n    - link \"Leads\":\n      - /url: /app/accounts/1/leads\n      - generic: Leads\n    - link \"Bookings\":\n      - /url: /app/accounts/1/bookings\n      - generic: Bookings\n    - button \"More\":\n      - generic: More"
+}

@@ -1,0 +1,94 @@
+- complementary:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - navigation "AI Lead Employee primary navigation":
+    - list:
+      - link "Inbox":
+        - /url: /app/accounts/1/dashboard
+        - generic: Inbox
+      - link "Leads":
+        - /url: /app/accounts/1/leads
+        - generic: Leads
+      - link "Bookings":
+        - /url: /app/accounts/1/bookings
+        - generic: Bookings
+  - button "Neema Assigned Member r06-neema@example.test":
+    - generic: Neema Assigned Member
+    - generic: r06-neema@example.test
+- main:
+  - complementary "Inbox conversations":
+    - heading "Inbox" [level=1]
+    - button "Filters"
+    - generic "Inbox quick queues":
+      - link "All 1":
+        - /url: /app/accounts/1/dashboard?queue=all
+        - generic: All
+        - generic: "1"
+      - link "Needs review 0":
+        - /url: /app/accounts/1/dashboard?queue=review
+        - generic: Needs review
+        - generic: "0"
+      - link "Hot leads 0":
+        - /url: /app/accounts/1/dashboard?queue=hot
+        - generic: Hot leads
+        - generic: "0"
+    - generic: Search name, phone, or message
+    - searchbox "Search name, phone, or message"
+    - 'button "Open Asha Synthetic Lead conversation #2"':
+      - generic: AS
+      - generic: Asha Synthetic Lead
+      - generic: 6:45
+      - paragraph: "Synthetic R06 reply: your demo request is assigned to Neema."
+      - generic: Unknown
+    - generic: 1 conversations
+  - main:
+    - button "Back to list"
+    - heading "Asha Synthetic Lead" [level=1]
+    - generic: Human Active
+    - generic: "Assignee: Neema Assigned Member"
+    - button "Lead details": Lead details
+    - list:
+      - paragraph: "COLLEAGUE ONLY: Asha separate confidential inquiry."
+      - time: Sep 10, 12:54 AM
+      - paragraph: "Synthetic R06 reply: your demo request is assigned to Neema."
+      - paragraph: "Synthetic R06 private note: member access verified."
+      - generic: Neema Assigned Member has shared a file
+      - generic: r06-ui-media.txt
+      - link "Download":
+        - /url: http://127.0.0.1:3216/rails/active_storage/blobs/proxy/<SYNTHETIC_SIGNED_BLOB>/r06-ui-media.txt
+      - time: Sep 10, 6:43 AM
+      - time: Sep 10, 6:45 AM
+      - time: Sep 10, 7:34 AM
+    - article:
+      - heading "AI proposed next step" [level=2]
+      - generic: Human Reply
+      - paragraph: Neema Assigned Member
+      - generic "Technical details"
+      - button "Resume AI" [disabled]: Resume AI
+    - button "Reply Private Note":
+      - generic: Reply
+      - generic: Private Note
+    - button "Writing tools"
+    - button "Resize reply editor"
+    - paragraph: Shift + enter for new line. This will be visible only to Agents
+    - button "Show emoji selector"
+    - generic "Attach files":
+      - button "Attach files"
+      - button
+    - button "Add Note (⌘ + ↵)" [disabled]:
+      - generic: Add Note (⌘ + ↵)
+- banner:
+  - heading [level=3]
+  - generic: r06-private-cache.png
+  - button
+  - button
+  - button
+  - button
+  - button
+  - button
+- main:
+  - button
+  - button [disabled]
+- contentinfo:
+  - generic: 2 / 2

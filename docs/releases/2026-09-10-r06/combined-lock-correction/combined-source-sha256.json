@@ -1,0 +1,9 @@
+{
+  "combined_tree": "f2dc31d4",
+  "sources": {
+    "app/services/whatsapp/outbound_dispatch.rb": "6086e850ea299b749e76b95f5836662d6c2605e1c84bc9dcf6c50c9c76713d70",
+    "app/models/whatsapp/outbound_delivery.rb": "860e8246a7edad8c2377ebd65d2e02542e7b45654fd29e338950e465ac2f56bc",
+    "app/models/human_review_request.rb": "bac29010ce6069c204d85fe82159293e801771cb3457b220651aab0fe119ec3f",
+    "app/jobs/agents/destroy_job.rb": "ae3f9ef72e1b1c6054df76e23ea183e35ca3a64764ec1fa174c84d5ac4049c04"
+  }
+}

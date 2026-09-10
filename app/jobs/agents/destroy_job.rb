@@ -2,9 +2,11 @@ class Agents::DestroyJob < ApplicationJob
   queue_as :low
 
   def perform(account, user)
-    return if account.account_users.exists?(user_id: user.id)
+    # Serialize invitations without blocking Account foreign-key checks from
+    # work that already holds a Conversation lock.
+    account.with_lock('FOR NO KEY UPDATE') do
+      next if account.account_users.exists?(user_id: user.id)
 
-    ActiveRecord::Base.transaction do
       destroy_notification_setting(account, user)
       remove_user_from_teams(account, user)
       remove_user_from_inboxes(account, user)

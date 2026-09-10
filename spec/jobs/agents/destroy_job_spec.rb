@@ -22,6 +22,10 @@ RSpec.describe Agents::DestroyJob do
   end
 
   describe '#perform' do
+    before do
+      user.account_users.find_by!(account: account).destroy!
+    end
+
     it 'remove inboxes, teams, and conversations when removed from account' do
       described_class.perform_now(account, user)
 

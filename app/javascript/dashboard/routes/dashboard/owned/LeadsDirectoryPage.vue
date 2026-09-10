@@ -3,6 +3,7 @@ import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import Icon from 'next/icon/Icon.vue';
+import Modal from 'dashboard/components/Modal.vue';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadDetail from './LeadDetail.vue';
 
@@ -1193,15 +1194,16 @@ watch(showEditModal, async value => {
       </aside>
     </main>
 
-    <div
-      v-if="showEditModal"
-      class="fixed inset-0 z-50 grid place-items-center bg-n-slate-12/40 p-4"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.EDIT.TITLE')"
+    <Modal
+      v-model:show="showEditModal"
+      :show-close-button="false"
+      size="mx-4 w-full max-w-2xl"
     >
       <form
-        class="max-h-full w-full max-w-2xl overflow-auto rounded-lg border border-n-weak bg-n-solid-1 p-5 shadow-xl"
+        class="w-full rounded-lg border border-n-weak bg-n-solid-1 p-5 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.EDIT.TITLE')"
         @submit.prevent="saveLead"
       >
         <div class="flex items-center gap-3">
@@ -1327,6 +1329,6 @@ watch(showEditModal, async value => {
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   </section>
 </template>

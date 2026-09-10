@@ -165,22 +165,25 @@ const confirmDeletion = () => {
         <div
           v-for="(agent, index) in filteredAgentList"
           :key="agent.email"
-          class="flex justify-between flex-row items-start gap-4 py-4"
+          class="flex flex-col justify-between items-start gap-3 py-4 sm:flex-row sm:gap-4"
         >
-          <div class="flex items-center gap-4">
+          <div class="flex min-w-0 items-center gap-4">
             <Avatar
+              class="shrink-0"
               :src="agent.thumbnail"
               :name="agent.name"
               :status="agent.availability_status"
               :size="40"
               hide-offline-status
             />
-            <div class="flex flex-col gap-1.5 items-start">
-              <span class="block text-heading-3 text-n-slate-12 capitalize">
+            <div class="flex min-w-0 flex-col gap-1.5 items-start">
+              <span
+                class="block break-words text-heading-3 text-n-slate-12 capitalize"
+              >
                 {{ agent.name }}
               </span>
-              <div class="flex items-center gap-2">
-                <span class="text-body-main text-n-slate-11">
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span class="break-all text-body-main text-n-slate-11">
                   {{ agent.email }}
                 </span>
                 <div class="w-px h-3 bg-n-strong rounded-lg" />
@@ -203,7 +206,7 @@ const confirmDeletion = () => {
               </div>
             </div>
           </div>
-          <div class="flex justify-end gap-3">
+          <div class="flex shrink-0 self-end justify-end gap-3 sm:self-start">
             <Button
               v-if="showEditAction(agent)"
               v-tooltip.top="$t('AGENT_MGMT.EDIT.BUTTON_TEXT')"

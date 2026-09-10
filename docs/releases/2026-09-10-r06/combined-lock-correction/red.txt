@@ -1,0 +1,61 @@
+Failures:
+
+  1) Membership cleanup concurrent with restoration and operator review finishes cleanup while a locked Conversation creates an operator review through its Account foreign key
+     Got 0 failures and 2 other errors:
+
+     1.1) Failure/Error: unassigned_count = user.assigned_conversations.where(account: account).in_batches.update_all(assignee_id: nil)
+
+          ActiveRecord::Deadlocked:
+            PG::TRDeadlockDetected: ERROR:  deadlock detected
+            DETAIL:  Process 53902 waits for ShareLock on transaction 44759; blocked by process 51036.
+            Process 51036 waits for ShareLock on transaction 44760; blocked by process 53902.
+            HINT:  See server log for query details.
+            CONTEXT:  while updating tuple (0,3) in relation "conversations"
+          # ./app/jobs/agents/destroy_job.rb:36:in 'Agents::DestroyJob#unassign_conversations'
+          # ./app/jobs/agents/destroy_job.rb:11:in 'block in Agents::DestroyJob#perform'
+          # ./app/jobs/agents/destroy_job.rb:5:in 'Agents::DestroyJob#perform'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:141:in 'RSpec::ExampleGroups::MembershipCleanupConcurrentWithRestorationAndOperatorReview#perform_cleanup'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:93:in 'block (4 levels) in <top (required)>'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:151:in 'block (2 levels) in RSpec::ExampleGroups::MembershipCleanupConcurrentWithRestorationAndOperatorReview#start_worker'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:147:in 'block in RSpec::ExampleGroups::MembershipCleanupConcurrentWithRestorationAndOperatorReview#start_worker'
+          # ------------------
+          # --- Caused by: ---
+          # PG::TRDeadlockDetected:
+          #   ERROR:  deadlock detected
+          #   DETAIL:  Process 53902 waits for ShareLock on transaction 44759; blocked by process 51036.
+          #   Process 51036 waits for ShareLock on transaction 44760; blocked by process 53902.
+          #   HINT:  See server log for query details.
+          #   CONTEXT:  while updating tuple (0,3) in relation "conversations"
+          #   ./app/jobs/agents/destroy_job.rb:36:in 'Agents::DestroyJob#unassign_conversations'
+
+     1.2) Failure/Error: unassigned_count = user.assigned_conversations.where(account: account).in_batches.update_all(assignee_id: nil)
+
+          ActiveRecord::Deadlocked:
+            PG::TRDeadlockDetected: ERROR:  deadlock detected
+            DETAIL:  Process 53902 waits for ShareLock on transaction 44759; blocked by process 51036.
+            Process 51036 waits for ShareLock on transaction 44760; blocked by process 53902.
+            HINT:  See server log for query details.
+            CONTEXT:  while updating tuple (0,3) in relation "conversations"
+          # ./app/jobs/agents/destroy_job.rb:36:in 'Agents::DestroyJob#unassign_conversations'
+          # ./app/jobs/agents/destroy_job.rb:11:in 'block in Agents::DestroyJob#perform'
+          # ./app/jobs/agents/destroy_job.rb:5:in 'Agents::DestroyJob#perform'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:141:in 'RSpec::ExampleGroups::MembershipCleanupConcurrentWithRestorationAndOperatorReview#perform_cleanup'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:93:in 'block (4 levels) in <top (required)>'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:151:in 'block (2 levels) in RSpec::ExampleGroups::MembershipCleanupConcurrentWithRestorationAndOperatorReview#start_worker'
+          # ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:147:in 'block in RSpec::ExampleGroups::MembershipCleanupConcurrentWithRestorationAndOperatorReview#start_worker'
+          # ------------------
+          # --- Caused by: ---
+          # PG::TRDeadlockDetected:
+          #   ERROR:  deadlock detected
+          #   DETAIL:  Process 53902 waits for ShareLock on transaction 44759; blocked by process 51036.
+          #   Process 51036 waits for ShareLock on transaction 44760; blocked by process 53902.
+          #   HINT:  See server log for query details.
+          #   CONTEXT:  while updating tuple (0,3) in relation "conversations"
+          #   ./app/jobs/agents/destroy_job.rb:36:in 'Agents::DestroyJob#unassign_conversations'
+
+Finished in 1 minute 35.53 seconds (files took 5 minutes 26 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/requests/r06_membership_cleanup_concurrency_spec.rb:83 # Membership cleanup concurrent with restoration and operator review finishes cleanup while a locked Conversation creates an operator review through its Account foreign key

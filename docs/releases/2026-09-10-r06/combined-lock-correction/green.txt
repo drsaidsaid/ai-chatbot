@@ -1,0 +1,4 @@
+LOG_LEVEL=warn POSTGRES_DATABASE=ale_release_r06_spec bundle exec rspec spec/requests/r06_membership_cleanup_concurrency_spec.rb spec/requests/r06_invitation_spec.rb spec/models/account_user_spec.rb spec/jobs/agents/destroy_job_spec.rb spec/controllers/api/v1/accounts/notification_settings_controller_spec.rb
+
+Finished in 20.26 seconds (files took 13.61 seconds to load)
+20 examples, 0 failures

@@ -73,7 +73,11 @@ describe Conversations::AssignmentService do
         expect(Audited::Audit.last).to have_attributes(
           auditable: conversation,
           associated: account,
-          audited_changes: { 'assignee_id' => [previous_agent.id, agent.id] }
+          audited_changes: {
+            'ai_lead_employee_action' => 'human_assignment',
+            'assignee_id' => [previous_agent.id, agent.id],
+            'control_state' => %w[ai_active human_active]
+          }
         )
       end
 

@@ -1,0 +1,10 @@
+{
+  "README.md": "4a773398ba185a36238dc95fdd93e74496f912c86b06933e263133fcfbac8ef6",
+  "checks.json": "987c74c0f099a52a6ff8c13d46e7e7558d13ec9fdcda90f55b6d994ccd654c7b",
+  "combined-source-sha256.json": "adeccc02f3174c15361e00534acfc7443ffd74a2c805d22ce514f187bae25ff9",
+  "green.txt": "1226ec51b8d9b03cfe26b341e51ddade95e09db8bd7678b230a5beeb6bdab3da",
+  "normal-commit.txt": "2f33c4320aaf7c9066742d5b693beb3016dc697d10637d85dcd9c7b69eef9f9c",
+  "red.txt": "4db6f21b48915b8497ab3271e8fca747a6f5f675cea83924db5ed46a11bff2c4",
+  "ruby-lint.txt": "83079ff1cf8a02605c8de3733a4c6609b54dd6140ec46c471a205ed585c0cabb",
+  "source-sha256.json": "77b0b6c48500dc5bd3011eedc6c8a3bdc8b45cc45b3d9001798ac48c52612c76"
+}

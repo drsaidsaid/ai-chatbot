@@ -1,0 +1,6 @@
+Correlated local browser request; unrelated interleaved log entries omitted.
+Started GET "/rails/active_storage/blobs/proxy/<SYNTHETIC_SIGNED_BLOB>/r06-private-cache.png" for 127.0.0.1 at 2026-09-10 08:24:35 +0300
+Processing by ActiveStorage::Blobs::ProxyController#show as PNG
+  Parameters: {"signed_id" => "<SYNTHETIC_SIGNED_BLOB>", "filename" => "r06-private-cache"}
+Filter chain halted as :authorize_owned_blob rendered or redirected
+Completed 403 Forbidden in 67ms (ActiveRecord: 34.4ms (7 queries, 0 cached) | GC: 1.7ms)

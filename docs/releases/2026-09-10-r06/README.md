@@ -1,9 +1,23 @@
 # R06 — Assigned Team Member access
 
-Status: implementation and review fixes verified by automated checks; R03
-integration refresh passed all automated checks. Browser acceptance remains pending.
+Status: implementation, automated checks and local browser acceptance passed.
+Real browser findings in reassignment invalidation, phone controls, streamed
+media caching and re-invitation are corrected. Final phone Save/Escape/persistence,
+successful revoke/reinvite and hidden Lead/Admin-only direct links pass on runtime
+`323d381291a51ae573e0f840cec12dab2d0784bc`. Both independent coordinator
+re-reviews have zero findings. The browser and build slots are released.
 Issue #23 remains open for coordinator review and integration. This is not a
 production launch approval.
+
+A subsequent combined review found a deadlock between membership cleanup and
+operator-review creation. The backend correction at
+`dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f` changes cleanup's Account lock
+strength and passes all 20 focused membership examples, including a real
+two-connection deadlock regression and both re-invitation orderings. See
+[combined lock correction](combined-lock-correction/README.md) for the preserved
+red proof and final green result. Independent Standards and Spec reviews of
+this later correction both have zero findings. The accepted browser evidence
+and fixture are unchanged.
 
 ## Source and decision
 
@@ -88,22 +102,32 @@ frontend build inputs changed. The upstream macro implementation is retained;
 its HTTP specs now assert the V1 unavailable contract, while the legacy executor
 service tests still run. See `review-follow-up.md` for the red/green evidence.
 
-## Browser evidence — pending
+## Browser evidence — accepted locally
 
-The coordinator granted the in-app browser slot. The task opened its isolated
-login page, but inspection timed out. Computer-use inventory then reported that
-the Mac was locked and automatic unlocking failed. The user has been asked to
-unlock it. These timeouts are not classified as an application defect.
+The earlier Mac-lock report is obsolete. On 10 September the in-app browser
+completed Admin sign-in, invitation, local email acceptance, member Lead editing,
+assigned replies, private notes and image rendering. The member directory and
+related Conversation list were scoped to assigned work.
 
-No invitation, acceptance, role or responsive browser flow has yet been proved.
-No screenshot is presented as acceptance evidence. Remaining proof:
-
-- Admin invitation and acceptance through the captured local email link.
-- Member assigned reply, private note and Lead edit; hidden same-account and
-  cross-account direct links/settings denied.
-- Reassignment and membership revocation while a member view is open.
-- Authorized attachment read followed by stale-link denial.
-- Admin/member desktop and phone layouts; R02 URL/back/focus behavior.
+The real Admin Lead reassignment path left an old member view visible. Fresh
+Conversation reads correctly denied access. A separate phone check found Team
+actions offscreen by default, though horizontal scrolling could reach them.
+An actual HTTP probe also found public media headers committed before the
+after-action. The corrections pass 43 Ruby examples, 37 frontend tests, lint and
+the Team layout production build. In the corrected browser, reassignment clears
+the member view automatically and the same newly uploaded image URL makes a
+fresh request that returns 403. Phone Team controls and Inbox back/focus pass;
+revocation automatically clears the account view while preserving the other
+Business Account and identity. Fresh requests to the same image return 403 after
+revocation and logout. Final phone Lead Save/Escape and successful re-invitation
+pass. Their focused corrections pass 16 frontend tests, 19 membership
+examples, lint and the 5,078-module production build. The membership tests include
+real concurrent cleanup and invitation in both orderings.
+See [browser evidence and correction](browser-acceptance/README.md) for exact
+provenance, screenshots, completed cases and regression evidence. Issue #23 remains
+open until coordinator integration. Final browser evidence and source hashes
+record the accepted browser checkpoint; the later backend lock-strength
+correction is documented separately above.
 
 ## Isolated reproduction
 

@@ -84,7 +84,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
 
     broadcasts = []
     allow(ActionCable.server).to receive(:broadcast).and_wrap_original do |original, stream, payload|
-      broadcasts << payload.deep_dup if payload[:event] == 'message.updated' && payload.dig(:data, :id) == reply.id
+      broadcasts << payload.deep_dup if stream == admin.pubsub_token && payload[:event] == 'message.updated' && payload.dig(:data, 'id') == reply.id
       original.call(stream, payload)
     end
     clear_enqueued_jobs
@@ -93,7 +93,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
       SendReplyJob.perform_now(reply.id)
     end
 
-    expect(broadcasts.last.dig(:data, :content_attributes, 'whatsapp_delivery', 'state')).to eq('canceled')
+    expect(broadcasts.last.dig(:data, 'content_attributes', 'whatsapp_delivery', 'state')).to eq('canceled')
     expect(reply.reload.content_attributes.dig('whatsapp_delivery', 'state')).to eq('canceled')
     expect(request).not_to have_been_requested
   end
@@ -139,7 +139,8 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
       message = conversation.messages.outgoing.sole
       broadcasts = []
       allow(ActionCable.server).to receive(:broadcast).and_wrap_original do |original, stream, payload|
-        broadcasts << payload.deep_dup if payload[:event] == 'message.updated' && payload.dig(:data, :id) == message.id
+        broadcasts << payload.deep_dup if stream == admin.pubsub_token && payload[:event] == 'message.updated' && payload.dig(:data,
+                                                                                                                              'id') == message.id
         original.call(stream, payload)
       end
       request = stub_request(:post, provider_url).to_return(status: http_status, body: body, headers: { 'Content-Type' => 'application/json' })
@@ -169,8 +170,8 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
       created_job = enqueued_jobs.select { |job| job[:job] == ActionCableBroadcastJob && job[:args][1] == 'message.created' }.sole
       creation_data = ActiveJob::Arguments.deserialize(created_job.fetch('arguments'))[2]
       broadcasts = []
-      allow(ActionCable.server).to receive(:broadcast) do |_stream, payload|
-        broadcasts << payload.deep_dup if payload.dig(:data, :id) == message.id
+      allow(ActionCable.server).to receive(:broadcast) do |stream, payload|
+        broadcasts << payload.deep_dup if stream == admin.pubsub_token && payload.dig(:data, 'id') == message.id
       end
       body = http_status == 200 ? '{"messages":[{"id":"wamid.CREATED.ORDER"}]}' : '{"error":{"code":2}}'
       stub_request(:post, provider_url).to_return(status: http_status, body: body, headers: { 'Content-Type' => 'application/json' })
@@ -194,7 +195,9 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     stub_request(:post, provider_url).to_return(status: 400, body: '{"error":{"code":100}}', headers: { 'Content-Type' => 'application/json' })
     SendReplyJob.perform_now(outgoing.id)
     broadcasts = []
-    allow(ActionCable.server).to receive(:broadcast) { |_stream, payload| broadcasts << payload if payload[:event] == 'message.updated' }
+    allow(ActionCable.server).to receive(:broadcast) { |stream, payload|
+      broadcasts << payload if stream == admin.pubsub_token && payload[:event] == 'message.updated'
+    }
     clear_enqueued_jobs
     perform_enqueued_jobs(only: ActionCableBroadcastJob) do
       post "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages/#{outgoing.id}/retry",
@@ -203,8 +206,8 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
 
     expect(response).to have_http_status(:ok)
     retry_live = broadcasts.last.fetch(:data)
-    expect(retry_live.dig(:content_attributes, 'whatsapp_delivery', 'state')).to eq('pending')
-    expect(retry_live).to include(status: 'sent', source_id: nil)
+    expect(retry_live.dig('content_attributes', 'whatsapp_delivery', 'state')).to eq('pending')
+    expect(retry_live).to include('status' => 'sent', 'source_id' => nil)
   end
 
   it 'broadcasts a later provider failure without losing the accepted delivery identity' do
@@ -212,16 +215,18 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
                                                 headers: { 'Content-Type' => 'application/json' })
     SendReplyJob.perform_now(outgoing.id)
     broadcasts = []
-    allow(ActionCable.server).to receive(:broadcast) { |_stream, payload| broadcasts << payload if payload[:event] == 'message.updated' }
+    allow(ActionCable.server).to receive(:broadcast) { |stream, payload|
+      broadcasts << payload if stream == admin.pubsub_token && payload[:event] == 'message.updated'
+    }
     clear_enqueued_jobs
     perform_enqueued_jobs(only: ActionCableBroadcastJob) do
       Whatsapp::MessageStatusProjector.new(message: outgoing.reload, status: { status: 'failed', timestamp: Time.current.to_i.to_s }).perform
     end
 
     receipt = broadcasts.last.fetch(:data)
-    expect(receipt).to include(status: 'failed', source_id: 'wamid.LIVE.RECEIPT')
-    expect(receipt.dig(:content_attributes, 'whatsapp_delivery', 'state')).to eq('accepted')
-    expect(receipt.dig(:content_attributes, 'whatsapp_provider_status')).to eq('failed')
+    expect(receipt).to include('status' => 'failed', 'source_id' => 'wamid.LIVE.RECEIPT')
+    expect(receipt.dig('content_attributes', 'whatsapp_delivery', 'state')).to eq('accepted')
+    expect(receipt.dig('content_attributes', 'whatsapp_provider_status')).to eq('failed')
   end
 
   it 'rejects client-supplied provider receipt evidence when creating an outgoing Message' do

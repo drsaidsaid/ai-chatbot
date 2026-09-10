@@ -1,0 +1,87 @@
+{
+  "recorded_at_utc": "2026-09-10T09:58:57.422301+00:00",
+  "base_tip": "842ef4663d73aaa3528e8a3d9d2929823393e16f",
+  "reported_combined_tree": "f2dc31d4",
+  "red": {
+    "examples": 1,
+    "failures": 1,
+    "exception": "ActiveRecord::Deadlocked / PG::TRDeadlockDetected",
+    "actual_deadlock": true,
+    "barrier_timeout": false,
+    "processes": [
+      53902,
+      51036
+    ],
+    "transactions": [
+      44759,
+      44760
+    ],
+    "aborted_operation": "DestroyJob Conversation unassignment",
+    "duration_seconds": 95.53,
+    "load_seconds": 326,
+    "evidence": "red.txt"
+  },
+  "setup_only_attempt": {
+    "credited_as_red": false,
+    "issue": "Factory Conversation retained dirty display_id; reload before locking fixed fixture setup"
+  },
+  "green": {
+    "status": "passed",
+    "files": [
+      "spec/requests/r06_membership_cleanup_concurrency_spec.rb",
+      "spec/requests/r06_invitation_spec.rb",
+      "spec/models/account_user_spec.rb",
+      "spec/jobs/agents/destroy_job_spec.rb",
+      "spec/controllers/api/v1/accounts/notification_settings_controller_spec.rb"
+    ],
+    "serial": true,
+    "test_deadlines_changed": false,
+    "examples": 20,
+    "failures": 0,
+    "duration_seconds": 20.26,
+    "load_seconds": 13.61,
+    "log_level": "warn",
+    "evidence": "green.txt"
+  },
+  "lint": {
+    "files": 2,
+    "offenses": 0
+  },
+  "fix": "Account.with_lock('FOR NO KEY UPDATE') plus explanatory comment",
+  "browser_evidence_preserved": true,
+  "browser_rerun": false,
+  "frontend_changed": false,
+  "build_rerun": false,
+  "combined_checkout_changed": false,
+  "external_delivery": false,
+  "independent_review": {
+    "status": "passed",
+    "base_tip": "842ef4663d73aaa3528e8a3d9d2929823393e16f",
+    "code_tip": "dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f",
+    "standards_findings": 0,
+    "spec_findings": 0
+  },
+  "regression_boundary": "Actual cleanup job and HumanReviewRequest Account foreign key on separate connections while Conversation lock is held; shared-model provider_failed reason, not R04 dispatch invocation",
+  "code_tip": "dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f",
+  "interrupted_green_attempt": {
+    "credited_as_result": false,
+    "reason": "Coordinator requested heavy-check pause while6GB frontend build rendered on8GB host",
+    "spec_pid": 55717,
+    "termination": "SIGINT requested shutdown; TERM ended only the still-loading own spec process",
+    "rerun": "Final serial run followed explicit coordinator slot grant"
+  },
+  "normal_commit": {
+    "tip": "dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f",
+    "hooks_bypassed": false,
+    "exit_code": 0,
+    "ruby_files": 2,
+    "ruby_offenses": 0
+  },
+  "heavy_check_slot_released": true,
+  "local_review": {
+    "standards_findings": 0,
+    "spec_findings": 0,
+    "scope": "Job lock strength, unchanged membership guard/mutations, concrete FK cycle and both invitation orderings"
+  },
+  "whitespace_check": "passed"
+}

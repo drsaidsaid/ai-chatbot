@@ -1,0 +1,156 @@
+{
+  "recorded_at_utc": "2026-09-10T04:46:39.109926+00:00",
+  "pre_correction_tip": "7161f8fef7902ed239f6d52c83f4661b1e533a96",
+  "browser_status": "Local browser acceptance passed; independent Standards and Spec re-reviews clear; browser/build slots released. Issue23 awaits coordinator integration.",
+  "external_delivery": false,
+  "regression_red": {
+    "examples": 1,
+    "failures": 1,
+    "signal": "Lead PATCH broadcast zero access.changed events to either old or new operator"
+  },
+  "regression_green": {
+    "examples": 3,
+    "failures": 0,
+    "cases": [
+      "old/new operator invalidation after successful outer commit",
+      "combined assignment/business/qualification evidence edit",
+      "rollback produces no notification and preserves HTTP access"
+    ]
+  },
+  "focused_backend": {
+    "files": [
+      "spec/requests/r06_lead_assignment_invalidation_spec.rb",
+      "spec/requests/r06_assignment_options_spec.rb",
+      "spec/requests/r06_assigned_access_spec.rb",
+      "spec/requests/r06_attachment_access_spec.rb",
+      "spec/services/ai_lead_employee/lead_update_service_spec.rb",
+      "spec/services/conversations/assignment_service_spec.rb",
+      "spec/requests/api/v1/accounts/leads_spec.rb",
+      "spec/requests/r06_streamed_media_cache_spec.rb",
+      "spec/requests/r06_invitation_spec.rb"
+    ],
+    "examples": 43,
+    "failures": 0,
+    "duration_seconds": 36.67,
+    "initial_run": {
+      "examples": 38,
+      "failures": 1,
+      "cause": "Pre-existing audit test expected an obsolete partial payload; corrected exact expectation to the current action, assignee and control-state audit fields."
+    },
+    "load_seconds": 9.78
+  },
+  "focused_frontend": {
+    "files": [
+      "app/javascript/dashboard/routes/dashboard/settings/agents/specs/AddAgent.spec.js",
+      "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+      "app/javascript/dashboard/helper/specs/actionCable.spec.js",
+      "app/javascript/dashboard/routes/dashboard/conversation/specs/InboxConversationCockpit.spec.js",
+      "app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js"
+    ],
+    "tests": 37,
+    "failures": 0
+  },
+  "production_build": {
+    "status": "passed",
+    "initial_attempt": "Node default approximately 2GB heap exhausted",
+    "retry_node_options": "--max-old-space-size=6144",
+    "modules": 5078,
+    "duration": "8m14s",
+    "build_slot_released": true,
+    "manifest_sha256": "02ae1f9489b94b57e7527db5ad5a20c78a25868508ae20210ca5a4776fb433f0",
+    "warnings": [
+      "Browserslist data age",
+      "large chunks"
+    ]
+  },
+  "source_files": 118,
+  "acceptance_source_files": 62,
+  "screenshots_before_correction": [
+    "01-admin-invitation-desktop.jpg",
+    "02-admin-team-phone.jpg",
+    "04-member-reply-note-media-desktop.jpg",
+    "05-member-authorized-image.jpg",
+    "06-reassignment-stale-member.jpg",
+    "08-phone-actions-scrolled.jpg"
+  ],
+  "lint": {
+    "ruby_files": 5,
+    "ruby_offenses": 0,
+    "frontend_files": 1,
+    "frontend_errors": 0,
+    "frontend_warnings": 0,
+    "whitespace_errors": 0
+  },
+  "review": {
+    "standards": "Focused diff reviewed locally; normal ESLint and Ruby commit hooks passed. Exact correction tip sent for independent coordinator review.",
+    "spec": "Assignment commit/rollback, actual streamed headers, both cleanup/re-invitation concurrency orderings and all local browser cases passed. Final independent re-review has zero findings."
+  },
+  "observed_authorized_image": {
+    "width": 160,
+    "height": 100,
+    "loaded": true,
+    "full_image_visible_in_screenshot": false
+  },
+  "correction_tip": "75994e522336e1dd2aa8f2a04c269a42159ab0d4",
+  "streamed_media_red": {
+    "examples": 2,
+    "failures": 2,
+    "signal": "Actual threaded blob and representation response committed public cache headers before after_action"
+  },
+  "streamed_media_final_green": {
+    "examples": 3,
+    "failures": 0,
+    "duration_seconds": 108.87,
+    "load_seconds": 24.24,
+    "cases": [
+      "blob stream headers before download completes",
+      "representation stream headers before download completes",
+      "ordinary, conditional and byte-range requests recheck access and retain private/no-store"
+    ]
+  },
+  "actual_browser_server_header_probe": {
+    "kind": "live_HTTP_media_headers_diagnostic",
+    "status": "200",
+    "cache_control": "private, no-store",
+    "bytes": 314
+  },
+  "corrected_browser": {
+    "member_sign_in": "passed",
+    "hidden_shared_lead_conversation_1": "unavailable",
+    "hidden_unrelated_conversation_3": "unavailable",
+    "team_settings": "redirected to own account dashboard",
+    "second_account_before_membership": "redirected to own account dashboard",
+    "fresh_private_image": {
+      "filename": "r06-private-cache.png",
+      "width": 160,
+      "height": 100,
+      "loaded": true,
+      "viewer_evidence": "13-fresh-private-image-authorized.jpg"
+    },
+    "live_reassignment": {
+      "automatic_clear": true,
+      "manual_refresh": false,
+      "conversations": 0,
+      "unavailable_alert": true,
+      "evidence": "14-live-reassignment-cleared.jpg"
+    },
+    "same_image_after_reassignment": {
+      "fresh_get_time": "2026-09-10T07:41:04+03:00",
+      "server_status": 403,
+      "browser_result": "ERR_HTTP_RESPONSE_CODE_FAILURE",
+      "generated_error_page": "data URL policy prevented inspection; no bypass attempted",
+      "cache_disabled": false
+    }
+  },
+  "normal_commit": {
+    "tip": "75994e522336e1dd2aa8f2a04c269a42159ab0d4",
+    "hooks_bypassed": false,
+    "eslint": "passed",
+    "ruby_files": 5,
+    "ruby_offenses": 0,
+    "app_spec_post_commit_diff": "empty"
+  },
+  "follow_on_code_tip": "1907f72c312ffc22efbec9afd7caf1a0a739e981",
+  "follow_on_checks": "follow-on-checks.json",
+  "final_runtime_tip": "323d381291a51ae573e0f840cec12dab2d0784bc"
+}

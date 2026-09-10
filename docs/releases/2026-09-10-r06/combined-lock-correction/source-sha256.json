@@ -1,0 +1,6 @@
+{
+  "app/jobs/agents/destroy_job.rb": "7da219c55aa22084a453040cb323b7043b74d7cc40d443ef81466b3a1ef8ff60",
+  "spec/requests/r06_membership_cleanup_concurrency_spec.rb": "57ecb64ec993d51c90e6a4b9e8a23b53c508166769da0b3a2f355160dbc9bced",
+  "TECHNICAL_DESIGN.md": "ee642dc0a10932f42c0f4a0e5a532f31837737d629fc14cb42850c8277296cca",
+  "docs/adr/0010-assigned-conversation-access.md": "51e8ccde9b2600752dab8eb35b9a2ab105e235ae8ba1cecfef93edfd67255109"
+}

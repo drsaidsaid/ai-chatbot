@@ -1,0 +1,31 @@
+{
+  "actions": [
+    {
+      "label": "Edit Musa Colleague",
+      "right": 322,
+      "x": 290,
+      "y": 515
+    },
+    {
+      "label": "Revoke access Musa Colleague",
+      "right": 366,
+      "x": 334,
+      "y": 515
+    },
+    {
+      "label": "Edit Neema Assigned Member",
+      "right": 322,
+      "x": 290,
+      "y": 665
+    },
+    {
+      "label": "Revoke access Neema Assigned Member",
+      "right": 366,
+      "x": 334,
+      "y": 665
+    }
+  ],
+  "documentWidth": 390,
+  "height": 844,
+  "width": 390
+}

@@ -265,7 +265,11 @@ const defaultResponse = overrides => ({
   },
 });
 
-const mountPage = async ({ response = defaultResponse(), query = {} } = {}) => {
+const mountPage = async ({
+  response = defaultResponse(),
+  query = {},
+  attachTo,
+} = {}) => {
   LeadsAPI.get.mockResolvedValue(response);
 
   const router = createRouter({
@@ -286,10 +290,14 @@ const mountPage = async ({ response = defaultResponse(), query = {} } = {}) => {
   await router.isReady();
 
   const wrapper = mount(LeadsDirectoryPage, {
+    attachTo,
     global: {
       plugins: [router],
       stubs: {
         Icon: IconStub,
+        Transition: true,
+        Modal: false,
+        WootModal: false,
       },
       mocks: {
         $t: key => key,
@@ -379,6 +387,41 @@ describe('LeadsDirectoryPage', () => {
     expect(LeadsAPI.get).toHaveBeenLastCalledWith(
       expect.objectContaining({ q: 'nuru' })
     );
+  });
+
+  it('dismisses an unsaved Lead edit with Escape so the workspace is usable again', async () => {
+    const response = defaultResponse();
+    response.data.meta.visibility = 'operator';
+    const { wrapper, router } = await mountPage({
+      response,
+      attachTo: document.body,
+    });
+    const previousRoute = router.currentRoute.value.fullPath;
+
+    try {
+      await wrapper
+        .findAll('button')
+        .find(button => button.text() === 'Edit lead')
+        .trigger('click');
+      await wrapper.find('input[required]').setValue('Unsaved edit');
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+      await wrapper.find('input[required]').trigger('keydown', {
+        key: 'Escape',
+        code: 'Escape',
+      });
+      await flushPromises();
+
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+      expect(LeadsAPI.update).not.toHaveBeenCalled();
+      expect(router.currentRoute.value.fullPath).toBe(previousRoute);
+      await wrapper
+        .findAll('button')
+        .find(button => button.text() === 'Edit lead')
+        .trigger('click');
+      expect(wrapper.find('input[required]').element.value).toBe('Jane Nkosi');
+    } finally {
+      wrapper.unmount();
+    }
   });
 
   it('validates and saves the edit form', async () => {

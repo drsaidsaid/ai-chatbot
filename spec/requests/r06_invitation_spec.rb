@@ -54,4 +54,40 @@ RSpec.describe 'Owned Team Member invitation', type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
   end
+
+  it 'reinvites a revoked member and retains separate notification preferences for each Business Account' do
+    member = create(:user, account: account, role: :agent)
+    other_account = create(:account)
+    create(:account_user, account: other_account, user: member, role: :agent)
+    member_headers = member.create_new_auth_token
+    admin_headers = admin.create_new_auth_token
+    preferences = {}
+
+    [account, other_account].each_with_index do |business, index|
+      patch "/api/v1/accounts/#{business.id}/notification_settings", headers: member_headers,
+                                                                     params: { notification_settings: {
+                                                                       selected_email_flags: index.zero? ? [] : ['email_conversation_assignment'],
+                                                                       selected_push_flags: index.zero? ? ['push_conversation_assignment'] : []
+                                                                     } }, as: :json
+      expect(response).to have_http_status(:ok)
+      preferences[business.id] = response.parsed_body
+    end
+
+    delete "/api/v1/accounts/#{account.id}/agents/#{member.id}", headers: admin_headers
+    expect(response).to have_http_status(:ok)
+    get "/api/v1/accounts/#{account.id}/notification_settings", headers: member_headers
+    expect(response).to have_http_status(:unauthorized)
+
+    post "/api/v1/accounts/#{account.id}/agents", headers: admin_headers,
+                                                  params: { agent: { name: member.name, email: member.email, role: 'agent' } }, as: :json
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body).to include('id' => member.id, 'role' => 'agent')
+    perform_enqueued_jobs(only: Agents::DestroyJob)
+
+    [account, other_account].each do |business|
+      get "/api/v1/accounts/#{business.id}/notification_settings", headers: member_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq(preferences.fetch(business.id))
+    end
+  end
 end
