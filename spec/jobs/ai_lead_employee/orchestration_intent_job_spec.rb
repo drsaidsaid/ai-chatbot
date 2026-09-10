@@ -331,7 +331,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     }
 
     examples.each do |reason, setup|
-      intent.update!(state: :pending, blocked_reason: nil, blocked_at: nil, review_request: nil)
+      # Each refusal scenario starts a fresh synthetic attempt budget.
+      intent.update!(state: :pending, attempts: 0, blocked_reason: nil, blocked_at: nil, review_request: nil)
       HumanReviewRequest.delete_all
       KnowledgeItem.where(account: account).delete_all
       triggering_message.update!(content: 'Do you offer AI employees?')

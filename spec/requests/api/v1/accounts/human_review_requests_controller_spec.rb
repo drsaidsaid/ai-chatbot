@@ -6,7 +6,7 @@ RSpec.describe 'Human Review Requests API', type: :request do
   let(:account) { create(:account) }
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:agent) { create(:user, account: account, role: :agent) }
-  let(:conversation) { create(:conversation, account: account) }
+  let(:conversation) { create(:conversation, account: account, assignee: agent) }
   let(:lead_message) do
     create(:message, account: account, conversation: conversation, inbox: conversation.inbox, content: 'Do you do VIP onboarding?')
   end
@@ -108,9 +108,9 @@ RSpec.describe 'Human Review Requests API', type: :request do
     expect(request_record.knowledge_item.source_kind).to eq('eligibility')
   end
 
-  it 'supports assignment and rejection from the Review workspace', :aggregate_failures do
+  it 'supports administrator assignment and assigned operator rejection from the Review workspace', :aggregate_failures do
     post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/assign",
-         headers: agent.create_new_auth_token,
+         headers: admin.create_new_auth_token,
          params: { assigned_user_id: agent.id },
          as: :json
 

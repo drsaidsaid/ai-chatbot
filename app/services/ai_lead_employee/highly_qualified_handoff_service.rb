@@ -159,11 +159,7 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
   end
 
   def normalized_recipient(recipient)
-    value = recipient.to_s.strip
-    return if value.blank?
-    return value if value.match?(RegexHelper::WHATSAPP_BSUID_REGEX)
-
-    value.delete('^0-9').presence
+    Whatsapp::RecipientIdentifier.normalize(recipient)
   end
 
   def whatsapp_alert_phone_for(user)

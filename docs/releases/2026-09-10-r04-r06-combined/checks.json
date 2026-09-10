@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-09-10T03:04:07Z",
+  "r06Parent": "7161f8fef7902ed239f6d52c83f4661b1e533a96",
+  "r04Parent": "e1158876814e18617432065ee3b821048aedf4d6",
+  "reviewedRuntimeTree": "2cdc528e80655d0741706cbd3416b9f9995597ad",
+  "reviewedFixtureTree": "31c82f76c92b313b21a103e07dfd4b2e06bc2750",
+  "ruby": {
+    "examples": 721,
+    "failures": 0,
+    "exitCode": 0,
+    "durationSeconds": 534,
+    "loadSeconds": 53.06
+  },
+  "frontend": {
+    "tests": 57,
+    "files": 8,
+    "failures": 0,
+    "exitCode": 0,
+    "durationSeconds": 18.06
+  },
+  "productionBuild": {
+    "exitCode": 0,
+    "durationSeconds": 351
+  },
+  "strictRubyLint": {
+    "mergeFiles": 4,
+    "fixtureFiles": 5,
+    "offenses": 0
+  },
+  "independentReviews": {
+    "runtime": {
+      "standards": [],
+      "spec": []
+    },
+    "fixtures": {
+      "standards": [],
+      "spec": []
+    }
+  },
+  "schemaSha256": "4d7bd95cb639a8971520562212a9d3e5c4480a6e0575dd026686d15cbdcb5421",
+  "sourceHashCount": 7997,
+  "browserAcceptance": "pending existing Mac unlock request",
+  "acceptedIntegration": "f2b184e1c332f0bf68c31dec460f7e5599657a72",
+  "ticketCompletion": false,
+  "realProviderValidation": false
+}

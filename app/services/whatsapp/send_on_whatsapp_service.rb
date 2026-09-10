@@ -1,4 +1,10 @@
 class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
+  def perform
+    super
+  rescue StandardError
+    raise unless message.whatsapp_outbound_delivery&.fail_preparation!
+  end
+
   private
 
   def channel_class
@@ -7,7 +13,7 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
 
   def perform_reply
     return send_template_message if template_params.present?
-    return send_session_message if message.conversation.can_reply?
+    return send_session_message if message.whatsapp_outbound_delivery || message.conversation.can_reply?
 
     message.update!(status: :failed, external_error: I18n.t('errors.whatsapp.message_outside_messaging_window'))
   end
@@ -21,7 +27,7 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
 
     name, namespace, lang_code, processed_parameters = processor.call
 
-    if name.blank?
+    if name.blank? && !message.whatsapp_outbound_delivery
       message.update!(status: :failed, external_error: 'Template not found or invalid template name')
       return
     end
@@ -46,6 +52,7 @@ class Whatsapp::SendOnWhatsappService < Base::SendOnChannelService
 
   def mark_message_sent!(message_id)
     return if message_id.blank?
+    return if message.whatsapp_outbound_delivery
 
     message.update!(source_id: message_id, external_error: nil)
   end

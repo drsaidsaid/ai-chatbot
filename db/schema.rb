@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_10_000304) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_10_000402) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -259,6 +259,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000304) do
     t.datetime "blocked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "owner_token"
+    t.datetime "lease_expires_at"
     t.index ["account_id", "conversation_id", "state"], name: "idx_on_account_id_conversation_id_state_b83b69ea47"
     t.index ["account_id", "conversation_id", "triggering_message_id", "observed_control_version"], name: "idx_ai_orchestration_intents_on_logical_trigger", unique: true
     t.index ["account_id", "idempotency_key"], name: "idx_on_account_id_idempotency_key_c7b0a1d67b", unique: true
@@ -266,6 +268,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000304) do
     t.index ["conversation_id"], name: "index_ai_orchestration_intents_on_conversation_id"
     t.index ["outbound_message_id"], name: "index_ai_orchestration_intents_on_outbound_message_id"
     t.index ["review_request_id"], name: "index_ai_orchestration_intents_on_review_request_id"
+    t.index ["state", "lease_expires_at"], name: "index_ai_orchestration_intents_on_state_and_lease_expires_at"
     t.index ["triggering_message_id"], name: "index_ai_orchestration_intents_on_triggering_message_id"
   end
 
@@ -2021,6 +2024,27 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000304) do
     t.index ["account_id", "url"], name: "index_webhooks_on_account_id_and_url", unique: true
   end
 
+  create_table "whatsapp_outbound_deliveries", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "message_id", null: false
+    t.integer "observed_control_version", null: false
+    t.string "state", default: "pending", null: false
+    t.string "owner_token"
+    t.datetime "lease_expires_at"
+    t.integer "attempts", default: 0, null: false
+    t.datetime "dispatch_started_at"
+    t.datetime "accepted_at"
+    t.string "provider_message_id"
+    t.string "failure_code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_whatsapp_outbound_deliveries_on_account_id"
+    t.index ["conversation_id"], name: "index_whatsapp_outbound_deliveries_on_conversation_id"
+    t.index ["message_id"], name: "index_whatsapp_outbound_deliveries_on_message_id", unique: true
+    t.index ["state", "lease_expires_at"], name: "idx_on_state_lease_expires_at_309103bfc7"
+  end
+
   create_table "whatsapp_webhook_events", force: :cascade do |t|
     t.bigint "receipt_id", null: false
     t.bigint "account_id", null: false
@@ -2145,6 +2169,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000304) do
   add_foreign_key "qualification_questions", "accounts"
   add_foreign_key "qualification_score_ranges", "accounts"
   add_foreign_key "user_sessions", "users"
+  add_foreign_key "whatsapp_outbound_deliveries", "accounts"
+  add_foreign_key "whatsapp_outbound_deliveries", "conversations"
+  add_foreign_key "whatsapp_outbound_deliveries", "messages"
   add_foreign_key "whatsapp_webhook_events", "accounts"
   add_foreign_key "whatsapp_webhook_events", "channel_whatsapp", column: "channel_id"
   add_foreign_key "whatsapp_webhook_events", "inboxes"

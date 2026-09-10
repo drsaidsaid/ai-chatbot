@@ -19,8 +19,13 @@ describe Whatsapp::SendOnWhatsappService do
       let(:whatsapp_request) { instance_double(HTTParty::Response) }
       let!(:whatsapp_channel) { create(:channel_whatsapp, sync_templates: false) }
 
-      let!(:contact_inbox) { create(:contact_inbox, inbox: whatsapp_channel.inbox, source_id: '123456789') }
-      let!(:conversation) { create(:conversation, contact_inbox: contact_inbox, inbox: whatsapp_channel.inbox) }
+      let!(:contact_inbox) do
+        create(:contact_inbox, inbox: whatsapp_channel.inbox, contact: create(:contact, account: whatsapp_channel.account), source_id: '123456789')
+      end
+      let!(:conversation) do
+        create(:conversation, account: whatsapp_channel.account, contact: contact_inbox.contact, contact_inbox: contact_inbox,
+                              inbox: whatsapp_channel.inbox)
+      end
       let(:api_key) { 'test_key' }
       let(:headers) { { 'D360-API-KEY' => api_key, 'Content-Type' => 'application/json' } }
       let(:template_body) do
@@ -56,10 +61,10 @@ describe Whatsapp::SendOnWhatsappService do
 
       it 'calls channel.send_message when with in 24 hour limit' do
         # to handle the case of 24 hour window limit.
-        create(:message, message_type: :incoming, content: 'test',
-                         conversation: conversation, account: conversation.account)
-        message = create(:message, message_type: :outgoing, content: 'test',
-                                   conversation: conversation, account: conversation.account)
+        create_channel_message(message_type: :incoming, content: 'test',
+                               conversation: conversation, account: conversation.account)
+        message = create_channel_message(message_type: :outgoing, content: 'test',
+                                         conversation: conversation, account: conversation.account)
 
         stub_request(:post, 'https://waba.360dialog.io/v1/messages')
           .with(
@@ -74,21 +79,25 @@ describe Whatsapp::SendOnWhatsappService do
 
       it 'sends a controlled human outbound message through WhatsApp Cloud and stores the Meta message id' do
         whatsapp_cloud_channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
-        agent = create(:user, account: whatsapp_cloud_channel.account)
-        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox, source_id: '255700111222')
-        cloud_conversation = create(:conversation, contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
-        create(:message,
-               message_type: :incoming,
-               content: 'Can a human explain pricing?',
-               conversation: cloud_conversation,
-               account: cloud_conversation.account)
-        message = create(:message,
-                         message_type: :outgoing,
-                         sender: agent,
-                         content: 'Yes, I can help with that.',
-                         external_error: 'Authentication Error',
-                         conversation: cloud_conversation,
-                         account: cloud_conversation.account)
+        agent = create(:user, :administrator, account: whatsapp_cloud_channel.account)
+        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox,
+                                                     contact: create(:contact, account: whatsapp_cloud_channel.account), source_id: '255700111222')
+        cloud_conversation = create(:conversation, account: whatsapp_cloud_channel.account, contact: cloud_contact_inbox.contact,
+                                                   contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
+        create_channel_message(
+          message_type: :incoming,
+          content: 'Can a human explain pricing?',
+          conversation: cloud_conversation,
+          account: cloud_conversation.account
+        )
+        message = create_channel_message(
+          message_type: :outgoing,
+          sender: agent,
+          content: 'Yes, I can help with that.',
+          external_error: 'Authentication Error',
+          conversation: cloud_conversation,
+          account: cloud_conversation.account
+        )
 
         allow(Meta::Whatsapp::OutboundMessageSender).to receive(:new)
         stub_request(:post, "https://graph.facebook.com/v13.0/#{whatsapp_cloud_channel.provider_config['phone_number_id']}/messages")
@@ -116,16 +125,19 @@ describe Whatsapp::SendOnWhatsappService do
 
       it 'does not send internal notes to WhatsApp leads' do
         whatsapp_cloud_channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
-        agent = create(:user, account: whatsapp_cloud_channel.account)
-        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox, source_id: '255700111222')
-        cloud_conversation = create(:conversation, contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
-        message = create(:message,
-                         message_type: :outgoing,
-                         sender: agent,
-                         content: 'Internal note for the team.',
-                         private: true,
-                         conversation: cloud_conversation,
-                         account: cloud_conversation.account)
+        agent = create(:user, :administrator, account: whatsapp_cloud_channel.account)
+        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox,
+                                                     contact: create(:contact, account: whatsapp_cloud_channel.account), source_id: '255700111222')
+        cloud_conversation = create(:conversation, account: whatsapp_cloud_channel.account, contact: cloud_contact_inbox.contact,
+                                                   contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
+        message = create_channel_message(
+          message_type: :outgoing,
+          sender: agent,
+          content: 'Internal note for the team.',
+          private: true,
+          conversation: cloud_conversation,
+          account: cloud_conversation.account
+        )
 
         described_class.new(message: message).perform
 
@@ -134,21 +146,21 @@ describe Whatsapp::SendOnWhatsappService do
       end
 
       it 'fails a free-form message without contacting the provider when outside the 24 hour limit' do
-        create(:message, message_type: :incoming, content: 'test', created_at: 25.hours.ago,
-                         conversation: conversation, account: conversation.account)
-        message = create(:message, message_type: :outgoing, content: 'test',
-                                   conversation: conversation, account: conversation.account)
+        create_channel_message(message_type: :incoming, content: 'test', created_at: 25.hours.ago,
+                               conversation: conversation, account: conversation.account)
+        message = create_channel_message(message_type: :outgoing, content: 'test',
+                                         conversation: conversation, account: conversation.account)
 
         expect(Whatsapp::TemplateProcessorService).not_to receive(:new)
 
         described_class.new(message: message).perform
 
-        expect(message.reload.status).to eq('failed')
-        expect(message.external_error).to eq(I18n.t('errors.whatsapp.message_outside_messaging_window'))
+        expect(message.reload.content_attributes.dig('whatsapp_delivery', 'state')).to eq('canceled')
+        expect(message.content_attributes.dig('whatsapp_delivery', 'failure_code')).to eq('message_window_closed')
         expect(a_request(:post, 'https://waba.360dialog.io/v1/messages')).not_to have_been_made
       end
 
-      it 'marks message as failed when template name is blank' do
+      it 'cancels delivery when the template name is blank' do
         processor = instance_double(Whatsapp::TemplateProcessorService)
         allow(Whatsapp::TemplateProcessorService).to receive(:new).and_return(processor)
         allow(processor).to receive(:call).and_return([nil, nil, nil, nil])
@@ -161,22 +173,22 @@ describe Whatsapp::SendOnWhatsappService do
           processed_params: { '1' => 'test' }
         }
 
-        message = create(:message,
-                         additional_attributes: { template_params: invalid_template_params },
-                         conversation: conversation,
-                         message_type: :outgoing,
-                         account: conversation.account)
+        message = create_channel_message(
+          additional_attributes: { template_params: invalid_template_params },
+          conversation: conversation,
+          message_type: :outgoing,
+          account: conversation.account
+        )
 
         described_class.new(message: message).perform
 
-        expect(message.reload.status).to eq('failed')
-        expect(message.reload.external_error).to eq('Template not found or invalid template name')
+        expect(message.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'template_unavailable')
       end
 
       it 'calls channel.send_template when after 24 hour limit' do
-        message = create(:message, message_type: :outgoing, content: 'Your package has been shipped. It will be delivered in 3 business days.',
-                                   conversation: conversation, additional_attributes: { template_params: template_params },
-                                   account: conversation.account)
+        message = create_channel_message(message_type: :outgoing, content: 'Your package has been shipped. It will be delivered in 3 business days.',
+                                         conversation: conversation, additional_attributes: { template_params: template_params },
+                                         account: conversation.account)
 
         stub_request(:post, 'https://waba.360dialog.io/v1/messages')
           .with(
@@ -189,9 +201,10 @@ describe Whatsapp::SendOnWhatsappService do
       end
 
       it 'calls channel.send_template if template_params are present' do
-        message = create(:message, additional_attributes: { template_params: template_params },
-                                   content: 'Your package will be delivered in 3 business days.', conversation: conversation, message_type: :outgoing,
-                                   account: conversation.account)
+        message = create_channel_message(additional_attributes: { template_params: template_params },
+                                         content: 'Your package will be delivered in 3 business days.',
+                                         conversation: conversation, message_type: :outgoing,
+                                         account: conversation.account)
         stub_request(:post, 'https://waba.360dialog.io/v1/messages')
           .with(
             headers: headers,
@@ -204,8 +217,10 @@ describe Whatsapp::SendOnWhatsappService do
 
       it 'calls channel.send_template with named params if template parameter type is NAMED' do
         whatsapp_cloud_channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
-        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox, source_id: '123456789')
-        cloud_conversation = create(:conversation, contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
+        cloud_contact_inbox = create(:contact_inbox, inbox: whatsapp_cloud_channel.inbox,
+                                                     contact: create(:contact, account: whatsapp_cloud_channel.account), source_id: '123456789')
+        cloud_conversation = create(:conversation, account: whatsapp_cloud_channel.account, contact: cloud_contact_inbox.contact,
+                                                   contact_inbox: cloud_contact_inbox, inbox: whatsapp_cloud_channel.inbox)
 
         named_template_params = {
           name: 'ticket_status_updated',
@@ -225,10 +240,11 @@ describe Whatsapp::SendOnWhatsappService do
             },
             :body => named_template_body.to_json
           ).to_return(status: 200, body: success_response, headers: { 'content-type' => 'application/json' })
-        message = create(:message,
-                         additional_attributes: { template_params: named_template_params },
-                         content: 'Your package will be delivered in 3 business days.', conversation: cloud_conversation, message_type: :outgoing,
-                         account: cloud_conversation.account)
+        message = create_channel_message(
+          additional_attributes: { template_params: named_template_params },
+          content: 'Your package will be delivered in 3 business days.', conversation: cloud_conversation, message_type: :outgoing,
+          account: cloud_conversation.account
+        )
 
         described_class.new(message: message).perform
         expect(message.reload.source_id).to eq('123456789')
@@ -271,8 +287,8 @@ describe Whatsapp::SendOnWhatsappService do
           processed_params: {}
         }
 
-        message = create(:message, additional_attributes: { template_params: empty_template_params },
-                                   conversation: conversation, message_type: :outgoing, account: conversation.account)
+        message = create_channel_message(additional_attributes: { template_params: empty_template_params },
+                                         conversation: conversation, message_type: :outgoing, account: conversation.account)
 
         stub_request(:post, 'https://waba.360dialog.io/v1/messages')
           .with(
@@ -369,8 +385,8 @@ describe Whatsapp::SendOnWhatsappService do
 
       it 'handles nil template_params gracefully' do
         # Test service behavior when template_params is completely nil
-        message = create(:message, additional_attributes: {},
-                                   conversation: conversation, message_type: :outgoing)
+        message = create_channel_message(additional_attributes: {},
+                                         conversation: conversation, message_type: :outgoing)
 
         # Should send regular message, not template
         stub_request(:post, 'https://waba.360dialog.io/v1/messages')
@@ -400,6 +416,16 @@ describe Whatsapp::SendOnWhatsappService do
 
       private
 
+      def create_channel_message(**attributes)
+        target = attributes.fetch(:conversation, conversation)
+        if attributes[:message_type].to_s == 'outgoing'
+          attributes[:sender] ||= create(:user, :administrator, account: target.account)
+        else
+          attributes[:provider_created_at] = attributes.fetch(:provider_created_at, attributes.fetch(:created_at, Time.current))
+        end
+        create(:message, **attributes, account: target.account, conversation: target, inbox: target.inbox)
+      end
+
       def build_template_params(name, namespace, language, processed_params)
         {
           name: name,
@@ -411,11 +437,12 @@ describe Whatsapp::SendOnWhatsappService do
       end
 
       def create_message_with_template(content, template_params)
-        create(:message,
-               message_type: :outgoing,
-               content: content,
-               conversation: conversation,
-               additional_attributes: { template_params: template_params })
+        create_channel_message(
+          message_type: :outgoing,
+          content: content,
+          conversation: conversation,
+          additional_attributes: { template_params: template_params }
+        )
       end
 
       def stub_template_request(template_params, components)

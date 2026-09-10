@@ -455,13 +455,13 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
   def inbound_payload(message_id:, body:)
     canonical_webhook_payload(
       contacts: [{ profile: { name: 'Launch Proof Lead' }, wa_id: sender_number }],
-      messages: [{ from: sender_number, id: message_id, timestamp: '1787740800', text: { body: body }, type: 'text' }]
+      messages: [{ from: sender_number, id: message_id, timestamp: Time.current.to_i.to_s, text: { body: body }, type: 'text' }]
     )
   end
 
   def status_payload(message_id:, status:)
     canonical_webhook_payload(
-      statuses: [{ id: message_id, status: status, timestamp: '1787740801', recipient_id: sender_number }]
+      statuses: [{ id: message_id, status: status, timestamp: (Time.current.to_i + 1).to_s, recipient_id: sender_number }]
     )
   end
 
@@ -584,7 +584,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
       to: source_id,
       id: "wamid.ECHO.#{SecureRandom.hex(4)}",
       text: { body: 'Handled in WhatsApp.' },
-      timestamp: '1787740800',
+      timestamp: Time.current.to_i.to_s,
       type: 'text'
     }
   end

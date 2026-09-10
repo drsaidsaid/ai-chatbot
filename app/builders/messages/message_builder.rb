@@ -1,4 +1,5 @@
-class Messages::MessageBuilder
+# Keep API evidence sanitization beside the existing CE message creation boundary.
+class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
   include ::FileTypeHelper
   include ::EmailHelper
   include ::DataHelper
@@ -22,6 +23,7 @@ class Messages::MessageBuilder
 
   def perform
     @message = @conversation.messages.build(message_params)
+    clear_client_whatsapp_evidence
     process_attachments
     process_emails
     # When the message has no quoted content, it will just be rendered as a regular message
@@ -32,6 +34,13 @@ class Messages::MessageBuilder
   end
 
   private
+
+  def clear_client_whatsapp_evidence
+    return unless @conversation.inbox.channel.is_a?(Channel::Whatsapp)
+
+    @message.source_id = nil
+    @message.content_attributes = Whatsapp::MessageEvidence.without_client_evidence(@message.content_attributes)
+  end
 
   # Extracts content attributes from the given params.
   # - Converts ActionController::Parameters to a regular hash if needed.

@@ -20,6 +20,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
       before do
         create(:inbox_member, inbox: conversation.inbox, user: agent)
+        conversation.update!(assignee: agent)
       end
 
       it 'creates a new outgoing message' do
@@ -239,6 +240,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
       before do
         create(:inbox_member, inbox: conversation.inbox, user: agent)
+        conversation.update!(assignee: agent)
       end
 
       it 'shows the conversation' do
@@ -269,6 +271,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
       before do
         create(:inbox_member, inbox: conversation.inbox, user: agent)
+        conversation.update!(assignee: agent)
       end
 
       it 'deletes the message' do
@@ -303,6 +306,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
       before do
         create(:inbox_member, inbox: conversation.inbox, user: agent)
+        conversation.update!(assignee: agent)
       end
 
       it 'returns not found error' do
@@ -330,6 +334,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
       before do
         create(:inbox_member, inbox: message.conversation.inbox, user: agent)
+        message.conversation.update!(assignee: agent)
       end
 
       it 'retries the message' do
@@ -348,6 +353,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
       before do
         create(:inbox_member, inbox: message.conversation.inbox, user: agent)
+        message.conversation.update!(assignee: agent)
       end
 
       it 'returns not found error' do
@@ -380,7 +386,10 @@ RSpec.describe 'Conversation Messages API', type: :request do
         let(:agent) { create(:user, account: account, role: :agent) }
         let!(:conversation) { create(:conversation, inbox: inbox, account: account) }
 
-        before { create(:inbox_member, inbox: inbox, user: agent) }
+        before do
+          create(:inbox_member, inbox: inbox, user: agent)
+          conversation.update!(assignee: agent)
+        end
 
         it 'returns forbidden' do
           patch api_v1_account_conversation_message_url(
@@ -393,7 +402,10 @@ RSpec.describe 'Conversation Messages API', type: :request do
       end
 
       context 'when agent has API inbox' do
-        before { create(:inbox_member, inbox: api_inbox, user: agent) }
+        before do
+          create(:inbox_member, inbox: api_inbox, user: agent)
+          conversation.update!(assignee: agent)
+        end
 
         it 'uses StatusUpdateService to perform status update' do
           service = instance_double(Messages::StatusUpdateService)

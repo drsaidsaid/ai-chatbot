@@ -61,7 +61,8 @@ class HumanReviewRequest < ApplicationRecord
     unsupported_media: 5,
     source_unverified: 6,
     provider_failed: 7,
-    stale_knowledge: 8
+    stale_knowledge: 8,
+    delivery_unknown: 9
   }
   enum status: {
     open: 0,

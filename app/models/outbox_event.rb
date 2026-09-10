@@ -34,7 +34,7 @@ class OutboxEvent < ApplicationRecord
   belongs_to :account
   belongs_to :aggregate, polymorphic: true
 
-  enum :state, { pending: 0, delivered: 1, failed: 2 }
+  enum :state, { pending: 0, delivered: 1, failed: 2, canceled: 3, unknown: 4 }
 
   validates :event_type, :idempotency_key, presence: true
   validates :idempotency_key, uniqueness: { scope: :account_id }

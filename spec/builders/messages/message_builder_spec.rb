@@ -135,12 +135,20 @@ describe Messages::MessageBuilder do
       end
 
       context 'when DIRECT_UPLOAD_ENABLED' do
+        let(:uploaded_blob) do
+          get_blob_for('spec/assets/avatar.png', 'image/png').tap do |blob|
+            blob.update!(metadata: blob.metadata.merge('r06_user_id' => user.id, 'r06_account_id' => account.id,
+                                                       'r06_conversation_id' => conversation.id))
+          end
+        end
         let(:params) do
           ActionController::Parameters.new({
                                              content: 'test',
-                                             attachments: [get_blob_for('spec/assets/avatar.png', 'image/png').signed_id]
+                                             attachments: [uploaded_blob.signed_id]
                                            })
         end
+
+        before { conversation.update!(assignee: user) }
 
         it 'creates message with attachments' do
           message = message_builder

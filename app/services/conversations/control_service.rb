@@ -9,6 +9,7 @@ class Conversations::ControlService
   AUTOMATION_BLOCK_REASON = BLOCK_REASONS[:incompatible_control_state]
 
   def self.invalidate_pending_ai!(conversation:, reason:)
+    Whatsapp::OutboundDelivery.cancel_automation!(conversation: conversation, reason: reason)
     conversation.ai_orchestration_intents
                 .where(state: %i[pending processing])
                 .find_each do |intent|

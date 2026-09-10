@@ -1,0 +1,65 @@
+{
+  "fixtures_only": true,
+  "browser_acceptance": "pending allocation",
+  "messages": [
+    {
+      "id": 1,
+      "status": "sent",
+      "delivery": null,
+      "provider_id": null
+    },
+    {
+      "id": 2,
+      "status": "sent",
+      "delivery": {
+        "state": "canceled",
+        "failure_code": "assigned_to_human_operator"
+      },
+      "provider_id": null
+    },
+    {
+      "id": 3,
+      "status": "sent",
+      "delivery": {
+        "state": "pending"
+      },
+      "provider_id": null
+    },
+    {
+      "id": 4,
+      "status": "failed",
+      "delivery": {
+        "state": "failed",
+        "failure_code": "provider_rejected"
+      },
+      "provider_id": null
+    },
+    {
+      "id": 5,
+      "status": "sent",
+      "delivery": {
+        "state": "unknown",
+        "failure_code": "acceptance_unknown"
+      },
+      "provider_id": null
+    },
+    {
+      "id": 6,
+      "status": "sent",
+      "delivery": {
+        "state": "accepted",
+        "failure_code": null
+      },
+      "provider_id": "wamid.R04.BROWSER.3"
+    },
+    {
+      "id": 7,
+      "status": "failed",
+      "delivery": {
+        "state": "accepted",
+        "failure_code": null
+      },
+      "provider_id": "wamid.R04.BROWSER.4"
+    }
+  ]
+}

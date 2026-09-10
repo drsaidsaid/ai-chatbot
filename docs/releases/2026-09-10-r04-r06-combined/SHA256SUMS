@@ -1,0 +1,15 @@
+40eb7925b37e346fd81a11e7d4d55da4fe53c58c095bc0573f66fa79098823eb  docs/releases/2026-09-10-r04-r06-combined/README.md
+f3c318bba12943174e2e26e4984d77f2dadb66b6246f3641b4994c14492d66d7  docs/releases/2026-09-10-r04-r06-combined/checks.json
+fc2c1e5f03efb994cd587edc9ca187e38000eea9aab6b2333e3419d9bec77d4f  docs/releases/2026-09-10-r04-r06-combined/fixture-followup.txt
+61f547147bd6de2549c71b2e15824acfb07e2797d3d910f42b73b2d50d4c3667  docs/releases/2026-09-10-r04-r06-combined/fixture-rubocop-final.json
+060ae72d5fe8dfa2080956e772a267726cbdaee3c9b1306c44117208065da5a3  docs/releases/2026-09-10-r04-r06-combined/fixture-rubocop.json
+08d4196ee8d8407e0d1af5f35273091cfe8bf796c699a3ae3883153b69b85ad2  docs/releases/2026-09-10-r04-r06-combined/frontend-initial.txt
+6504459a7f685dd9034129ce6842fa21213cb36400eb989c43fcbbbd5f0150bb  docs/releases/2026-09-10-r04-r06-combined/frontend-selection.json
+7ba6e12fb098678371fd71f9b735efaef327b8f8539b3e5dc8a9cde63e955c65  docs/releases/2026-09-10-r04-r06-combined/mail-review-isolation.txt
+05cfd1bfb5a2510334ad5d17e892a4461447fb87314f0da8507bdf0a360697f7  docs/releases/2026-09-10-r04-r06-combined/production-build.txt
+1d8e3f9100451825512d868f8231754b09428b70f2f4a7735d7df46073115aee  docs/releases/2026-09-10-r04-r06-combined/review-queue-diagnostic.txt
+481114df816406008d286da2d8a2f4666d3d7b22ed8f8bc8f637d79e839db69f  docs/releases/2026-09-10-r04-r06-combined/rubocop-initial.json
+8600eced34eaa53892bb630cb660c8f0c89743274cd71ab09b7c0d72f802c259  docs/releases/2026-09-10-r04-r06-combined/ruby-final.txt
+d79623ee0a4527fa06c1201e8cb154aa3b9d39f14292607af8a65c6967ea1fa2  docs/releases/2026-09-10-r04-r06-combined/ruby-initial.txt
+e64bbc7f79f89e57c6ccec10c786067c5fa186f5ddc981f1a26eca5e42f900dd  docs/releases/2026-09-10-r04-r06-combined/ruby-selection.json
+014fb3850fcdaf307d09c5d0ef1038f9561efe283758cd268aa693578336d0f4  docs/releases/2026-09-10-r04-r06-combined/source-sha256.json

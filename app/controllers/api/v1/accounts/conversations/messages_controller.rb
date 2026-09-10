@@ -9,7 +9,9 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     user = Current.user || @resource
     mb = Messages::MessageBuilder.new(user, @conversation, params)
     @message = mb.perform
-    Conversations::ControlService.new(conversation: @conversation).human_reply!(operator: user) if human_public_reply?(user)
+    if !@conversation.inbox.channel.is_a?(Channel::Whatsapp) && human_public_reply?(user)
+      Conversations::ControlService.new(conversation: @conversation).human_reply!(operator: user)
+    end
   rescue Pundit::NotAuthorizedError
     raise
   rescue StandardError => e
@@ -30,6 +32,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   def retry
     return if message.blank?
+    return retry_whatsapp_delivery if @conversation.inbox.channel.is_a?(Channel::Whatsapp)
 
     ::SendReplyJob.perform_later(message.id) if claim_message_retry
   rescue StandardError => e
@@ -58,6 +61,18 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   private
+
+  def retry_whatsapp_delivery
+    delivery = message.whatsapp_outbound_delivery
+    return render json: { error: 'This delivery cannot be safely retried.' }, status: :conflict unless delivery&.retry_for?(Current.user)
+
+    begin
+      ::SendReplyJob.perform_later(message.id)
+    rescue StandardError
+      Rails.logger.warn("[WHATSAPP OUTBOUND] retry_queue_unavailable message_id=#{message.id}")
+    end
+    head :ok
+  end
 
   def message
     @message ||= @conversation.messages.find(permitted_params[:id])

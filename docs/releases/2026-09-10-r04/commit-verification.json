@@ -1,0 +1,33 @@
+{
+  "implementation_commit": "4b5379610dafb948f5ff83fc347bc9355c9d4a5f",
+  "normal_repository_hooks_exit": 0,
+  "hooks_bypassed": false,
+  "browser_acceptance": "pending coordinator allocation",
+  "integration_performed": false,
+  "follow_up_commit": "ca117f6bb37731ef104e797a85adc90ba107777f",
+  "follow_up_normal_repository_hooks_exit": 0,
+  "follow_up_hooks_bypassed": false,
+  "follow_up_validation": {
+    "ruby_examples": 291,
+    "ruby_failures": 0,
+    "vue_tests": 8,
+    "vue_failures": 0,
+    "production_build": "passed",
+    "rubocop_offenses": 0,
+    "eslint_errors": 0
+  },
+  "receipt_alias_validation": {
+    "ruby_examples": 292,
+    "ruby_failures": 0,
+    "vue_tests": 18,
+    "vue_failures": 0,
+    "production_build": "previous corrected build retained; no runtime frontend change",
+    "rubocop_offenses": 0,
+    "rubocop_files": 4,
+    "eslint_errors": 0,
+    "eslint_existing_warnings": 1
+  },
+  "receipt_alias_commit": "562c6f407d2f489ee13c39a68837b1feb5ed0ca1",
+  "receipt_alias_normal_repository_hooks_exit": 0,
+  "receipt_alias_hooks_bypassed": false
+}

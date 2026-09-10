@@ -35,6 +35,13 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
     context 'when a text message starts a channel-greeted conversation' do
       let(:text_message_id) { 'wamid.CANONICAL.FIRST' }
       let(:text_params) { canonical_text_params(message_id: text_message_id, body: 'Can you help qualify my leads?') }
+      let(:receipt) do
+        Whatsapp::WebhookReceipt.create!(
+          raw_body: text_params.to_json, body_digest: Digest::SHA256.hexdigest(text_params.to_json),
+          verified_routes: [{ entry: 0, change: 0, channel_id: whatsapp_channel.id,
+                              account_id: whatsapp_channel.account_id, inbox_id: whatsapp_channel.inbox.id }]
+        )
+      end
 
       before do
         whatsapp_channel.inbox.update!(greeting_enabled: true, greeting_message: 'Welcome to AI Lead Employee.')
@@ -58,8 +65,7 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
 
       it 'persists the lead message before one visible greeting and replays without side effects' do
         perform_enqueued_jobs(only: SendReplyJob) do
-          described_class.new(inbox: whatsapp_channel.inbox, params: text_params).perform
-          described_class.new(inbox: whatsapp_channel.inbox, params: text_params).perform
+          2.times { Whatsapp::ReceiptProcessor.new(receipt).perform }
         end
 
         conversation = whatsapp_channel.inbox.conversations.first
@@ -716,7 +722,7 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
               from: sender_number,
               id: message_id,
               text: { body: body },
-              timestamp: '1787740800',
+              timestamp: Time.current.to_i.to_s,
               type: 'text'
             }]
           }

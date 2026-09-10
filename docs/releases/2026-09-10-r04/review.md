@@ -1,0 +1,80 @@
+# R04 two-axis review
+
+Reviewed the working implementation against integrated R03
+`f2b184e1c332f0bf68c31dec460f7e5599657a72`, using separate Standards and Spec
+review agents. Both agents performed read-only reviews. They did not run tests
+or browser checks; the implementation task owns the attached validation.
+
+## Standards
+
+Initial findings: task-specific test database names prevented standard CI use;
+alert cancellation/origin locking omitted explicit tenant scope; recipient
+normalization differed between alert creation and current authority checks.
+
+Resolved: concurrency suites use the repository's Rails test-environment guard;
+the process provider binds an ephemeral loopback port; both queries scope the
+Business Account; shared recipient normalization covers creation and comparison,
+including formatted phone numbers. The Standards rereview confirmed all three
+findings resolved with no new actionable regression in those fixes.
+
+## Spec
+
+Initial findings: formatted alert recipients could be canceled incorrectly;
+malformed template preparation could remain pending indefinitely; independent
+workers could send an AI answer before its Channel Greeting.
+
+Resolved: shared normalization, durable preparation failure and fair recovery
+ordering, and a greeting acceptance dependency. A follow-up review caught that
+historical canceled greetings could block fresh work after resume. The dependency
+now matches the current control version; a canonical intent/outbox regression
+proves that the old greeting stays canceled and a fresh answer is accepted.
+The final Spec rereview confirmed no remaining targeted findings.
+
+Final findings: Standards 0; Spec 0. In-app browser acceptance remains pending
+allocation and is recorded separately from code-review findings.
+
+
+## Coordinator follow-up review
+
+The coordinator independently found three gaps at `99cc25e`: Standards identified
+local attachment preparation being classified unknown; Spec identified accepted
+messages showing Sent without provider receipts, and rejection racing review-alert
+authorization. Each received a canonical red/green regression and a correction.
+
+The follow-up two-axis review also identified stale prepared credentials,
+client-supplied receipt evidence, recovery/retry lock inversion and late acceptance
+overwriting a concurrent human review decision. Further targeted review required
+token-only credential rotation coverage and Channel-before-Conversation locking
+consistent with R03 ingress. These are covered by creation APIs, persisted Messages,
+signed webhook processing, real provider seams and independent database connections.
+The local review agents' final targeted rereviews confirmed both the merged
+credential snapshot and consistent Channel → Conversation → delivery lock order,
+with no remaining actionable targeted finding. Reviews were read-only; the parent
+task owns execution evidence.
+
+The coordinator also explicitly included BookingMutationService's existing direct
+provider bypass in R04. Its cancel/reschedule notices now share atomic Message
+recording, operator authority and common dispatch/recovery. Separate connection
+regressions cover booking preparation competing with dispatch or cancellation,
+plus review/booking/handoff revocation. Broader calendar correctness remains R13.
+
+Follow-up final findings: Standards 0; Spec 0. Browser acceptance remains pending.
+
+## Receipt alias correction
+
+The coordinator's final rereview found one remaining P2: camelCase and other
+client attribute aliases could survive the snake_case-only filter, then become
+trusted-looking receipt fields through the Inbox's deep `useCamelCase` transform.
+This could show Sent immediately after acceptance without a provider receipt.
+
+A shared API/model filter now reserves all equivalent top-level delivery,
+receipt and external-echo keys. Canonical HTTP coverage exercises ten forms,
+including case, separators and Unicode normalization boundaries. A fixture
+captured from the actual GET Message responses feeds the real frontend
+transform and MessageMeta regression. Ordinary attributes, nested customer data
+and trusted provider ingress retain their existing behavior.
+
+Both local review agents completed read-only targeted rereviews of the shared
+filter and API-to-component contract. Standards: no actionable findings. Spec:
+no concrete remaining defect. The parent task owns the execution evidence.
+Browser acceptance remains pending and is not implied by these reviews.

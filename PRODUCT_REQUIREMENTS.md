@@ -419,6 +419,20 @@ The booked-call alert should also include:
 
 ## 12. Assignment and Human Takeover
 
+R04 requires one durable dispatch owner per outgoing WhatsApp Message, including
+Channel Greetings. Before dispatch, current sender access and automation authority
+are rechecked. Pending automation is canceled on takeover, assignment, private
+or public human reply, pause, closure, recorded opt-out or launch withdrawal.
+Slow AI work must not delay human control. Inbox delivery outcomes distinguish
+pending, canceled, failed and unknown from provider acceptance and delivery.
+Unknown acceptance requires reconciliation or a Review Request without automatic
+resending; lost queue operations and interrupted claims recover durably (ADR 0011).
+Acceptance displays as awaiting delivery until a provider receipt establishes
+sent/delivered/read history. A local preparation failure remains eligible for an
+authorized retry. Review rejection and alert dispatch authorization must serialize.
+Booking cancel/reschedule notices use the same durable sender, attributed to the
+initiating operator, with one persisted notice per mutation identity.
+
 - Leads have a default owner.
 - An admin may manually assign or reassign any lead.
 - V1 supports automatic assignment structure, initially default-owner based, with future rules for round-robin, offer, and availability.

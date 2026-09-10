@@ -105,6 +105,8 @@ class AiLeadEmployee::HumanReviewRequestService
       ai_lead_employee: {
         delivery_boundary: 'outbox',
         review_request_id: request.id,
+        origin_conversation_id: conversation.id,
+        origin_control_version: conversation.control_version,
         alert_type: ALERT_TYPE,
         alert_recipient: recipient
       }

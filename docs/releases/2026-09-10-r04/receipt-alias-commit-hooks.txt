@@ -1,0 +1,76 @@
+⚠ Some of your tasks use `git add` command. Please remove it from the config since all modifications made by tasks will be automatically added to the git commit index.
+
+[STARTED] Backing up original state...
+[COMPLETED] Backed up original state in git stash (59bc3cf)
+[STARTED] Running tasks for staged files...
+[STARTED] package.json — 22 files
+[STARTED] app/**/*.{js,vue} — 1 file
+[STARTED] *.scss — 0 files
+[SKIPPED] *.scss — no files
+[STARTED] eslint --fix
+[COMPLETED] eslint --fix
+[STARTED] git add
+[COMPLETED] git add
+[COMPLETED] app/**/*.{js,vue} — 1 file
+[COMPLETED] package.json — 22 files
+[COMPLETED] Running tasks for staged files...
+[STARTED] Applying modifications from tasks...
+[COMPLETED] Applying modifications from tasks...
+[STARTED] Cleaning up temporary files...
+[COMPLETED] Cleaning up temporary files...
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+[codex/r04-outbound-delivery-20260910 562c6f4] Reserve normalized WhatsApp receipt evidence aliases
+ 22 files changed, 1593 insertions(+), 20 deletions(-)
+ create mode 100644 app/javascript/dashboard/components-next/message/specs/fixtures/whatsappReceiptAliases.json
+ create mode 100644 app/services/whatsapp/message_evidence.rb
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-api-green.txt
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-api-red.txt
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-eslint.txt
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-rspec.txt
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-rubocop.json
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-ui-green.txt
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-ui-red.txt
+ create mode 100644 docs/releases/2026-09-10-r04/receipt-alias-vitest.txt

@@ -1,0 +1,106 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/a823/AI Chatbot
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > shows an honest pending outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > shows an honest canceled outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > shows an honest unknown outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > does not offer a retry for uncertain acceptance or a provider-accepted message
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > offers a retry for a definite failure before provider acceptance
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > waits for a provider receipt before showing sent, then advances through actual delivery history
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+ ❯ app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js (6 tests | 1 failed) 65ms
+   ✓ WhatsApp delivery outcomes in the Inbox > shows an honest pending outcome
+   ✓ WhatsApp delivery outcomes in the Inbox > shows an honest canceled outcome
+   ✓ WhatsApp delivery outcomes in the Inbox > shows an honest unknown outcome
+   ✓ WhatsApp delivery outcomes in the Inbox > does not offer a retry for uncertain acceptance or a provider-accepted message
+   ✓ WhatsApp delivery outcomes in the Inbox > offers a retry for a definite failure before provider acceptance
+   × WhatsApp delivery outcomes in the Inbox > waits for a provider receipt before showing sent, then advances through actual delivery history 11ms
+     → expected 'Sep 10, 4:42 AM' to contain 'Accepted by WhatsApp; awaiting delive…'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > waits for a provider receipt before showing sent, then advances through actual delivery history
+AssertionError: expected 'Sep 10, 4:42 AM' to contain 'Accepted by WhatsApp; awaiting delive…'
+
+Expected: "Accepted by WhatsApp; awaiting delivery"
+Received: "Sep 10, 4:42 AM"
+
+ ❯ app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js:87:28
+     85|   it('waits for a provider receipt before showing sent, then advances …
+     86|     const wrapper = mountDelivery('accepted', 'sent', 'wamid.ACCEPTED'…
+     87|     expect(wrapper.text()).toContain('Accepted by WhatsApp; awaiting d…
+       |                            ^
+     88|     expect(wrapper.findComponent(MessageStatus).exists()).toBe(false);
+     89|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  04:42:56
+   Duration  1.86s (transform 161ms, setup 204ms, collect 620ms, tests 65ms, environment 689ms, prepare 93ms)

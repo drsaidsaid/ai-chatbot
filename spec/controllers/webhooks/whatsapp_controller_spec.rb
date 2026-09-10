@@ -380,7 +380,7 @@ RSpec.describe 'Webhooks::WhatsappController', type: :request do
     canonical_webhook_payload(
       channel,
       contacts: [{ profile: { name: sender_name }, wa_id: sender_number }],
-      messages: [{ from: sender_number, id: message_id, timestamp: '1787740800', text: { body: body }, type: 'text' }]
+      messages: [{ from: sender_number, id: message_id, timestamp: Time.current.to_i.to_s, text: { body: body }, type: 'text' }]
     ).to_json
   end
 

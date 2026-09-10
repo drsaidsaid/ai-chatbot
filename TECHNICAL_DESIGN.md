@@ -389,6 +389,28 @@ Owned labels initially include `hot-lead`, `needs-review`, `follow-up-due`, and
 
 ## 8. Event Processing Invariants
 
+R04's dispatch contract is ADR 0011. Each WhatsApp Message records a unique
+Outbound Delivery in its creation transaction; every sender entry point uses
+that delivery's durable owner and final eligibility gate. Domain outbox events
+refer to the same Message rather than owning a competing provider send. A short
+transaction authorizes dispatch, followed by HTTP outside Conversation locks.
+Expired pre-dispatch claims recover; dispatch-started uncertainty cannot resend.
+Model claims likewise release Conversation locks during remote work and fence
+late output by owner and current authority. Inbox projection preserves local
+delivery outcomes separately from R03's monotonic provider-status facts.
+
+Payload preparation, including dispatch-time media capabilities, completes while
+the owner is claimed. Final authorization validates the prepared connection
+snapshot and locks the originating review/booking/handoff until dispatching
+commits. Local preparation failures remain retryable; HTTP uncertainty does not.
+Only the provider status projector supplies receipt evidence for the Inbox's
+accepted → sent/delivered/read progression. Booking cancel/reschedule transactions
+record their operator-authored notice and mutation Message ID atomically; the
+common Message sender and recovery job handle delivery after commit. Calendar
+reservation and broader rescheduling correctness remain R13 work.
+The API/model evidence filter reserves aliases across frontend key normalization,
+not only snake_case spellings, while preserving ordinary and nested attributes.
+
 R03 implements the receipt and recovery boundary in ADR 0009. The canonical
 controller persists authenticated envelopes with verified routing, then durable
 channel-scoped logical events drive the existing CE normalization service.

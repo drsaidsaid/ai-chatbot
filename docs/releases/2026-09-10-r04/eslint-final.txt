@@ -1,0 +1,5 @@
+
+/Users/ghalyasaid/.codex/worktrees/a823/AI Chatbot/app/javascript/dashboard/components-next/message/MessageMeta.vue
+  51:16  warning  'key' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
+
+✖ 1 problem (0 errors, 1 warning)

@@ -1,0 +1,29 @@
+Created database 'ale_release_r04_upgrade'
+== 20260910000400 CreateWhatsappOutboundDeliveries: migrating =================
+-- create_table(:whatsapp_outbound_deliveries)
+   -> 0.0103s
+-- add_index(:whatsapp_outbound_deliveries, [:state, :lease_expires_at])
+   -> 0.0009s
+== 20260910000400 CreateWhatsappOutboundDeliveries: migrated (0.0113s) ========
+
+== 20260910000401 AddAiOrchestrationClaims: migrating =========================
+-- add_column(:ai_orchestration_intents, :owner_token, :string)
+   -> 0.0009s
+-- add_column(:ai_orchestration_intents, :lease_expires_at, :datetime)
+   -> 0.0004s
+-- add_index(:ai_orchestration_intents, [:state, :lease_expires_at])
+   -> 0.0008s
+== 20260910000401 AddAiOrchestrationClaims: migrated (0.0021s) ================
+
+== 20260910000402 BackfillWhatsappOutboundEvidence: migrating =================
+-- execute("INSERT INTO whatsapp_outbound_deliveries (account_id, conversation_id, message_id, observed_control_version, state, provider_message_id, failure_code, created_at, updated_at) SELECT m.account_id, m.conversation_id, m.id, c.control_version, CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'unknown' ELSE 'accepted' END, NULLIF(m.source_id, ''), CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'legacy_acceptance_unknown' END, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM messages m JOIN conversations c ON c.id = m.conversation_id AND c.account_id = m.account_id JOIN inboxes i ON i.id = m.inbox_id AND i.id = c.inbox_id AND i.account_id = m.account_id WHERE i.channel_type = 'Channel::Whatsapp' AND m.message_type IN (1, 3) AND m.private = FALSE AND COALESCE(m.content_attributes->>'external_echo', '') NOT IN ('true', '1') ON CONFLICT (message_id) DO NOTHING")
+   -> 0.0017s
+-- execute("UPDATE messages m SET content_attributes = COALESCE(m.content_attributes::jsonb, '{}'::jsonb) || jsonb_build_object('whatsapp_delivery', jsonb_build_object('state', d.state, 'failure_code', d.failure_code)) FROM whatsapp_outbound_deliveries d WHERE m.id = d.message_id")
+   -> 0.0016s
+-- execute("INSERT INTO human_review_requests (account_id, conversation_id, lead_message_id, reason, status, question, created_at, updated_at) SELECT account_id, conversation_id, message_id, 9, 0, 'Legacy delivery outcome unknown. Check provider history before contacting the Lead again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM whatsapp_outbound_deliveries WHERE failure_code = 'legacy_acceptance_unknown' ON CONFLICT (account_id, conversation_id, lead_message_id, reason) DO NOTHING")
+   -> 0.0005s
+-- execute("UPDATE outbox_events e SET state = 4, failure_class = 'legacy_acceptance_unknown', failed_at = CURRENT_TIMESTAMP, delivered_at = NULL FROM whatsapp_outbound_deliveries d WHERE e.aggregate_type = 'Message' AND e.aggregate_id = d.message_id AND e.account_id = d.account_id AND d.failure_code = 'legacy_acceptance_unknown'")
+   -> 0.0009s
+== 20260910000402 BackfillWhatsappOutboundEvidence: migrated (0.0051s) ========
+
+Loading Installation config

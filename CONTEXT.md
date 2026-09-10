@@ -66,6 +66,15 @@ _Avoid_: Reply event, response payload
 A configured first response from the Business Account that welcomes a Lead at the start of a Conversation. It is visible conversation history, not hidden AI context.
 _Avoid_: Bot intro, duplicate salutation, welcome hook
 
+**WhatsApp Outbound Delivery**:
+The durable ownership and outcome of dispatching one Outbound Message through
+the existing WhatsApp sender. Pending, claimed and dispatching describe local
+work; accepted requires a provider Message ID. Unknown requires reconciliation
+or human review, never a blind resend. Provider sent/delivered/read facts remain
+separate from acceptance. Booking change notices are Outbound Messages attributed
+to the initiating Human Operator, with one notice per recorded mutation identity.
+See ADR 0011.
+
 **AI Employee**:
 The automated participant that answers approved questions, gathers qualification evidence, and follows configured rules.
 _Avoid_: Chatbot, agent, bot

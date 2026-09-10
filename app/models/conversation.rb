@@ -146,6 +146,7 @@ class Conversation < ApplicationRecord
 
   after_update_commit :execute_after_update_commit_callbacks
   after_update_commit :invalidate_assignment_access, if: :saved_change_to_assignee_id?
+  after_update :cancel_pending_automated_replies, if: -> { saved_change_to_status? && !open? }
   after_create_commit :notify_conversation_creation
   after_create_commit :load_attributes_created_by_db_triggers
   before_destroy :set_unread_count_deletion_data
@@ -283,6 +284,10 @@ class Conversation < ApplicationRecord
 
   def invalidate_assignment_access
     AiLeadEmployee::AccessInvalidation.notify(account_id: account_id, user_ids: saved_change_to_assignee_id)
+  end
+
+  def cancel_pending_automated_replies
+    Conversations::ControlService.invalidate_pending_ai!(conversation: self, reason: 'ineligible_inbox_status')
   end
 
   def cancel_incompatible_ai_follow_ups

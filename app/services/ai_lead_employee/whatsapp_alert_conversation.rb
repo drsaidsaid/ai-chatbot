@@ -4,7 +4,7 @@ class AiLeadEmployee::WhatsappAlertConversation
   def initialize(account:, whatsapp_channel:, recipient:, alert_type:)
     @account = account
     @whatsapp_channel = whatsapp_channel
-    @recipient = recipient
+    @recipient = Whatsapp::RecipientIdentifier.normalize(recipient)
     @alert_type = alert_type
   end
 

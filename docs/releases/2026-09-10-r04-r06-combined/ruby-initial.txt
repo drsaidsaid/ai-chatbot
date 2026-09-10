@@ -1,0 +1,537 @@
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :message_type, {incoming: 0, outgoing: 1, activity: 2, template: 3}
+ (called from <class:Message> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/message.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :content_type, {text: 0, input_text: 1, input_textarea: 2, input_email: 3, input_select: 4, cards: 5, form: 6, article: 7, incoming_email: 8, input_csat: 9, integrations: 10, sticker: 11, voice_call: 12}
+ (called from <class:Message> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/message.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {sent: 0, delivered: 1, read: 2, failed: 3}
+ (called from <class:Message> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/message.rb:105)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :file_type, {image: 0, audio: 1, video: 2, file: 3, location: 4, fallback: 5, share: 6, story_mention: 7, contact: 8, ig_reel: 9, ig_post: 10, ig_story: 11, embed: 12}
+ (called from <class:Attachment> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/attachment.rb:47)
+Run options: include {locations: {"./spec/controllers/api/v1/accounts/inboxes_controller_spec.rb" => [1442]}}
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, pending: 2, snoozed: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/conversation.rb:88)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :priority, {low: 0, medium: 1, high: 2, urgent: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/conversation.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :control_state, {ai_active: 0, handoff_requested: 1, human_active: 2, ai_paused: 3, closed: 4}
+ (called from <class:Conversation> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/conversation.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reply_time, {in_a_few_minutes: 0, in_a_few_hours: 1, in_a_day: 2}
+ (called from <class:WebWidget> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/channel/web_widget.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_type, {ongoing: 0, one_off: 1}
+ (called from <class:Campaign> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/campaign.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_status, {active: 0, completed: 1, processing: 2}
+ (called from <class:Campaign> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/campaign.rb:52)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {active: 0, inactive: 1}
+ (called from <class:AgentBotInbox> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/agent_bot_inbox.rb:22)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {disabled: 0, enabled: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/integrations/hook.rb:38)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :hook_type, {account: 0, inbox: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/integrations/hook.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :bot_type, {webhook: 0}
+ (called from <class:AgentBot> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/agent_bot.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {unknown: 0, unqualified: 1, low_qualified: 2, qualified: 3, highly_qualified: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/lead_qualification.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {no_follow_up: 0, nurture: 1, human_review: 2, call_booked: 3, closed: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/lead_qualification.rb:48)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source, {extracted: 0, human: 1}
+ (called from <class:QualificationEvidence> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/qualification_evidence.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {confirmed: 0, canceled: 1, completed: 2}
+ (called from <class:Booking> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/booking.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reason, {no_approved_knowledge: 0, conflicting_knowledge: 1, sensitive_question: 2, qualification_blocker: 3, angry_question: 4, unsupported_media: 5, source_unverified: 6, provider_failed: 7, stale_knowledge: 8, delivery_unknown: 9}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/human_review_request.rb:55)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, rejected: 2}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/human_review_request.rb:67)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, completed: 1, canceled: 2}
+ (called from <class:LeadHandoff> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/lead_handoff.rb:46)
+.....DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {pending: 0, sent: 1, cancelled: 2, failed: 3}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/lead_follow_up.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :stage, {incomplete_qualification: 0, qualified_nurture: 1}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/lead_follow_up.rb:64)
+.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, published: 1, archived: 2}
+ (called from <class:Article> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/article.rb:73)
+...DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source_kind, {faq: 0, offer: 1, pricing: 2, supporting_document: 3, objection: 4, policy: 5, refund: 6, guarantee: 7, eligibility: 8}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/knowledge_item.rb:33)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, approved: 1, rejected: 2, inactive: 3}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/knowledge_item.rb:44)
+.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :filter_type, {conversation: 0, contact: 1, report: 2}
+ (called from <class:CustomFilter> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/custom_filter.rb:23)
+........DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {"unknown" => 0, "unqualified" => 1, "low_qualified" => 2, "qualified" => 3, "highly_qualified" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/lead_qualification_decision.rb:40)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {"no_follow_up" => 0, "nurture" => 1, "human_review" => 2, "call_booked" => 3, "closed" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/lead_qualification_decision.rb:41)
+...FF.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :visibility, {personal: 0, global: 1}
+ (called from <class:Macro> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/macro.rb:29)
+............................./private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+......................................................................................................................................................../private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :webhook_type, {account_type: 0, inbox_type: 1}
+ (called from <class:Webhook> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/webhook.rb:30)
+...DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :subscription_type, {browser_push: 1, fcm: 2}
+ (called from <class:NotificationSubscription> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/notification_subscription.rb:28)
+..........................................F......../private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+............................F................................................................................................................................................/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+.../private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+.................................................../private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+............................DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, published: 1, archived: 2, import_failed: 3}
+ (called from <class:KnowledgeDocument> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/knowledge_document.rb:40)
+.................-- execute("INSERT INTO whatsapp_outbound_deliveries (account_id, conversation_id, message_id, observed_control_version, state, provider_message_id, failure_code, created_at, updated_at) SELECT m.account_id, m.conversation_id, m.id, c.control_version, CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'unknown' ELSE 'accepted' END, NULLIF(m.source_id, ''), CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'legacy_acceptance_unknown' END, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM messages m JOIN conversations c ON c.id = m.conversation_id AND c.account_id = m.account_id JOIN inboxes i ON i.id = m.inbox_id AND i.id = c.inbox_id AND i.account_id = m.account_id WHERE i.channel_type = 'Channel::Whatsapp' AND m.message_type IN (1, 3) AND m.private = FALSE AND COALESCE(m.content_attributes->>'external_echo', '') NOT IN ('true', '1') ON CONFLICT (message_id) DO NOTHING")
+   -> 0.0020s
+-- execute("UPDATE messages m SET content_attributes = COALESCE(m.content_attributes::jsonb, '{}'::jsonb) || jsonb_build_object('whatsapp_delivery', jsonb_build_object('state', d.state, 'failure_code', d.failure_code)) FROM whatsapp_outbound_deliveries d WHERE m.id = d.message_id")
+   -> 0.0012s
+-- execute("INSERT INTO human_review_requests (account_id, conversation_id, lead_message_id, reason, status, question, created_at, updated_at) SELECT account_id, conversation_id, message_id, 9, 0, 'Legacy delivery outcome unknown. Check provider history before contacting the Lead again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM whatsapp_outbound_deliveries WHERE failure_code = 'legacy_acceptance_unknown' ON CONFLICT (account_id, conversation_id, lead_message_id, reason) DO NOTHING")
+   -> 0.0014s
+-- execute("UPDATE outbox_events e SET state = 4, failure_class = 'legacy_acceptance_unknown', failed_at = CURRENT_TIMESTAMP, delivered_at = NULL FROM whatsapp_outbound_deliveries d WHERE e.aggregate_type = 'Message' AND e.aggregate_id = d.message_id AND e.account_id = d.account_id AND d.failure_code = 'legacy_acceptance_unknown'")
+   -> 0.0008s
+-- execute("INSERT INTO whatsapp_outbound_deliveries (account_id, conversation_id, message_id, observed_control_version, state, provider_message_id, failure_code, created_at, updated_at) SELECT m.account_id, m.conversation_id, m.id, c.control_version, CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'unknown' ELSE 'accepted' END, NULLIF(m.source_id, ''), CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'legacy_acceptance_unknown' END, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM messages m JOIN conversations c ON c.id = m.conversation_id AND c.account_id = m.account_id JOIN inboxes i ON i.id = m.inbox_id AND i.id = c.inbox_id AND i.account_id = m.account_id WHERE i.channel_type = 'Channel::Whatsapp' AND m.message_type IN (1, 3) AND m.private = FALSE AND COALESCE(m.content_attributes->>'external_echo', '') NOT IN ('true', '1') ON CONFLICT (message_id) DO NOTHING")
+   -> 0.0008s
+-- execute("UPDATE messages m SET content_attributes = COALESCE(m.content_attributes::jsonb, '{}'::jsonb) || jsonb_build_object('whatsapp_delivery', jsonb_build_object('state', d.state, 'failure_code', d.failure_code)) FROM whatsapp_outbound_deliveries d WHERE m.id = d.message_id")
+   -> 0.0004s
+-- execute("INSERT INTO human_review_requests (account_id, conversation_id, lead_message_id, reason, status, question, created_at, updated_at) SELECT account_id, conversation_id, message_id, 9, 0, 'Legacy delivery outcome unknown. Check provider history before contacting the Lead again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM whatsapp_outbound_deliveries WHERE failure_code = 'legacy_acceptance_unknown' ON CONFLICT (account_id, conversation_id, lead_message_id, reason) DO NOTHING")
+   -> 0.0003s
+-- execute("UPDATE outbox_events e SET state = 4, failure_class = 'legacy_acceptance_unknown', failed_at = CURRENT_TIMESTAMP, delivered_at = NULL FROM whatsapp_outbound_deliveries d WHERE e.aggregate_type = 'Message' AND e.aggregate_id = d.message_id AND e.account_id = d.account_id AND d.failure_code = 'legacy_acceptance_unknown'")
+   -> 0.0003s
+.............................................................................................................DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :medium, {sms: 0, whatsapp: 1}
+ (called from <class:TwilioSms> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/channel/twilio_sms.rb:52)
+...........................FFF/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+F/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+FFFF....F.FFF.F/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+F.FFFF/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+FFFF.........F.............
+
+Failures:
+
+  1) Owned Team Member invitation accepts the local invitation, signs in, and revokes only the selected Business Account
+     Failure/Error: expect(mail).to be_present
+       expected `nil.present?` to be truthy, got false
+     # ./spec/requests/r06_invitation_spec.rb:20:in 'RSpec::ExampleGroups::OwnedTeamMemberInvitation#invite'
+     # ./spec/requests/r06_invitation_spec.rb:25:in 'block (2 levels) in <main>'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (3 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:24:in 'block in ClimateControl#modify'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'Monitor#synchronize'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'ClimateControl#modify'
+     # ./spec/spec_helper.rb:17:in 'Object#with_modified_env'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (2 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  2) Owned Team Member invitation rejects expired invitation credentials
+     Failure/Error: expect(mail).to be_present
+       expected `nil.present?` to be truthy, got false
+     # ./spec/requests/r06_invitation_spec.rb:20:in 'RSpec::ExampleGroups::OwnedTeamMemberInvitation#invite'
+     # ./spec/requests/r06_invitation_spec.rb:49:in 'block (2 levels) in <main>'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (3 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:24:in 'block in ClimateControl#modify'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'Monitor#synchronize'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'ClimateControl#modify'
+     # ./spec/spec_helper.rb:17:in 'Object#with_modified_env'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (2 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  3) Webhooks::WhatsappController POST /webhooks/whatsapp/{:phone_number} replays a first lead message without duplicating the message, conversation, contact, or sent greeting
+     Failure/Error: expect(conversation.messages.template.first.source_id).to eq('wamid.GREETING.ROUNDTRIP.SENT')
+
+       expected: "wamid.GREETING.ROUNDTRIP.SENT"
+            got: nil
+
+       (compared using ==)
+     # ./spec/controllers/webhooks/whatsapp_controller_spec.rb:456:in 'RSpec::ExampleGroups::WebhooksWhatsappController#expect_replayed_greeting_messages'
+     # ./spec/controllers/webhooks/whatsapp_controller_spec.rb:181:in 'block (3 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  4) Whatsapp::IncomingMessageWhatsappCloudService#perform when a text message starts a channel-greeted conversation persists the lead message before one visible greeting and replays without side effects
+     Failure/Error: expect(greeting.source_id).to eq('wamid.GREETING.SENT')
+
+       expected: "wamid.GREETING.SENT"
+            got: nil
+
+       (compared using ==)
+     # ./spec/services/whatsapp/incoming_message_whatsapp_cloud_service_spec.rb:75:in 'block (4 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  5) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation creates a new outgoing message
+     Failure/Error: expect(response).to have_http_status(:success)
+       expected the response to have a success status code (2xx) but it was 401
+     # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:33:in 'block (4 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  6) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation marks the conversation as human controlled when a Human Operator sends a public reply
+     Failure/Error: expect(response).to have_http_status(:success)
+       expected the response to have a success status code (2xx) but it was 401
+     # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:54:in 'block (4 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  7) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation does not change control state for private notes
+     Failure/Error: expect(response).to have_http_status(:success)
+       expected the response to have a success status code (2xx) but it was 401
+     # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:75:in 'block (4 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  8) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation does not create the message
+     Failure/Error: expect(response).to have_http_status(:unprocessable_entity)
+       expected the response to have status code :unprocessable_entity (422) but it was :unauthorized (401)
+     # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:89:in 'block (4 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  9) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation returns a customer-safe error when the database query is canceled
+     Failure/Error: expect(response).to have_http_status(:unprocessable_entity)
+       expected the response to have status code :unprocessable_entity (422) but it was :unauthorized (401)
+     # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:107:in 'block (4 levels) in <main>'
+     # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  10) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation creates an outgoing text message with a specific bot sender
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:122:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  11) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation creates a new outgoing message with attachment
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:138:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  12) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation when api inbox reopens the conversation with new incoming message
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:159:in 'block (5 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  13) Conversation Messages API GET /api/v1/accounts/{account.id}/conversations/:id/messages when it is an authenticated user with access to conversation shows the conversation
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:249:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  14) Conversation Messages API DELETE /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when it is an authenticated user with access to conversation deletes the message
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:279:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  15) Conversation Messages API DELETE /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when it is an authenticated user with access to conversation deletes interactive messages
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:296:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  16) Conversation Messages API DELETE /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when the message id is invalid returns not found error
+      Failure/Error: expect(response).to have_http_status(:not_found)
+        expected the response to have a not_found status code (404) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:313:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  17) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id/retry when it is an authenticated user with access to conversation retries the message
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:340:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  18) Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id/retry when the message id is invalid returns not found error
+      Failure/Error: expect(response).to have_http_status(:unprocessable_entity)
+        expected the response to have status code :unprocessable_entity (422) but it was :unauthorized (401)
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:358:in 'block (4 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  19) Conversation Messages API PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when authenticated agent when agent has non-API inbox returns forbidden
+      Failure/Error: expect(response).to have_http_status(:forbidden)
+        expected the response to have status code :forbidden (403) but it was :unauthorized (401)
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:391:in 'block (5 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  20) Conversation Messages API PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when authenticated agent when agent has API inbox uses StatusUpdateService to perform status update
+      Failure/Error:
+        expect(Messages::StatusUpdateService).to receive(:new)
+          .with(message, 'failed', 'err123')
+          .and_return(service)
+
+        (Messages::StatusUpdateService (class)).new(#<Message id: 3847, content: "Incoming Message", account_id: 2898, inbox_id: 3374, conversation_id: 3...ributes: {}, processed_message_content: "Incoming Message", sentiment: {}, provider_created_at: nil>, "failed", "err123")
+            expected: 1 time with arguments: (#<Message id: 3847, content: "Incoming Message", account_id: 2898, inbox_id: 3374, conversation_id: 3...ributes: {}, processed_message_content: "Incoming Message", sentiment: {}, provider_created_at: nil>, "failed", "err123")
+            received: 0 times
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:400:in 'block (5 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  21) Conversation Messages API PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when authenticated agent when agent has API inbox updates status to failed with external_error
+      Failure/Error: expect(response).to have_http_status(:success)
+        expected the response to have a success status code (2xx) but it was 401
+      # ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:418:in 'block (5 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  22) Human Review Requests API shows the operator queue to a Human Operator
+      Failure/Error:
+        expect(response.parsed_body.first).to include(
+          'id' => request_record.id,
+          'question' => 'Do you do VIP onboarding?',
+          'status' => 'open',
+          'conversation_display_id' => conversation.display_id
+        )
+
+        expected nil to include {"id" => 397, "question" => "Do you do VIP onboarding?", "status" => "open", "conversation_display_id" => 1}, but it does not respond to `include?`
+      # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:21:in 'block (2 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  23) Human Review Requests API does not resolve a request with an automated outgoing answer
+      Failure/Error: expect(response).to have_http_status(:unprocessable_entity)
+        expected the response to have status code :unprocessable_entity (422) but it was :unauthorized (401)
+      # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:44:in 'block (2 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  24) Human Review Requests API resolves a request with the human answer and optional draft knowledge proposal
+      Got 4 failures and 1 other error:
+
+      24.1) Failure/Error: expect(response).to have_http_status(:success)
+              expected the response to have a success status code (2xx) but it was 401
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:69:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      24.2) Failure/Error: expect(request_record.reload).to be_resolved
+              expected `#<HumanReviewRequest id: 399, account_id: 2902, conversation_id: 3166, lead_message_id: 3852, human_a...4150000 +0000", assigned_user_id: nil, operator_answer: nil, resolution_kind: nil, rejected_at: nil>.resolved?` to be truthy, got false
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:70:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      24.3) Failure/Error: expect(request_record.human_answer_message).to eq(answer)
+
+              expected: #<Message id: 3853, content: "Yes, VIP onboarding is available after approval.", account_id: 2902, in...ontent: "Yes, VIP onboarding is available after approval.", sentiment: {}, provider_created_at: nil>
+                   got: nil
+
+              (compared using ==)
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:71:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      24.4) Failure/Error: expect(request_record.knowledge_item).to be_draft
+              expected nil to respond to `draft?`
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:72:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      24.5) Failure/Error: expect(request_record.knowledge_item.question).to eq('Do you do VIP onboarding?')
+
+            NoMethodError:
+              undefined method 'question' for nil
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:73:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  25) Human Review Requests API creates the outgoing answer while resolving and proposing an Approved Answer
+      Got 2 failures and 1 other error:
+
+      25.1) Failure/Error: expect(response).to have_http_status(:success)
+              expected the response to have a success status code (2xx) but it was 401
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:103:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      25.2) Failure/Error: expect(request_record.reload).to be_resolved
+              expected `#<HumanReviewRequest id: 400, account_id: 2903, conversation_id: 3167, lead_message_id: 3854, human_a...7860000 +0000", assigned_user_id: nil, operator_answer: nil, resolution_kind: nil, rejected_at: nil>.resolved?` to be truthy, got false
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:104:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      25.3) Failure/Error: expect(request_record.human_answer_message.content).to eq('VIP onboarding is available for qualified leads.')
+
+            NoMethodError:
+              undefined method 'content' for nil
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:105:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  26) Human Review Requests API supports assignment and rejection from the Review workspace
+      Got 5 failures:
+
+      26.1) Failure/Error: expect(response).to have_http_status(:success)
+              expected the response to have a success status code (2xx) but it was 401
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:117:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      26.2) Failure/Error: expect(request_record.reload.assigned_user).to eq(agent)
+
+              expected: #<User id: 2089, provider: "email", uid: "grover@148492c4-bb04-449c-8545-681cc2bb951d.com", name: "Su...consumed_timestep: nil, otp_required_for_login: false, otp_backup_codes: [FILTERED], confirmed: nil>
+                   got: nil
+
+              (compared using ==)
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:118:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      26.3) Failure/Error: expect(response).to have_http_status(:success)
+              expected the response to have a success status code (2xx) but it was 401
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:125:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      26.4) Failure/Error: expect(request_record.reload).to be_rejected
+              expected `#<HumanReviewRequest id: 401, account_id: 2904, conversation_id: 3168, lead_message_id: 3855, human_a...3430000 +0000", assigned_user_id: nil, operator_answer: nil, resolution_kind: nil, rejected_at: nil>.rejected?` to be truthy, got false
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:126:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+      26.5) Failure/Error: expect(request_record.operator_answer).to eq('Do not use this request as knowledge.')
+
+              expected: "Do not use this request as knowledge."
+                   got: nil
+
+              (compared using ==)
+            # ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:127:in 'block (2 levels) in <main>'
+            # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  27) Messages::MessageBuilder#perform when message_type is incoming when attachment messages when DIRECT_UPLOAD_ENABLED creates message with attachments
+      Failure/Error: raise Pundit::NotAuthorizedError unless new(blob: blob, user: user).allowed?
+
+      Pundit::NotAuthorizedError:
+        not allowed to  this NilClass
+      # ./app/services/ai_lead_employee/blob_access.rb:8:in 'AiLeadEmployee::BlobAccess.authorize_upload!'
+      # ./app/builders/messages/message_builder.rb:63:in 'block in Messages::MessageBuilder#process_attachments'
+      # ./app/builders/messages/message_builder.rb:62:in 'Array#each'
+      # ./app/builders/messages/message_builder.rb:62:in 'Messages::MessageBuilder#process_attachments'
+      # ./app/builders/messages/message_builder.rb:27:in 'Messages::MessageBuilder#perform'
+      # ./spec/builders/messages/message_builder_spec.rb:4:in 'block (2 levels) in <main>'
+      # ./spec/builders/messages/message_builder_spec.rb:146:in 'block (5 levels) in <main>'
+      # /private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/ale-release-r04-gems.20260910-25641-ozq4o5/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+Finished in 3 minutes 52.5 seconds (files took 16.43 seconds to load)
+721 examples, 27 failures
+
+Failed examples:
+
+rspec ./spec/requests/r06_invitation_spec.rb:24 # Owned Team Member invitation accepts the local invitation, signs in, and revokes only the selected Business Account
+rspec ./spec/requests/r06_invitation_spec.rb:48 # Owned Team Member invitation rejects expired invitation credentials
+rspec ./spec/controllers/webhooks/whatsapp_controller_spec.rb:154 # Webhooks::WhatsappController POST /webhooks/whatsapp/{:phone_number} replays a first lead message without duplicating the message, conversation, contact, or sent greeting
+rspec ./spec/services/whatsapp/incoming_message_whatsapp_cloud_service_spec.rb:59 # Whatsapp::IncomingMessageWhatsappCloudService#perform when a text message starts a channel-greeted conversation persists the lead message before one visible greeting and replays without side effects
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:25 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation creates a new outgoing message
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:39 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation marks the conversation as human controlled when a Human Operator sends a public reply
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:60 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation does not change control state for private notes
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:81 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation does not create the message
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:96 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation returns a customer-safe error when the database query is canceled
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:112 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation creates an outgoing text message with a specific bot sender
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:130 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation creates a new outgoing message with attachment
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:148 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/<id>/messages when it is an authenticated user with access to conversation when api inbox reopens the conversation with new incoming message
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:244 # Conversation Messages API GET /api/v1/accounts/{account.id}/conversations/:id/messages when it is an authenticated user with access to conversation shows the conversation
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:274 # Conversation Messages API DELETE /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when it is an authenticated user with access to conversation deletes the message
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:285 # Conversation Messages API DELETE /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when it is an authenticated user with access to conversation deletes interactive messages
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:308 # Conversation Messages API DELETE /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when the message id is invalid returns not found error
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:335 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id/retry when it is an authenticated user with access to conversation retries the message
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:353 # Conversation Messages API POST /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id/retry when the message id is invalid returns not found error
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:385 # Conversation Messages API PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when authenticated agent when agent has non-API inbox returns forbidden
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:398 # Conversation Messages API PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when authenticated agent when agent has API inbox uses StatusUpdateService to perform status update
+rspec ./spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb:411 # Conversation Messages API PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id when authenticated agent when agent has API inbox updates status to failed with external_error
+rspec ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:15 # Human Review Requests API shows the operator queue to a Human Operator
+rspec ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:29 # Human Review Requests API does not resolve a request with an automated outgoing answer
+rspec ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:48 # Human Review Requests API resolves a request with the human answer and optional draft knowledge proposal
+rspec ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:91 # Human Review Requests API creates the outgoing answer while resolving and proposing an Approved Answer
+rspec ./spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb:111 # Human Review Requests API supports assignment and rejection from the Review workspace
+rspec ./spec/builders/messages/message_builder_spec.rb:145 # Messages::MessageBuilder#perform when message_type is incoming when attachment messages when DIRECT_UPLOAD_ENABLED creates message with attachments

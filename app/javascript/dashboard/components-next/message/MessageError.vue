@@ -12,21 +12,38 @@ defineProps({
 
 const emit = defineEmits(['retry']);
 
-const { orientation, status, createdAt, content, attachments } =
-  useMessageContext();
+const {
+  orientation,
+  status,
+  createdAt,
+  content,
+  attachments,
+  contentAttributes,
+  sourceId,
+} = useMessageContext();
 
 const { t } = useI18n();
 
 const canRetry = computed(() => {
+  const delivery = contentAttributes.value?.whatsappDelivery;
+  if (delivery && (delivery.state !== 'failed' || sourceId.value)) return false;
   const hasContent = content.value !== null;
   const hasAttachments = attachments.value && attachments.value.length > 0;
   return !hasOneDayPassed(createdAt.value) && (hasContent || hasAttachments);
+});
+
+const failureLabel = computed(() => {
+  const state = contentAttributes.value?.whatsappDelivery?.state;
+  if (state === 'unknown') return t('CHAT_LIST.DELIVERY_UNKNOWN');
+  if (state === 'canceled') return t('CHAT_LIST.DELIVERY_CANCELED');
+  if (state === 'accepted') return t('CHAT_LIST.DELIVERY_FAILED');
+  return t('CHAT_LIST.FAILED_TO_SEND');
 });
 </script>
 
 <template>
   <div class="text-xs text-n-ruby-11 flex items-center gap-1.5">
-    <span>{{ t('CHAT_LIST.FAILED_TO_SEND') }}</span>
+    <span role="status">{{ failureLabel }}</span>
     <div class="relative group">
       <div
         class="bg-n-alpha-2 rounded-md size-5 grid place-content-center cursor-pointer"
@@ -49,6 +66,7 @@ const canRetry = computed(() => {
     <button
       v-if="canRetry"
       type="button"
+      :aria-label="t('CHAT_LIST.RETRY_DELIVERY')"
       :disabled="status !== MESSAGE_STATUS.FAILED"
       class="bg-n-alpha-2 rounded-md size-5 grid place-content-center cursor-pointer"
       @click="emit('retry')"
