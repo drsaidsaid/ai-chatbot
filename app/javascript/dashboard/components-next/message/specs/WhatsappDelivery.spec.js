@@ -7,6 +7,8 @@ import MessageError from '../MessageError.vue';
 import MessageStatus from '../MessageStatus.vue';
 import { provideMessageContext } from '../provider';
 import chatlist from 'dashboard/i18n/locale/en/chatlist.json';
+import { useCamelCase } from 'dashboard/composables/useTransformKeys';
+import receiptAliases from './fixtures/whatsappReceiptAliases.json';
 
 const wrappers = [];
 const mountDelivery = (state, status = 'sent', sourceId = null) => {
@@ -60,6 +62,41 @@ const mountDelivery = (state, status = 'sent', sourceId = null) => {
 afterEach(() => wrappers.splice(0).forEach(wrapper => wrapper.unmount()));
 
 describe('WhatsApp delivery outcomes in the Inbox', () => {
+  it.each(receiptAliases)(
+    '$case evidence aliases cannot impersonate provider history after the real API transform',
+    async ({
+      client_attributes: clientAttributes,
+      accepted_message: apiMessage,
+    }) => {
+      const attempted = useCamelCase(clientAttributes, { deep: true });
+      expect(attempted.whatsappProviderStatus).toBe('sent');
+      expect(attempted.whatsappDeliveryTimestamp).toBe(123);
+      const message = useCamelCase(apiMessage, {
+        deep: true,
+        stopPaths: [
+          'content_attributes.translations',
+          'content_attributes.whatsapp_flow_response.response_json',
+        ],
+      });
+      const wrapper = mountDelivery(
+        'accepted',
+        message.status,
+        message.sourceId
+      );
+      await wrapper.setProps({ contentAttributes: message.contentAttributes });
+      expect(wrapper.text()).toContain(
+        'Accepted by WhatsApp; awaiting delivery'
+      );
+      expect(wrapper.findComponent(MessageStatus).exists()).toBe(false);
+      expect(message.contentAttributes.operatorNote).toBe(
+        'Keep this ordinary attribute'
+      );
+      expect(message.contentAttributes.notes.whatsappProviderStatus).toBe(
+        'Preserve nested customer data'
+      );
+    }
+  );
+
   it.each([
     ['pending', 'Pending'],
     ['canceled', 'Canceled'],

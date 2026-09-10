@@ -143,6 +143,36 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     expect(message.whatsapp_outbound_delivery).to be_pending
   end
 
+  it 'keeps every supported client evidence alias out of accepted Message API history' do
+    fixture_path = Rails.root.join('app/javascript/dashboard/components-next/message/specs/fixtures/whatsappReceiptAliases.json')
+    cases = JSON.parse(fixture_path.read)
+    actual = cases.map.with_index do |item, index|
+      headers = admin.create_new_auth_token
+      path = "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages"
+      post path, headers: headers, params: { content: 'Wait for the provider receipt', content_attributes: item.fetch('client_attributes') },
+                 as: :json
+      expect(response).to have_http_status(:ok)
+      message = conversation.messages.outgoing.order(:id).last
+      provider_id = "wamid.ALIAS.#{index}"
+      stub_request(:post, provider_url).to_return(status: 200, body: { messages: [{ id: provider_id }] }.to_json,
+                                                  headers: { 'Content-Type' => 'application/json' })
+      SendReplyJob.perform_now(message.id)
+      get path, headers: headers
+      payload = response.parsed_body.fetch('payload').find { |row| row['id'] == message.id }
+      item.merge('accepted_message' => payload.slice('status', 'source_id', 'content_attributes'))
+    end
+    # The frontend contract fixture is captured from actual HTTP responses, never
+    # assembled by a second sanitizer. Future runs compare that same contract.
+    Rails.root.join('tmp/whatsapp_receipt_aliases_api.json').write(JSON.pretty_generate(actual))
+    actual.each do |item|
+      expect(item.dig('accepted_message', 'content_attributes')).to eq(
+        'operator_note' => 'Keep this ordinary attribute', 'notes' => { 'whatsappProviderStatus' => 'Preserve nested customer data' },
+        'whatsapp_delivery' => { 'state' => 'accepted', 'failure_code' => nil }
+      )
+    end
+    expect(actual).to eq(cases)
+  end
+
   it 'recovers an outgoing Message committed during a queue outage without asking the operator to recreate it' do
     adapter_class = Class.new do
       def enqueue(*)

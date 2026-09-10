@@ -59,3 +59,22 @@ regressions cover booking preparation competing with dispatch or cancellation,
 plus review/booking/handoff revocation. Broader calendar correctness remains R13.
 
 Follow-up final findings: Standards 0; Spec 0. Browser acceptance remains pending.
+
+## Receipt alias correction
+
+The coordinator's final rereview found one remaining P2: camelCase and other
+client attribute aliases could survive the snake_case-only filter, then become
+trusted-looking receipt fields through the Inbox's deep `useCamelCase` transform.
+This could show Sent immediately after acceptance without a provider receipt.
+
+A shared API/model filter now reserves all equivalent top-level delivery,
+receipt and external-echo keys. Canonical HTTP coverage exercises ten forms,
+including case, separators and Unicode normalization boundaries. A fixture
+captured from the actual GET Message responses feeds the real frontend
+transform and MessageMeta regression. Ordinary attributes, nested customer data
+and trusted provider ingress retain their existing behavior.
+
+Both local review agents completed read-only targeted rereviews of the shared
+filter and API-to-component contract. Standards: no actionable findings. Spec:
+no concrete remaining defect. The parent task owns the execution evidence.
+Browser acceptance remains pending and is not implied by these reviews.

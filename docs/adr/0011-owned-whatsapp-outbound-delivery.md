@@ -69,6 +69,11 @@ channel-scoped receipt history and shared monotonic MessageStatusProjector.
 The Inbox displays accepted/awaiting delivery until projector-owned receipt
 evidence exists; creating a Message cannot supply this evidence through client
 content attributes. Provider sent/delivered/read/failed projections survive reload.
+The reserved evidence namespace includes aliases recognized by the Inbox's deep
+camel-case conversion: casing, separators and supported Unicode trim/case forms.
+The API and new owned Message boundary share this filter. It removes only reserved
+top-level keys; ordinary attributes, nested customer data and trusted provider
+ingress retain their existing meanings.
 Without reliable correlation, human review is the terminal recovery action.
 
 A recurring recovery job repairs lost enqueue operations, expired pre-dispatch

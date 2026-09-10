@@ -15,5 +15,16 @@
     "production_build": "passed",
     "rubocop_offenses": 0,
     "eslint_errors": 0
+  },
+  "receipt_alias_validation": {
+    "ruby_examples": 292,
+    "ruby_failures": 0,
+    "vue_tests": 18,
+    "vue_failures": 0,
+    "production_build": "previous corrected build retained; no runtime frontend change",
+    "rubocop_offenses": 0,
+    "rubocop_files": 4,
+    "eslint_errors": 0,
+    "eslint_existing_warnings": 1
   }
 }

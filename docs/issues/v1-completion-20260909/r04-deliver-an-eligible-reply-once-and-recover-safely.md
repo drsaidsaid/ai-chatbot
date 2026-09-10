@@ -63,4 +63,8 @@ uncertainty, accepted-before-receipt display/evidence, and originating review
 rejection serialization. Include the reachable booking cancel/reschedule notice
 bypass: atomically record one operator-authored Message per mutation identity and
 use shared dispatch/recovery. Broader calendar/rescheduling correctness remains
-blocked R13 work. Follow-up red/green and rereview evidence is being recorded.
+blocked R13 work. Follow-up red/green and rereview evidence is recorded in the
+release directory. The final receipt correction also reserves client aliases
+that normalize to delivery/receipt/echo fields; actual HTTP responses feed the
+Inbox transform and MessageMeta regression, preserving ordinary attributes and
+trusted provider ingress. Browser acceptance remains pending.

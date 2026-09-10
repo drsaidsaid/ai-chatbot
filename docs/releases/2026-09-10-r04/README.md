@@ -36,14 +36,16 @@ copied or replaced.
 
 ## Validation
 
-- **291 selected Ruby examples passed** after coordinator corrections, including 44 canonical outgoing cases,
+- **292 selected Ruby examples passed** after the final receipt-alias correction, including 45 canonical outgoing cases,
   two real Rails-process kill cases, R03 ingress/concurrency, existing canonical
   launch flow, orchestration, domain outbox, follow-up, handoff/review/booking,
   both WhatsApp providers, native Message/Bookings/Review APIs, the Message builder,
   nine independent-connection authority cases and five booking notice cases.
-- **8 Vue component tests passed** against the actual MessageMeta/MessageError
+- **18 Vue component tests passed** against the actual MessageMeta/MessageError
   components: pending/canceled/unknown display, acceptance awaiting receipt,
-  projected sent/delivered/read advancement, provider failure and retry eligibility.
+  projected sent/delivered/read advancement, provider failure, retry eligibility
+  and ten client evidence aliases passed through the real deep camel-case
+  transform using actual HTTP response fixtures.
 - **Corrected production Vite build passed**, 1m19s. Existing Browserslist and bundle-size
   warnings remain. No dependency or lockfile change was made.
 - Ruby lint passed on changed Ruby files. Frontend lint has no errors and one
@@ -63,8 +65,11 @@ after the provider accepts but before the Message ID commits. Recovery sends
 once in the former case and raises one unknown review without resending in the
 latter. These are canonical-path checks, not evaluation-sandbox labels.
 
-The current follow-up results use `coordinator-*` logs. The earlier 235-example
-run and original build remain preserved as initial implementation evidence.
+The latest results use `receipt-alias-*` logs. The previous 291-example and
+8-component correction run and successful production build use `coordinator-*`
+logs; no production frontend source changed in the final alias correction.
+The earlier 235-example run and original build remain preserved as initial
+implementation evidence.
 [Coordinator correction details](coordinator-follow-up.md) map each regression to
 its red/green evidence and define the narrow booking scope.
 

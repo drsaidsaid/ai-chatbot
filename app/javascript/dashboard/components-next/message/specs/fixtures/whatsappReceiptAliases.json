@@ -1,0 +1,302 @@
+[
+  {
+    "case": "snake_case",
+    "client_attributes": {
+      "external_echo": true,
+      "whatsapp_delivery": {
+        "state": "accepted"
+      },
+      "whatsapp_provider_status": "sent",
+      "whatsapp_delivery_timestamp": 123,
+      "whatsapp_delivery_error_code": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.0",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "camelCase",
+    "client_attributes": {
+      "externalEcho": true,
+      "whatsappDelivery": {
+        "state": "accepted"
+      },
+      "whatsappProviderStatus": "sent",
+      "whatsappDeliveryTimestamp": 123,
+      "whatsappDeliveryErrorCode": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.1",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "PascalCase",
+    "client_attributes": {
+      "ExternalEcho": true,
+      "WhatsappDelivery": {
+        "state": "accepted"
+      },
+      "WhatsappProviderStatus": "sent",
+      "WhatsappDeliveryTimestamp": 123,
+      "WhatsappDeliveryErrorCode": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.2",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "UPPER_SNAKE_CASE",
+    "client_attributes": {
+      "EXTERNAL_ECHO": true,
+      "WHATSAPP_DELIVERY": {
+        "state": "accepted"
+      },
+      "WHATSAPP_PROVIDER_STATUS": "sent",
+      "WHATSAPP_DELIVERY_TIMESTAMP": 123,
+      "WHATSAPP_DELIVERY_ERROR_CODE": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.3",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "hyphens",
+    "client_attributes": {
+      "external-echo": true,
+      "whatsapp-delivery": {
+        "state": "accepted"
+      },
+      "whatsapp-provider-status": "sent",
+      "whatsapp-delivery-timestamp": 123,
+      "whatsapp-delivery-error-code": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.4",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "dots",
+    "client_attributes": {
+      "external.echo": true,
+      "whatsapp.delivery": {
+        "state": "accepted"
+      },
+      "whatsapp.provider.status": "sent",
+      "whatsapp.delivery.timestamp": 123,
+      "whatsapp.delivery.error.code": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.5",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "spaces",
+    "client_attributes": {
+      "external echo": true,
+      "whatsapp delivery": {
+        "state": "accepted"
+      },
+      "whatsapp provider status": "sent",
+      "whatsapp delivery timestamp": 123,
+      "whatsapp delivery error code": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.6",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "repeated_separators",
+    "client_attributes": {
+      "__external.-_ echo.-": true,
+      "__whatsapp.-_ delivery.-": {
+        "state": "accepted"
+      },
+      "__whatsapp.-_ provider.-_ status.-": "sent",
+      "__whatsapp.-_ delivery.-_ timestamp.-": 123,
+      "__whatsapp.-_ delivery.-_ error.-_ code.-": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.7",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "unicode_trim",
+    "client_attributes": {
+      " ﻿EXTERNAL_ECHO﻿ ": true,
+      " ﻿WHATSAPP_DELIVERY﻿ ": {
+        "state": "accepted"
+      },
+      " ﻿WHATSAPP_PROVIDER_STATUS﻿ ": "sent",
+      " ﻿WHATSAPP_DELIVERY_TIMESTAMP﻿ ": 123,
+      " ﻿WHATSAPP_DELIVERY_ERROR_CODE﻿ ": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.8",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  },
+  {
+    "case": "unicode_boundary",
+    "client_attributes": {
+      "external_echo": true,
+      "whatsapp_delivery": {
+        "state": "accepted"
+      },
+      "whatsapp_provider_ſtatus": "sent",
+      "whatsapp_delivery_timestamp": 123,
+      "whatsapp_delivery_error_code": "190",
+      "operator_note": "Keep this ordinary attribute",
+      "notes": {
+        "whatsappProviderStatus": "Preserve nested customer data"
+      }
+    },
+    "accepted_message": {
+      "status": "sent",
+      "source_id": "wamid.ALIAS.9",
+      "content_attributes": {
+        "operator_note": "Keep this ordinary attribute",
+        "notes": {
+          "whatsappProviderStatus": "Preserve nested customer data"
+        },
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    }
+  }
+]

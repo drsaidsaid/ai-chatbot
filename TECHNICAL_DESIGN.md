@@ -398,6 +398,8 @@ accepted → sent/delivered/read progression. Booking cancel/reschedule transact
 record their operator-authored notice and mutation Message ID atomically; the
 common Message sender and recovery job handle delivery after commit. Calendar
 reservation and broader rescheduling correctness remain R13 work.
+The API/model evidence filter reserves aliases across frontend key normalization,
+not only snake_case spellings, while preserving ordinary and nested attributes.
 
 R03 implements the receipt and recovery boundary in ADR 0009. The canonical
 controller persists authenticated envelopes with verified routing, then durable

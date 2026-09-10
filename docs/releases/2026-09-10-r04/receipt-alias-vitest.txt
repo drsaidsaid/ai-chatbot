@@ -1,0 +1,200 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/a823/AI Chatbot
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'snake_case' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'camelCase' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'PascalCase' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'UPPER_SNAKE_CASE' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'hyphens' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'dots' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'spaces' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'repeated_separators' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'unicode_trim' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > 'unicode_boundary' evidence aliases cannot impersonate provider history after the real API transform
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > shows an honest pending outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > shows an honest canceled outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > shows an honest unknown outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > does not offer a retry for uncertain acceptance or a provider-accepted message
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > offers a retry for a definite failure before provider acceptance
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > waits for provider evidence before advancing to sent
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > waits for provider evidence before advancing to delivered
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js > WhatsApp delivery outcomes in the Inbox > waits for provider evidence before advancing to read
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js (18 tests) 122ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  05:29:55
+   Duration  2.30s (transform 223ms, setup 243ms, collect 643ms, tests 122ms, environment 845ms, prepare 126ms)

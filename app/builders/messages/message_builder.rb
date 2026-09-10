@@ -40,9 +40,7 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
     return unless @conversation.inbox.channel.is_a?(Channel::Whatsapp)
 
     @message.source_id = nil
-    @message.content_attributes = @message.content_attributes.to_h.except(
-      'external_echo', 'whatsapp_delivery', 'whatsapp_provider_status', 'whatsapp_delivery_timestamp', 'whatsapp_delivery_error_code'
-    )
+    @message.content_attributes = Whatsapp::MessageEvidence.without_client_evidence(@message.content_attributes)
   end
 
   # Extracts content attributes from the given params.
