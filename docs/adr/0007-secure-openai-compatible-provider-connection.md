@@ -47,7 +47,8 @@ baseline `324ee6df`.
 Follow-up review requires durable admission to use a separate bounded database
 pool whenever provider work runs inside an application transaction. Checkout
 failure blocks provider HTTP, while bookkeeping failure after HTTP suppresses
-the output and leaves the reservation conservative. Provider-produced Messages
+the output, leaves the reservation conservative, and terminates orchestration
+recovery before another provider attempt. Provider-produced Messages
 retain both the configuration revision and UTC allowance date used for admission;
 the final WhatsApp boundary rejects either stale value. Health writes also reject
 observations older than the latest persisted provider result. Evaluation evidence

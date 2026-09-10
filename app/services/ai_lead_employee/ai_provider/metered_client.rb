@@ -24,8 +24,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
     )
     raise
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
-    attempt_cleanup { fail_usage!(reservation&.usage_id, e.failure_class) }
-    attempt_cleanup { record_provider_failure!(reservation, e.failure_class) }
+    clean_up_provider_failure(reservation, e) unless e.is_a?(AiLeadEmployee::AiProvider::AccountingUncertainFailure)
     raise
   end
 
@@ -53,16 +52,32 @@ class AiLeadEmployee::AiProvider::MeteredClient
   end
 
   def complete_reserved!(reservation, messages, max_tokens, temperature, response_format)
-    response = adapter.complete(
+    response = request_provider_response(messages, max_tokens, temperature, response_format)
+    finalize_response!(reservation, response)
+  end
+
+  def request_provider_response(messages, max_tokens, temperature, response_format)
+    adapter.complete(
       messages: messages,
       max_tokens: max_tokens,
       temperature: temperature,
       response_format: response_format
     )
+  rescue AiLeadEmployee::AiProvider::ProviderFailure
+    raise
+  rescue StandardError
+    raise AiLeadEmployee::AiProvider::AccountingUncertainFailure,
+          'AI provider outcome is uncertain after an unexpected response-processing failure'
+  end
+
+  def finalize_response!(reservation, response)
     response.configuration_version = reservation.configuration_version
     response.usage_period_on = reservation.period_on
     complete_usage!(reservation.usage_id, response)
     response
+  rescue StandardError
+    raise AiLeadEmployee::AiProvider::AccountingUncertainFailure,
+          'AI provider responded but durable usage completion is uncertain'
   end
 
   def reserve_usage!(purpose:, max_tokens:)
@@ -170,5 +185,10 @@ class AiLeadEmployee::AiProvider::MeteredClient
     yield
   rescue AiLeadEmployee::AiProvider::AdmissionUnavailableFailure, ActiveRecord::RecordNotFound
     nil
+  end
+
+  def clean_up_provider_failure(reservation, failure)
+    attempt_cleanup { fail_usage!(reservation&.usage_id, failure.failure_class) }
+    attempt_cleanup { record_provider_failure!(reservation, failure.failure_class) }
   end
 end

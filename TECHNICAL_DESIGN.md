@@ -224,7 +224,8 @@ Transactional callers write admission through a separate bounded database pool,
 so a saturated application pool cannot deadlock accounting. If that ledger pool
 cannot be checked out, the request fails closed before provider HTTP. A failure
 to complete accounting after HTTP suppresses the returned output and retains the
-reserved attempt conservatively.
+reserved attempt conservatively. That uncertain post-response state becomes a
+terminal orchestration failure so recovery cannot call the provider again.
 
 Extend R04's existing claimed-intent/output fence and
 `Whatsapp::OutboundEligibility` with current provider permission and revision.

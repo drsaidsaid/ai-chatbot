@@ -58,3 +58,6 @@ are recorded in `docs/releases/2026-09-10-r10/`.
 The later concurrency and final-authorization corrections are recorded separately
 in `docs/releases/2026-09-11-r10-follow-up/` so the original candidate evidence
 remains immutable.
+The final post-response accounting fence and its test-first evidence are recorded
+in `docs/releases/2026-09-11-r10-accounting-follow-up/` as a second immutable
+correction layer.

@@ -14,6 +14,7 @@ module AiLeadEmployee::AiProvider
     input_limit: 'input_limit_exceeded',
     output_limit: 'output_limit_exceeded',
     configuration_changed: 'provider_configuration_changed',
-    admission_unavailable: 'provider_admission_unavailable'
+    admission_unavailable: 'provider_admission_unavailable',
+    accounting_uncertain: 'provider_accounting_uncertain'
   }.freeze
 end
