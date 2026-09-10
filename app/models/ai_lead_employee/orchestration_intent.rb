@@ -55,6 +55,12 @@ class AiLeadEmployee::OrchestrationIntent < ApplicationRecord
 
   enum :state, { pending: 0, processing: 1, completed: 2, blocked: 3, failed: 4 }
 
+  MAX_CLAIM_ATTEMPTS = 3
+
+  scope :recoverable, lambda {
+    pending.or(processing.where('lease_expires_at IS NULL OR lease_expires_at <= ?', Time.current))
+  }
+
   validates :idempotency_key, :observed_control_version, presence: true
   validates :idempotency_key, uniqueness: { scope: :account_id }
   validate :validate_account_scope

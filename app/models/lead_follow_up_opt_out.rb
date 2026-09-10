@@ -38,8 +38,15 @@ class LeadFollowUpOptOut < ApplicationRecord
   validates :reason, :opted_out_at, presence: true
   validates :contact_id, uniqueness: { scope: :account_id }
   validate :validate_account_scope
+  after_create :cancel_pending_automation
 
   private
+
+  def cancel_pending_automation
+    account.conversations.where(contact_id: contact_id).find_each do |item|
+      item.with_lock { Conversations::ControlService.invalidate_pending_ai!(conversation: item, reason: 'opted_out') }
+    end
+  end
 
   def validate_account_scope
     errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id

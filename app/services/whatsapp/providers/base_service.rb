@@ -33,12 +33,22 @@ class Whatsapp::Providers::BaseService
 
   def process_response(response, message)
     parsed_response = response.parsed_response
+    return owned_delivery_response(response, parsed_response) if message&.whatsapp_outbound_delivery
+
     if response.success? && parsed_response['error'].blank?
       parsed_response['messages'].first['id']
     else
       handle_error(response, message)
       nil
     end
+  end
+
+  def owned_delivery_response(response, parsed_response)
+    raise Whatsapp::OutboundDispatch::AcceptanceUnknown if response.code.to_i >= 500 || response.code.to_i == 408
+    raise Whatsapp::OutboundDispatch::AcceptanceUnknown unless parsed_response.is_a?(Hash)
+    raise Whatsapp::OutboundDispatch::Rejected unless response.success? && parsed_response['error'].blank?
+
+    parsed_response.dig('messages', 0, 'id')
   end
 
   def handle_error(response, message)

@@ -26,6 +26,12 @@ ai_lead_employee_outbox_dispatch_job:
   class: 'AiLeadEmployee::OutboxDispatchJob'
   queue: high
 
+# Repairs committed WhatsApp Messages whose delivery enqueue operation was lost.
+whatsapp_outbound_recovery_job:
+  cron: '*/1 * * * *'
+  class: 'Whatsapp::OutboundRecoveryJob'
+  queue: scheduled_jobs
+
 # Reconciles due follow-ups if their original scheduled job was lost.
 ai_lead_employee_follow_up_delivery_job:
   cron: '*/1 * * * *'

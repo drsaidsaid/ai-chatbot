@@ -36,6 +36,7 @@ class AiLeadEmployee::LaunchGate < ApplicationRecord
 
   validates :account_id, uniqueness: true
   validates :pilot_conversations_reviewed_count, numericality: { greater_than_or_equal_to: 0 }
+  after_update :cancel_pending_automation, if: -> { saved_change_to_approved_at? && approved_at.nil? }
 
   def self.for(account)
     find_or_create_by!(account: account)
@@ -59,5 +60,13 @@ class AiLeadEmployee::LaunchGate < ApplicationRecord
       report: report,
       approval_notes: report['approval_notes'].presence || approval_notes
     )
+  end
+
+  private
+
+  def cancel_pending_automation
+    account.conversations.find_each do |conversation|
+      conversation.with_lock { Conversations::ControlService.invalidate_pending_ai!(conversation: conversation, reason: 'launch_gate_not_approved') }
+    end
   end
 end

@@ -1,4 +1,5 @@
-class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseService
+class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseService # rubocop:disable Metrics/ClassLength
+  prepend Whatsapp::OutboundProviderGuard
   def send_message(phone_number, message)
     @message = message
 
@@ -26,6 +27,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     response = HTTParty.post(
       "#{phone_id_path}/messages",
       headers: api_headers,
+      timeout: 10,
       body: request_body.to_json
     )
 
@@ -131,6 +133,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     response = HTTParty.post(
       "#{phone_id_path}/messages",
       headers: api_headers,
+      timeout: 10,
       body: {
         messaging_product: 'whatsapp',
         context: whatsapp_reply_context(message),
@@ -151,6 +154,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     response = HTTParty.post(
       "#{phone_id_path('v24.0')}/messages",
       headers: api_headers,
+      timeout: 10,
       body: {
         :messaging_product => 'whatsapp',
         :context => whatsapp_reply_context(message),
@@ -247,6 +251,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     response = HTTParty.post(
       "#{phone_id_path}/messages",
       headers: api_headers,
+      timeout: 10,
       body: {
         messaging_product: 'whatsapp',
         **recipient_params(phone_number),

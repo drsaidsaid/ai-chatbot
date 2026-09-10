@@ -7,6 +7,11 @@
       "404": "There are no active conversations in this group."
     },
     "FAILED_TO_SEND": "Failed to send",
+    "DELIVERY_PENDING": "Pending",
+    "DELIVERY_CANCELED": "Canceled",
+    "DELIVERY_UNKNOWN": "Delivery unknown",
+    "DELIVERY_FAILED": "Delivery failed",
+    "RETRY_DELIVERY": "Retry delivery",
     "FETCH_ERROR": "Couldn't load conversations. Please try again.",
     "TAB_HEADING": "Conversations",
     "MENTION_HEADING": "Mentions",

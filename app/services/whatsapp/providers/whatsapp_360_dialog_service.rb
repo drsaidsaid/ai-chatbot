@@ -1,4 +1,5 @@
 class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseService
+  prepend Whatsapp::OutboundProviderGuard
   def send_message(phone_number, message)
     @message = message
     if message.attachments.present?
@@ -14,6 +15,7 @@ class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseS
     response = HTTParty.post(
       "#{api_base_path}/messages",
       headers: api_headers,
+      timeout: 10,
       body: {
         to: phone_number,
         template: template_body_parameters(template_info),
@@ -61,6 +63,7 @@ class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseS
     response = HTTParty.post(
       "#{api_base_path}/messages",
       headers: api_headers,
+      timeout: 10,
       body: {
         to: phone_number,
         text: { body: message.outgoing_content },
@@ -83,6 +86,7 @@ class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseS
     response = HTTParty.post(
       "#{api_base_path}/messages",
       headers: api_headers,
+      timeout: 10,
       body: {
         'to' => phone_number,
         'type' => type,
@@ -116,6 +120,7 @@ class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseS
     response = HTTParty.post(
       "#{api_base_path}/messages",
       headers: api_headers,
+      timeout: 10,
       body: {
         to: phone_number,
         interactive: payload,

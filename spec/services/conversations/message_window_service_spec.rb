@@ -372,6 +372,7 @@ RSpec.describe Conversations::MessageWindowService do
         account: conversation.account,
         inbox: whatsapp_inbox,
         conversation: conversation,
+        provider_created_at: 13.hours.ago,
         created_at: 13.hours.ago
       )
       service = described_class.new(conversation)
@@ -384,6 +385,7 @@ RSpec.describe Conversations::MessageWindowService do
         account: conversation.account,
         inbox: whatsapp_inbox,
         conversation: conversation,
+        provider_created_at: 25.hours.ago,
         created_at: 25.hours.ago
       )
       service = described_class.new(conversation)
@@ -397,6 +399,7 @@ RSpec.describe Conversations::MessageWindowService do
         inbox: whatsapp_inbox,
         conversation: conversation,
         message_type: :incoming,
+        provider_created_at: 6.hours.ago,
         created_at: 6.hours.ago
       )
 
@@ -406,6 +409,7 @@ RSpec.describe Conversations::MessageWindowService do
         inbox: whatsapp_inbox,
         conversation: conversation,
         message_type: :outgoing,
+        provider_created_at: 1.hour.ago,
         created_at: 1.hour.ago
       )
 
@@ -420,6 +424,7 @@ RSpec.describe Conversations::MessageWindowService do
         account: conversation.account,
         inbox: whatsapp_inbox,
         conversation: conversation,
+        provider_created_at: 10.days.ago,
         created_at: 10.days.ago
       )
 
@@ -429,6 +434,7 @@ RSpec.describe Conversations::MessageWindowService do
         account: conversation.account,
         inbox: whatsapp_inbox,
         conversation: conversation,
+        provider_created_at: 6.hours.ago,
         created_at: 6.hours.ago
       )
 

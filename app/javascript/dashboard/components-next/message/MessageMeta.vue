@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { messageTimestamp } from 'shared/helpers/timeHelper';
 
 import MessageStatus from './MessageStatus.vue';
@@ -36,8 +37,23 @@ const readableTime = computed(() =>
   messageTimestamp(createdAt.value, 'LLL d, h:mm a')
 );
 
+const { t } = useI18n();
+const localDeliveryLabel = computed(() => {
+  if (isPrivate.value || status.value === MESSAGE_STATUS.FAILED) return '';
+  const labels = {
+    pending: 'CHAT_LIST.DELIVERY_PENDING',
+    claimed: 'CHAT_LIST.SENDING',
+    dispatching: 'CHAT_LIST.SENDING',
+    canceled: 'CHAT_LIST.DELIVERY_CANCELED',
+    unknown: 'CHAT_LIST.DELIVERY_UNKNOWN',
+  };
+  const key = labels[contentAttributes.value?.whatsappDelivery?.state];
+  return key ? t(key) : '';
+});
+
 const showStatusIndicator = computed(() => {
   if (isPrivate.value) return false;
+  if (localDeliveryLabel.value) return false;
   // Don't show status for failed messages, we already show error message
   if (status.value === MESSAGE_STATUS.FAILED) return false;
   // Don't show status for deleted messages
@@ -137,6 +153,9 @@ const statusToShow = computed(() => {
       <time class="inline">{{ readableTime }}</time>
     </div>
     <Icon v-if="isPrivate" icon="i-lucide-lock-keyhole" class="size-3" />
+    <span v-if="localDeliveryLabel" role="status" class="text-n-slate-11">
+      {{ localDeliveryLabel }}
+    </span>
     <MessageStatus v-if="showStatusIndicator" :status="statusToShow" />
   </div>
 </template>

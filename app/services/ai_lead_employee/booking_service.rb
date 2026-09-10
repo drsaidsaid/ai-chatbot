@@ -227,6 +227,8 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
         delivery_boundary: 'outbox',
         booking_id: booking.id,
         alert_type: PREPARATION_ALERT_TYPE,
+        origin_conversation_id: conversation.id,
+        origin_control_version: conversation.control_version,
         alert_recipient: recipient
       },
       template_params: preparation_alert_template_params(booking)

@@ -134,8 +134,12 @@ class Message < ApplicationRecord
 
   has_many :attachments, dependent: :destroy, autosave: true, before_add: :validate_attachments_limit
   has_one :csat_survey_response, dependent: :destroy_async
+  has_one :whatsapp_outbound_delivery, class_name: 'Whatsapp::OutboundDelivery', dependent: :destroy
   has_many :notifications, as: :primary_actor, dependent: :destroy_async
 
+  before_create :initialize_whatsapp_delivery_status
+  around_create :protect_whatsapp_human_reply
+  after_create :record_whatsapp_outbound_delivery
   after_create_commit :execute_after_create_commit_callbacks
 
   after_update_commit :dispatch_update_event
@@ -397,11 +401,50 @@ class Message < ApplicationRecord
   end
 
   def send_reply
+    return if inbox.channel.is_a?(Channel::Whatsapp) && !whatsapp_delivery_required?
     return if ai_lead_employee_outbox_managed?
 
     # FIXME: Giving it few seconds for the attachment to be uploaded to the service
     # active storage attaches the file only after commit
     attachments.blank? ? ::SendReplyJob.perform_later(id) : ::SendReplyJob.set(wait: 2.seconds).perform_later(id)
+  rescue StandardError
+    raise unless whatsapp_outbound_delivery
+
+    Rails.logger.warn("[WHATSAPP OUTBOUND] queue_unavailable message_id=#{id}")
+  end
+
+  def record_whatsapp_outbound_delivery
+    return unless whatsapp_delivery_required?
+
+    create_whatsapp_outbound_delivery!(account: account, conversation: conversation,
+                                       observed_control_version: conversation.control_version)
+  end
+
+  def whatsapp_delivery_required?
+    inbox.channel.is_a?(Channel::Whatsapp) && (outgoing? || template?) &&
+      !private? && source_id.blank? && content_attributes['external_echo'].blank?
+  end
+
+  def initialize_whatsapp_delivery_status
+    return unless whatsapp_delivery_required?
+
+    self.content_attributes = content_attributes.merge('whatsapp_delivery' => { 'state' => 'pending' })
+  end
+
+  def protect_whatsapp_human_reply
+    return yield unless owned_whatsapp_human_reply?
+
+    conversation.reload.with_lock do
+      membership = AccountUser.find_by(account_id: account_id, user_id: sender.id)
+      if membership && (membership.administrator? || conversation.assignee_id == sender.id)
+        Conversations::ControlService.new(conversation: conversation).human_reply!(operator: sender)
+      end
+      yield
+    end
+  end
+
+  def owned_whatsapp_human_reply?
+    inbox.channel.is_a?(Channel::Whatsapp) && human_response? && sender.is_a?(User) && source_id.blank?
   end
 
   def ai_lead_employee_outbox_managed?

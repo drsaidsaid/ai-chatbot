@@ -7,6 +7,17 @@ describe Whatsapp::Providers::Whatsapp360DialogService do
   let!(:whatsapp_channel) { create(:channel_whatsapp, sync_templates: false, validate_provider_config: false) }
   let(:response_headers) { { 'Content-Type' => 'application/json' } }
   let(:whatsapp_response) { { messages: [{ id: 'message_id' }] } }
+  let(:operator) { create(:user, :administrator, account: whatsapp_channel.account) }
+  let(:conversation) do
+    create(:conversation, account: whatsapp_channel.account, inbox: whatsapp_channel.inbox, assignee: operator).tap do |item|
+      item.contact_inbox.update!(source_id: '123456789')
+    end
+  end
+
+  before do
+    create(:message, account: whatsapp_channel.account, inbox: whatsapp_channel.inbox, conversation: conversation,
+                     message_type: :incoming, provider_created_at: Time.current)
+  end
 
   describe '#sync_templates' do
     context 'when called' do
@@ -24,7 +35,8 @@ describe Whatsapp::Providers::Whatsapp360DialogService do
   describe '#send_interactive message' do
     context 'when called' do
       it 'calls message endpoints with button payload when number of items is less than or equal to 3' do
-        message = create(:message, message_type: :outgoing, content: 'test',
+        message = create(:message, account: whatsapp_channel.account, conversation: conversation, sender: operator,
+                                   message_type: :outgoing, content: 'test',
                                    inbox: whatsapp_channel.inbox, content_type: 'input_select',
                                    content_attributes: {
                                      items: [
@@ -36,7 +48,7 @@ describe Whatsapp::Providers::Whatsapp360DialogService do
         stub_request(:post, 'https://waba.360dialog.io/v1/messages')
           .with(
             body: {
-              to: '+123456789',
+              to: '123456789',
               interactive: {
                 type: 'button',
                 body: {
@@ -47,12 +59,13 @@ describe Whatsapp::Providers::Whatsapp360DialogService do
               }, type: 'interactive'
             }.to_json
           ).to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
 
       it 'calls message endpoints with list payload when number of items is greater than 3' do
         items = %w[Burito Pasta Sushi Salad].map { |i| { title: i, value: i } }
-        message = create(:message, message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
+        message = create(:message, account: whatsapp_channel.account, conversation: conversation, sender: operator,
+                                   message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
                                    content_type: 'input_select', content_attributes: { items: items })
 
         expected_action = {
@@ -63,7 +76,7 @@ describe Whatsapp::Providers::Whatsapp360DialogService do
         stub_request(:post, 'https://waba.360dialog.io/v1/messages')
           .with(
             body: {
-              to: '+123456789',
+              to: '123456789',
               interactive: {
                 type: 'list',
                 body: {
@@ -74,7 +87,7 @@ describe Whatsapp::Providers::Whatsapp360DialogService do
               type: 'interactive'
             }.to_json
           ).to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
     end
   end

@@ -7,12 +7,20 @@ class Conversations::MessageWindowService
   end
 
   def can_reply?
+    return whatsapp_window_open? if @conversation.inbox.channel_type == 'Channel::Whatsapp'
     return true if messaging_window.blank?
 
     last_message_in_messaging_window?(messaging_window)
   end
 
   private
+
+  def whatsapp_window_open?
+    latest = @conversation.inbox.messages.incoming.joins(:conversation)
+                          .where(account_id: @conversation.account_id, conversations: { contact_inbox_id: @conversation.contact_inbox_id })
+                          .where('messages.provider_created_at <= ?', Time.current).maximum(:provider_created_at)
+    latest.present? && latest > MESSAGING_WINDOW_24_HOURS.ago
+  end
 
   def messaging_window
     case @conversation.inbox.channel_type

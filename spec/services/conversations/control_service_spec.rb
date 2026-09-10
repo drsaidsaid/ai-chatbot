@@ -45,7 +45,7 @@ RSpec.describe Conversations::ControlService do
     )
     expect(pending_intent.reload).to have_attributes(
       state: 'blocked',
-      blocked_reason: 'incompatible_control_state'
+      blocked_reason: 'ineligible_inbox_status'
     )
   end
 

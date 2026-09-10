@@ -3,7 +3,14 @@ require 'rails_helper'
 describe Whatsapp::Providers::WhatsappCloudService do
   subject(:service) { described_class.new(whatsapp_channel: whatsapp_channel) }
 
-  let(:conversation) { create(:conversation, inbox: whatsapp_channel.inbox) }
+  let(:operator) { create(:user, :administrator, account: whatsapp_channel.account) }
+  let(:response_headers) { { 'Content-Type' => 'application/json' } }
+  let(:whatsapp_response) { { messages: [{ id: 'message_id' }] } }
+  let(:conversation) do
+    create(:conversation, account: whatsapp_channel.account, inbox: whatsapp_channel.inbox, assignee: operator).tap do |item|
+      item.contact_inbox.update!(source_id: '123456789')
+    end
+  end
   let(:business_management_token) { nil }
   let(:whatsapp_channel) do
     create(
@@ -16,19 +23,27 @@ describe Whatsapp::Providers::WhatsappCloudService do
   end
 
   let(:message) do
-    create(:message, conversation: conversation, message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox, source_id: 'external_id')
+    owned_message(content: 'test')
   end
 
   let(:message_with_reply) do
-    create(:message, conversation: conversation, message_type: :outgoing, content: 'reply', inbox: whatsapp_channel.inbox,
-                     content_attributes: { in_reply_to: message.id })
+    owned_message(content: 'reply', content_attributes: { in_reply_to: incoming_message.id })
   end
 
-  let(:response_headers) { { 'Content-Type' => 'application/json' } }
-  let(:whatsapp_response) { { messages: [{ id: 'message_id' }] } }
+  let!(:incoming_message) do
+    create(:message, account: whatsapp_channel.account, conversation: conversation, inbox: whatsapp_channel.inbox,
+                     message_type: :incoming, source_id: 'external_id', provider_created_at: Time.current)
+  end
+
+  def owned_message(**attributes)
+    create(:message, **attributes, account: whatsapp_channel.account, conversation: conversation, inbox: whatsapp_channel.inbox,
+                                   sender: operator, message_type: :outgoing)
+  end
 
   before do
     stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates')
+    whatsapp_channel.update!(message_templates: whatsapp_channel.message_templates + [{ 'name' => 'test_template', 'language' => 'en_US',
+                                                                                        'status' => 'APPROVED' }])
   end
 
   describe '#send_message' do
@@ -39,13 +54,13 @@ describe Whatsapp::Providers::WhatsappCloudService do
             body: {
               messaging_product: 'whatsapp',
               context: nil,
-              to: '+123456789',
+              to: '123456789',
               text: { body: message.content },
               type: 'text'
             }.to_json
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
 
       it 'calls message endpoints for a reply to messages' do
@@ -54,37 +69,39 @@ describe Whatsapp::Providers::WhatsappCloudService do
             body: {
               messaging_product: 'whatsapp',
               context: {
-                message_id: message.source_id
+                message_id: incoming_message.source_id
               },
-              to: '+123456789',
+              to: '123456789',
               text: { body: message_with_reply.content },
               type: 'text'
             }.to_json
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message_with_reply)).to eq 'message_id'
+        expect(service.send_message('123456789', message_with_reply)).to eq 'message_id'
       end
 
       it 'calls message endpoints for image attachment message messages' do
         attachment = message.attachments.new(account_id: message.account_id, file_type: :image)
         attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+        attachment.save!
 
         stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
           .with(
             body: hash_including({
                                    messaging_product: 'whatsapp',
-                                   to: '+123456789',
+                                   to: '123456789',
                                    type: 'image',
                                    image: WebMock::API.hash_including({ caption: message.content, link: anything })
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
 
       it 'calls message endpoints for document attachment message messages' do
         attachment = message.attachments.new(account_id: message.account_id, file_type: :file)
         attachment.file.attach(io: Rails.root.join('spec/assets/sample.pdf').open, filename: 'sample.pdf', content_type: 'application/pdf')
+        attachment.save!
 
         # ref: https://github.com/bblimke/webmock/issues/900
         # reason for Webmock::API.hash_including
@@ -92,47 +109,49 @@ describe Whatsapp::Providers::WhatsappCloudService do
           .with(
             body: hash_including({
                                    messaging_product: 'whatsapp',
-                                   to: '+123456789',
+                                   to: '123456789',
                                    type: 'document',
                                    document: WebMock::API.hash_including({ filename: 'sample.pdf', caption: message.content, link: anything })
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
 
       it 'calls message endpoints for audio voice message with voice flag' do
         attachment = message.attachments.new(account_id: message.account_id, file_type: :audio, meta: { 'is_voice_message' => true })
         attachment.file.attach(io: Rails.root.join('spec/assets/sample.ogg').open, filename: 'voice.ogg', content_type: 'audio/ogg')
+        attachment.save!
 
         stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
           .with(
             body: hash_including({
                                    messaging_product: 'whatsapp',
-                                   to: '+123456789',
+                                   to: '123456789',
                                    type: 'audio',
                                    audio: WebMock::API.hash_including({ link: anything, voice: true })
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
 
       it 'calls message endpoints for regular audio attachment without voice flag' do
         attachment = message.attachments.new(account_id: message.account_id, file_type: :audio)
         attachment.file.attach(io: Rails.root.join('spec/assets/sample.ogg').open, filename: 'audio.ogg', content_type: 'audio/ogg')
+        attachment.save!
 
         stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
           .with(
             body: hash_including({
                                    messaging_product: 'whatsapp',
-                                   to: '+123456789',
+                                   to: '123456789',
                                    type: 'audio'
                                  })
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
 
-        result = service.send_message('+123456789', message)
+        result = service.send_message('123456789', message)
         expect(result).to eq 'message_id'
       end
     end
@@ -141,19 +160,19 @@ describe Whatsapp::Providers::WhatsappCloudService do
   describe '#send_interactive message' do
     context 'when called' do
       it 'calls message endpoints with button payload when number of items is less than or equal to 3' do
-        message = create(:message, message_type: :outgoing, content: 'test',
-                                   inbox: whatsapp_channel.inbox, content_type: 'input_select',
-                                   content_attributes: {
-                                     items: [
-                                       { title: 'Burito', value: 'Burito' },
-                                       { title: 'Pasta', value: 'Pasta' },
-                                       { title: 'Sushi', value: 'Sushi' }
-                                     ]
-                                   })
+        message = owned_message(message_type: :outgoing, content: 'test',
+                                inbox: whatsapp_channel.inbox, content_type: 'input_select',
+                                content_attributes: {
+                                  items: [
+                                    { title: 'Burito', value: 'Burito' },
+                                    { title: 'Pasta', value: 'Pasta' },
+                                    { title: 'Sushi', value: 'Sushi' }
+                                  ]
+                                })
         stub_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
           .with(
             body: {
-              messaging_product: 'whatsapp', to: '+123456789',
+              messaging_product: 'whatsapp', to: '123456789',
               interactive: {
                 type: 'button',
                 body: {
@@ -164,13 +183,13 @@ describe Whatsapp::Providers::WhatsappCloudService do
               }, type: 'interactive'
             }.to_json
           ).to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
 
       it 'calls message endpoints with list payload when number of items is greater than 3' do
         items = %w[Burito Pasta Sushi Salad].map { |i| { title: i, value: i } }
-        message = create(:message, message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
-                                   content_type: 'input_select', content_attributes: { items: items })
+        message = owned_message(message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
+                                content_type: 'input_select', content_attributes: { items: items })
 
         expected_action = {
           button: I18n.t('conversations.messages.whatsapp.list_button_label'),
@@ -180,7 +199,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
         stub_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
           .with(
             body: {
-              messaging_product: 'whatsapp', to: '+123456789',
+              messaging_product: 'whatsapp', to: '123456789',
               interactive: {
                 type: 'list',
                 body: {
@@ -191,7 +210,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
               type: 'interactive'
             }.to_json
           ).to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
-        expect(service.send_message('+123456789', message)).to eq 'message_id'
+        expect(service.send_message('123456789', message)).to eq 'message_id'
       end
     end
   end
@@ -210,7 +229,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
       {
         messaging_product: 'whatsapp',
         recipient_type: 'individual', # Added recipient_type field
-        to: '+123456789',
+        to: '123456789',
         type: 'template',
         template: {
           name: template_info[:name],
@@ -231,7 +250,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
           )
           .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
 
-        expect(service.send_template('+123456789', template_info, message)).to eq('message_id')
+        expect(service.send_template('123456789', template_info, message)).to eq('message_id')
       end
     end
   end
@@ -239,6 +258,8 @@ describe Whatsapp::Providers::WhatsappCloudService do
   describe 'when the recipient is a Business-Scoped User ID (BSUID)' do
     # Meta requires a BSUID to be sent in the `recipient` field (with recipient_type: individual), not `to`.
     let(:bsuid) { 'BR.13491208655302741918' }
+
+    before { conversation.contact_inbox.update!(source_id: bsuid) }
 
     it 'sends a text message via the recipient field instead of to' do
       stub_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
@@ -267,9 +288,9 @@ describe Whatsapp::Providers::WhatsappCloudService do
     end
 
     it 'sends an interactive message via the recipient field instead of to' do
-      interactive_message = create(:message, message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
-                                             content_type: 'input_select',
-                                             content_attributes: { items: [{ title: 'Burito', value: 'Burito' }] })
+      interactive_message = owned_message(message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
+                                          content_type: 'input_select',
+                                          content_attributes: { items: [{ title: 'Burito', value: 'Burito' }] })
       stub_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
         .with(body: hash_including({ messaging_product: 'whatsapp', recipient_type: 'individual', recipient: bsuid, type: 'interactive' }))
         .to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
@@ -280,6 +301,7 @@ describe Whatsapp::Providers::WhatsappCloudService do
     it 'sends an attachment via the recipient field instead of to' do
       attachment = message.attachments.new(account_id: message.account_id, file_type: :image)
       attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+      attachment.save!
 
       stub_request(:post, 'https://graph.facebook.com/v24.0/123456789/messages')
         .with(body: hash_including({ messaging_product: 'whatsapp', recipient_type: 'individual', recipient: bsuid, type: 'image' }))

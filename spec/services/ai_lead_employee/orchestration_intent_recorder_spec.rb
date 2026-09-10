@@ -20,7 +20,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
               from: sender_number,
               id: message_id,
               text: { body: 'Can you qualify my leads?' },
-              timestamp: '1787740800',
+              timestamp: Time.current.to_i.to_s,
               type: 'text'
             }]
           }
@@ -70,7 +70,9 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     expect(conversation.messages.order(:created_at, :id).pluck(:content)).to eq(
       ['Can you qualify my leads?', 'Welcome to AI Lead Employee.']
     )
-    expect(greeting.source_id).to eq('wamid.GREETING.ORCHESTRATION.SENT')
+    # Only the authenticated receipt path supplies a trusted provider timestamp.
+    expect(greeting.source_id).to be_nil
+    expect(greeting.content_attributes.dig('whatsapp_delivery', 'failure_code')).to eq('message_window_closed')
     expect(intent).to have_attributes(
       account_id: whatsapp_channel.account_id,
       conversation_id: conversation.id,

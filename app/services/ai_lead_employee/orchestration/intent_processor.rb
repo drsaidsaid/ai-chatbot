@@ -26,39 +26,89 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     @enforce_launch_gate = enforce_launch_gate
   end
 
-  # rubocop:disable Metrics/MethodLength
   def perform
     @outbox_event_id = nil
     @handoff_alert_delivery_ids = []
-    processed_intent = ActiveRecord::Base.transaction do
-      intent.lock!
-      return intent if intent.terminal?
+    @owner_token = SecureRandom.uuid
+    return intent unless prepare_claimed_answer
 
-      conversation.lock!
-      intent.attempts += 1
-
-      block_reason = final_block_reason
-      return block_intent!(block_reason) if block_reason.present?
-
-      process_grounded_answer!
-    end
+    complete_provider_answer if @answer_result
     enqueue_outbox_delivery
     enqueue_handoff_alert_deliveries
-    processed_intent
+    intent
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
-    AiLeadEmployee::Orchestration::ProviderFailureHandler.new(
-      intent: intent,
-      failure: e,
-      enqueue_review_alerts: enqueue_deliveries
-    ).perform
+    handle_owned_provider_failure(e)
   end
-  # rubocop:enable Metrics/MethodLength
 
   private
 
   attr_reader :intent, :enqueue_deliveries, :enforce_launch_gate
 
   delegate :conversation, :triggering_message, :account, to: :intent
+
+  def prepare_claimed_answer
+    conversation.with_lock do
+      intent.lock!
+      next false if intent.terminal? || (intent.processing? && intent.lease_expires_at&.future?)
+
+      block_reason = final_block_reason
+      if block_reason.present?
+        block_intent!(block_reason)
+        next false
+      end
+      next exhaust_claim! if intent.attempts >= AiLeadEmployee::OrchestrationIntent::MAX_CLAIM_ATTEMPTS
+
+      intent.update!(state: :processing, owner_token: @owner_token, lease_expires_at: 1.minute.from_now, attempts: intent.attempts + 1)
+      process_grounded_answer!
+      true
+    end
+  end
+
+  def exhaust_claim!
+    review = HumanReviewRequest.find_or_create_by!(account: account, conversation: conversation,
+                                                   lead_message: triggering_message, reason: :provider_failed) do |request|
+      request.question = 'AI processing could not complete after recovery. A Human Operator should review this Lead message.'
+    end
+    intent.update!(state: :failed, failure_class: 'claim_recovery_exhausted', review_request: review, completed_at: Time.current)
+    false
+  end
+
+  def complete_provider_answer
+    response = build_provider_answer(@answer_result)
+    conversation.with_lock do
+      intent.lock!
+      next unless owns_claim?
+
+      block_reason = final_block_reason
+      next block_intent!(block_reason) if block_reason.present?
+      next request_review!('source_unverified') if provider_review_required?(response) || !sources_still_current?
+
+      complete_grounded_answer!(response, @answer_result, @qualification_result)
+    end
+  end
+
+  def sources_still_current?
+    current = AiLeadEmployee::KnowledgeAnswerService.new(account: account, question: triggering_message.content).perform
+    !current.refused? && current.answer == @answer_result.answer && current.sources == @answer_result.sources
+  end
+
+  def owns_claim?
+    intent.processing? && intent.owner_token == @owner_token && intent.lease_expires_at&.future?
+  end
+
+  def handle_owned_provider_failure(failure)
+    conversation.with_lock do
+      intent.lock!
+      next intent unless owns_claim?
+
+      reason = final_block_reason
+      next block_intent!(reason) if reason.present?
+
+      AiLeadEmployee::Orchestration::ProviderFailureHandler.new(intent: intent, failure: failure,
+                                                                enqueue_review_alerts: enqueue_deliveries).perform
+    end
+    intent
+  end
 
   def final_block_reason
     reason, = FINAL_CHECKS.find { |(_, predicate)| send(predicate) }
@@ -120,13 +170,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
     return request_review!(answer_result.refusal_reason) if answer_result.refused?
 
-    provider_response = build_provider_answer(answer_result)
-    return request_review!('source_unverified') if provider_review_required?(provider_response)
-
-    block_reason = final_block_reason
-    return block_intent!(block_reason) if block_reason.present?
-
-    complete_grounded_answer!(provider_response, answer_result, qualification_result)
+    @answer_result = answer_result
+    @qualification_result = qualification_result
   end
 
   def qualification_result_response(qualification_result)
