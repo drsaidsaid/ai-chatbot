@@ -65,6 +65,26 @@ RSpec.describe 'Automated Contact Consent', type: :request do
     expect(provider_request).not_to have_been_requested
   end
 
+  it 'keeps a mixed stop and support request visible without automated acknowledgement', :aggregate_failures do
+    provider_request = stub_request(:post, %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages})
+    content = 'Please stop messaging me. I need a human to help with a refund.'
+    post_signed_stop(body: content, message_id: 'wamid.R05.STOP.SUPPORT', sender: '255700000109')
+
+    Webhooks::WhatsappEventsJob.perform_now(response.parsed_body.fetch('receipt_id'))
+    lead = lead_for('255700000109', headers: admin.create_new_auth_token)
+    conversation = channel.account.conversations.find_by!(display_id: lead.dig('conversation', 'display_id'))
+    get "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages",
+        headers: admin.create_new_auth_token,
+        as: :json
+
+    expect(lead.dig('detail', 'automated_contact_consent')).to include('state' => 'withdrawn')
+    expect(response.parsed_body.fetch('payload').map { |message| [message['message_type'], message['content']] })
+      .to eq([[0, content]])
+    expect(conversation.ai_orchestration_intents).to be_empty
+    expect(conversation.messages.outgoing).to be_empty
+    expect(provider_request).not_to have_been_requested
+  end
+
   it 'distinguishes English Swahili and mixed withdrawal from negated or quoted stop phrases' do
     channel.inbox.update!(greeting_enabled: false)
     examples = {
@@ -217,6 +237,33 @@ RSpec.describe 'Automated Contact Consent', type: :request do
     expect(response.parsed_body.fetch('automated_contact_consent')).not_to have_key('evidence')
   end
 
+  it 'loads consent state with a fixed query count for a real Conversation list' do
+    create_conversation_for_phone('255700000131')
+    single_count = consent_query_count
+    4.times { |index| create_conversation_for_phone("25570000014#{index}") }
+
+    page_count = consent_query_count
+
+    expect(single_count).to be_positive
+    expect(page_count).to eq(single_count)
+  end
+
+  it 'keeps inaccessible source evidence out of a preloaded Conversation list' do
+    sender = '255700000132'
+    process_signed_message(body: 'Stop messaging me.', message_id: 'wamid.R05.LIST.ACCESS', sender: sender)
+    contact = channel.account.contacts.find(lead_for(sender, headers: admin.create_new_auth_token).fetch('id'))
+    operator = create(:user, account: channel.account, role: :agent)
+    visible_conversation = create_conversation_for_contact(contact, assignee: operator)
+
+    get "/api/v1/accounts/#{channel.account_id}/conversations", headers: operator.create_new_auth_token, as: :json
+    consent = response.parsed_body.dig('data', 'payload').find do |item|
+      item.fetch('id') == visible_conversation.display_id
+    end.fetch('automated_contact_consent')
+
+    expect(consent).to include('state' => 'withdrawn')
+    expect(consent).not_to have_key('evidence')
+  end
+
   it 'invalidates pending automation across every Lead conversation and blocks a late follow-up delivery' do
     channel.inbox.update!(greeting_enabled: false)
     provider_request = stub_request(:post, %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages})
@@ -276,6 +323,38 @@ RSpec.describe 'Automated Contact Consent', type: :request do
   def post_signed_stop(body:, message_id:, sender: '255700000105', timestamp: '1789000000')
     raw = signed_raw(body: body, message_id: message_id, sender: sender, timestamp: timestamp)
     post_raw_message(raw)
+  end
+
+  def create_conversation_for_phone(phone)
+    contact = create(:contact, account: channel.account, phone_number: "+#{phone}")
+    create_conversation_for_contact(contact, source_id: phone)
+  end
+
+  def create_conversation_for_contact(contact, source_id: SecureRandom.hex(8), **attributes)
+    contact_inbox = contact.contact_inboxes.find_by(inbox: channel.inbox) ||
+                    create(:contact_inbox, contact: contact, inbox: channel.inbox, source_id: source_id)
+    create(
+      :conversation,
+      account: channel.account,
+      inbox: channel.inbox,
+      contact: contact,
+      contact_inbox: contact_inbox,
+      **attributes
+    )
+  end
+
+  def consent_query_count
+    queries = []
+    subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _start, _finish, _id, payload|
+      next if payload[:cached]
+      next unless payload[:sql].match?(/FROM "(?:lead_follow_up_opt_outs|lead_consent_events)"/)
+
+      queries << payload[:sql]
+    end
+    get "/api/v1/accounts/#{channel.account_id}/conversations", headers: admin.create_new_auth_token, as: :json
+    queries.size
+  ensure
+    ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
   end
 
   def process_signed_message(body:, message_id:, sender:, timestamp: '1789000000')

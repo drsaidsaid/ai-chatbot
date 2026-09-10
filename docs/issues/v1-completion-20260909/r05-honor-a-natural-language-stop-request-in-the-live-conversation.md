@@ -68,6 +68,10 @@ Based on the 9 September 2026 standalone UI/UX audit and the standalone portions
   consent/concurrency/legacy-compatibility examples. Vue/API passes 23 tests;
   focused RuboCop, ESLint, and normal commit hooks are clean. Coordinator
   integration and in-app browser acceptance remain pending.
+- Final review follow-up: the signed mixed stop/support case and access-scoped
+  Conversation-list suite pass in the 10-example public request file; isolated
+  concurrency/legacy compatibility passes 4 examples. Consent list queries are
+  fixed at 2 for both one and five real rows after reproducing the 2-to-10 red.
 
 
 ## Execution coordination

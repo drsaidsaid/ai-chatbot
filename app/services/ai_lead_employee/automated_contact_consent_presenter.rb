@@ -1,6 +1,52 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::AutomatedContactConsentPresenter
+  def self.preload(account:, user:, contacts:)
+    contact_ids = contacts.map(&:id).uniq
+    access = AiLeadEmployee::AccessScope.new(account: account, user: user)
+    preload_contexts(
+      contact_ids,
+      active_stops(account, contact_ids),
+      latest_events(account, contact_ids),
+      visible_conversation_ids(access, contact_ids),
+      access.administrator?
+    )
+  end
+
+  def self.preload_contexts(contact_ids, active_stops, latest_events, visible_conversation_ids, administrator)
+    contact_ids.index_with do |contact_id|
+      {
+        active_stop: active_stops[contact_id],
+        latest_event: latest_events[contact_id],
+        visible_conversation_ids: visible_conversation_ids,
+        reconsent_candidate: nil,
+        administrator: administrator
+      }
+    end
+  end
+  private_class_method :preload_contexts
+
+  def self.active_stops(account, contact_ids)
+    LeadFollowUpOptOut.where(account: account, contact_id: contact_ids)
+                      .includes(:consent_event)
+                      .index_by(&:contact_id)
+  end
+  private_class_method :active_stops
+
+  def self.latest_events(account, contact_ids)
+    LeadConsentEvent.where(
+      account: account,
+      contact_id: contact_ids,
+      purpose: AiLeadEmployee::AutomatedContactConsent::PURPOSE
+    ).order(occurred_at: :desc, id: :desc).group_by(&:contact_id).transform_values(&:first)
+  end
+  private_class_method :latest_events
+
+  def self.visible_conversation_ids(access, contact_ids)
+    access.conversations.where(contact_id: contact_ids).pluck(:id).to_set
+  end
+  private_class_method :visible_conversation_ids
+
   def initialize(account:, user:, contact:, include_reconsent_candidate: false, preloaded: nil)
     @account = account
     @user = user

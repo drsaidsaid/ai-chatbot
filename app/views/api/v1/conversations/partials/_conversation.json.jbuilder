@@ -57,7 +57,8 @@ access = AiLeadEmployee::AccessScope.new(account: conversation.account, user: Cu
 json.automated_contact_consent AiLeadEmployee::AutomatedContactConsentPresenter.new(
   account: conversation.account,
   user: Current.user,
-  contact: conversation.contact
+  contact: conversation.contact,
+  preloaded: @automated_contact_consent_by_contact&.fetch(conversation.contact_id, nil)
 ).payload
 qualification = access.qualification(conversation.contact)
 if qualification.present?

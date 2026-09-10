@@ -211,3 +211,9 @@ shared processor, or R11 candidate was used. R15 retains its later scheduling
 redesign and must consume the active suppression and pre-withdrawal invalidation
 contract. Do not close issue 22 until coordinator integration and in-app
 acceptance.
+
+A final review follow-up adds signed mixed stop-plus-support proof and batches
+consent state for the Conversation list. The real list query-count test first
+reproduced growth from 2 consent queries for one row to 10 for five rows, then
+passed at a fixed 2 queries. The updated public request suite passes 10 examples;
+the isolated concurrency and legacy compatibility suite passes 4 examples.
