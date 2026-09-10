@@ -20,7 +20,8 @@ Both independent coordinator reviews found no remaining integration issues. The 
 - Full public consent and contact history, consent/send races and WhatsApp outbound delivery: **74 examples, 0 failures**.
 - Five affected frontend suites: **34 tests, 0 failures**.
 - Two coordinator-adjusted Ruby specs: **no lint offenses**.
-- Production build and normal-hook identity check: pending final recording.
+- Production-mode Vite build: **5,078 modules, passed in 1m37s** with a 4 GiB Node heap. The isolated test environment writes these production-mode assets to `public/vite-test`. Build log SHA-256: `912b5423ac62f624da4a8f547e3dd69c8f4219dc22113ca1d8bac277bfbb6924`; manifest SHA-256: `40e551375cbf05a61f901f03f619f83d3049911e9c6cdbdc1011ca8cffca4009`.
+- Normal merge commit hooks passed in `651e3709c30ce9d3dbca1374f0941b4d97fcde4d`; all 43 recorded app/database/test hashes were unchanged afterward. This evidence update changes documentation only.
 
 The 131 Rails examples ran serially in a disposable PostgreSQL 18 database with pgvector and an isolated Redis instance. Ledger pool size was 2 with a 1-second checkout timeout. All provider HTTP was mocked; tests exercised actual jobs, database transactions and recovery. The frontend used the unchanged lockfile and a local offline installation. An earlier cross-worktree dependency symlink failed before test collection; no source or expectations were changed to resolve that environment issue. An accidentally unfiltered frontend invocation was stopped and replaced with an explicit five-file command.
 
