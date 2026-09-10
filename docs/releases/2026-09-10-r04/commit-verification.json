@@ -26,5 +26,8 @@
     "rubocop_files": 4,
     "eslint_errors": 0,
     "eslint_existing_warnings": 1
-  }
+  },
+  "receipt_alias_commit": "562c6f407d2f489ee13c39a68837b1feb5ed0ca1",
+  "receipt_alias_normal_repository_hooks_exit": 0,
+  "receipt_alias_hooks_bypassed": false
 }
