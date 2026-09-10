@@ -25,11 +25,13 @@ class ActionCableBroadcastJob < ApplicationJob
   # caused by out-of-order events during high-traffic periods. This prevents
   # jobs from publishing an older Message instance or Conversation snapshot.
   def prepare_broadcast_data(event_name, data)
-    if event_name == MESSAGE_UPDATED
+    if [MESSAGE_CREATED, MESSAGE_UPDATED].include?(event_name)
       message = Message.find_by(id: data[:id], account_id: data[:account_id])
       return if message.nil?
 
-      return message.push_event_data.merge(data.slice(:previous_changes, :performer))
+      metadata = data.slice(:previous_changes, :performer)
+      metadata[:echo_id] = data[:echo_id] if event_name == MESSAGE_CREATED && data.key?(:echo_id)
+      return message.push_event_data.merge(metadata)
     end
 
     return data unless CONVERSATION_UPDATE_EVENTS.include?(event_name)

@@ -157,6 +157,39 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     end
   end
 
+  it 'keeps terminal outcomes when the originally queued creation broadcast runs after dispatch updates' do
+    fixture_path = Rails.root.join('app/javascript/dashboard/components-next/message/specs/fixtures/whatsappCreatedOrdering.json')
+    projection = ->(payload) { payload.deep_stringify_keys.slice('status', 'source_id', 'content_attributes', 'echo_id') }
+    actual = [['accepted', 200], ['unknown', 503]].map do |expected_state, http_status|
+      clear_enqueued_jobs
+      path = "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages"
+      post path, headers: admin.create_new_auth_token, params: { content: "Queued creation #{expected_state}", echo_id: "echo-#{expected_state}" },
+                 as: :json
+      message = conversation.messages.outgoing.order(:id).last
+      created_job = enqueued_jobs.select { |job| job[:job] == ActionCableBroadcastJob && job[:args][1] == 'message.created' }.sole
+      creation_data = ActiveJob::Arguments.deserialize(created_job.fetch('arguments'))[2]
+      broadcasts = []
+      allow(ActionCable.server).to receive(:broadcast) do |_stream, payload|
+        broadcasts << payload.deep_dup if payload.dig(:data, :id) == message.id
+      end
+      body = http_status == 200 ? '{"messages":[{"id":"wamid.CREATED.ORDER"}]}' : '{"error":{"code":2}}'
+      stub_request(:post, provider_url).to_return(status: http_status, body: body, headers: { 'Content-Type' => 'application/json' })
+      clear_enqueued_jobs
+      perform_enqueued_jobs(only: ActionCableBroadcastJob) { SendReplyJob.perform_now(message.id) }
+      updated = broadcasts.last.fetch(:data)
+      ActiveJob::Base.execute(created_job)
+      { 'case' => expected_state, 'pending_creation' => projection.call(creation_data),
+        'updated' => projection.call(updated), 'late_creation' => projection.call(broadcasts.last.fetch(:data)) }
+    end
+    Rails.root.join('tmp/whatsapp_created_ordering.json').write(JSON.pretty_generate(actual))
+    actual.each do |item|
+      expect(item.dig('pending_creation', 'content_attributes', 'whatsapp_delivery', 'state')).to eq('pending')
+      expect(item.dig('late_creation', 'content_attributes', 'whatsapp_delivery', 'state')).to eq(item.fetch('case'))
+      expect(item.dig('late_creation', 'echo_id')).to eq("echo-#{item.fetch('case')}")
+    end
+    expect(actual).to eq(JSON.parse(fixture_path.read))
+  end
+
   it 'broadcasts pending when the operator retries a definite failure through the Inbox API' do
     stub_request(:post, provider_url).to_return(status: 400, body: '{"error":{"code":100}}', headers: { 'Content-Type' => 'application/json' })
     SendReplyJob.perform_now(outgoing.id)

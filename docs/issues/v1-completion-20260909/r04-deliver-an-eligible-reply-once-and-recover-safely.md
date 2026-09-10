@@ -76,3 +76,13 @@ each owned delivery's visible outcome. Canonical broadcast and actual MessageLis
 regressions reproduce the failures; both targeted rereviews are clear. The
 corrected desktop/phone walkthrough remains queued after R06. See
 [browser correction evidence](../../releases/2026-09-10-r04/browser-corrections.md).
+
+The coordinator's subsequent P2 review reproduced an older `message.created`
+job resetting accepted/unknown to pending after an outcome update. Creation and
+update broadcasts now both read the current scoped Message; creation retains
+its original echo ID. A combined optimistic → outcome → creation regression
+also exposed duplicate Inbox rows. Creation reconciliation collapses both IDs
+while preserving unrelated replies. Canonical queued-job and actual store/list
+evidence is recorded in
+[creation ordering corrections](../../releases/2026-09-10-r04/created-order-corrections.md).
+The corrected desktop/phone walkthrough remains blocked on browser allocation.

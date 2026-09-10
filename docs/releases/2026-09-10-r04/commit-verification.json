@@ -48,5 +48,24 @@
   },
   "browser_correction_commit": "4c5ce8e6c0dec222bcd40d300cd18a270c8c2eaa",
   "browser_correction_normal_repository_hooks_exit": 0,
-  "browser_correction_hooks_bypassed": false
+  "browser_correction_hooks_bypassed": false,
+  "created_order_validation": {
+    "ruby_examples": 306,
+    "ruby_failures": 0,
+    "vue_tests": 56,
+    "inbox_tests": 31,
+    "existing_store_tests": 25,
+    "vue_failures": 0,
+    "production_build": "passed",
+    "build_modules": 5078,
+    "build_duration": "4m33s",
+    "dashboard_asset": "dashboard-CBAPqSQd.js",
+    "rubocop_files": 3,
+    "rubocop_offenses": 0,
+    "eslint_errors": 0,
+    "eslint_warnings": 0,
+    "standards_findings": 0,
+    "spec_findings": 0,
+    "corrected_browser_walkthrough": "pending allocation after coordinator connection repair and R06"
+  }
 }

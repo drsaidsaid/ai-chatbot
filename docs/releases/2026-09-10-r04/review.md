@@ -96,3 +96,24 @@ and reported no remaining targeted findings. Message grouping now preserves
 each owned delivery's metadata while ordinary grouping remains covered.
 Reviews were read-only; the implementation task owns test and browser evidence.
 The corrected desktop/phone browser walkthrough remains pending allocation.
+
+## Delayed creation and optimistic reconciliation
+
+The coordinator found that the original queued Message creation still carried
+pending data and could arrive after an accepted/unknown update. The canonical
+Message API regression executes that exact serialized creation job last; captured
+payloads reproduce both outcomes reverting through the actual Inbox store/list.
+Both creation and update jobs now publish current account-scoped Message data,
+retaining creation echo correlation and the existing event-metadata whitelist.
+
+Standards and Spec independently found the combined optimistic → outcome →
+creation gap in the initial regression set: replacing only the first identity
+match left two copies of the persisted Message. The combined real-store/list
+tests reproduced accepted and unknown duplication before the correction. The
+mutation now reconciles both IDs while keeping the first position and unrelated
+same-content replies. Direct creation and persisted-row ordering remain covered.
+
+Both targeted rereviews report zero actionable findings and confirm the combined
+ordering tests cover the reported gap. These reviews were read-only; no reviewer
+ran validation processes or browser actions. Final findings: Standards 0; Spec 0.
+Corrected desktop/phone browser acceptance remains pending allocation.

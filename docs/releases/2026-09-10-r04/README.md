@@ -38,21 +38,24 @@ copied or replaced.
 
 ## Validation
 
-- **301 selected Ruby examples passed** after the browser-discovered corrections, including 50 canonical outgoing cases,
+- **306 selected Ruby examples passed** after the delayed-creation corrections, including 51 canonical outgoing cases,
   two real Rails-process kill cases, R03 ingress/concurrency, existing canonical
   launch flow, orchestration, domain outbox, follow-up, handoff/review/booking,
   both WhatsApp providers, native Message/Bookings/Review APIs, the Message builder,
   nine independent-connection authority cases and five booking notice cases.
-- **25 Vue component tests passed** against the actual MessageList/Message/MessageMeta/MessageError
+- **56 Vue tests passed**, including 31 Inbox cases against the actual store and MessageList/Message/MessageMeta/MessageError
   components: pending/canceled/unknown display, acceptance awaiting receipt,
   projected sent/delivered/read advancement, provider failure, retry eligibility
   and ten client evidence aliases passed through the real deep camel-case
   transform using actual HTTP response fixtures, plus individual owned outcomes
-  within same-minute groups and preserved ordinary grouping.
-- **Latest production Vite build passed**, 14m41s, 5,078 modules. Existing Browserslist and bundle-size
+  within same-minute groups, delayed creation after outcomes, optimistic reply
+  reconciliation and preserved ordinary grouping. The remaining 25 cases cover
+  existing conversation mutations and helpers.
+- **Latest production Vite build passed**, 4m33s, 5,078 modules. Existing Browserslist and bundle-size
   warnings remain. No dependency or lockfile change was made.
-- Ruby lint passed on changed Ruby files. Frontend lint has no errors and one
-  finite translation-key mapping warning; it does not affect the production build.
+- Strict Ruby lint passed on all three changed Ruby files. The changed frontend
+  store and list test pass lint with no errors or warnings. Earlier full-branch
+  evidence retains one finite translation-key mapping warning.
 - Fresh schema and exact R03 checkpoint upgrade match canonical schema hash
   `ff7f8e39a5a0efe2eea6f069d6b1a17a60721fa30a286526defcfc504cbeb707`.
   A separate migration regression proves legacy unknown/accepted evidence is
@@ -68,7 +71,11 @@ after the provider accepts but before the Message ID commits. Recovery sends
 once in the former case and raises one unknown review without resending in the
 latter. These are canonical-path checks, not evaluation-sandbox labels.
 
-The latest results use `browser-fixes-*` and `browser-grouping-green.txt` logs.
+The latest backend/frontend/lint results use `created-order-*` logs.
+[Delayed creation and reconciliation evidence](created-order-corrections.md)
+records the canonical queued-event and actual store/list regressions.
+The previous 301-example/25-Inbox run uses `browser-fixes-*` and
+`browser-grouping-green.txt` logs.
 [Browser-discovered correction evidence](browser-corrections.md) records the
 actual stale live broadcast and hidden grouped metadata, their regressions and
 targeted rereviews. The corrected desktop/phone walkthrough remains pending.
@@ -118,6 +125,8 @@ bundle exec rspec spec/requests/whatsapp_outbound_delivery_spec.rb \
 pnpm exec vitest --run \
   app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js \
   app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js \
+  app/javascript/dashboard/store/modules/conversations/specs/mutations.spec.js \
+  app/javascript/dashboard/store/modules/specs/conversations/helpers.spec.js \
   --minWorkers=1 --maxWorkers=1
 RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 pnpm exec vite build
 ```

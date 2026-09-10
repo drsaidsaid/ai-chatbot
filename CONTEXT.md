@@ -66,6 +66,8 @@ work; accepted requires a provider Message ID. Unknown requires reconciliation
 or human review, never a blind resend. Provider sent/delivered/read facts remain
 separate from acceptance. Booking change notices are Outbound Messages attributed
 to the initiating Human Operator, with one notice per recorded mutation identity.
+Delayed creation events preserve the saved outcome and reconcile the optimistic
+reply with its persisted Message as one Inbox row.
 See ADR 0011.
 
 **AI Employee**:
