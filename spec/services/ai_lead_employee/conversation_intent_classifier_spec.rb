@@ -1,8 +1,213 @@
 # frozen_string_literal: true
 
-require 'rails_helper'
+require 'active_support/all'
+
+module AiLeadEmployee
+end
+
+require_relative '../../../app/services/ai_lead_employee/language_detector'
+require_relative '../../../app/services/ai_lead_employee/conversation_intent_classifier'
 
 RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
+  it 'routes a complaint asking for a person to Review before sales qualification' do
+    result = described_class.new(message: 'This is a scam. I want a human to handle my complaint.').perform
+
+    expect(result.intent).to eq(:complaint)
+    expect(result.review_reason).to eq('angry_question')
+    expect(result).to be_risky
+  end
+
+  it 'recognizes a Swahili complaint and keeps its acknowledgment language' do
+    result = described_class.new(message: 'Nina malalamiko. Huu ni utapeli.').perform
+
+    expect(result.intent).to eq(:complaint)
+    expect(result.review_reason).to eq('angry_question')
+    expect(result.language).to eq(:swahili)
+  end
+
+  ['I am furious about this terrible service. I want to speak to a human.', "I'm upset about this service."].each do |message|
+    it "routes a present first-person complaint before staff or sales policy: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result).to have_attributes(intent: :complaint, review_reason: 'angry_question')
+    end
+  end
+
+  ['Siwezi kuingia kwenye kozi yangu.', 'Ningependa kuzungumza na mtu.', 'Nahitaji kuzungumza na mtu.'].each do |message|
+    it "retains Swahili for a recognized request without a greeting or payment preface: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.language).to eq(:swahili)
+    end
+  end
+
+  it 'keeps informational complaint-policy questions in the knowledge path' do
+    result = described_class.new(message: 'What is your complaint policy?').perform
+
+    expect(result.intent).to eq(:business_question)
+    expect(result.review_reason).to be_nil
+  end
+
+  {
+    'Can you refund my course payment?' => :english,
+    'Nimelipia kozi lakini nataka kurudishiwa fedha zangu.' => :swahili
+  }.each do |message, language|
+    it "routes a #{language} refund action to Review" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:refund_request)
+      expect(result.review_reason).to eq('sensitive_question')
+      expect(result.language).to eq(language)
+    end
+  end
+
+  it 'keeps informational refund policy questions eligible for approved knowledge' do
+    result = described_class.new(message: 'What is your refund policy?').perform
+
+    expect(result).to be_requires_approved_knowledge
+    expect(result.review_reason).to be_nil
+  end
+
+  it 'keeps an explicitly negated refund action in the informational knowledge path' do
+    result = described_class.new(message: 'Please do not refund my payment. What is your refund policy?').perform
+
+    expect(result.review_reason).to be_nil
+    expect(result).to be_requires_approved_knowledge
+  end
+
+  ['What happens if I want a refund?', 'Does Student Support help people who cannot access courses?'].each do |message|
+    it "keeps hypothetical or third-person questions in the knowledge path: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.review_reason).to be_nil
+      expect(result).to be_requires_approved_knowledge
+    end
+  end
+
+  {
+    'I paid but cannot access my course.' => :english,
+    'Nimelipa lakini siwezi kufungua kozi yangu.' => :swahili
+  }.each do |message, language|
+    it "routes a #{language} personal access problem to customer-support Review" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:support_request)
+      expect(result.review_reason).to eq('sensitive_question')
+      expect(result.language).to eq(language)
+    end
+  end
+
+  it 'does not treat a support programme definition as a personal support action' do
+    result = described_class.new(message: 'What is Student Support?').perform
+
+    expect(result.intent).to eq(:business_question)
+    expect(result.review_reason).to be_nil
+  end
+
+  ['Why am I unable to access my course?', "Why can't I access my course?",
+   'I paid yesterday. Please confirm my payment.', 'Nimelipa. Tafadhali thibitisha malipo yangu.'].each do |message|
+    it "routes a personal access or payment request to support: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:support_request)
+      expect(result.review_reason).to eq('sensitive_question')
+    end
+  end
+
+  ['Please let me speak to a human.', 'Nataka kuzungumza na mtu wa timu yenu.',
+   'I want to speak to a sales representative.', 'Please connect me to a person.', 'I want a human.',
+   'How can I speak to a human?'].each do |message|
+    it "recognizes the actual staff request: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:human_request)
+      expect(result.review_reason).to be_nil
+    end
+  end
+
+  ['This is unacceptable.', 'Your service is terrible.'].each do |message|
+    it "recognizes the present complaint: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:complaint)
+      expect(result.review_reason).to eq('angry_question')
+    end
+  end
+
+  it 'treats ordinary sales help as a qualification statement rather than a staff request' do
+    result = described_class.new(message: 'I need help increasing sales.').perform
+
+    expect(result.intent).to eq(:qualification_answer)
+  end
+
+  ['Tell me about your course.', 'Please explain your business.'].each do |message|
+    it "keeps a direct factual request in the approved knowledge path: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:business_question)
+      expect(result).to be_requires_approved_knowledge
+    end
+  end
+
+  it 'preserves the existing explicit request to be given a human' do
+    result = described_class.new(message: 'Please give me a human. My budget is $50.').perform
+
+    expect(result.intent).to eq(:human_request)
+  end
+
+  [
+    'Please do not let me speak to a human. Just answer here.',
+    'Never refund me.',
+    'I do not want to speak to a human. I need help increasing sales.',
+    'What does "please let me speak to a human" mean?',
+    "What does 'please let me speak to a human' mean?",
+    'The training phrase is ‘please let me speak to a human’.',
+    'What is a sales representative?',
+    'Sitaki kuzungumza na mtu wa timu yenu.'
+  ].each do |message|
+    it "does not mistake an informational, quoted or negated phrase for a staff request: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).not_to eq(:human_request)
+      expect(result.review_reason).to be_nil
+    end
+  end
+
+  it 'keeps a greeting-prefixed business question in the knowledge path' do
+    result = described_class.new(message: 'Habari, biashara yenu inafanya nini?').perform
+
+    expect(result.intent).to eq(:business_question)
+  end
+
+  ['Hello, is your course online', 'Hello, what happens if I want a refund?'].each do |message|
+    it "preserves an informational question after a greeting: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result).to be_requires_approved_knowledge
+      expect(result.review_reason).to be_nil
+    end
+  end
+
+  it 'recognizes business details after a greeting as a qualification answer' do
+    result = described_class.new(message: 'Hello, I run a coaching business.').perform
+
+    expect(result.intent).to eq(:qualification_answer)
+  end
+
+  ['My budget is $500.', 'I am the owner and can spend $500.'].each do |message|
+    it "recognizes a declarative qualification answer containing an auxiliary verb: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:qualification_answer)
+    end
+  end
+
+  it 'accepts a greeting-only question mark without treating it as a knowledge question' do
+    result = described_class.new(message: 'Habari?').perform
+
+    expect(result.intent).to eq(:greeting)
+  end
+
   it 'classifies a Swahili language-support question as safe conversation' do
     result = described_class.new(message: 'unaongea kiswahili?').perform
 
@@ -50,10 +255,10 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
     expect(result).to be_requires_approved_knowledge
   end
 
-  it 'classifies short acknowledgements as generic safe conversation' do
+  it 'distinguishes a short acknowledgment from an unclear statement' do
     result = described_class.new(message: 'sawa').perform
 
-    expect(result.intent).to eq(:generic_safe)
+    expect(result.intent).to eq(:acknowledgment)
     expect(result.language).to eq(:swahili)
     expect(result).to be_safe_conversation
   end

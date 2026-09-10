@@ -1,0 +1,25 @@
+{
+  "baseline": "1aa85090f638c6140aa42939a8d1355762452ab4",
+  "manifest": "tmp/emergency/final-candidate-source-sha256.json",
+  "all_unchanged": true,
+  "files": {
+    "app/services/ai_lead_employee/conversation_intent_classifier.rb": {"before": "ec63e9e920b2ef131ae08981e42dd98fb8db17259a483da21fa7f7c45eee02e9", "after": "ec63e9e920b2ef131ae08981e42dd98fb8db17259a483da21fa7f7c45eee02e9"},
+    "app/services/ai_lead_employee/language_detector.rb": {"before": "0c006a9a682ade57e40f6ce7c847d07179274dcbb8ca49366b38767baf556558", "after": "0c006a9a682ade57e40f6ce7c847d07179274dcbb8ca49366b38767baf556558"},
+    "app/services/ai_lead_employee/orchestration/intent_processor.rb": {"before": "800d613fdbb8179d9f3d403d09d282a36aadd6f3efb35caf3d9e1d2224d197ed", "after": "800d613fdbb8179d9f3d403d09d282a36aadd6f3efb35caf3d9e1d2224d197ed"},
+    "app/services/ai_lead_employee/qualification_evidence_extractor.rb": {"before": "b534097b2fade3b5f87e9e417c186d112f6a71b6bd78ca1c9b8ec2443b27cf84", "after": "b534097b2fade3b5f87e9e417c186d112f6a71b6bd78ca1c9b8ec2443b27cf84"},
+    "app/services/ai_lead_employee/review_acknowledgment.rb": {"before": "a69031462eca4abe89ce190d0d6b4d4bb3d8c18470a68edf48600d9d3f099fa9", "after": "a69031462eca4abe89ce190d0d6b4d4bb3d8c18470a68edf48600d9d3f099fa9"},
+    "app/services/ai_lead_employee/safe_conversation_reply_service.rb": {"before": "beac1438f4262aac6a3b4113cfef8046b82fbff74a69eb3fe923eeb57cc20723", "after": "beac1438f4262aac6a3b4113cfef8046b82fbff74a69eb3fe923eeb57cc20723"},
+    "spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb": {"before": "d292d2154eddec20474b6f20a87db33167ae7f0fc65f7712cdb7fed9585f6674", "after": "d292d2154eddec20474b6f20a87db33167ae7f0fc65f7712cdb7fed9585f6674"},
+    "spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb": {"before": "7734825da2c8dbe1f1b3bca06db73971dc260a64a8f622f62ca3866e2634393d", "after": "7734825da2c8dbe1f1b3bca06db73971dc260a64a8f622f62ca3866e2634393d"},
+    "spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb": {"before": "6bd71fb5b00339e95a577a87d524bb6a708c919f6a016d85ecdd7138401b9692", "after": "6bd71fb5b00339e95a577a87d524bb6a708c919f6a016d85ecdd7138401b9692"},
+    "spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb": {"before": "005d41b7fa91cc060d3d72fe4a19e17e6b0126f40abcb9ad9a3e8a1be7b091e9", "after": "005d41b7fa91cc060d3d72fe4a19e17e6b0126f40abcb9ad9a3e8a1be7b091e9"},
+    "spec/requests/whatsapp_outbound_delivery_spec.rb": {"before": "6f6c3dad7dde86a4d5e6a50845d5b5e3aba5ddcc5c2e72d538507ea71ff9b30c", "after": "6f6c3dad7dde86a4d5e6a50845d5b5e3aba5ddcc5c2e72d538507ea71ff9b30c"},
+    "spec/services/ai_lead_employee/conversation_intent_classifier_spec.rb": {"before": "908bffbc3282dbbbc2366d4be9e52535765019394731c333cdce759557c67c75", "after": "908bffbc3282dbbbc2366d4be9e52535765019394731c333cdce759557c67c75"},
+    "spec/services/ai_lead_employee/qualification_evidence_extractor_cross_signal_spec.rb": {"before": "0cae9eb891fa0216579c37027d87d6b4e044b9fdc5c5e9e1442b8663a17fe27c", "after": "0cae9eb891fa0216579c37027d87d6b4e044b9fdc5c5e9e1442b8663a17fe27c"},
+    "spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb": {"before": "ab0c4b42914487f9cdd95c0f246b3dd0a15bafd061711c6568a6cee11a598f39", "after": "ab0c4b42914487f9cdd95c0f246b3dd0a15bafd061711c6568a6cee11a598f39"},
+    "spec/services/ai_lead_employee/qualification_service_cross_signal_spec.rb": {"before": "bdf45dd06b771e2abe8aa7dc1380381329ad6468045640684d7499b87c1b844e", "after": "bdf45dd06b771e2abe8aa7dc1380381329ad6468045640684d7499b87c1b844e"},
+    "spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb": {"before": "581c7978838fe29d30ac64b654870953802aa0fd2378657a2640298d0a3b6c36", "after": "581c7978838fe29d30ac64b654870953802aa0fd2378657a2640298d0a3b6c36"},
+    "spec/services/ai_lead_employee/review_acknowledgment_spec.rb": {"before": "3bfc902692dac20a5c4398b17673f60287a96aa29ca910664b954a7b8b43b0e0", "after": "3bfc902692dac20a5c4398b17673f60287a96aa29ca910664b954a7b8b43b0e0"},
+    "spec/services/ai_lead_employee/safe_conversation_reply_service_spec.rb": {"before": "576e7328db5e8f21daddaa2c6cc87e0d9ffc5a7b03cc2a9c41240c608a1cccb1", "after": "576e7328db5e8f21daddaa2c6cc87e0d9ffc5a7b03cc2a9c41240c608a1cccb1"}
+  }
+}

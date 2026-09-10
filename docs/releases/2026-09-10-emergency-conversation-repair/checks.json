@@ -1,0 +1,651 @@
+{
+  "schema_version": 1,
+  "release_acceptance": false,
+  "full_r11_complete": false,
+  "final_combined": {
+    "summary": {
+      "duration": 45.450103,
+      "example_count": 97,
+      "failure_count": 1,
+      "pending_count": 0,
+      "errors_outside_of_examples_count": 0
+    },
+    "by_file": {
+      "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb": {
+        "passed": 27
+      },
+      "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb": {
+        "passed": 26,
+        "failed": 1
+      },
+      "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb": {
+        "passed": 15
+      },
+      "./spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb": {
+        "passed": 4
+      },
+      "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb": {
+        "passed": 13
+      },
+      "./spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb": {
+        "passed": 6
+      },
+      "./spec/services/ai_lead_employee/qualification_evidence_extractor_cross_signal_spec.rb": {
+        "passed": 3
+      },
+      "./spec/services/ai_lead_employee/qualification_service_cross_signal_spec.rb": {
+        "passed": 2
+      }
+    },
+    "examples": [
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob records one complaint Review and fixed acknowledgment before any sales qualification under duplicate jobs",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 31
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob keeps an unanswered business question blocked while acknowledging its persisted Review without sales questions",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 54
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob retains the actual HTTP 402 failure and enqueues one fixed acknowledgment of its persisted Review",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 71
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob shows the current Review disposition instead of an earlier grounded answer in the conversation decision",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 95
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob answers a Swahili greeting without creating a false knowledge Review",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 114
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob acknowledges persisted business details and asks the actual next question without claiming a Review",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 129
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob continues after a simple Swahili acknowledgment without promising a nonexistent Review",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 146
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob uses the configured staff-request policy for a genuine Swahili request without a knowledge Review",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 157
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob clarifies an unclear message instead of asking a pending sales question",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 176
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob routes a first-person how-to-contact question through the staff policy",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 187
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob acknowledges ordinary sales help instead of invoking staff-request policy",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 201
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob routes This is unacceptable. before qualification and sends only its fixed acknowledgment",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 219
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob routes Nina malalamiko. Nataka kuzungumza na mtu. before qualification and sends only its fixed acknowledgment",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 219
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob routes Please refund my payment. before qualification and sends only its fixed acknowledgment",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 219
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob routes Siwezi kuingia kwenye kozi. before qualification and sends only its fixed acknowledgment",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 219
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob preserves the grounded path for the approved informational question Tell me about your course.",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 238
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob preserves the grounded path for the approved informational question Hello, what is your refund policy?",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 238
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob preserves the grounded path for the approved informational question What support do you offer?",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 238
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob suppresses the acknowledgment when human takeover revokes authority before an actual provider failure returns",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 256
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob acknowledges a source withdrawn during generation without sending the now-unverified provider answer",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 275
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob uses actual Swahili question context to record an unknown answer and ask the next unanswered question",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 295
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob does not turn an informational imperative after a business question into evidence, including later history replay",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 318
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob retains a budget correction and its source history while asking only the next unanswered question",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 346
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with controlled provider failures for a Swahili question acknowledges timeout once in Swahili while retaining the original failure",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 394
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with controlled provider failures for a Swahili question acknowledges malformed JSON once in Swahili while retaining the original failure",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 394
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with controlled provider failures for a Swahili question acknowledges safety refusal once in Swahili while retaining the original failure",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 394
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with controlled provider failures for a Swahili question acknowledges truncation once in Swahili while retaining the original failure",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_emergency_spec.rb",
+        "line_number": 394
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks live processing when the launch gate is not approved",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 47
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks a delayed worker after human takeover without creating outbound side effects",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 57
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks a delayed worker when the triggering message is outside the locked tenant scope",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 68
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks a delayed worker after a human reply even when control state was not updated",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 81
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks a delayed worker when a human is assigned even if the control version was not bumped",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 97
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks a delayed worker when the conversation control state no longer permits AI",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 107
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks a delayed worker when the inbox status is no longer eligible",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 117
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob blocks a delayed worker after opt-out",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 127
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob does not create outbound work when manual resume only changes control state",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 137
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob atomically records qualification, a grounded AI answer, the next question, verified Source References, and outbox event once under retry",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 147
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob explains unsupported human requests through durable orchestration without creating a sales handoff",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 206
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob creates one highly qualified handoff from current qualification evidence instead of an AI answer",
+        "status": "failed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 231
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob creates one highly qualified handoff when the Lead explicitly states the budget",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 255
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob keeps one unanswered question blocked with one fixed Review acknowledgment",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 275
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob answers Swahili language-support questions in Swahili instead of blocking on missing knowledge",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 299
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob records one conflicting_knowledge Review and acknowledgment without provider calls",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 319
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob records one sensitive_question Review and acknowledgment without provider calls",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 319
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob records one angry_question Review and acknowledgment without provider calls",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 319
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob records one source_unverified Review and acknowledgment without provider calls",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 319
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob records one stale_knowledge Review and acknowledgment without provider calls",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 319
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob creates a Review Request when the provider declines to answer from the supplied source",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 352
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob re-runs the sending boundary after provider completion before creating the outbound message",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 374
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob creates a Review Request when the provider fails after source verification",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 399
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with the real provider adapter and controlled HTTP responses requests enough bounded output in the Lead question language and persists the complete sourced answer",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 428
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with the real provider adapter and controlled HTTP responses retains the truncation failure and sends only a fixed Review acknowledgment",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 447
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with the real provider adapter and controlled HTTP responses keeps the built-in question in English for an English Lead question",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 465
+      },
+      {
+        "full_description": "AiLeadEmployee::OrchestrationIntentJob with the real provider adapter and controlled HTTP responses preserves a custom account prompt verbatim even for a Swahili Lead question",
+        "status": "passed",
+        "file_path": "./spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+        "line_number": 479
+      },
+      {
+        "full_description": "Review acknowledgment delivery commits one blocked Review acknowledgment before enqueue and accepts it once under competing outbox workers",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 33
+      },
+      {
+        "full_description": "Review acknowledgment delivery recovers a committed acknowledgment after enqueue failure without repeating orchestration or provider work",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 67
+      },
+      {
+        "full_description": "Review acknowledgment delivery keeps the complaint Review, acknowledgment and operator alert committed when the alert queue fails",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 91
+      },
+      {
+        "full_description": "Review acknowledgment delivery keeps the provider_failure Review, acknowledgment and operator alert committed when the alert queue fails",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 91
+      },
+      {
+        "full_description": "Review acknowledgment delivery cancels the recorded acknowledgment after takeover without treating its Review as operator-alert authority",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 126
+      },
+      {
+        "full_description": "Review acknowledgment delivery cancels the recorded acknowledgment after assignment without treating its Review as operator-alert authority",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 126
+      },
+      {
+        "full_description": "Review acknowledgment delivery cancels the recorded acknowledgment after opt_out without treating its Review as operator-alert authority",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 126
+      },
+      {
+        "full_description": "Review acknowledgment delivery cancels the recorded acknowledgment after launch_withdrawal without treating its Review as operator-alert authority",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 126
+      },
+      {
+        "full_description": "Review acknowledgment delivery cancels the recorded acknowledgment after window_expiry without treating its Review as operator-alert authority",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 126
+      },
+      {
+        "full_description": "Review acknowledgment delivery acknowledges an exhausted expired claim once and commits its operator alert without another model attempt",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 154
+      },
+      {
+        "full_description": "Review acknowledgment delivery does not acknowledge an exhausted live claim",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 184
+      },
+      {
+        "full_description": "Review acknowledgment delivery does not acknowledge an exhausted revoked claim",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 184
+      },
+      {
+        "full_description": "Review acknowledgment delivery records uncertain acceptance without resending or recursively acknowledging the delivery Review",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 200
+      },
+      {
+        "full_description": "Review acknowledgment delivery creates one Review acknowledgment when independent orchestration workers compete for the same claim",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 219
+      },
+      {
+        "full_description": "Review acknowledgment delivery keeps the replacement claim failure and acknowledgment when an expired worker returns later",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/review_acknowledgment_delivery_spec.rb",
+        "line_number": 230
+      },
+      {
+        "full_description": "End-to-end canonical launch proof proves the canonical WhatsApp launch path and records a deterministic launch report",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb",
+        "line_number": 43
+      },
+      {
+        "full_description": "End-to-end canonical launch proof blocks stale AI jobs after takeover assignment pause resolution coexistence echo and explicit resume",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb",
+        "line_number": 78
+      },
+      {
+        "full_description": "End-to-end canonical launch proof classifies provider failures and source-unverified answers without fabricated fallback content",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb",
+        "line_number": 133
+      },
+      {
+        "full_description": "End-to-end canonical launch proof denies cross-tenant access to launch proof records and configuration",
+        "status": "passed",
+        "file_path": "./spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb",
+        "line_number": 170
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not turn \"Tell me about your course.\" into an answer about business_type",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 14
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not turn \"Tell me about your course.\" into an answer about problem",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 14
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not turn \"Please explain your business.\" into an answer about business_type",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 14
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not turn \"Please explain your business.\" into an answer about problem",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 14
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not borrow business-question context for \"Please tell me about your course.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 20
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not borrow business-question context for \"Explain your pricing.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 20
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not borrow business-question context for \"Thanks. Tell me about your course.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 20
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor preserves the descriptive business_type answer \"Bookkeeping\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 27
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor preserves the descriptive problem answer \"Finding new customers\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 27
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor preserves the descriptive problem answer \"Customer acquisition\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 27
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor preserves the descriptive problem answer \"Kupata wateja wapya\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 27
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor retains the explicit business assertion alongside \"Tell me about your course. I run a salon.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 33
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor retains the explicit business assertion alongside \"I run a salon. Please explain your business.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_requests_spec.rb",
+        "line_number": 33
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService does not create or replay business evidence from \"Tell me about your course.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb",
+        "line_number": 24
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService does not create or replay business evidence from \"Please explain your business.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb",
+        "line_number": 24
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService does not create or replay business evidence from \"Thanks. Tell me about your course.\"",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb",
+        "line_number": 24
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService preserves a genuine descriptive business answer and advances",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb",
+        "line_number": 39
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService preserves a genuine descriptive problem answer and advances",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb",
+        "line_number": 47
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService retains explicit business evidence from another clause in an informational request",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_informational_requests_spec.rb",
+        "line_number": 58
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor does not treat a budget correction as an answer to the business question",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_cross_signal_spec.rb",
+        "line_number": 13
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor retains a genuine descriptive answer to the business question",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_cross_signal_spec.rb",
+        "line_number": 20
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationEvidenceExtractor retains a separate explicit business assertion alongside a budget correction",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_evidence_extractor_cross_signal_spec.rb",
+        "line_number": 26
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService preserves a budget correction and source history without consuming the unanswered business question",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_cross_signal_spec.rb",
+        "line_number": 27
+      },
+      {
+        "full_description": "AiLeadEmployee::QualificationService still completes the business question when the Lead supplies a genuine descriptive answer",
+        "status": "passed",
+        "file_path": "./spec/services/ai_lead_employee/qualification_service_cross_signal_spec.rb",
+        "line_number": 45
+      }
+    ]
+  },
+  "pure_routing_replies": {
+    "examples": 85,
+    "failures": 0,
+    "duration_seconds": 1.09,
+    "load_seconds": 18.77
+  },
+  "retained_coupled_prior_to_final_cleanup": {
+    "examples": 238,
+    "failures": 1,
+    "duration_seconds": 469,
+    "load_seconds": 20.91
+  },
+  "known_failure": {
+    "file": "spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+    "line": 231,
+    "input": "I need more leads now. I am the owner of the agency and can spend $2500.",
+    "expected": "Highly Qualified handoff without customer outbound Message",
+    "observed": "No budget observation; completed conversation reply with customer outbound Message",
+    "disposition": "Original test and expectation retained unchanged. Capacity-to-spend versus qualification budget remains a coordinator-owned requirement; no runtime exclusion or expansion inferred from implementation."
+  },
+  "natural_retrieval": {
+    "correct": 6,
+    "total": 20,
+    "changed_by_this_repair": false
+  },
+  "external_activity": "Synthetic local fixtures and controlled HTTP only in this task; no live provider, Meta or deployment action."
+}

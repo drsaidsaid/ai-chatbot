@@ -365,6 +365,26 @@ Conversation before sending.
 
 ### Knowledge and Human Review
 
+The bounded emergency conversation repair classifies the current public Lead
+request within the owned orchestration attempt before qualification/handoff
+side effects. Transactional complaint/refund/support actions enter an existing
+Review reason; informational policy questions retain the knowledge boundary.
+Ordinary greeting/language/qualification replies do not create knowledge-gap
+Reviews. A fixed, model-free acknowledgment may be recorded atomically with an
+eligible inbound Review and the blocked/provider-failed intent, using the
+existing Message/outbox idempotency and R04 delivery path. It is separately
+identified from a grounded answer. Both normal completion and provider rescue
+must enqueue after the owning transaction, including any configured operator
+Review alerts. Their Messages must also survive a queue outage; the owning
+processor defers alert enqueue through the existing service options and retains
+the persisted alert Message identities. ProviderFailureHandler remains unchanged.
+An exhausted expired claim follows this record-only Review path without allocating
+another provider attempt; its failed state, recovery failure class and attempt
+count remain unchanged. Current authority and live-claim guards still run first.
+No global Review callback or sender
+authority exception is introduced. See
+`docs/issues/2026-09-10-emergency-conversation-repair.md` and its approved plan.
+
 #### `knowledge_documents`
 
 - `business_account_id`, optional `offer_id`, category, title, source type, content or storage reference, authority priority, version, status, and approval metadata.

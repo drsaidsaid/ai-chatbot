@@ -244,6 +244,18 @@ Basic human assistance is available separately from a qualified sales appointmen
 
 ### Out-of-Scope and Sensitive Topics
 
+The authorized September 2026 emergency repair distinguishes a transactional
+complaint/refund/support request from an informational question about approved
+policy or services. Transactional requests reach Review before sales
+qualification, without requiring the Lead to qualify for support. An eligible
+inbound Review or provider failure receives one fixed English/Swahili
+acknowledgment after Review persistence, with no commercial promise or appended
+sales question. The original refusal/failure remains visible. Normal greetings
+and supported qualification statements receive an appropriate reply without a
+false knowledge Review, and the next question comes from persisted evidence.
+Acknowledgments remain subject to current R04 delivery authority; no automated
+post-handoff exception or new semantic retrieval is included.
+
 The agent must escalate instead of improvising on:
 
 - Legal or medical advice.
