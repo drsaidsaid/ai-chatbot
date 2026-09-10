@@ -10,5 +10,6 @@ AiLeadEmployee::AiProvider::Response = Struct.new(
   :total_tokens,
   :cost_usd,
   :configuration_version,
+  :usage_period_on,
   keyword_init: true
 )

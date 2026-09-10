@@ -194,7 +194,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       content: reply_content(provider_response.content, qualification_result),
       source_references: answer_result.sources,
       qualification_result: qualification_result,
-      status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS
+      status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS,
+      provider_response: provider_response
     )
     create_outbox_event!(outbound_message)
     complete_intent!(
@@ -314,7 +315,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     provider_response.content.to_s.strip.match?(/\Areview_required[.!]?\z/i)
   end
 
-  def create_outbound_message!(content:, source_references:, qualification_result:, status:)
+  def create_outbound_message!(content:, source_references:, qualification_result:, status:, provider_response: nil)
     conversation.messages.create!(
       account: account,
       inbox: conversation.inbox,
@@ -330,9 +331,18 @@ class AiLeadEmployee::Orchestration::IntentProcessor
           outbound_intent_status: status,
           source_references: source_references,
           qualification: qualification_result_payload(qualification_result)
-        }
+        }.merge(provider_delivery_authority(provider_response))
       }
     )
+  end
+
+  def provider_delivery_authority(provider_response)
+    return {} unless provider_response
+
+    {
+      provider_configuration_version: provider_response.configuration_version,
+      provider_usage_period_on: provider_response.usage_period_on&.iso8601
+    }
   end
 
   def create_outbox_event!(outbound_message)

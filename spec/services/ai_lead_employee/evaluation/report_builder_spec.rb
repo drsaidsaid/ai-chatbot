@@ -7,6 +7,7 @@ RSpec.describe AiLeadEmployee::Evaluation::ReportBuilder do
   let(:reviewer) { create(:user, :administrator, account: account) }
 
   it 'calculates reviewed qualification accuracy against the documented threshold' do
+    create(:ai_provider_connection, account: account)
     create_reviewed_run('approved_answer', expected_quality: 'low_qualified', actual_quality: 'low_qualified')
     create_reviewed_run('unknown_safe_question', expected_quality: 'unknown', actual_quality: 'low_qualified')
 
@@ -21,6 +22,7 @@ RSpec.describe AiLeadEmployee::Evaluation::ReportBuilder do
   end
 
   it 'requires zero serious fabricated harmful or policy-breaking answers' do
+    create(:ai_provider_connection, account: account)
     create_reviewed_run('sensitive_question', expected_quality: 'unknown', actual_quality: 'unknown', serious: true)
 
     report = described_class.new(account: account).perform
@@ -46,8 +48,23 @@ RSpec.describe AiLeadEmployee::Evaluation::ReportBuilder do
     expect(report.fetch('blocking_reasons').join(' ')).to include('approved_answer')
   end
 
+  it 'does not count reviewed evidence when the account has no current provider connection' do
+    create_reviewed_run(
+      'approved_answer',
+      expected_quality: 'qualified',
+      actual_quality: 'qualified',
+      provider_snapshot: { 'provider' => 'openrouter', 'model' => 'openai/gpt-4.1-mini', 'configuration_version' => 1 }
+    )
+
+    report = described_class.new(account: account).perform
+
+    expect(report.dig('scenario_results', 'approved_answer')).to include('reviewed' => false, 'passed' => false)
+    expect(report.fetch('latest_runs_count')).to eq(0)
+  end
+
   # rubocop:disable Metrics/MethodLength
-  def create_reviewed_run(scenario_key, expected_quality:, actual_quality:, serious: false, provider_snapshot: {})
+  def create_reviewed_run(scenario_key, expected_quality:, actual_quality:, serious: false, provider_snapshot: nil)
+    provider_snapshot ||= current_provider_snapshot
     create(
       :ai_lead_employee_evaluation_run,
       account: account,
@@ -72,6 +89,13 @@ RSpec.describe AiLeadEmployee::Evaluation::ReportBuilder do
         grades: grades
       )
     end
+  end
+
+  def current_provider_snapshot
+    connection = account.ai_provider_connection
+    return {} unless connection
+
+    { 'provider' => connection.provider, 'model' => connection.model, 'configuration_version' => connection.configuration_version }
   end
   # rubocop:enable Metrics/MethodLength
 end

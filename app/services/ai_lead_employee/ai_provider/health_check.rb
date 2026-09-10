@@ -20,7 +20,7 @@ class AiLeadEmployee::AiProvider::HealthCheck
     update_connection!(checked_at: checked_at, configuration_version: provider[:configuration_version],
                        status: 'healthy', failure_class: nil, model: response.model)
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
-    update_connection!(checked_at: checked_at || Time.current, configuration_version: provider&.dig(:configuration_version),
+    update_connection!(checked_at: Time.current, configuration_version: provider&.dig(:configuration_version),
                        status: 'failed', failure_class: e.failure_class, model: connection.model)
   end
 
@@ -38,7 +38,7 @@ class AiLeadEmployee::AiProvider::HealthCheck
 
   def update_connection!(checked_at:, configuration_version:, status:, failure_class:, model:)
     connection.with_lock do
-      return Result.new(status: 'stale', checked_at: checked_at) if connection.configuration_version != configuration_version
+      return Result.new(status: 'stale', checked_at: checked_at) if stale_observation?(checked_at, configuration_version)
 
       connection.update!(
         last_health_checked_at: checked_at,
@@ -56,5 +56,10 @@ class AiLeadEmployee::AiProvider::HealthCheck
     end
 
     Result.new(status: status, failure_class: failure_class, checked_at: checked_at)
+  end
+
+  def stale_observation?(checked_at, configuration_version)
+    connection.configuration_version != configuration_version ||
+      (connection.last_health_checked_at && connection.last_health_checked_at >= checked_at)
   end
 end

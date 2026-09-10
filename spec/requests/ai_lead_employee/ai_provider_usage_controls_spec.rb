@@ -22,8 +22,9 @@ RSpec.describe 'AI provider usage controls', type: :request do
         }.to_json
       )
 
+    provider_response = nil
     ActiveRecord::Base.transaction(requires_new: true) do
-      AiLeadEmployee::AiProvider::ClientFactory.for(account: account).complete(
+      provider_response = AiLeadEmployee::AiProvider::ClientFactory.for(account: account).complete(
         messages: [{ role: 'user', content: 'Synthetic evaluation question' }],
         purpose: 'evaluation'
       )
@@ -37,6 +38,10 @@ RSpec.describe 'AI provider usage controls', type: :request do
       'requests_used_today' => 1,
       'cost_usd_today' => nil,
       'cost_data_complete' => false
+    )
+    expect(provider_response).to have_attributes(
+      configuration_version: account.ai_provider_connection.configuration_version,
+      usage_period_on: Time.current.utc.to_date
     )
   end
 
@@ -192,6 +197,109 @@ RSpec.describe 'AI provider usage controls', type: :request do
       last_health_configuration_version: 1
     )
     expect(connection.usages.failed.sole.failure_class).to eq('insufficient_credits')
+  end
+
+  it 'does not let a slower older health success overwrite a newer real failure', :aggregate_failures do
+    account = create(:account)
+    connection = create(:ai_provider_connection, account: account, daily_request_limit: 10)
+    health_entered = Queue.new
+    release_health = Queue.new
+    stub_request(:post, 'https://openrouter.ai/api/v1/chat/completions').to_return do |request|
+      prompt = JSON.parse(request.body).fetch('messages').last.fetch('content')
+      if prompt == 'Reply with ok.'
+        health_entered << true
+        release_health.pop
+        {
+          status: 200,
+          body: { id: 'older-health', model: connection.model,
+                  choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] }.to_json
+        }
+      else
+        { status: 402, body: { error: { message: 'Synthetic later failure' } }.to_json }
+      end
+    end
+    health_result = Queue.new
+    health_worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        health_result << AiLeadEmployee::AiProvider::HealthCheck.new(connection: connection.reload).perform
+      end
+    end
+    Timeout.timeout(10) { health_entered.pop }
+
+    expect do
+      AiLeadEmployee::AiProvider::ClientFactory.for(account: account).complete(
+        messages: [{ role: 'user', content: 'Observe the later real failure' }]
+      )
+    end.to raise_error(AiLeadEmployee::AiProvider::InsufficientCreditsFailure)
+    release_health << true
+    health_worker.value
+
+    expect(health_result.pop.status).to eq('stale')
+    expect(connection.reload).to have_attributes(
+      readiness_status: 'failed',
+      last_health_failure_class: 'insufficient_credits'
+    )
+  ensure
+    release_health << true if release_health
+    health_worker&.join
+  end
+
+  it 'admits real evaluation usage without waiting on the caller transaction pool connection', :aggregate_failures do
+    original_config = ActiveRecord::Base.connection_db_config.configuration_hash
+    ActiveRecord::Base.establish_connection(original_config.merge(pool: 1, checkout_timeout: 0.2))
+    account = create(:account)
+    admin = create(:user, :administrator, account: account)
+    create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
+    connection = create(:ai_provider_connection, account: account, daily_request_limit: 10)
+    request = stub_request(:post, 'https://openrouter.ai/api/v1/chat/completions').to_return(
+      status: 200,
+      body: { id: 'bounded-pool-evaluation', model: connection.model,
+              choices: [{ message: { content: 'Yes, we build AI employees.' }, finish_reason: 'stop' }] }.to_json
+    )
+
+    result = Timeout.timeout(2) do
+      AiLeadEmployee::Evaluation::SandboxRunner.new(account: account, user: admin, scenario_key: 'approved_answer').perform
+    end
+
+    expect(result.run).to be_completed
+    expect(request).to have_been_requested.once
+    expect(connection.usages.sole).to have_attributes(purpose: 'evaluation')
+  ensure
+    ActiveRecord::Base.establish_connection(original_config) if original_config
+  end
+
+  it 'fails closed before provider HTTP when the bounded usage ledger pool is unavailable', :aggregate_failures do
+    account = create(:account)
+    connection = create(:ai_provider_connection, account: account, daily_request_limit: 10)
+    provider_request = stub_request(:post, 'https://openrouter.ai/api/v1/chat/completions')
+    pool = AiLeadEmployee::AiProviderLedgerRecord.connection_pool
+    occupied = Queue.new
+    release = Queue.new
+    workers = Array.new(pool.size) do
+      Thread.new do
+        pool.with_connection do
+          occupied << true
+          release.pop
+        end
+      end
+    end
+    workers.size.times { Timeout.timeout(5) { occupied.pop } }
+
+    expect do
+      Timeout.timeout(3) do
+        ActiveRecord::Base.transaction do
+          AiLeadEmployee::AiProvider::ClientFactory.for(account: account).complete(
+            messages: [{ role: 'user', content: 'Do not call the provider without durable admission' }]
+          )
+        end
+      end
+    end.to raise_error(AiLeadEmployee::AiProvider::AdmissionUnavailableFailure)
+    expect(provider_request).not_to have_been_requested
+    expect(connection.usages).to be_empty
+  ensure
+    workers&.size&.times { release << true }
+    workers&.each(&:join)
   end
 
   private

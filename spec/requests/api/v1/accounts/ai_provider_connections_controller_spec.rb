@@ -3,12 +3,17 @@
 require 'rails_helper'
 
 RSpec.describe 'AI provider connection API', type: :request do
+  self.use_transactional_tests = false
+
   let(:account) { create(:account) }
   let(:other_account) { create(:account) }
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:other_admin) { create(:user, account: other_account, role: :administrator) }
   let(:endpoint) { "/api/v1/accounts/#{account.id}/ai_provider_connection" }
+
+  before { clean_committed_fixtures }
+  after { clean_committed_fixtures }
 
   it 'lets an admin configure and rotate one encrypted provider connection without returning the raw key', :aggregate_failures do
     require_configured_encryption!
@@ -250,5 +255,13 @@ RSpec.describe 'AI provider connection API', type: :request do
 
   def require_configured_encryption!
     skip('encryption keys missing; AI Provider Connections reject plaintext credentials') unless Chatwoot.encryption_configured?
+  end
+
+  def clean_committed_fixtures
+    raise 'Rails test database required' unless Rails.env.test?
+
+    database = ActiveRecord::Base.connection
+    tables = database.tables - %w[schema_migrations ar_internal_metadata installation_configs]
+    database.execute("TRUNCATE #{tables.map { |table| database.quote_table_name(table) }.join(', ')} CASCADE")
   end
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::AiProvider::MeteredClient
-  Reservation = Data.define(:usage_id, :configuration_version)
+  Reservation = Data.define(:usage_id, :configuration_version, :period_on)
   MAX_INPUT_BYTES = 32.kilobytes
 
   def initialize(connection:, adapter:)
@@ -24,8 +24,8 @@ class AiLeadEmployee::AiProvider::MeteredClient
     )
     raise
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
-    fail_usage!(reservation&.usage_id, e.failure_class)
-    record_provider_failure!(reservation, e.failure_class)
+    attempt_cleanup { fail_usage!(reservation&.usage_id, e.failure_class) }
+    attempt_cleanup { record_provider_failure!(reservation, e.failure_class) }
     raise
   end
 
@@ -60,17 +60,22 @@ class AiLeadEmployee::AiProvider::MeteredClient
       response_format: response_format
     )
     response.configuration_version = reservation.configuration_version
+    response.usage_period_on = reservation.period_on
     complete_usage!(reservation.usage_id, response)
     response
   end
 
   def reserve_usage!(purpose:, max_tokens:)
-    persistently do
-      current = AiLeadEmployee::AiProviderConnection.find(connection.id)
+    with_usage_ledger do |connection_class, usage_class|
+      current = connection_class.find(connection.id)
       current.with_lock do
         validate_reservation!(current)
-        usage = create_usage!(current, purpose, max_tokens)
-        Reservation.new(usage_id: usage.id, configuration_version: current.configuration_version)
+        usage = create_usage!(usage_class, current, purpose, max_tokens)
+        Reservation.new(
+          usage_id: usage.id,
+          configuration_version: current.configuration_version,
+          period_on: usage.period_on
+        )
       end
     end
   end
@@ -85,10 +90,10 @@ class AiLeadEmployee::AiProvider::MeteredClient
     raise AiLeadEmployee::AiProvider::UsageLimitFailure, 'Daily AI request allowance is exhausted' if current.daily_request_limit <= used
   end
 
-  def create_usage!(current, purpose, max_tokens)
-    AiLeadEmployee::AiProviderUsage.create!(
-      account: current.account,
-      ai_provider_connection: current,
+  def create_usage!(usage_class, current, purpose, max_tokens)
+    usage_class.create!(
+      account_id: current.account_id,
+      ai_provider_connection_id: current.id,
       configuration_version: current.configuration_version,
       purpose: purpose,
       period_on: Time.current.utc.to_date,
@@ -98,8 +103,8 @@ class AiLeadEmployee::AiProvider::MeteredClient
   end
 
   def complete_usage!(usage_id, response)
-    persistently do
-      AiLeadEmployee::AiProviderUsage.find(usage_id).update!(
+    with_usage_ledger do |_connection_class, usage_class|
+      usage_class.find(usage_id).update!(
         status: 'completed',
         provider_request_id: response.id,
         model: response.model,
@@ -116,8 +121,8 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def fail_usage!(usage_id, failure_class)
     return unless usage_id
 
-    persistently do
-      AiLeadEmployee::AiProviderUsage.find(usage_id).update!(
+    with_usage_ledger do |_connection_class, usage_class|
+      usage_class.find(usage_id).update!(
         status: 'failed',
         failure_class: failure_class,
         completed_at: Time.current
@@ -128,8 +133,8 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def record_provider_failure!(reservation, failure_class)
     return unless reservation
 
-    persistently do
-      current = AiLeadEmployee::AiProviderConnection.find(connection.id)
+    with_usage_ledger do |connection_class, _usage_class|
+      current = connection_class.find(connection.id)
       current.with_lock do
         next unless current.configured? && current.configuration_version == reservation.configuration_version
 
@@ -151,13 +156,19 @@ class AiLeadEmployee::AiProvider::MeteredClient
     }
   end
 
-  def persistently(&)
-    return yield unless ActiveRecord::Base.connection.transaction_open?
+  def with_usage_ledger
+    return yield(AiLeadEmployee::AiProviderConnection, AiLeadEmployee::AiProviderUsage) unless ActiveRecord::Base.connection.transaction_open?
 
-    worker = Thread.new do
-      ActiveRecord::Base.connection_pool.with_connection(&)
+    AiLeadEmployee::AiProviderLedgerRecord.connection_pool.with_connection do
+      yield(AiLeadEmployee::AiProviderLedgerConnection, AiLeadEmployee::AiProviderLedgerUsage)
     end
-    worker.report_on_exception = false
-    worker.value
+  rescue ActiveRecord::ConnectionTimeoutError, ActiveRecord::ConnectionNotEstablished => e
+    raise AiLeadEmployee::AiProvider::AdmissionUnavailableFailure, "AI provider usage admission unavailable: #{e.message}"
+  end
+
+  def attempt_cleanup
+    yield
+  rescue AiLeadEmployee::AiProvider::AdmissionUnavailableFailure, ActiveRecord::RecordNotFound
+    nil
   end
 end

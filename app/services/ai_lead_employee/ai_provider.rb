@@ -13,6 +13,7 @@ module AiLeadEmployee::AiProvider
     usage_limit: 'usage_limit_exhausted',
     input_limit: 'input_limit_exceeded',
     output_limit: 'output_limit_exceeded',
-    configuration_changed: 'provider_configuration_changed'
+    configuration_changed: 'provider_configuration_changed',
+    admission_unavailable: 'provider_admission_unavailable'
   }.freeze
 end

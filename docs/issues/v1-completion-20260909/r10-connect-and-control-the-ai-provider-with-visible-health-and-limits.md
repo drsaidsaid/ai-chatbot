@@ -1,6 +1,6 @@
 # R10 — Connect and control the AI provider with visible health and limits
 
-Status: Candidate handoff complete from accepted baseline
+Status: Candidate handoff and review correction complete from accepted baseline
 `324ee6df9ca50dff708f41a4004cd105b23a784b`; coordinator integration pending.
 
 ## Parent
@@ -55,3 +55,6 @@ qualification-lock correction and R09 parser work remain separately coordinated.
 ADR 0012 is reserved. Runtime implementation follows this reviewed contract.
 The final bounded checks, independent rereviews and in-app desktop/phone evidence
 are recorded in `docs/releases/2026-09-10-r10/`.
+The later concurrency and final-authorization corrections are recorded separately
+in `docs/releases/2026-09-11-r10-follow-up/` so the original candidate evidence
+remains immutable.

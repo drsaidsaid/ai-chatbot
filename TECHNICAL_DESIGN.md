@@ -220,9 +220,18 @@ accounting across provider errors and evaluation rollback, and records only
 sanitized outcome and supplied usage/cost. Missing cost is unknown. Readiness
 uses the same reply budget as R11's answer request rather than the current
 8-token probe; it reports the scope/time checked, never indefinite capacity.
+Transactional callers write admission through a separate bounded database pool,
+so a saturated application pool cannot deadlock accounting. If that ledger pool
+cannot be checked out, the request fails closed before provider HTTP. A failure
+to complete accounting after HTTP suppresses the returned output and retains the
+reserved attempt conservatively.
 
 Extend R04's existing claimed-intent/output fence and
 `Whatsapp::OutboundEligibility` with current provider permission and revision.
+Grounded output also carries its UTC allowance date into the durable Message;
+final dispatch rejects output whose admitted date is no longer the current UTC
+allowance period. Health observations are ordered by their start time so a slow,
+older success cannot overwrite a later real provider failure.
 Keep HTTP outside locks and preserve its dispatch authorization point, unknown
 outcomes and current control/source checks. Configuration mutation releases its
 provider lock before Conversation cancellation; final dispatch must observe

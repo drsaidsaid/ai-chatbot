@@ -32,7 +32,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
   end
 
   def approve_launch!
-    connection = channel.account.ai_provider_connection
+    connection = channel.account.ai_provider_connection || create(:ai_provider_connection, account: channel.account)
     AiLeadEmployee::Evaluation::ScenarioCatalog.required_keys.each do |scenario_key|
       attributes = { account: channel.account, user: admin, scenario_key: scenario_key }
       if connection
@@ -459,6 +459,48 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     release_authorization << true if release_authorization
     send_worker&.join
     update_worker&.join
+  end
+
+  it 'never revives provider output admitted on an earlier UTC allowance day' do
+    conversation.update!(control_state: :ai_active, assignee: nil)
+    connection = create(:ai_provider_connection, account: channel.account, daily_request_limit: 1)
+    approve_launch!
+    admitted_on = Time.current.utc.to_date - 1.day
+    usage = AiLeadEmployee::AiProviderUsage.create!(
+      account: channel.account,
+      ai_provider_connection: connection,
+      configuration_version: connection.configuration_version,
+      purpose: 'answer',
+      period_on: admitted_on,
+      status: 'completed',
+      requested_output_tokens: connection.reply_token_limit,
+      started_at: 1.day.ago,
+      completed_at: 1.day.ago
+    )
+    reply = create(
+      :message,
+      :bot_message,
+      account: channel.account,
+      inbox: channel.inbox,
+      conversation: conversation,
+      sender: nil,
+      message_type: :outgoing,
+      content: 'Yesterday provider output must stay canceled',
+      additional_attributes: {
+        ai_lead_employee: {
+          orchestration_intent_id: 123_456,
+          provider_configuration_version: usage.configuration_version,
+          provider_usage_period_on: usage.period_on.iso8601
+        }
+      }
+    )
+    provider_request = stub_request(:post, provider_url)
+
+    SendReplyJob.perform_now(reply.id)
+
+    delivery = reply.reload.whatsapp_outbound_delivery
+    expect(delivery).to have_attributes(state: 'canceled', failure_code: 'provider_usage_period_expired')
+    expect(provider_request).not_to have_been_requested
   end
 
   it 'recovers an expired pre-dispatch claim but never reclaims dispatch-started work' do

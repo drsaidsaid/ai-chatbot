@@ -97,7 +97,12 @@ class Whatsapp::OutboundEligibility
     return lead_failure if lead_failure
     return unless provider_control_required?
 
-    AiLeadEmployee::AiProvider::RuntimeControl.failure_code(account: @delivery.account)
+    attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
+    AiLeadEmployee::AiProvider::RuntimeControl.failure_code(
+      account: @delivery.account,
+      configuration_version: attributes['provider_configuration_version'],
+      usage_period_on: attributes['provider_usage_period_on']
+    )
   end
 
   def provider_control_required?

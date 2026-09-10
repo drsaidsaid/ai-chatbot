@@ -10,12 +10,15 @@ class AiLeadEmployee::AiProvider::RuntimeControl
     end
   end
 
-  def self.failure_code(account:)
+  def self.failure_code(account:, configuration_version: nil, usage_period_on: nil)
     connection = AiLeadEmployee::AiProviderConnection.find_by(account_id: account.id)
     return 'provider_disabled' unless connection&.configured?
 
     connection.with_lock do
       next 'provider_disabled' unless connection.configured?
+
+      authority_failure = provider_authority_failure(connection, configuration_version, usage_period_on)
+      next authority_failure if authority_failure
 
       used = connection.usages.for_utc_day(Time.current.utc.to_date).count
       'usage_limit_exhausted' if connection.daily_request_limit <= used
@@ -29,4 +32,12 @@ class AiLeadEmployee::AiProvider::RuntimeControl
       end
     end
   end
+
+  def self.provider_authority_failure(connection, configuration_version, usage_period_on)
+    return 'provider_configuration_changed' if configuration_version && connection.configuration_version != configuration_version.to_i
+    return 'provider_usage_period_expired' if usage_period_on && usage_period_on.to_s != Time.current.utc.to_date.iso8601
+
+    nil
+  end
+  private_class_method :provider_authority_failure
 end

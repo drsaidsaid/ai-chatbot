@@ -44,6 +44,15 @@ cannot establish capacity for a normal answer, and unavailable cost cannot be
 reported as zero. The focused R10 branch implements this extension from reviewed
 baseline `324ee6df`.
 
+Follow-up review requires durable admission to use a separate bounded database
+pool whenever provider work runs inside an application transaction. Checkout
+failure blocks provider HTTP, while bookkeeping failure after HTTP suppresses
+the output and leaves the reservation conservative. Provider-produced Messages
+retain both the configuration revision and UTC allowance date used for admission;
+the final WhatsApp boundary rejects either stale value. Health writes also reject
+observations older than the latest persisted provider result. Evaluation evidence
+cannot certify launch when no current provider connection exists.
+
 Provider permission extends the existing ADR 0011 model/output/dispatch boundary;
 it does not introduce another sender or hold Conversation locks during provider
 HTTP. Explicit disablement or exhausted local allowance blocks pending automation.

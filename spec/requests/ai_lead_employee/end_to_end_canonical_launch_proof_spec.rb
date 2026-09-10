@@ -351,6 +351,10 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
                                                 private: false)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'orchestration_intent_id')).to eq(intent.id)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'source_references').first['id']).to eq(knowledge_item.id)
+    expect(outbound_message.additional_attributes.fetch('ai_lead_employee')).to include(
+      'provider_configuration_version' => provider_connection.configuration_version,
+      'provider_usage_period_on' => Time.current.utc.to_date.iso8601
+    )
     expect(OutboxEvent.find_by!(aggregate: outbound_message)).to have_attributes(account_id: account.id,
                                                                                  event_type: 'ai_employee.outbound_intent_recorded')
   end
@@ -449,7 +453,8 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
       model: 'openai/gpt-5.2',
       content: 'Yes, we build AI employees for qualified businesses.',
       finish_reason: 'stop',
-      configuration_version: provider_connection.configuration_version
+      configuration_version: provider_connection.configuration_version,
+      usage_period_on: Time.current.utc.to_date
     )
   end
 
