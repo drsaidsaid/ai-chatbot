@@ -1,0 +1,19 @@
+[
+  {
+    "hit": "<a href=\"/app/accounts/1/bookings\" class=\"flex h-full flex-col items-center justify-center gap-1 px-1 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-n-brand text-n-slate-11 hover:text-n-slate-12\"><span class=\"i-lucide-calendar-days size-6\"></span><span class=\"truncate\">Bookings</span></a>",
+    "saveRect": {
+      "bottom": 861,
+      "height": 36,
+      "left": 227.1875,
+      "right": 353,
+      "top": 825,
+      "width": 125.8125,
+      "x": 227.1875,
+      "y": 825
+    },
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  }
+]

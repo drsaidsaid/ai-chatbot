@@ -1,6 +1,6 @@
 # R06 — Invite a team member with access only to assigned Leads
 
-Status: Implementing on `codex/r06-assigned-access-20260910`; R01 and R02 integrated at `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`. Real browser acceptance found stale-view invalidation on Admin Lead reassignment, offscreen phone Team actions and public streaming media cache headers. Corrections pass 43 Ruby examples, 37 frontend tests, lint and production build. Corrected live reassignment clears the member view and a fresh stale-image request returns 403. Remaining phone and membership revocation acceptance awaits the coordinator browser allocation. The earlier Mac-lock blocker is obsolete. See `docs/releases/2026-09-10-r06/README.md`.
+Status: Final acceptance on `codex/r06-assigned-access-20260910`; R01 and R02 integrated at `5577a37ddae5f6d08b33b0b33aefe6d933d7003c`. Real browser corrections pass live reassignment clearing, private media denial, phone Team controls, Inbox back/focus, account revocation preserving another membership, and logout media denial. Follow-on phone Lead modal and re-invitation cleanup corrections pass 16 frontend tests, 19 membership examples, lint and the final production frontend build. Final phone Save/Escape, successful browser re-invitation, remaining direct-link checks and independent cleanup-fix re-review are pending. The earlier Mac-lock blocker is obsolete. Issue #23 remains open for coordinator acceptance/integration. See `docs/releases/2026-09-10-r06/README.md`.
 
 ## Parent
 

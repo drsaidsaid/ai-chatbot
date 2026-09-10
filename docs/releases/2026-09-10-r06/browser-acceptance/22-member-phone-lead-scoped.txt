@@ -1,0 +1,77 @@
+- main:
+  - heading "Leads" [level=1]
+  - generic: Search leads by name, phone, or business
+  - button "More actions"
+  - main:
+    - button "Back to leads": Back to leads
+    - generic: AS
+    - heading "Asha Synthetic Lead" [level=2]
+    - paragraph: Not captured
+    - paragraph
+    - heading "Contact channels" [level=3]
+    - paragraph:
+      - generic: Source
+      - generic: Synthetic baseline — no provider
+    - heading "Qualification" [level=3]
+    - generic: Lead Quality
+    - generic: Unknown
+    - generic: Score
+    - generic: 0 / 100
+    - heading "Why this lead matters" [level=3]
+    - paragraph: No qualification reasons captured yet.
+    - heading "Strongest evidence" [level=3]
+    - paragraph: Not captured
+    - heading "Missing signals" [level=3]
+    - paragraph: No missing signals
+    - heading "Conversation summary" [level=3]
+    - paragraph: Last message 10 Sept, 7:34
+    - paragraph: No message preview
+    - paragraph: "Total messages: 6"
+    - term: Conversation status
+    - definition: Open
+    - term: AI control state
+    - definition: Human Active
+    - heading "Owner & follow-up" [level=3]
+    - term: Assignee
+    - definition: Neema Assigned Member
+    - term: Follow-up state
+    - definition: No Follow Up
+    - term: Next action
+    - definition: Capture missing signals
+    - term: Due
+    - definition: Not captured
+    - heading "Related" [level=3]
+    - link "#2 10 Sept, 7:34":
+      - /url: /app/accounts/1/conversations/2
+      - generic: "#2"
+      - generic: 10 Sept, 7:34
+    - heading "Bookings" [level=4]
+    - paragraph: No related bookings
+    - heading "Actions" [level=3]
+    - link "Open conversation":
+      - /url: /app/accounts/1/conversations/2
+      - text: Open conversation
+    - button "Edit lead": Edit lead
+- banner:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+  - link "Notifications":
+    - /url: /app/accounts/1/inbox-view
+  - link "Your profile":
+    - /url: /app/accounts/1/profile/settings
+- navigation "AI Lead Employee mobile navigation":
+  - list:
+    - link "Inbox":
+      - /url: /app/accounts/1/dashboard
+      - generic: Inbox
+    - link "Leads":
+      - /url: /app/accounts/1/leads
+      - generic: Leads
+    - link "Bookings":
+      - /url: /app/accounts/1/bookings
+      - generic: Bookings
+    - button "More":
+      - generic: More

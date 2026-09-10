@@ -1,7 +1,7 @@
 {
   "recorded_at_utc": "2026-09-10T04:46:39.109926+00:00",
   "pre_correction_tip": "7161f8fef7902ed239f6d52c83f4661b1e533a96",
-  "browser_status": "Live reassignment and fresh stale-image denial passed; phone and membership revocation pending coordinator browser regrant",
+  "browser_status": "Phone Team, Inbox back/focus, membership revocation and logout media passed. Modal production build and cleanup/reinvite regression pass; final browser proof and coordinator re-review pending.",
   "external_delivery": false,
   "regression_red": {
     "examples": 1,
@@ -63,8 +63,8 @@
       "large chunks"
     ]
   },
-  "source_files": 116,
-  "acceptance_source_files": 58,
+  "source_files": 118,
+  "acceptance_source_files": 62,
   "screenshots_before_correction": [
     "01-admin-invitation-desktop.jpg",
     "02-admin-team-phone.jpg",
@@ -149,5 +149,7 @@
     "ruby_files": 5,
     "ruby_offenses": 0,
     "app_spec_post_commit_diff": "empty"
-  }
+  },
+  "follow_on_code_tip": "1907f72c312ffc22efbec9afd7caf1a0a739e981",
+  "follow_on_checks": "follow-on-checks.json"
 }

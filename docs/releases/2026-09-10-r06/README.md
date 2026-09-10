@@ -4,8 +4,11 @@ Status: implementation and review fixes verified by automated checks; R03
 integration refresh passed all automated checks. Real browser acceptance found a
 Lead reassignment invalidation defect, a phone Team layout issue and public
 streaming media cache headers. Corrections pass focused checks; real two-session
-reassignment and fresh stale-image denial now pass. Remaining browser acceptance
-is pending the coordinator's browser allocation.
+reassignment and fresh stale-image denial now pass. Phone Team, Inbox back/focus,
+live account revocation and logout media denial also pass. Follow-on phone Lead
+modal and re-invitation cleanup corrections pass focused checks and the final
+production frontend build. Final phone Save/Escape, successful re-invitation and
+remaining direct-link checks await the coordinator's browser allocation.
 Issue #23 remains open for coordinator review and integration. This is not a
 production launch approval.
 
@@ -106,8 +109,13 @@ An actual HTTP probe also found public media headers committed before the
 after-action. The corrections pass 43 Ruby examples, 37 frontend tests, lint and
 the Team layout production build. In the corrected browser, reassignment clears
 the member view automatically and the same newly uploaded image URL makes a
-fresh request that returns 403. Phone layout and membership revocation acceptance
-remain to be completed.
+fresh request that returns 403. Phone Team controls and Inbox back/focus pass;
+revocation automatically clears the account view while preserving the other
+Business Account and identity. Fresh requests to the same image return 403 after
+revocation and logout. Final phone Lead Save/Escape and successful re-invitation
+remain pending. Their focused corrections pass 16 frontend tests, 19 membership
+examples, lint and the 5,078-module production build. The membership tests include
+real concurrent cleanup and invitation in both orderings.
 See [browser evidence and correction](browser-acceptance/README.md) for exact
 provenance, screenshots, pending cases and regression evidence. Issue #23 remains
 open until correction acceptance and coordinator integration.

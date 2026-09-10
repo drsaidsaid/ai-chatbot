@@ -1,0 +1,192 @@
+{
+  "recorded_at_utc": "2026-09-10T08:26:27.593374+00:00",
+  "observed_before_follow_on_tip": "6e9ef30fada3f6eda5529e843cbcdfa3b1eafeb0",
+  "follow_on_code_tip": "1907f72c312ffc22efbec9afd7caf1a0a739e981",
+  "external_delivery": false,
+  "phone_team": {
+    "actions": [
+      {
+        "label": "Edit Musa Colleague",
+        "right": 322,
+        "x": 290,
+        "y": 515
+      },
+      {
+        "label": "Revoke access Musa Colleague",
+        "right": 366,
+        "x": 334,
+        "y": 515
+      },
+      {
+        "label": "Edit Neema Assigned Member",
+        "right": 322,
+        "x": 290,
+        "y": 665
+      },
+      {
+        "label": "Revoke access Neema Assigned Member",
+        "right": 366,
+        "x": 334,
+        "y": 665
+      }
+    ],
+    "documentWidth": 390,
+    "height": 844,
+    "width": 390
+  },
+  "phone_inbox_back_focus": {
+    "passed": true,
+    "evidence": "21-member-phone-back-focus.json"
+  },
+  "phone_lead_save_before_fix": {
+    "passed": false,
+    "route_after_click": "/app/accounts/1/bookings",
+    "geometry_evidence": "25-phone-lead-edit-overlap.json",
+    "screenshot": "25-phone-lead-edit-overlap.jpg"
+  },
+  "live_membership_revocation": {
+    "passed": true,
+    "automatic_redirect": "/app/accounts/2/dashboard?queue=all",
+    "same_member_identity": true,
+    "first_account_removed": true,
+    "evidence": [
+      "27-revocation-preserves-second-account.txt",
+      "28-first-account-revoked.txt"
+    ]
+  },
+  "fresh_media_denial": {
+    "revoked_membership": {
+      "status": 403,
+      "request_at": "2026-09-10T08:24:35+03:00",
+      "evidence": "29-revoked-membership-media-denial.txt"
+    },
+    "logout": {
+      "status": 403,
+      "request_at": "2026-09-10T08:32:12+03:00",
+      "authorized_image_loaded_before_logout": true,
+      "evidence": "31-logged-out-media-denial.txt"
+    },
+    "browser_result": "ERR_HTTP_RESPONSE_CODE_FAILURE",
+    "cache_disabled": false
+  },
+  "reinvite_red": {
+    "examples": 1,
+    "failures": 1,
+    "observed_status": 500,
+    "signal": "AccountUser committed then duplicate notification setting violated unique account/user constraint"
+  },
+  "focused_backend": {
+    "files": [
+      "spec/requests/r06_invitation_spec.rb",
+      "spec/models/account_user_spec.rb",
+      "spec/jobs/agents/destroy_job_spec.rb",
+      "spec/controllers/api/v1/accounts/notification_settings_controller_spec.rb"
+    ],
+    "examples": 17,
+    "failures": 0,
+    "duration_seconds": 20.33,
+    "load_seconds": 24.16,
+    "initial_expansion_failures": "Two existing cleanup-job examples still had active account membership; corrected fixtures revoke membership before expecting cleanup."
+  },
+  "phone_modal_red": {
+    "tests": 8,
+    "failures": 1,
+    "signal": "Escape left the unsaved custom Lead dialog open"
+  },
+  "focused_frontend": {
+    "files": [
+      "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+      "app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js"
+    ],
+    "tests": 16,
+    "failures": 0,
+    "duration_seconds": 10.34,
+    "real_modal": true,
+    "animation_stub": true
+  },
+  "lint": {
+    "ruby_files": 3,
+    "ruby_offenses": 0,
+    "frontend_files": 2,
+    "frontend_errors": 0,
+    "frontend_warnings": 0
+  },
+  "normal_commit": {
+    "tip": "1907f72c312ffc22efbec9afd7caf1a0a739e981",
+    "hooks_bypassed": false,
+    "app_spec_diff_after_commit": "empty"
+  },
+  "review": {
+    "local_standards_findings": 0,
+    "local_spec_findings": 0,
+    "independent": {
+      "standards_findings": 0,
+      "spec_findings": 1,
+      "spec_finding": "Cleanup membership check can race with reinvitation because it does not hold AgentBuilder\u2019s Account lock.",
+      "status": "race correction in progress; modal source clear"
+    }
+  },
+  "production_build": {
+    "status": "passed",
+    "modules": 5078,
+    "duration": "16m33s",
+    "node_options": "--max-old-space-size=6144",
+    "frontend_source_tip": "1907f72c312ffc22efbec9afd7caf1a0a739e981",
+    "frontend_sha256": {
+      "app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue": "48d94a1d8c1629e0a9b1d1e31c135a796f5479528cd7dbc6009a0c9dfbb8a71b",
+      "app/javascript/dashboard/components/Modal.vue": "9ca9fa0347a052dba880fdee7b5b04897cbac9a4c4c09a7dd0bdcae1c1f9bfae",
+      "app/javascript/dashboard/routes/dashboard/settings/agents/Index.vue": "b03491e9c1197cce32a2bdc10a0bd5a258585375914005b1d34dfba234c7076d"
+    },
+    "manifest_sha256": "e272e76e2446c2d76f7633ef976719f086ba5ca4b626779419652ad6a3b2f828",
+    "slot_released": true,
+    "warnings": [
+      "Browserslist data age",
+      "large chunks"
+    ]
+  },
+  "remaining_browser": [
+    "phone Lead edit Save hit-test and persisted values",
+    "Escape cancellation on phone",
+    "successful revoke/reinvite response",
+    "additional direct hidden Lead and Admin-only settings navigation"
+  ],
+  "cleanup_race_correction": {
+    "code_tip": "323d381291a51ae573e0f840cec12dab2d0784bc",
+    "red": {
+      "examples": 2,
+      "failures": 2,
+      "duration_seconds": 10.51,
+      "load_seconds": 21.73,
+      "cases": [
+        "cleanup first: successful invitation followed by settings HTTP 500",
+        "invitation queued first: retained preferences replaced by defaults"
+      ]
+    },
+    "green": {
+      "examples": 19,
+      "failures": 0,
+      "duration_seconds": 28.73,
+      "load_seconds": 15.07,
+      "files": [
+        "spec/requests/r06_membership_cleanup_concurrency_spec.rb",
+        "spec/requests/r06_invitation_spec.rb",
+        "spec/models/account_user_spec.rb",
+        "spec/jobs/agents/destroy_job_spec.rb",
+        "spec/controllers/api/v1/accounts/notification_settings_controller_spec.rb"
+      ]
+    },
+    "coordination": "Separate ActiveRecord pool connections; actual PostgreSQL row locks and pg_blocking_pids; bounded barriers, no job internal mocks",
+    "scope_checks": [
+      "restored current account preferences and assigned Conversation access",
+      "other account preferences and assigned Conversation access unchanged"
+    ],
+    "lint": {
+      "files": 2,
+      "offenses": 0
+    },
+    "hooks_bypassed": false,
+    "app_spec_diff_after_commit": "empty",
+    "independent_review": "requested",
+    "frontend_sources_changed": false
+  }
+}

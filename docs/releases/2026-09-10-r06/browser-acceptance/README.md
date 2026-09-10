@@ -1,8 +1,10 @@
 # R06 browser acceptance and correction
 
-Status: in progress. The coordinator owns the browser for the user's WhatsApp work
-after the R06 reassignment/media checkpoint. Do not close issue #23 or treat this evidence as launch
-approval. No real email, WhatsApp, AI or calendar delivery occurred.
+Status: final acceptance in progress. The coordinator owns the browser for the
+user's WhatsApp work. Phone modal and cleanup/re-invitation corrections have
+passed focused tests and the production frontend build; final phone interaction
+and successful re-invitation remain pending. Do not close issue #23 or treat this
+evidence as launch approval. No real email, WhatsApp, AI or calendar delivery occurred.
 
 ## Observed source and fixture
 
@@ -126,17 +128,73 @@ against the already-established human-assignment action/control-state payload.
 
 ## Still required
 
-- Complete independent coordinator review of the committed correction.
+- Complete independent coordinator re-review of the committed cleanup race correction.
 - Direct hidden Lead and additional Admin-only settings denial through the browser
   while permitted assignment remains available; the hidden Conversation,
   cross-account and Team-settings cases above have passed.
-- Session-end and account-revocation media denial. Current image access followed
-  by a fresh stale-link 403 after reassignment has passed. The first text-file navigation returned 200 from Rails
-  but the browser could not display its download. A later image-tab navigation
-  was blank without a recorded fresh GET; it is not evidence of denial.
-- Revoke one Business Account while the member view is open and verify another
-  account membership/user identity survives.
-- Corrected phone Team actions, member phone workspaces, and URL/back/focus checks.
+- Final phone Lead Save hit-test and persisted values, then Escape cancellation.
+- Successful browser re-invitation following revocation on the corrected runtime.
+
+Session-end and account-revocation media denial, preservation of the other
+account membership and identity, phone Team controls, and Inbox URL/back/focus
+passed in the follow-on checkpoint below. Earlier blank/download tabs are not
+used as evidence of denial.
 
 The earlier Mac-lock/header-policy reports do not block current browser access.
 Only the coordinator's shared browser allocation pauses the correction retest.
+
+## Follow-on phone and membership checkpoint — correction in progress
+
+The corrected phone Team rows fit the 390px viewport: document width is 390,
+Edit spans x290–322 and Revoke spans x334–366 (17–18). The member's phone Inbox
+contains one assigned inquiry, opens its query-backed Conversation URL, and
+Back to list restores the row's keyboard focus (19–21). Phone Lead detail shows
+only inquiry #2 (22).
+
+A further phone failure was captured before correction: Lead edit Save sat at
+y825–861 behind the mobile Bookings navigation link. The real click opened
+Bookings without saving; the hit-test and screenshot are evidence 25. The
+focused correction uses the existing CE Modal's stacking and scroll behavior,
+retaining the Lead form and its permissions. A failing Escape-cancellation
+regression supplements the actual browser layout regression; no CSS literal
+assertion substitutes for the final phone click and saved-value check.
+
+Admin added the existing Neema identity to the second synthetic Business Account
+through Team invitation, then revoked her first-account access from the phone.
+Both open member views cleared automatically and moved to the second account
+with zero Conversations, preserving the same signed-in identity (23, 26–28).
+The identical protected image URL made a fresh request after revocation and
+returned 403 at 08:24:35 +0300. After access had been restored and the image
+loaded again, UI logout returned to sign-in (30); the same URL made another
+fresh request and returned 403 at 08:32:12 +0300.
+
+Restoring the revoked membership exposed a second failure: the new AccountUser
+committed, but the after-create callback attempted to insert notification
+preferences already retained while deletion cleanup was pending. The unique
+account/user constraint produced HTTP 500. The real revoke/reinvite HTTP
+regression reproduces that response. The focused correction reuses an existing
+notification setting for the same user and account, applies defaults only to a
+new setting, and leaves another account's preferences untouched. The final test
+also runs the pending deletion job after restoration. Browser re-invitation must
+be repeated successfully before this path is accepted.
+
+Coordinator review of `1907f72c312ffc22efbec9afd7caf1a0a739e981`
+found no Standards issues and one cleanup race: checking for restored membership
+before taking a lock allowed a stale cleanup job to delete preferences after
+re-invitation succeeded. Correction
+`323d381291a51ae573e0f840cec12dab2d0784bc` holds the same Account row lock
+as AgentBuilder across the membership recheck and all cleanup. Separate database
+connections and bounded PostgreSQL row-lock barriers reproduce both orderings
+without mocking job internals. Before the correction, both cases failed: cleanup
+first left a successful re-invitation with settings returning 500; invitation
+queued first lost retained preferences. After correction, all 19 membership
+examples pass, including unchanged preferences and assigned Conversation access
+in the other Business Account. Both Ruby files pass lint and normal commit hooks.
+This spec must run serially on the disposable `_spec` or `_test` database.
+
+The final phone-modal production build passed on the exact `1907f72` frontend
+inputs: 5,078 modules in 16m33s. The build slot is released. The subsequent
+cleanup fix changes only Ruby and does not require another frontend build.
+Exact input and manifest hashes, test counts and pending browser checks are in
+`follow-on-checks.json`. Final phone Save/Escape and successful re-invitation
+remain pending a browser grant; no pending check is marked accepted.

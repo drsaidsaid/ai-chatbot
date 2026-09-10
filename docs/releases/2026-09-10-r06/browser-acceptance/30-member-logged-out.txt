@@ -1,0 +1,13 @@
+- main:
+  - img "AI Lead Employee"
+  - heading "Login to AI Lead Employee" [level=2]
+  - generic: Email
+  - textbox "example@companyname.com"
+  - text: Password
+  - paragraph:
+    - link "Forgot your password?":
+      - /url: /app/auth/reset/password
+  - textbox "Password"
+  - button "Show password"
+  - button "Login":
+    - generic: Login
