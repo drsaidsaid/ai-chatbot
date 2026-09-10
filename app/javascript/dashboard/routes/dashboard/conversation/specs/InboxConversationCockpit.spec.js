@@ -77,8 +77,25 @@ vi.mock('vue-i18n', () => ({
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PRODUCT_DEMO': 'Product demo',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONFIRM_CALL': 'Confirm call',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN': 'Assign',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_TO_ME': 'Assign to me',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_SUCCESS':
+          'Conversation assigned to you. You now control public replies.',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER': 'Take over',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER_SUCCESS':
+          'You now control this Conversation. Pending automated replies were canceled.',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE': 'Resolve Conversation',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE_SUCCESS':
+          'Conversation resolved. Pending automated replies were canceled.',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CLOSED_EXPLANATION':
+          'Reopen the Conversation before changing AI control.',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_AI': 'Pause AI',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_SUCCESS':
+          'AI is paused for this Conversation. Pending automated replies were canceled.',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_AI': 'Resume AI',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_SUCCESS':
+          'Control returned to AI. The Conversation is unassigned, and only future eligible messages can create new work. Earlier canceled replies remain canceled.',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED':
+          'The action could not be completed. The Conversation was not changed.',
         'CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.STOPPED':
           'Automated contact stopped',
         'CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.RESUME_NOTICE':
@@ -331,13 +348,15 @@ const conversationPayload = {
   messages: [{ id: 1, content: 'I need WhatsApp automation this week.' }],
 };
 
-const buildStore = () => {
+const buildStore = ({ role = 'administrator' } = {}) => {
   const actions = {
     'agents/get': vi.fn(),
     'inboxes/get': vi.fn(),
     pauseAI: vi.fn(),
     resumeAI: vi.fn(),
     assignAgent: vi.fn(),
+    toggleStatus: vi.fn(),
+    'draftMessages/setReplyEditorMode': vi.fn(),
     clearSelectedState: vi.fn(({ commit }) => commit('setChat', {})),
     updateConversation: vi.fn(({ commit }, data) => commit('setChat', data)),
     setActiveChat: vi.fn(({ commit }, { data }) => commit('setChat', data)),
@@ -353,6 +372,7 @@ const buildStore = () => {
     getters: {
       getSelectedChat: state => state.chat,
       getCurrentUser: () => ({ id: 9, name: 'Nia Operator', avatar_url: '' }),
+      getCurrentRole: () => role,
       'inboxes/getInbox': () => inboxId => ({
         id: inboxId,
         name: 'WhatsApp Sales',
@@ -384,11 +404,12 @@ const mountCockpit = async ({
   query = {},
   list = false,
   attach = false,
+  role = 'administrator',
 } = {}) => {
   const router = await buildRouter(query);
   if (list)
     await router.push({ name: 'home', params: { accountId: 1 }, query });
-  const { store, actions } = buildStore();
+  const { store, actions } = buildStore({ role });
 
   const wrapper = mount(
     { template: '<router-view />' },
@@ -560,6 +581,258 @@ describe('InboxConversationCockpit', () => {
       .trigger('click');
     expect(wrapper.text()).not.toContain('Confirm call');
     expect(BookingsAPI.create).not.toHaveBeenCalled();
+  });
+
+  it('offers the review action without showing booking details for a Review Request', async () => {
+    ConversationApi.show.mockResolvedValueOnce({
+      data: {
+        ...conversationPayload,
+        cockpit: {
+          ...conversationPayload.cockpit,
+          booking: null,
+          next_action: {
+            kind: 'answer_review',
+            label: 'Answer review request',
+            detail: 'Can we send pricing?',
+          },
+        },
+      },
+    });
+
+    const { wrapper, actions } = await mountCockpit({
+      query: { queue: 'review' },
+    });
+
+    expect(wrapper.get('[data-testid="review-request-action"]').text()).toBe(
+      'Answer review request'
+    );
+    expect(wrapper.text()).not.toContain('Proposed time');
+    expect(wrapper.text()).not.toContain('Confirm call time');
+
+    await wrapper.get('[data-testid="review-request-action"]').trigger('click');
+    expect(actions['draftMessages/setReplyEditorMode']).toHaveBeenCalledWith(
+      expect.any(Object),
+      { mode: 'REPLY' }
+    );
+
+    await wrapper
+      .get('button[aria-controls="mobile-lead-brief-panel"]')
+      .trigger('click');
+
+    expect(
+      wrapper.get('[data-testid="mobile-review-request-action"]').text()
+    ).toBe('Answer review request');
+  });
+
+  it('lets an assigned Human Operator explicitly resume AI and shows the persisted state', async () => {
+    const humanOwnedConversation = {
+      ...conversationPayload,
+      control_state: 'human_active',
+      control_version: 8,
+    };
+    const resumedConversation = {
+      ...humanOwnedConversation,
+      control_state: 'ai_active',
+      control_version: 9,
+      meta: { ...humanOwnedConversation.meta, assignee: null },
+    };
+    ConversationApi.show
+      .mockResolvedValueOnce({ data: humanOwnedConversation })
+      .mockResolvedValueOnce({ data: resumedConversation });
+
+    const { wrapper, actions } = await mountCockpit();
+
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('Human Active');
+    const resumeButton = wrapper.get('[data-testid="resume-ai-action"]');
+    expect(resumeButton.attributes('disabled')).toBeUndefined();
+
+    await resumeButton.trigger('click');
+    await flushPromises();
+
+    expect(actions.resumeAI).toHaveBeenCalledWith(expect.any(Object), {
+      conversationId: 101,
+    });
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('AI Active');
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'Control returned to AI'
+    );
+    expect(wrapper.text()).toContain('Assignee: Unassigned');
+  });
+
+  it('returns a Team Member to their permitted list after handing an assigned Conversation back to AI', async () => {
+    const humanOwnedConversation = {
+      ...conversationPayload,
+      control_state: 'human_active',
+      control_version: 8,
+    };
+    ConversationApi.show.mockResolvedValueOnce({
+      data: humanOwnedConversation,
+    });
+
+    const { wrapper, router, actions } = await mountCockpit({ role: 'agent' });
+    actions.resumeAI.mockResolvedValueOnce(true);
+
+    await wrapper.get('[data-testid="resume-ai-action"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.name).toBe('home');
+    expect(ConversationApi.show).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the current state and explains when resume fails', async () => {
+    const humanOwnedConversation = {
+      ...conversationPayload,
+      control_state: 'human_active',
+      control_version: 8,
+    };
+    ConversationApi.show.mockResolvedValueOnce({
+      data: humanOwnedConversation,
+    });
+
+    const { wrapper, actions } = await mountCockpit();
+    actions.resumeAI.mockResolvedValueOnce(false);
+
+    await wrapper.get('[data-testid="resume-ai-action"]').trigger('click');
+    await flushPromises();
+
+    expect(ConversationApi.show).toHaveBeenCalledTimes(1);
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('Human Active');
+    expect(wrapper.get('[role="alert"]').text()).toContain(
+      'Conversation was not changed'
+    );
+  });
+
+  it('lets an authorized operator take over an AI-controlled Conversation', async () => {
+    const humanOwnedConversation = {
+      ...conversationPayload,
+      control_state: 'human_active',
+      control_version: 6,
+    };
+    ConversationApi.show
+      .mockResolvedValueOnce({ data: conversationPayload })
+      .mockResolvedValueOnce({ data: humanOwnedConversation });
+
+    const { wrapper, actions } = await mountCockpit({ role: 'agent' });
+
+    await wrapper.get('[data-testid="take-over-action"]').trigger('click');
+    await flushPromises();
+
+    expect(actions.toggleStatus).toHaveBeenCalledWith(expect.any(Object), {
+      conversationId: 101,
+      status: 'open',
+    });
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('Human Active');
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'You now control this Conversation'
+    );
+  });
+
+  it('pauses AI persistently and reports that automated work was canceled', async () => {
+    const pausedConversation = {
+      ...conversationPayload,
+      control_state: 'ai_paused',
+      control_version: 6,
+    };
+    ConversationApi.show
+      .mockResolvedValueOnce({ data: conversationPayload })
+      .mockResolvedValueOnce({ data: pausedConversation });
+
+    const { wrapper, actions } = await mountCockpit();
+
+    await wrapper.get('[data-testid="pause-ai-action"]').trigger('click');
+    await flushPromises();
+
+    expect(actions.pauseAI).toHaveBeenCalledWith(expect.any(Object), {
+      conversationId: 101,
+    });
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('AI Paused');
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'AI is paused for this Conversation'
+    );
+  });
+
+  it('resolves the Conversation persistently and explains why control actions are unavailable', async () => {
+    const humanOwnedConversation = {
+      ...conversationPayload,
+      control_state: 'human_active',
+      control_version: 8,
+    };
+    const resolvedConversation = {
+      ...humanOwnedConversation,
+      status: 'resolved',
+      control_state: 'closed',
+      control_version: 9,
+    };
+    ConversationApi.show
+      .mockResolvedValueOnce({ data: humanOwnedConversation })
+      .mockResolvedValueOnce({ data: resolvedConversation });
+
+    const { wrapper, actions } = await mountCockpit();
+
+    await wrapper
+      .get('[data-testid="resolve-conversation-action"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(actions.toggleStatus).toHaveBeenCalledWith(expect.any(Object), {
+      conversationId: 101,
+      status: 'resolved',
+    });
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('Closed');
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'Conversation resolved'
+    );
+    expect(
+      wrapper.get('[data-testid="control-unavailable-reason"]').text()
+    ).toContain('Reopen the Conversation before changing AI control');
+    expect(wrapper.find('[data-testid="resume-ai-action"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('assigns the Conversation to the current Human Operator and shows the outcome', async () => {
+    const unassignedConversation = {
+      ...conversationPayload,
+      meta: { ...conversationPayload.meta, assignee: null },
+    };
+    const assignedConversation = {
+      ...conversationPayload,
+      control_state: 'human_active',
+      control_version: 6,
+    };
+    ConversationApi.show
+      .mockResolvedValueOnce({ data: unassignedConversation })
+      .mockResolvedValueOnce({ data: assignedConversation });
+
+    const { wrapper, actions } = await mountCockpit();
+
+    await wrapper.get('[data-testid="assign-to-me-action"]').trigger('click');
+    await flushPromises();
+
+    expect(actions.assignAgent).toHaveBeenCalledWith(expect.any(Object), {
+      conversationId: 101,
+      agentId: 9,
+      assigneeType: 'User',
+    });
+    expect(wrapper.text()).toContain('Assignee: Nia Operator');
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('Human Active');
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'Conversation assigned to you'
+    );
   });
 
   it('renders detail tabs, mobile brief disclosure, and AI handoff controls', async () => {

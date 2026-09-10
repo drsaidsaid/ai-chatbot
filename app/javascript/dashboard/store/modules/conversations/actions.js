@@ -224,8 +224,9 @@ const actions = {
         assignee: response.data,
         assigneeType,
       });
+      return true;
     } catch (error) {
-      // Handle error
+      return false;
     }
   },
 
@@ -295,8 +296,9 @@ const actions = {
           controlVersion,
         });
       }
+      return true;
     } catch (error) {
-      // Handle error
+      return false;
     }
   },
 
@@ -308,8 +310,9 @@ const actions = {
         controlState: data.control_state,
         controlVersion: data.control_version,
       });
+      return true;
     } catch (error) {
-      // Handle error
+      return false;
     }
   },
 
@@ -321,8 +324,9 @@ const actions = {
         controlState: data.control_state,
         controlVersion: data.control_version,
       });
+      return true;
     } catch (error) {
-      // Handle error
+      return false;
     }
   },
 

@@ -477,7 +477,8 @@ initiating operator, with one persisted notice per mutation identity.
 - A human assignment, handoff, pause, reply, or resolution cancels any pending AI reply before it can be sent.
 - Before every outbound AI message, the system must recheck that the AI still owns the conversation; an already-queued reply must be blocked after human takeover.
 - The AI resumes only when a human explicitly resumes it.
-- Resuming the AI does not immediately send a message; it permits the next eligible lead message or scheduled action to be evaluated.
+- Resuming the AI does not immediately send a message; it permits only the next eligible Lead message to create new automated work.
+- Resuming from Human Active clears the Human Operator assignment. A Team Member returns to their assigned Conversation list after handing control back; an admin retains Business Account-wide visibility.
 - Internal notes are never sent to the lead.
 
 ## 13. Follow-Up

@@ -279,6 +279,10 @@
     "REPLYBOX": {
       "REPLY": "Reply",
       "PRIVATE_NOTE": "Private Note",
+      "MODE": {
+        "PUBLIC": "Public reply mode. Switch to Private Note.",
+        "PRIVATE": "Private note mode. Switch to Reply."
+      },
       "SEND": "Send",
       "CREATE": "Add Note",
       "INSERT_READ_MORE": "Read more",

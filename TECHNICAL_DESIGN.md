@@ -140,6 +140,14 @@ Assignment, human reply, pause, and resolution events are authoritative even whe
 an AI job was queued earlier. A queued job must not infer permission from the state
 that existed when it was created.
 
+Explicit resume from Human Active clears the Human Operator assignment as it
+returns the Conversation to AI Active. This preserves the assigned-only access
+boundary: a Team Member returns to their permitted Inbox list after handing the
+Conversation back, while an administrator can continue to inspect it. Previously
+canceled orchestration and delivery records remain terminal. Only a later eligible
+Inbound Message may record work under the new control version, and Automated
+Contact Consent remains an independent dispatch requirement.
+
 ## 6. Draft PostgreSQL Schema
 
 The following sections describe the domain responsibilities, not replacement DDL. The authoritative physical schema is `db/schema.rb` and its migrations: CE records use integer/bigint identifiers and `account_id`, with `Account`, `AccountUser`, `Contact`, `Conversation` and `Message` retained. Do not introduce parallel `business_accounts`, memberships or Lead identity tables from these conceptual names. Timestamps use UTC; business display and booking rules use the Business Account timezone.

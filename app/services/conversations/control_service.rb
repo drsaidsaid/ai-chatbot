@@ -50,7 +50,8 @@ class Conversations::ControlService
   def resume_ai!
     raise InvalidTransition, 'Cannot resume AI for a closed conversation' if conversation.closed?
 
-    transition!({ control_state: :ai_active, assignee_agent_bot: nil }, action: 'resume_ai', block_reason: AUTOMATION_BLOCK_REASON)
+    transition!({ control_state: :ai_active, assignee: nil, assignee_agent_bot: nil },
+                action: 'resume_ai', block_reason: AUTOMATION_BLOCK_REASON)
   end
 
   def close!

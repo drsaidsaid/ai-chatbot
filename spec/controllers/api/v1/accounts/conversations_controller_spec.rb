@@ -109,6 +109,7 @@ RSpec.describe 'Conversations API', type: :request do
 
     before do
       create(:inbox_member, user: agent, inbox: conversation.inbox)
+      conversation.update!(assignee: agent)
     end
 
     it 'pauses the AI Employee and invalidates pending automated work' do
@@ -154,6 +155,7 @@ RSpec.describe 'Conversations API', type: :request do
 
     before do
       create(:inbox_member, user: agent, inbox: conversation.inbox)
+      conversation.update!(assignee: agent)
     end
 
     it 'manually resumes future AI Employee work without creating a message' do
@@ -164,8 +166,11 @@ RSpec.describe 'Conversations API', type: :request do
       end.not_to change(Message, :count)
 
       expect(response).to have_http_status(:success)
-      expect(conversation.reload).to be_ai_active
-      expect(conversation.control_version).to eq(8)
+      expect(conversation.reload).to have_attributes(
+        control_state: 'ai_active',
+        control_version: 8,
+        assignee: nil
+      )
       expect(response.parsed_body).to include(
         'control_state' => 'ai_active',
         'control_version' => 8

@@ -170,13 +170,15 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
 
     contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
     contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    operator = create(:user, account: whatsapp_channel.account)
     conversation = create(:conversation,
                           account: whatsapp_channel.account,
                           inbox: whatsapp_channel.inbox,
                           contact: contact,
                           contact_inbox: contact_inbox,
-                          control_state: :ai_paused,
-                          control_version: 4)
+                          control_state: :human_active,
+                          control_version: 4,
+                          assignee: operator)
 
     expect do
       Conversations::ControlService.new(conversation: conversation).resume_ai!
@@ -192,6 +194,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
                              source_id: 'wamid.RESUMED.LEAD')
     intent = described_class.new(message: resumed_message).perform
 
+    expect(conversation.reload).to have_attributes(control_state: 'ai_active', assignee: nil)
     expect(intent).to have_attributes(
       conversation: conversation,
       triggering_message: resumed_message,

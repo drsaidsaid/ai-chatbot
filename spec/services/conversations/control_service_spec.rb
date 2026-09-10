@@ -60,13 +60,14 @@ RSpec.describe Conversations::ControlService do
   end
 
   it 'resumes only future eligible lead messages without reviving pending AI work' do
-    conversation.update!(control_state: :ai_paused, control_version: 4)
+    operator = create(:user, account: account)
+    conversation.update!(control_state: :human_active, control_version: 4, assignee: operator)
 
     expect do
       described_class.new(conversation: conversation).resume_ai!
     end.not_to change(Message, :count)
 
-    expect(conversation.reload).to have_attributes(control_state: 'ai_active', control_version: 5)
+    expect(conversation.reload).to have_attributes(control_state: 'ai_active', control_version: 5, assignee: nil)
     expect(pending_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'incompatible_control_state')
   end
 

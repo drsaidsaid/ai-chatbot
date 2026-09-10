@@ -10,6 +10,7 @@ import { emitter } from 'shared/helpers/mitt';
 import Avatar from 'next/avatar/Avatar.vue';
 import Icon from 'next/icon/Icon.vue';
 import MessagesView from 'dashboard/components/widgets/conversation/MessagesView.vue';
+import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import BookingsAPI from 'dashboard/api/bookings';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
@@ -74,6 +75,8 @@ const isLoadingConversation = ref(false);
 const conversationError = ref(false);
 let conversationRequest = 0;
 const isUpdatingAction = ref(false);
+const actionStatus = ref('');
+const actionError = ref('');
 const activeDetailTab = ref('summary');
 const isMobileBriefOpen = ref(false);
 
@@ -309,11 +312,31 @@ const canPauseAI = computed(
   () =>
     currentChat.value?.control_state === 'ai_active' && !isUpdatingAction.value
 );
+const canTakeOver = computed(
+  () =>
+    !isAdmin.value &&
+    ['ai_active', 'ai_paused', 'handoff_requested'].includes(
+      currentChat.value?.control_state
+    ) &&
+    !isUpdatingAction.value
+);
+const canResolve = computed(
+  () =>
+    currentChat.value?.id &&
+    currentChat.value.control_state !== 'closed' &&
+    currentChat.value.status !== 'resolved' &&
+    !isUpdatingAction.value
+);
+const controlsUnavailable = computed(
+  () =>
+    currentChat.value?.control_state === 'closed' ||
+    currentChat.value?.status === 'resolved'
+);
 const canResumeAI = computed(
   () =>
     currentChat.value?.control_state &&
     currentChat.value.control_state !== 'ai_active' &&
-    !['human_active', 'closed'].includes(currentChat.value.control_state) &&
+    currentChat.value.control_state !== 'closed' &&
     !isUpdatingAction.value
 );
 
@@ -402,10 +425,18 @@ const reloadCurrentConversation = async () => {
 
 const pauseAI = async () => {
   if (!canPauseAI.value) return;
+  actionStatus.value = '';
+  actionError.value = '';
   isUpdatingAction.value = true;
   try {
-    await store.dispatch('pauseAI', { conversationId: currentChat.value.id });
+    const succeeded = await store.dispatch('pauseAI', {
+      conversationId: currentChat.value.id,
+    });
+    if (succeeded === false) throw new Error('pause_failed');
     await reloadCurrentConversation();
+    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_SUCCESS');
+  } catch {
+    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
   } finally {
     isUpdatingAction.value = false;
   }
@@ -413,10 +444,64 @@ const pauseAI = async () => {
 
 const resumeAI = async () => {
   if (!canResumeAI.value) return;
+  actionStatus.value = '';
+  actionError.value = '';
   isUpdatingAction.value = true;
   try {
-    await store.dispatch('resumeAI', { conversationId: currentChat.value.id });
+    const succeeded = await store.dispatch('resumeAI', {
+      conversationId: currentChat.value.id,
+    });
+    if (succeeded === false) throw new Error('resume_failed');
+    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_SUCCESS');
+    if (!isAdmin.value) {
+      useAlert(actionStatus.value);
+      await backToList();
+      await loadDashboard();
+      return;
+    }
     await reloadCurrentConversation();
+  } catch {
+    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
+  } finally {
+    isUpdatingAction.value = false;
+  }
+};
+
+const takeOver = async () => {
+  if (!canTakeOver.value) return;
+  actionStatus.value = '';
+  actionError.value = '';
+  isUpdatingAction.value = true;
+  try {
+    const succeeded = await store.dispatch('toggleStatus', {
+      conversationId: currentChat.value.id,
+      status: 'open',
+    });
+    if (succeeded === false) throw new Error('takeover_failed');
+    await reloadCurrentConversation();
+    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER_SUCCESS');
+  } catch {
+    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
+  } finally {
+    isUpdatingAction.value = false;
+  }
+};
+
+const resolveConversation = async () => {
+  if (!canResolve.value) return;
+  actionStatus.value = '';
+  actionError.value = '';
+  isUpdatingAction.value = true;
+  try {
+    const succeeded = await store.dispatch('toggleStatus', {
+      conversationId: currentChat.value.id,
+      status: 'resolved',
+    });
+    if (succeeded === false) throw new Error('resolve_failed');
+    await reloadCurrentConversation();
+    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE_SUCCESS');
+  } catch {
+    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
   } finally {
     isUpdatingAction.value = false;
   }
@@ -431,17 +516,29 @@ const assignToMe = async () => {
     return;
   }
 
+  actionStatus.value = '';
+  actionError.value = '';
   isUpdatingAction.value = true;
   try {
-    await store.dispatch('assignAgent', {
+    const succeeded = await store.dispatch('assignAgent', {
       conversationId: currentChat.value.id,
       agentId: currentUser.value.id,
       assigneeType: 'User',
     });
+    if (succeeded === false) throw new Error('assignment_failed');
     await reloadCurrentConversation();
+    actionStatus.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_SUCCESS');
+  } catch {
+    actionError.value = t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ACTION_FAILED');
   } finally {
     isUpdatingAction.value = false;
   }
+};
+
+const startReviewReply = () => {
+  store.dispatch('draftMessages/setReplyEditorMode', {
+    mode: REPLY_EDITOR_MODES.REPLY,
+  });
 };
 
 const confirmCallTime = async () => {
@@ -820,7 +917,9 @@ onMounted(() => {
           <div
             class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-n-slate-11"
           >
-            <span>{{ humanize(currentChat.control_state) }}</span>
+            <span data-testid="conversation-control-state">{{
+              humanize(currentChat.control_state)
+            }}</span>
             <span
               >{{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGNEE') }}:
               {{
@@ -871,6 +970,7 @@ onMounted(() => {
 
       <MessagesView
         v-else
+        id="conversation-composer"
         :inbox-id="currentChat.inbox_id"
         class="min-h-0 flex-1"
         data-testid="cockpit-message-view"
@@ -879,6 +979,20 @@ onMounted(() => {
           <section
             class="shrink-0 border-t border-n-weak bg-n-background px-3 py-2"
           >
+            <p
+              v-if="actionStatus"
+              role="status"
+              class="mb-2 rounded-lg border border-n-teal-5 bg-n-teal-2 p-3 text-xs text-n-teal-11"
+            >
+              {{ actionStatus }}
+            </p>
+            <p
+              v-if="actionError"
+              role="alert"
+              class="mb-2 rounded-lg border border-n-ruby-5 bg-n-ruby-2 p-3 text-xs text-n-ruby-11"
+            >
+              {{ actionError }}
+            </p>
             <div
               v-if="automatedContactKnown"
               class="mb-2 flex flex-col gap-1 rounded-lg border p-3 text-xs"
@@ -994,7 +1108,16 @@ onMounted(() => {
                   }}</span>
                 </div>
               </div>
-              <div class="mt-4 flex gap-2">
+              <div class="mt-4 flex flex-wrap gap-2">
+                <a
+                  v-if="nextAction.kind === 'answer_review'"
+                  href="#conversation-composer"
+                  data-testid="mobile-review-request-action"
+                  class="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-n-brand px-3 text-sm font-medium text-white"
+                  @click="startReviewReply"
+                >
+                  {{ nextAction.label }}
+                </a>
                 <button
                   v-if="nextAction.kind === 'confirm_booking' && latestBooking"
                   type="button"
@@ -1005,7 +1128,33 @@ onMounted(() => {
                   {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONFIRM_CALL') }}
                 </button>
                 <button
+                  v-if="canTakeOver"
                   type="button"
+                  data-testid="mobile-take-over-action"
+                  class="h-10 flex-1 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="isUpdatingAction"
+                  @click="takeOver"
+                >
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER') }}
+                </button>
+                <button
+                  v-if="canResolve"
+                  type="button"
+                  data-testid="mobile-resolve-conversation-action"
+                  class="h-10 flex-1 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="isUpdatingAction"
+                  @click="resolveConversation"
+                >
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE') }}
+                </button>
+                <button
+                  v-if="!controlsUnavailable"
+                  type="button"
+                  :data-testid="
+                    canPauseAI
+                      ? 'mobile-pause-ai-action'
+                      : 'mobile-resume-ai-action'
+                  "
                   class="h-10 flex-1 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="!canPauseAI && !canResumeAI"
                   @click="canPauseAI ? pauseAI() : resumeAI()"
@@ -1016,6 +1165,13 @@ onMounted(() => {
                       : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_AI')
                   }}
                 </button>
+                <p
+                  v-if="controlsUnavailable"
+                  data-testid="mobile-control-unavailable-reason"
+                  class="w-full text-xs text-n-slate-11"
+                >
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CLOSED_EXPLANATION') }}
+                </p>
               </div>
             </section>
 
@@ -1114,8 +1270,18 @@ onMounted(() => {
                 </div>
               </div>
               <div class="mt-3 flex flex-wrap justify-end gap-2">
+                <a
+                  v-if="nextAction.kind === 'answer_review'"
+                  href="#conversation-composer"
+                  data-testid="review-request-action"
+                  class="inline-flex h-9 items-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
+                  @click="startReviewReply"
+                >
+                  <Icon icon="i-lucide-message-square-reply" class="size-4" />
+                  {{ nextAction.label }}
+                </a>
                 <RouterLink
-                  v-if="isAdmin"
+                  v-if="isAdmin && nextAction.kind === 'answer_review'"
                   :to="accountScopedRoute('owned_knowledge_index')"
                   class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
                 >
@@ -1132,17 +1298,44 @@ onMounted(() => {
                   {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONFIRM_CALL') }}
                 </button>
                 <button
-                  v-if="isAdmin"
+                  v-if="isAdmin && !controlsUnavailable"
                   type="button"
+                  data-testid="assign-to-me-action"
                   class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="isUpdatingAction"
                   @click="assignToMe"
                 >
                   <Icon icon="i-lucide-user-round" class="size-4" />
-                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN') }}
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_TO_ME') }}
                 </button>
                 <button
+                  v-if="canTakeOver"
                   type="button"
+                  data-testid="take-over-action"
+                  class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="isUpdatingAction"
+                  @click="takeOver"
+                >
+                  <Icon icon="i-lucide-hand" class="size-4" />
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER') }}
+                </button>
+                <button
+                  v-if="canResolve"
+                  type="button"
+                  data-testid="resolve-conversation-action"
+                  class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="isUpdatingAction"
+                  @click="resolveConversation"
+                >
+                  <Icon icon="i-lucide-check-circle" class="size-4" />
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE') }}
+                </button>
+                <button
+                  v-if="!controlsUnavailable"
+                  type="button"
+                  :data-testid="
+                    canPauseAI ? 'pause-ai-action' : 'resume-ai-action'
+                  "
                   class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="!canPauseAI && !canResumeAI"
                   @click="canPauseAI ? pauseAI() : resumeAI()"
@@ -1154,6 +1347,13 @@ onMounted(() => {
                       : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_AI')
                   }}
                 </button>
+                <p
+                  v-if="controlsUnavailable"
+                  data-testid="control-unavailable-reason"
+                  class="basis-full text-right text-xs text-n-slate-11"
+                >
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CLOSED_EXPLANATION') }}
+                </p>
               </div>
             </article>
           </section>

@@ -355,7 +355,7 @@ describe('#actions', () => {
       axios.post.mockResolvedValue({
         data: { id: 1, name: 'User' },
       });
-      await actions.assignAgent(
+      const result = await actions.assignAgent(
         { dispatch },
         { conversationId: 1, agentId: 1, assigneeType: 'AgentBot' }
       );
@@ -364,6 +364,18 @@ describe('#actions', () => {
         assignee: { id: 1, name: 'User' },
         assigneeType: 'AgentBot',
       });
+      expect(result).toBe(true);
+    });
+
+    it('reports a failed assignment to the caller', async () => {
+      axios.post.mockRejectedValueOnce(new Error('Assignment failed'));
+
+      await expect(
+        actions.assignAgent(
+          { dispatch },
+          { conversationId: 1, agentId: 1, assigneeType: 'User' }
+        )
+      ).resolves.toBe(false);
     });
   });
 
@@ -413,6 +425,17 @@ describe('#actions', () => {
         ],
       ]);
     });
+
+    it('reports a failed status change to the caller', async () => {
+      axios.post.mockRejectedValueOnce(new Error('Status failed'));
+
+      await expect(
+        actions.toggleStatus(
+          { commit },
+          { conversationId: 1, status: 'resolved' }
+        )
+      ).resolves.toBe(false);
+    });
   });
 
   describe('#pauseAI', () => {
@@ -436,6 +459,14 @@ describe('#actions', () => {
         ],
       ]);
     });
+
+    it('reports a failed pause to the caller', async () => {
+      axios.post.mockRejectedValueOnce(new Error('Pause failed'));
+
+      await expect(
+        actions.pauseAI({ commit }, { conversationId: 1 })
+      ).resolves.toBe(false);
+    });
   });
 
   describe('#resumeAI', () => {
@@ -458,6 +489,14 @@ describe('#actions', () => {
           },
         ],
       ]);
+    });
+
+    it('reports a failed resume to the caller', async () => {
+      axios.post.mockRejectedValueOnce(new Error('Resume failed'));
+
+      await expect(
+        actions.resumeAI({ commit }, { conversationId: 1 })
+      ).resolves.toBe(false);
     });
   });
 
