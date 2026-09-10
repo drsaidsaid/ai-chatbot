@@ -1,5 +1,5 @@
 {
-  "recorded_at_utc": "2026-09-10T08:26:27.593374+00:00",
+  "recorded_at_utc": "2026-09-10T08:53:55.982142+00:00",
   "observed_before_follow_on_tip": "6e9ef30fada3f6eda5529e843cbcdfa3b1eafeb0",
   "follow_on_code_tip": "1907f72c312ffc22efbec9afd7caf1a0a739e981",
   "external_delivery": false,
@@ -123,7 +123,12 @@
       "standards_findings": 0,
       "spec_findings": 1,
       "spec_finding": "Cleanup membership check can race with reinvitation because it does not hold AgentBuilder\u2019s Account lock.",
-      "status": "race correction in progress; modal source clear"
+      "status": "resolved: Standards and Spec re-review of1907f72 through323d381 both clear",
+      "re_review": {
+        "code_tip": "323d381291a51ae573e0f840cec12dab2d0784bc",
+        "standards_findings": 0,
+        "spec_findings": 0
+      }
     }
   },
   "production_build": {
@@ -144,12 +149,7 @@
       "large chunks"
     ]
   },
-  "remaining_browser": [
-    "phone Lead edit Save hit-test and persisted values",
-    "Escape cancellation on phone",
-    "successful revoke/reinvite response",
-    "additional direct hidden Lead and Admin-only settings navigation"
-  ],
+  "remaining_browser": [],
   "cleanup_race_correction": {
     "code_tip": "323d381291a51ae573e0f840cec12dab2d0784bc",
     "red": {
@@ -186,7 +186,113 @@
     },
     "hooks_bypassed": false,
     "app_spec_diff_after_commit": "empty",
-    "independent_review": "requested",
+    "independent_review": {
+      "standards_findings": 0,
+      "spec_findings": 0,
+      "previous_race_resolved": true
+    },
     "frontend_sources_changed": false
+  },
+  "final_browser": {
+    "runtime_tip": "323d381291a51ae573e0f840cec12dab2d0784bc",
+    "frontend_source_tip": "1907f72c312ffc22efbec9afd7caf1a0a739e981",
+    "browser": "Codex in-app browser",
+    "server": "loopback3216",
+    "database": "ale_release_r06_browser",
+    "database_preserved": true,
+    "phone_save": {
+      "passed": true,
+      "viewport": [
+        390,
+        844
+      ],
+      "document_width": 390,
+      "button_rect": {
+        "x": 215.1875,
+        "y": 805,
+        "width": 125.8125,
+        "height": 36
+      },
+      "center_hit": "Save changes",
+      "actual_click": true,
+      "route_retained": "/app/accounts/1/leads?lead_id=1",
+      "business_after_reload": "Synthetic Dar Demo",
+      "city_after_reload": "Dar es Salaam",
+      "http_status": 200,
+      "request_at": "2026-09-10T11:45:22+03:00",
+      "evidence": [
+        "33-phone-save-corrected.jpg",
+        "33-phone-save-hit-test.json",
+        "34-phone-save-persisted.txt"
+      ]
+    },
+    "phone_escape": {
+      "passed": true,
+      "unsaved_trial_name": "UNSAVED R06 ESCAPE",
+      "dialog_closed": true,
+      "reopened_name": "Asha Synthetic Lead",
+      "reopened_business_city_preserved": true,
+      "evidence": "35-phone-escape-cancel.txt"
+    },
+    "revoke_reinvite": {
+      "passed": true,
+      "revoked_account": 1,
+      "preserved_account": 2,
+      "same_user_id": 3,
+      "automatic_member_redirect": "/app/accounts/2/dashboard?queue=all",
+      "delete_status": 200,
+      "delete_at": "2026-09-10T11:46:57+03:00",
+      "reinvite_status": 200,
+      "reinvite_at": "2026-09-10T11:47:21+03:00",
+      "verified_member_restored": true,
+      "team_count": 3,
+      "restored_lead": 1,
+      "restored_conversation": 2,
+      "queued_cleanup": "test adapter; both concurrent cleanup orderings separately verified by actual HTTP tests",
+      "evidence": [
+        "36-final-revocation-clears-member.txt",
+        "37-reinvite-success.txt",
+        "37-reinvite-success.jpg",
+        "38-restored-member-permitted-lead.txt",
+        "43-restored-member-phone-conversation.jpg",
+        "44-final-browser-http-success.txt"
+      ]
+    },
+    "hidden_lead_direct_link": {
+      "passed": true,
+      "requested_lead_id": 2,
+      "url_retains_requested_id": true,
+      "visible_fallback": "permitted Asha Lead1",
+      "hidden_baraka_content_visible": false,
+      "evidence": "39-hidden-lead-direct-link.txt"
+    },
+    "admin_only_direct_links": {
+      "passed": true,
+      "paths": [
+        "/settings/ai-lead-employee/offers-qualification",
+        "/settings/ai-lead-employee/whatsapp-connection",
+        "/knowledge"
+      ],
+      "result": "/app/accounts/1/dashboard?queue=all",
+      "permitted_conversation_count": 1,
+      "evidence": [
+        "40-business-settings-direct-link.txt",
+        "41-provider-settings-direct-link.txt",
+        "42-knowledge-direct-link.txt"
+      ]
+    },
+    "restored_phone_conversation": {
+      "viewport": [
+        390,
+        844
+      ],
+      "document_width": 390,
+      "evidence": "43-restored-member-phone-conversation.jpg"
+    },
+    "screenshots_visually_inspected": true,
+    "viewport_reset": true,
+    "browser_slot_released": true,
+    "other_task_surfaces_untouched": true,
+    "external_delivery": false
   }
 }

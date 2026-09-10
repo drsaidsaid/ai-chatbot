@@ -1,0 +1,45 @@
+http://127.0.0.1:3216/app/accounts/2/dashboard?queue=all
+- main:
+  - complementary "Inbox conversations":
+    - heading "Inbox" [level=1]
+    - button "Filters"
+    - generic "Inbox quick queues":
+      - link "All 0":
+        - /url: /app/accounts/2/dashboard?queue=all
+        - generic: All
+        - generic: "0"
+      - link "Needs review 0":
+        - /url: /app/accounts/2/dashboard?queue=review
+        - generic: Needs review
+        - generic: "0"
+      - link "Hot leads 0":
+        - /url: /app/accounts/2/dashboard?queue=hot
+        - generic: Hot leads
+        - generic: "0"
+    - generic: Search name, phone, or message
+    - searchbox "Search name, phone, or message"
+    - generic: No conversations match this queue
+    - generic: 0 conversations
+- banner:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/2/dashboard
+    - text: AI
+  - link "AI Lead Employee":
+    - /url: /app/accounts/2/dashboard
+  - link "Notifications":
+    - /url: /app/accounts/2/inbox-view
+  - link "Your profile":
+    - /url: /app/accounts/2/profile/settings
+- navigation "AI Lead Employee mobile navigation":
+  - list:
+    - link "Inbox":
+      - /url: /app/accounts/2/dashboard
+      - generic: Inbox
+    - link "Leads":
+      - /url: /app/accounts/2/leads
+      - generic: Leads
+    - link "Bookings":
+      - /url: /app/accounts/2/bookings
+      - generic: Bookings
+    - button "More":
+      - generic: More

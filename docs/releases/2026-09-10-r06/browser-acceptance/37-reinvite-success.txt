@@ -1,0 +1,70 @@
+- complementary:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - navigation "AI Lead Employee primary navigation":
+    - list:
+      - link "Inbox":
+        - /url: /app/accounts/1/dashboard
+        - generic: Inbox
+      - link "Leads":
+        - /url: /app/accounts/1/leads
+        - generic: Leads
+      - link "Bookings":
+        - /url: /app/accounts/1/bookings
+        - generic: Bookings
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - generic: Knowledge
+      - link "Settings":
+        - /url: /app/accounts/1/settings/ai-lead-employee/offers-qualification
+        - generic: Settings
+  - button "Release Operator release-operator@example.test":
+    - generic: Release Operator
+    - generic: release-operator@example.test
+- main:
+  - complementary:
+    - heading "Settings" [level=1]
+    - navigation "Settings section":
+      - link "Business & offers":
+        - /url: /app/accounts/1/settings/ai-lead-employee/offers-qualification
+      - link "Team & alerts":
+        - /url: /app/accounts/1/settings/agents/list
+      - link "Booking hours":
+        - /url: /app/accounts/1/settings/ai-lead-employee/booking-business-hours
+      - link "Follow-ups":
+        - /url: /app/accounts/1/settings/ai-lead-employee/follow-ups
+      - link "WhatsApp connection":
+        - /url: /app/accounts/1/settings/ai-lead-employee/whatsapp-connection
+      - link "AI & testing":
+        - /url: /app/accounts/1/settings/ai-lead-employee/ai-testing
+  - navigation "Related settings":
+    - link "Team members":
+      - /url: /app/accounts/1/settings/agents/list
+    - link "Teams":
+      - /url: /app/accounts/1/settings/teams/list
+    - link "Alert routes":
+      - /url: /app/accounts/1/settings/ai-lead-employee/alerts
+  - heading "Team" [level=1]
+  - paragraph: Admins manage the business and its settings. Team Members work only on conversations assigned to them and the related Leads.
+  - searchbox "Search team members..."
+  - generic: 3 team members
+  - button "Invite team member":
+    - generic: Invite team member
+  - main:
+    - generic: Musa Colleague
+    - generic: r06-colleague@example.test
+    - generic: Team Member
+    - generic: Verified
+    - button "Edit Musa Colleague"
+    - button "Revoke access Musa Colleague"
+    - generic: Release Operator
+    - generic: release-operator@example.test
+    - generic: Admin
+    - generic: Verified
+    - generic: Neema Assigned Member
+    - generic: r06-neema@example.test
+    - generic: Team Member
+    - generic: Verified
+    - button "Edit Neema Assigned Member"
+    - button "Revoke access Neema Assigned Member"

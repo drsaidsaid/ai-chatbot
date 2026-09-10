@@ -1,10 +1,11 @@
 # R06 browser acceptance and correction
 
-Status: final acceptance in progress. The coordinator owns the browser for the
-user's WhatsApp work. Phone modal and cleanup/re-invitation corrections have
-passed focused tests and the production frontend build; final phone interaction
-and successful re-invitation remain pending. Do not close issue #23 or treat this
-evidence as launch approval. No real email, WhatsApp, AI or calendar delivery occurred.
+Status: local browser acceptance passed on runtime
+`323d381291a51ae573e0f840cec12dab2d0784bc`, with the verified `1907f72`
+frontend build. Independent coordinator Standards and Spec re-reviews both have
+zero findings. The browser slot has been released. Issue #23 remains open for
+coordinator integration; this evidence is not launch approval. No real email,
+WhatsApp, AI or calendar delivery occurred.
 
 ## Observed source and fixture
 
@@ -126,24 +127,20 @@ assignment/business/qualification edit, and rollback without notification or
 changed HTTP access. The existing assignment audit expectation is also checked
 against the already-established human-assignment action/control-state payload.
 
-## Still required
+## Acceptance handoff
 
-- Complete independent coordinator re-review of the committed cleanup race correction.
-- Direct hidden Lead and additional Admin-only settings denial through the browser
-  while permitted assignment remains available; the hidden Conversation,
-  cross-account and Team-settings cases above have passed.
-- Final phone Lead Save hit-test and persisted values, then Escape cancellation.
-- Successful browser re-invitation following revocation on the corrected runtime.
+All R06 local browser cases are complete, including the final checks below.
+The coordinator owns integration into the combined release and closure of #23.
 
 Session-end and account-revocation media denial, preservation of the other
 account membership and identity, phone Team controls, and Inbox URL/back/focus
 passed in the follow-on checkpoint below. Earlier blank/download tabs are not
 used as evidence of denial.
 
-The earlier Mac-lock/header-policy reports do not block current browser access.
-Only the coordinator's shared browser allocation pauses the correction retest.
+The earlier Mac-lock/header-policy reports did not block the completed local
+browser checks.
 
-## Follow-on phone and membership checkpoint — correction in progress
+## Follow-on phone and membership correction
 
 The corrected phone Team rows fit the 390px viewport: document width is 390,
 Edit spans x290–322 and Revoke spans x334–366 (17–18). The member's phone Inbox
@@ -175,8 +172,8 @@ account/user constraint produced HTTP 500. The real revoke/reinvite HTTP
 regression reproduces that response. The focused correction reuses an existing
 notification setting for the same user and account, applies defaults only to a
 new setting, and leaves another account's preferences untouched. The final test
-also runs the pending deletion job after restoration. Browser re-invitation must
-be repeated successfully before this path is accepted.
+also runs the pending deletion job after restoration. Browser re-invitation was
+then repeated successfully in the final pass below.
 
 Coordinator review of `1907f72c312ffc22efbec9afd7caf1a0a739e981`
 found no Standards issues and one cleanup race: checking for restored membership
@@ -195,6 +192,37 @@ This spec must run serially on the disposable `_spec` or `_test` database.
 The final phone-modal production build passed on the exact `1907f72` frontend
 inputs: 5,078 modules in 16m33s. The build slot is released. The subsequent
 cleanup fix changes only Ruby and does not require another frontend build.
-Exact input and manifest hashes, test counts and pending browser checks are in
-`follow-on-checks.json`. Final phone Save/Escape and successful re-invitation
-remain pending a browser grant; no pending check is marked accepted.
+Exact input and manifest hashes, test counts and final browser checks are in
+`follow-on-checks.json`.
+
+## Final browser acceptance
+
+Evidence 33–43 was captured on the final runtime after restarting only the
+isolated Rails process, preserving the browser database. At 390×844 the Lead
+dialog's Save button spans y805–841, and the center hit-test resolves to Save
+instead of the mobile navigation. An actual click saved Business “Synthetic Dar
+Demo” and City “Dar es Salaam” without leaving the Lead route. Reload preserved
+both values (33–34). Escape closed an edit containing the trial name “UNSAVED R06
+ESCAPE”; reopening showed the original name and saved business/city (35).
+
+Admin revoked Neema's first-account membership. The open member view cleared
+automatically and moved to her remaining Business Account #2 (36). Re-invitation
+closed the form successfully and restored the existing Neema identity as the
+third, verified Team Member (37). She could reopen the first account's permitted
+Lead with saved values and assigned Conversation #2 (38, 43). No new password or
+identity was created. Cleanup ordering and retained preferences are covered by
+the independent-connection HTTP regressions above; the browser fixture queues
+background cleanup on the test adapter. The filtered Rails extract (44) confirms
+HTTP 200 for the real browser's Lead save, revocation and re-invitation requests.
+
+The member's direct link to hidden Lead #2 exposed no Baraka data. The URL kept
+`lead_id=2`, while the view safely fell back to the permitted Asha Lead (39).
+Direct Business settings, local provider settings and Knowledge URLs all returned
+to the permitted Inbox with one assigned Conversation (40–42). Restored phone
+Conversation access has document width 390 with a 390px viewport (43).
+
+The coordinator's independent Standards and Spec re-reviews of `1907f72` through
+`323d381` both report zero findings and confirm the previous cleanup race is
+resolved. Final screenshots were visually inspected. The local viewport was
+reset and the browser slot released promptly; Meta, live WhatsApp, production
+and other tasks' tabs were untouched.
