@@ -1,0 +1,27 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration
+
+ ✓ app/javascript/dashboard/api/specs/leads.spec.js (6 tests) 20ms
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js (5 tests) 279ms
+ ✓ app/javascript/dashboard/routes/dashboard/conversation/specs/AIEmployeeControlPanel.spec.js (7 tests) 365ms
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (10 tests) 558ms
+2:36:04 AM [vite] (client) Failed to load source map for /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/node_modules/.pnpm/@chatwoot+prosemirror-schema@1.4.1/node_modules/@chatwoot/prosemirror-schema/dist/index.es.js.
+Error: An error occurred while trying to read the map file at index.es.js.map
+Error: ENOENT: no such file or directory, open '/Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/node_modules/.pnpm/@chatwoot+prosemirror-schema@1.4.1/node_modules/@chatwoot/prosemirror-schema/dist/index.es.js.map'
+    at async open (node:internal/fs/promises:637:25)
+    at async Object.readFile (node:internal/fs/promises:1269:14)
+    at async extractSourcemapFromFile (file:///Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:11154:53)
+    at async loadAndTransform (file:///Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:35702:27)
+ ✓ app/javascript/dashboard/routes/dashboard/conversation/specs/InboxConversationCockpit.spec.js (6 tests) 304ms
+
+ Test Files  5 passed (5)
+      Tests  34 passed (34)
+   Start at  02:35:57
+   Duration  8.86s (transform 8.04s, setup 3.37s, collect 11.91s, tests 1.53s, environment 5.81s, prepare 575ms)
+

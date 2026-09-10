@@ -1,0 +1,176 @@
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :message_type, {incoming: 0, outgoing: 1, activity: 2, template: 3}
+ (called from <class:Message> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/message.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :content_type, {text: 0, input_text: 1, input_textarea: 2, input_email: 3, input_select: 4, cards: 5, form: 6, article: 7, incoming_email: 8, input_csat: 9, integrations: 10, sticker: 11, voice_call: 12}
+ (called from <class:Message> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/message.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {sent: 0, delivered: 1, read: 2, failed: 3}
+ (called from <class:Message> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/message.rb:105)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, pending: 2, snoozed: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/conversation.rb:88)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :priority, {low: 0, medium: 1, high: 2, urgent: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/conversation.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :control_state, {ai_active: 0, handoff_requested: 1, human_active: 2, ai_paused: 3, closed: 4}
+ (called from <class:Conversation> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/conversation.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_type, {ongoing: 0, one_off: 1}
+ (called from <class:Campaign> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/campaign.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_status, {active: 0, completed: 1, processing: 2}
+ (called from <class:Campaign> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/campaign.rb:52)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {active: 0, inactive: 1}
+ (called from <class:AgentBotInbox> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/agent_bot_inbox.rb:22)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {disabled: 0, enabled: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/integrations/hook.rb:38)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :hook_type, {account: 0, inbox: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/integrations/hook.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :file_type, {image: 0, audio: 1, video: 2, file: 3, location: 4, fallback: 5, share: 6, story_mention: 7, contact: 8, ig_reel: 9, ig_post: 10, ig_story: 11, embed: 12}
+ (called from <class:Attachment> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/attachment.rb:47)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :bot_type, {webhook: 0}
+ (called from <class:AgentBot> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/agent_bot.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {unknown: 0, unqualified: 1, low_qualified: 2, qualified: 3, highly_qualified: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/lead_qualification.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {no_follow_up: 0, nurture: 1, human_review: 2, call_booked: 3, closed: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/lead_qualification.rb:48)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {confirmed: 0, canceled: 1, completed: 2}
+ (called from <class:Booking> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/booking.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {pending: 0, sent: 1, cancelled: 2, failed: 3}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/lead_follow_up.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :stage, {incomplete_qualification: 0, qualified_nurture: 1}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/lead_follow_up.rb:64)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source, {extracted: 0, human: 1}
+ (called from <class:QualificationEvidence> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/qualification_evidence.rb:50)
+.../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+...DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reason, {no_approved_knowledge: 0, conflicting_knowledge: 1, sensitive_question: 2, qualification_blocker: 3, angry_question: 4, unsupported_media: 5, source_unverified: 6, provider_failed: 7, stale_knowledge: 8, delivery_unknown: 9}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/human_review_request.rb:55)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, rejected: 2}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/human_review_request.rb:67)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, completed: 1, canceled: 2}
+ (called from <class:LeadHandoff> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/lead_handoff.rb:46)
+......DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reply_time, {in_a_few_minutes: 0, in_a_few_hours: 1, in_a_day: 2}
+ (called from <class:WebWidget> at /Users/ghalyasaid/Documents/projects/AI-Lead-R05-R10-Integration/app/models/channel/web_widget.rb:58)
+...F.F.F
+
+Failures:
+
+  1) /api/v1/accounts/{account.id}/contacts/:id/conversations GET /api/v1/accounts/{account.id}/contacts/:id/conversations when user is logged in with user as agent returns conversations from the inboxes which agent has access to
+     Failure/Error: expect(response).to have_http_status(:success)
+       expected the response to have a success status code (2xx) but it was 404
+     # ./spec/controllers/api/v1/accounts/contacts/conversations_controller_spec.rb:75:in 'block (5 levels) in <main>'
+
+  2) /api/v1/accounts/{account.id}/contacts/:id/conversations GET /api/v1/accounts/{account.id}/contacts/:id/conversations when user is logged in with user as unknown role returns conversations from no inboxes
+     Failure/Error: expect(response).to have_http_status(:success)
+       expected the response to have a success status code (2xx) but it was 404
+     # ./spec/controllers/api/v1/accounts/contacts/conversations_controller_spec.rb:105:in 'block (5 levels) in <main>'
+
+  3) AiLeadEmployee::AutomatedContactConsent preserves an authorized provider outcome and blocks every later automated reply
+     Failure/Error: Timeout.timeout(10) { request_entered.pop }
+
+     Timeout::Error:
+       execution expired
+     # ./spec/services/ai_lead_employee/automated_contact_consent_concurrency_spec.rb:109:in 'block (2 levels) in <main>'
+     # ------------------
+     # --- Caused by: ---
+     # Timeout::ExitException:
+     #   execution expired
+     #   ./spec/services/ai_lead_employee/automated_contact_consent_concurrency_spec.rb:109:in 'block (3 levels) in <main>'
+
+Finished in 34.05 seconds (files took 4.8 seconds to load)
+20 examples, 3 failures
+
+Failed examples:
+
+rspec ./spec/controllers/api/v1/accounts/contacts/conversations_controller_spec.rb:72 # /api/v1/accounts/{account.id}/contacts/:id/conversations GET /api/v1/accounts/{account.id}/contacts/:id/conversations when user is logged in with user as agent returns conversations from the inboxes which agent has access to
+rspec ./spec/controllers/api/v1/accounts/contacts/conversations_controller_spec.rb:102 # /api/v1/accounts/{account.id}/contacts/:id/conversations GET /api/v1/accounts/{account.id}/contacts/:id/conversations when user is logged in with user as unknown role returns conversations from no inboxes
+rspec ./spec/services/ai_lead_employee/automated_contact_consent_concurrency_spec.rb:97 # AiLeadEmployee::AutomatedContactConsent preserves an authorized provider outcome and blocks every later automated reply
+

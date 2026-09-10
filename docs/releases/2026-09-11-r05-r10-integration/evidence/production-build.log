@@ -1,0 +1,259 @@
+vite v6.4.2 building for production...
+transforming...
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 5078 modules transformed.
+rendering chunks...
+computing gzip size...
+../../public/vite-test/.vite/manifest-assets.json                          0.00 kB │ gzip:     0.02 kB
+../../public/vite-test/assets/pf-CEX9Vx76.svg                              4.11 kB │ gzip:     1.73 kB
+../../public/vite-test/assets/pf-CMTHIumB.svg                              4.15 kB │ gzip:     1.72 kB
+../../public/vite-test/assets/sz-DpZ3V1AK.svg                              4.75 kB │ gzip:     1.95 kB
+../../public/vite-test/assets/sz-BC3w3Gmj.svg                              4.80 kB │ gzip:     1.97 kB
+../../public/vite-test/assets/gu-wFhsTC1Y.svg                              4.91 kB │ gzip:     1.91 kB
+../../public/vite-test/assets/gq-OBiOttRB.svg                              5.07 kB │ gzip:     2.05 kB
+../../public/vite-test/assets/gu-Bkjkorus.svg                              5.10 kB │ gzip:     2.00 kB
+../../public/vite-test/assets/gq-BvOxIUGP.svg                              5.16 kB │ gzip:     2.15 kB
+../../public/vite-test/assets/zm-CNg0kgkw.svg                              5.41 kB │ gzip:     2.29 kB
+../../public/vite-test/assets/zm-BmHUGSoa.svg                              5.51 kB │ gzip:     2.29 kB
+../../public/vite-test/assets/nf--j2oelto.svg                              5.56 kB │ gzip:     2.44 kB
+../../public/vite-test/assets/ki-COZ8g898.svg                              5.64 kB │ gzip:     1.64 kB
+../../public/vite-test/assets/ki-CM44VBPm.svg                              5.81 kB │ gzip:     1.70 kB
+../../public/vite-test/assets/nf-COchEj81.svg                              5.81 kB │ gzip:     2.55 kB
+../../public/vite-test/assets/cy-VQFkW-qk.svg                              5.91 kB │ gzip:     2.52 kB
+../../public/vite-test/assets/cy-Bgo0XIP0.svg                              6.00 kB │ gzip:     2.57 kB
+../../public/vite-test/assets/ms-7tNehsjt.svg                              6.07 kB │ gzip:     2.61 kB
+../../public/vite-test/assets/ms-D--tLJBo.svg                              6.12 kB │ gzip:     2.56 kB
+../../public/vite-test/assets/no-chat-dark-BSWrQBd3.svg                    6.35 kB │ gzip:     2.40 kB
+../../public/vite-test/assets/zw-DGkTG73v.svg                              6.65 kB │ gzip:     2.61 kB
+../../public/vite-test/assets/zw-Ceqd3Xj3.svg                              6.67 kB │ gzip:     2.64 kB
+../../public/vite-test/assets/no-chat-okxWD-4P.svg                         6.68 kB │ gzip:     2.48 kB
+../../public/vite-test/assets/tc-CYGgqbY-.svg                              7.15 kB │ gzip:     3.00 kB
+../../public/vite-test/assets/tc-BB3tFO-G.svg                              7.15 kB │ gzip:     3.00 kB
+../../public/vite-test/assets/kh-V4Sa3vlt.svg                              7.28 kB │ gzip:     2.77 kB
+../../public/vite-test/assets/kh-CAffWc0R.svg                              7.28 kB │ gzip:     2.78 kB
+../../public/vite-test/assets/kz-DBjWpOlG.svg                              7.29 kB │ gzip:     2.99 kB
+../../public/vite-test/assets/kz-BBCbe9jj.svg                              7.29 kB │ gzip:     2.98 kB
+../../public/vite-test/assets/br-Yf30zEjB.svg                              7.68 kB │ gzip:     2.54 kB
+../../public/vite-test/assets/br-DaE4AJQY.svg                              8.10 kB │ gzip:     2.74 kB
+../../public/vite-test/assets/li-DgeenFRc.svg                              8.25 kB │ gzip:     3.25 kB
+../../public/vite-test/assets/li-y6TPS81M.svg                              8.27 kB │ gzip:     3.26 kB
+../../public/vite-test/assets/pt-BV5okG4O.svg                              8.32 kB │ gzip:     3.34 kB
+../../public/vite-test/assets/vi-1FTBesw2.svg                              8.62 kB │ gzip:     3.61 kB
+../../public/vite-test/assets/xk-B6uU6dIH.svg                              8.63 kB │ gzip:     3.24 kB
+../../public/vite-test/assets/pt-BLLm3V0o.svg                              8.67 kB │ gzip:     3.36 kB
+../../public/vite-test/assets/vi-DatfOFqY.svg                              8.68 kB │ gzip:     3.65 kB
+../../public/vite-test/assets/aw-W0PWLK5p.svg                              9.00 kB │ gzip:     1.67 kB
+../../public/vite-test/assets/gb-wls-lLp_JivI.svg                          9.07 kB │ gzip:     4.05 kB
+../../public/vite-test/assets/gb-wls-C4LdH8Nd.svg                          9.18 kB │ gzip:     4.17 kB
+../../public/vite-test/assets/xk-F5dDvX79.svg                              9.31 kB │ gzip:     3.50 kB
+../../public/vite-test/assets/eg-BIzzVp3n.svg                              9.85 kB │ gzip:     3.88 kB
+../../public/vite-test/assets/eg-C1MYAOXe.svg                              9.87 kB │ gzip:     3.89 kB
+../../public/vite-test/assets/im-BAoxVCMv.svg                              9.90 kB │ gzip:     3.77 kB
+../../public/vite-test/assets/sa-eH5F7cXy.svg                             10.17 kB │ gzip:     4.26 kB
+../../public/vite-test/assets/im-deD7ny0b.svg                             10.22 kB │ gzip:     4.01 kB
+../../public/vite-test/assets/sa-DLf2NaXn.svg                             10.24 kB │ gzip:     4.31 kB
+../../public/vite-test/assets/aw-CLCX8uk5.svg                             10.36 kB │ gzip:     1.79 kB
+../../public/vite-test/assets/vg-qlt33Cv3.svg                             10.39 kB │ gzip:     4.28 kB
+../../public/vite-test/assets/vg-DKEU1GdO.svg                             10.41 kB │ gzip:     4.27 kB
+../../public/vite-test/assets/md-DArlF80d.svg                             11.20 kB │ gzip:     2.85 kB
+../../public/vite-test/assets/md-DRw6DF0o.svg                             11.31 kB │ gzip:     2.72 kB
+../../public/vite-test/assets/lk-B2IfFxoh.svg                             11.34 kB │ gzip:     4.63 kB
+../../public/vite-test/assets/lk-DIvkWByA.svg                             11.35 kB │ gzip:     4.63 kB
+../../public/vite-test/assets/sx-DzlMoqh2.svg                             12.95 kB │ gzip:     4.40 kB
+../../public/vite-test/assets/sx-4BiL6F_v.svg                             13.14 kB │ gzip:     4.61 kB
+../../public/vite-test/assets/mt-DeenPMqd.svg                             13.73 kB │ gzip:     5.65 kB
+../../public/vite-test/assets/pn-DEs-Vj71.svg                             13.84 kB │ gzip:     5.03 kB
+../../public/vite-test/assets/pn-vyD5VXw1.svg                             13.88 kB │ gzip:     5.09 kB
+../../public/vite-test/assets/eac-CZCl_pn7.svg                            14.22 kB │ gzip:     4.98 kB
+../../public/vite-test/assets/eac-D_uIzpYR.svg                            14.23 kB │ gzip:     4.98 kB
+../../public/vite-test/assets/bn-BDKbSv-u.svg                             14.32 kB │ gzip:     5.94 kB
+../../public/vite-test/assets/bn-UGyQANfK.svg                             14.46 kB │ gzip:     5.96 kB
+../../public/vite-test/assets/ht-DPCqX9cm.svg                             14.57 kB │ gzip:     5.13 kB
+../../public/vite-test/assets/mt-0OWB-5b3.svg                             14.64 kB │ gzip:     6.04 kB
+../../public/vite-test/assets/ht-HoSCtdNQ.svg                             14.70 kB │ gzip:     5.17 kB
+../../public/vite-test/assets/ir-CXFV1BFU.svg                             15.31 kB │ gzip:     2.29 kB
+../../public/vite-test/assets/ir-cCIgaNf6.svg                             15.40 kB │ gzip:     2.24 kB
+../../public/vite-test/assets/sm-DHRSzt4z.svg                             15.66 kB │ gzip:     5.38 kB
+../../public/vite-test/assets/sm-1NcqoN_z.svg                             15.77 kB │ gzip:     5.28 kB
+../../public/vite-test/assets/dm-BlhP-6zy.svg                             15.82 kB │ gzip:     3.08 kB
+../../public/vite-test/assets/dm-ClJ_IDld.svg                             16.31 kB │ gzip:     3.24 kB
+../../public/vite-test/assets/facebook_login-_skaVloV.png                 16.39 kB
+../../public/vite-test/assets/py-BfpB8kRi.svg                             17.19 kB │ gzip:     6.09 kB
+../../public/vite-test/assets/py-CRTEf2ay.svg                             17.36 kB │ gzip:     6.17 kB
+../../public/vite-test/assets/ni-CC3zFI7h.svg                             18.44 kB │ gzip:     5.75 kB
+../../public/vite-test/assets/ni-ChnV2lR-.svg                             18.49 kB │ gzip:     5.81 kB
+../../public/vite-test/assets/typing-DYm07fFx.gif                         19.30 kB
+../../public/vite-test/assets/un-0G1DCZ6c.svg                             20.05 kB │ gzip:     7.92 kB
+../../public/vite-test/assets/un-BQ1kEGox.svg                             20.29 kB │ gzip:     8.04 kB
+../../public/vite-test/assets/af-Cc32fsDB.svg                             20.92 kB │ gzip:     8.30 kB
+../../public/vite-test/assets/af-CI4E3ER1.svg                             21.06 kB │ gzip:     8.36 kB
+../../public/vite-test/assets/om-Ri__rIwP.svg                             22.61 kB │ gzip:     4.45 kB
+../../public/vite-test/assets/om-DnUPbroW.svg                             22.62 kB │ gzip:     4.44 kB
+../../public/vite-test/assets/bm-D2j4bkLD.svg                             22.73 kB │ gzip:     7.25 kB
+../../public/vite-test/assets/bm-BoWRAtUx.svg                             22.81 kB │ gzip:     7.25 kB
+../../public/vite-test/assets/io-BzKkDPkD.svg                             22.88 kB │ gzip:     4.14 kB
+../../public/vite-test/assets/dg-CPWO5scz.svg                             22.88 kB │ gzip:     4.14 kB
+../../public/vite-test/assets/io-Bkx8USW1.svg                             23.16 kB │ gzip:     4.16 kB
+../../public/vite-test/assets/dg-B55Nvqqm.svg                             23.16 kB │ gzip:     4.16 kB
+../../public/vite-test/assets/mp-xI88Vk3c.svg                             23.33 kB │ gzip:     7.19 kB
+../../public/vite-test/assets/mp-DOjKDFJv.svg                             23.58 kB │ gzip:     7.25 kB
+../../public/vite-test/assets/gb-nir-BOm9QMOa.svg                         23.59 kB │ gzip:     6.30 kB
+../../public/vite-test/assets/ky-D_l3blFP.svg                             23.99 kB │ gzip:     8.63 kB
+../../public/vite-test/assets/ky-BqProAqG.svg                             24.01 kB │ gzip:     8.62 kB
+../../public/vite-test/assets/bt-Cm0R6rAQ.svg                             24.91 kB │ gzip:    10.08 kB
+../../public/vite-test/assets/bt-Csq9bKsA.svg                             25.12 kB │ gzip:    10.18 kB
+../../public/vite-test/assets/gb-nir-BZUeOVwE.svg                         25.13 kB │ gzip:     5.79 kB
+../../public/vite-test/assets/fj-DLvzYbo8.svg                             25.69 kB │ gzip:     9.56 kB
+../../public/vite-test/assets/fj-CJDn3VQ8.svg                             25.79 kB │ gzip:     9.65 kB
+../../public/vite-test/assets/arab-DwNob5Qo.svg                           26.34 kB │ gzip:     9.21 kB
+../../public/vite-test/assets/arab-PzQTPYwO.svg                           26.46 kB │ gzip:     9.21 kB
+../../public/vite-test/assets/es-ga-BbFllROk.svg                          28.63 kB │ gzip:     6.35 kB
+../../public/vite-test/assets/es-ga-RI_ZudJJ.svg                          28.74 kB │ gzip:     6.34 kB
+../../public/vite-test/assets/ec-LNhQ9L4k.svg                             28.97 kB │ gzip:     6.89 kB
+../../public/vite-test/assets/va-BntFJQHU.svg                             29.40 kB │ gzip:     9.89 kB
+../../public/vite-test/assets/va-maDzWwNR.svg                             29.46 kB │ gzip:     9.91 kB
+../../public/vite-test/assets/ec-sTVr1A3S.svg                             29.55 kB │ gzip:     6.77 kB
+../../public/vite-test/assets/fk-Ck9cznm4.svg                             30.04 kB │ gzip:     9.56 kB
+../../public/vite-test/assets/fk-Be42QBCW.svg                             30.31 kB │ gzip:     9.37 kB
+../../public/vite-test/assets/sh-ta-DNDOtP8t.svg                          30.57 kB │ gzip:    11.36 kB
+../../public/vite-test/assets/sh-ta-clv2MsBt.svg                          30.83 kB │ gzip:    11.52 kB
+../../public/vite-test/assets/as-D2gsNMrP.svg                             32.25 kB │ gzip:    11.92 kB
+../../public/vite-test/assets/ad-CDtWnnSA.svg                             32.46 kB │ gzip:    11.62 kB
+../../public/vite-test/assets/as-_t1IQUdv.svg                             32.50 kB │ gzip:    12.02 kB
+../../public/vite-test/assets/gs-Di8hLP4g.svg                             32.53 kB │ gzip:    11.73 kB
+../../public/vite-test/assets/gs-PK6r6yhR.svg                             33.02 kB │ gzip:    11.45 kB
+../../public/vite-test/assets/ad-BOo-tPI4.svg                             33.68 kB │ gzip:    12.13 kB
+../../public/vite-test/assets/gt-Ufdm0MFv.svg                             35.09 kB │ gzip:    12.35 kB
+../../public/vite-test/assets/gt-CovS1bZs.svg                             35.09 kB │ gzip:    12.35 kB
+../../public/vite-test/assets/sh-hl-DWwv0HRi.svg                          38.31 kB │ gzip:    13.42 kB
+../../public/vite-test/assets/tm-CCv743R_.svg                             38.37 kB │ gzip:    12.01 kB
+../../public/vite-test/assets/tm-DYhdxDK7.svg                             38.50 kB │ gzip:    12.11 kB
+../../public/vite-test/assets/sh-hl-CnGxQM93.svg                          38.83 kB │ gzip:    13.71 kB
+../../public/vite-test/assets/hr-cWEworf7.svg                             41.18 kB │ gzip:    15.80 kB
+../../public/vite-test/assets/hr-C7VqhX5l.svg                             41.37 kB │ gzip:    15.98 kB
+../../public/vite-test/assets/je-PUw16g1j.svg                             46.07 kB │ gzip:    12.13 kB
+../../public/vite-test/assets/bz-YpwBidLU.svg                             46.67 kB │ gzip:    16.80 kB
+../../public/vite-test/assets/je-YWv5VSiQ.svg                             46.77 kB │ gzip:    12.47 kB
+../../public/vite-test/assets/bz-CqiVUvof.svg                             46.96 kB │ gzip:    16.82 kB
+../../public/vite-test/assets/do--tGVu9lQ.svg                             50.07 kB │ gzip:    16.78 kB
+../../public/vite-test/assets/do-DJGo0v5t.svg                             50.86 kB │ gzip:    17.04 kB
+../../public/vite-test/assets/me-B32CQdRA.svg                             62.57 kB │ gzip:    23.16 kB
+../../public/vite-test/assets/me-BUFcTh_w.svg                             63.55 kB │ gzip:    23.56 kB
+../../public/vite-test/.vite/manifest.json                                74.63 kB │ gzip:     7.61 kB
+../../public/vite-test/assets/sv-n55iiUxg.svg                             82.82 kB │ gzip:    23.62 kB
+../../public/vite-test/assets/sv-BGK8a8aZ.svg                             83.34 kB │ gzip:    23.81 kB
+../../public/vite-test/assets/mx-4c9y9ryX.svg                             88.84 kB │ gzip:    30.39 kB
+../../public/vite-test/assets/es-DL6RIaKh.svg                             91.01 kB │ gzip:    16.37 kB
+../../public/vite-test/assets/es-CR0ZfKpD.svg                             92.80 kB │ gzip:    17.17 kB
+../../public/vite-test/assets/mx-C7ivyfFO.svg                             93.45 kB │ gzip:    32.18 kB
+../../public/vite-test/assets/InterDisplay-Regular-C0mmbI_t.woff2        105.57 kB
+../../public/vite-test/assets/InterDisplay-Thin-DMFvXDOM.woff2           106.24 kB
+../../public/vite-test/assets/Inter-Thin-B4o5siQk.woff2                  106.62 kB
+../../public/vite-test/assets/InterDisplay-Black-DM1fLmGj.woff2          107.22 kB
+../../public/vite-test/assets/Inter-Regular-B0QUfDW0.woff2               108.49 kB
+../../public/vite-test/assets/InterDisplay-ExtraLight-CkrcZ2OC.woff2     109.66 kB
+../../public/vite-test/assets/InterDisplay-Light-DB1R7qf0.woff2          109.86 kB
+../../public/vite-test/assets/Inter-Light-MWFfSqj5.woff2                 109.99 kB
+../../public/vite-test/assets/InterDisplay-Medium-BRBaQVhl.woff2         110.01 kB
+../../public/vite-test/assets/InterDisplay-Bold-CXJyJlfA.woff2           110.18 kB
+../../public/vite-test/assets/InterDisplay-SemiBold-J6ePsRbj.woff2       110.23 kB
+../../public/vite-test/assets/InterDisplay-ExtraBold-DsWMgBJM.woff2      110.30 kB
+../../public/vite-test/assets/Inter-Bold-CytjP_7U.woff2                  111.04 kB
+../../public/vite-test/assets/Inter-Medium-B0NFony0.woff2                111.38 kB
+../../public/vite-test/assets/Inter-SemiBold-_JLwM7Yv.woff2              111.59 kB
+../../public/vite-test/assets/bo-BqtZbaiW.svg                            112.08 kB │ gzip:    27.17 kB
+../../public/vite-test/assets/bo-CP9m75_5.svg                            114.01 kB │ gzip:    27.60 kB
+../../public/vite-test/assets/Inter-Italic-B_ozvy2G.woff2                114.58 kB
+../../public/vite-test/assets/signup-bg-DFyqN1ma.jpg                     132.94 kB
+../../public/vite-test/assets/sh-ac-6pU0wZVL.svg                         153.41 kB │ gzip:    50.86 kB
+../../public/vite-test/assets/sh-ac-Ch9Jh9Lp.svg                         156.13 kB │ gzip:    51.52 kB
+../../public/vite-test/assets/rs-D2wyuxjv.svg                            184.05 kB │ gzip:    50.63 kB
+../../public/vite-test/assets/rs-Dv4N4BPN.svg                            184.17 kB │ gzip:    50.88 kB
+../../public/vite-test/assets/InterVariable-CWi-zmRD.woff2               345.59 kB
+../../public/vite-test/assets/InterVariable-Italic-d6KXgdvN.woff2        380.90 kB
+../../public/vite-test/assets/CategoryHeaderControls-BUZSH_Ej.css          0.05 kB │ gzip:     0.07 kB
+../../public/vite-test/assets/commandbar-DaCNDihA.css                      0.41 kB │ gzip:     0.23 kB
+../../public/vite-test/assets/DashboardIcon-DIfX85bS.css                   1.24 kB │ gzip:     0.26 kB
+../../public/vite-test/assets/useBranding-DSFJg_40.css                     1.42 kB │ gzip:     0.49 kB
+../../public/vite-test/assets/PreChatForm-B-cW-ypb.css                     2.08 kB │ gzip:     0.45 kB
+../../public/vite-test/assets/UnreadMessageList-Cn-n9TQ5.css               3.36 kB │ gzip:     0.83 kB
+../../public/vite-test/assets/Messages-BHylWXtb.css                       14.36 kB │ gzip:     2.42 kB
+../../public/vite-test/assets/ArticleEditor-CSBUrqy3.css                  15.37 kB │ gzip:     3.40 kB
+../../public/vite-test/assets/chatwoot-viz-CjR1jhrx.css                   24.89 kB │ gzip:     3.83 kB
+../../public/vite-test/assets/superadmin-DA1aaRjo.css                  1,522.15 kB │ gzip:   142.46 kB
+../../public/vite-test/assets/v3app-R34VfEW3.css                       1,524.23 kB │ gzip:   143.29 kB
+../../public/vite-test/assets/survey-BfkI7YGn.css                      1,526.02 kB │ gzip:   143.98 kB
+../../public/vite-test/assets/portal-pY5PCJ3R.css                      1,526.56 kB │ gzip:   144.01 kB
+../../public/vite-test/assets/widget-BlLJGAHg.css                      1,542.13 kB │ gzip:   145.57 kB
+../../public/vite-test/assets/dashboard-D9T3bjkJ.css                   3,276.52 kB │ gzip:   343.91 kB
+../../public/vite-test/assets/constants-lVAyZKq6.js                        0.11 kB │ gzip:     0.12 kB
+../../public/vite-test/assets/HTMLSanitizer-cciupgGC.js                    0.12 kB │ gzip:     0.12 kB
+../../public/vite-test/assets/ArticleViewer-Cyh6J_mD.js                    0.46 kB │ gzip:     0.34 kB
+../../public/vite-test/assets/_commonjsHelpers-gnU0ypJ3.js                 0.61 kB │ gzip:     0.33 kB
+../../public/vite-test/assets/superadmin-CfVMsn4a.js                       0.70 kB │ gzip:     0.37 kB
+../../public/vite-test/assets/index-DN3rM4CW.js                            0.84 kB │ gzip:     0.49 kB
+../../public/vite-test/assets/Button-CMXY2BrX.js                           0.97 kB │ gzip:     0.55 kB
+../../public/vite-test/assets/sharedFrameEvents-0qZ2yOho.js                1.02 kB │ gzip:     0.58 kB
+../../public/vite-test/assets/UnreadMessages-BvkXed7P.js                   1.08 kB │ gzip:     0.61 kB
+../../public/vite-test/assets/StarRating-S_TeT3UM.js                       1.14 kB │ gzip:     0.66 kB
+../../public/vite-test/assets/pickerHelper-DH_Ehxlt.js                     1.18 kB │ gzip:     0.74 kB
+../../public/vite-test/assets/Campaigns-D0doZSki.js                        1.25 kB │ gzip:     0.69 kB
+../../public/vite-test/assets/js.cookie-Cz0CWeBA.js                        1.41 kB │ gzip:     0.72 kB
+../../public/vite-test/assets/Branding-ClM9tUhm.js                         1.51 kB │ gzip:     0.84 kB
+../../public/vite-test/assets/articleDiffHelper-Bn4_MX5e.js                2.04 kB │ gzip:     1.09 kB
+../../public/vite-test/assets/IframeLoader-BKjJo5jI.js                     2.50 kB │ gzip:     0.90 kB
+../../public/vite-test/assets/EmojiPicker-BthBP-2z.js                      2.61 kB │ gzip:     1.43 kB
+../../public/vite-test/assets/PortalsArticlesNewPage-CO4a0YWk.js           2.69 kB │ gzip:     1.30 kB
+../../public/vite-test/assets/index-DfsDTqrj.js                            2.86 kB │ gzip:     1.32 kB
+../../public/vite-test/assets/PortalsArticlesEditPage-DB7PvpVV.js          3.07 kB │ gzip:     1.44 kB
+../../public/vite-test/assets/UnreadMessageList-DXauHny4.js                4.06 kB │ gzip:     1.78 kB
+../../public/vite-test/assets/useKeyboardNavigableList-BF6wSfVt.js         4.30 kB │ gzip:     2.09 kB
+../../public/vite-test/assets/colorHelper-DkkSNPxc.js                      4.40 kB │ gzip:     2.47 kB
+../../public/vite-test/assets/Home-DXHlFCY6.js                             5.79 kB │ gzip:     2.48 kB
+../../public/vite-test/assets/HelpCenterLayout-ClsNqty7.js                 5.88 kB │ gzip:     2.45 kB
+../../public/vite-test/assets/Icon-BivWYjCr.js                             5.90 kB │ gzip:     2.05 kB
+../../public/vite-test/assets/superadmin_pages-Cnp4BQf2.js                 7.48 kB │ gzip:     3.11 kB
+../../public/vite-test/assets/index-lVzqX2jn.js                            9.32 kB │ gzip:     2.92 kB
+../../public/vite-test/assets/module-BIBIfBlc.js                           9.54 kB │ gzip:     4.17 kB
+../../public/vite-test/assets/FloatingCallWidget-DY0SBrjt.js               9.72 kB │ gzip:     3.61 kB
+../../public/vite-test/assets/PreChatForm-CPg6ngeq.js                     12.71 kB │ gzip:     4.95 kB
+../../public/vite-test/assets/CategoryHeaderControls-C-IZUFTg.js          12.80 kB │ gzip:     4.42 kB
+../../public/vite-test/assets/PortalsCategoriesIndexPage-DN2sF1bW.js      12.86 kB │ gzip:     4.88 kB
+../../public/vite-test/assets/index-CRZmgz_q.js                           16.75 kB │ gzip:     5.92 kB
+../../public/vite-test/assets/index-CPaeUgzW.js                           20.96 kB │ gzip:     5.73 kB
+../../public/vite-test/assets/PortalsLocalesIndexPage-BX470nLW.js         22.93 kB │ gzip:     7.26 kB
+../../public/vite-test/assets/EmojiIconPicker-BMtCWQ32.js                 23.65 kB │ gzip:     6.89 kB
+../../public/vite-test/assets/sdk-Cghc3jzE.js                             26.32 kB │ gzip:     8.50 kB
+../../public/vite-test/assets/PortalsArticlesIndexPage-D-zt6Taf.js        31.12 kB │ gzip:    10.49 kB
+../../public/vite-test/assets/chatwoot-viz-Dof0uMLM.js                    32.04 kB │ gzip:    10.29 kB
+../../public/vite-test/assets/PortalsSettingsIndexPage-TyA5-TVc.js        35.80 kB │ gzip:     9.53 kB
+../../public/vite-test/assets/survey-BH0oeRmY.js                          36.49 kB │ gzip:    14.88 kB
+../../public/vite-test/assets/ArticleEditor-D0u46Ox5.js                   40.98 kB │ gzip:    13.80 kB
+../../public/vite-test/assets/Messages-BZDX16sI.js                        49.59 kB │ gzip:    14.10 kB
+../../public/vite-test/assets/helper-BVTgYTlr.js                          59.45 kB │ gzip:    16.24 kB
+../../public/vite-test/assets/Validators-DVUdH6Vt.js                      70.86 kB │ gzip:    26.06 kB
+../../public/vite-test/assets/utils.esm-qHqIGgqd.js                       85.39 kB │ gzip:    26.76 kB
+../../public/vite-test/assets/useBranding-DOaSAB8m.js                     89.99 kB │ gzip:    29.92 kB
+../../public/vite-test/assets/widget-B2Ua5omq.js                          96.63 kB │ gzip:    27.90 kB
+../../public/vite-test/assets/commandbar-CpjyWo_M.js                     100.71 kB │ gzip:    30.20 kB
+../../public/vite-test/assets/index-H1ZH5s1l.js                          134.61 kB │ gzip:    32.62 kB
+../../public/vite-test/assets/vue-dompurify-html-DrFQMDmR.js             136.59 kB │ gzip:    58.62 kB
+../../public/vite-test/assets/portal-CLqgtmg4.js                         157.76 kB │ gzip:    47.11 kB
+../../public/vite-test/assets/_plugin-vue_export-helper-8L4TdCbw.js      172.08 kB │ gzip:    64.74 kB
+../../public/vite-test/assets/index-BDHeTyw-.js                          175.51 kB │ gzip:    48.80 kB
+../../public/vite-test/assets/v3app-Dvp5KNrA.js                          270.58 kB │ gzip:    97.74 kB
+../../public/vite-test/assets/index-CINT72J5.js                          339.82 kB │ gzip:   101.86 kB
+../../public/vite-test/assets/typing-sO0KMqnQ.js                         443.49 kB │ gzip:   138.96 kB
+../../public/vite-test/assets/dashboard-tq0aC9of.js                    3,426.48 kB │ gzip:   948.48 kB
+../../public/vite-test/assets/DashboardIcon-jxkUQyfE.js               14,866.93 kB │ gzip: 4,056.88 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1m 37s
