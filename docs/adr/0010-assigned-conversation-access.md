@@ -30,6 +30,15 @@ queued deliveries must check current membership/assignment. Reassignment removes
 old access; a content-free invalidation can tell clients to clear stale data.
 Revoking one account membership must preserve a user's access to other accounts.
 
+Queued revocation cleanup must serialize its membership recheck and mutations
+with invitation creation under the Account row lock. Cleanup uses
+`FOR NO KEY UPDATE`: it still conflicts with AgentBuilder's `FOR UPDATE`, but
+allows the `FOR KEY SHARE` check required when Conversation-locked work inserts
+a HumanReviewRequest referencing the Account. This avoids a circular wait between
+cleanup's Conversation unassignment and review creation without weakening the
+membership check. Regression covers both invitation/cleanup orderings and the
+real two-connection review foreign-key interaction.
+
 The acceptance seams are the authorized R06 HTTP invitation/session/resource
 paths, asynchronous realtime/export boundaries and actual Vue/browser user paths.
 Tests use two accounts, several assignments, mixed-access Conversations for one

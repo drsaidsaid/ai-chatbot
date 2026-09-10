@@ -156,6 +156,13 @@ queued deletion and synchronous Lead merges require current Admin membership.
 No new conceptual tenancy tables are
 introduced by this feature.
 
+Queued membership cleanup takes an Account `FOR NO KEY UPDATE` row lock before
+rechecking membership and removing account-scoped preferences and assignments.
+It conflicts with AgentBuilder's Account `FOR UPDATE` lock, preserving invitation
+serialization, while allowing Account foreign-key checks by operator-review
+creation that already holds a Conversation lock. Using `FOR UPDATE` for cleanup
+would introduce an Account-to-Conversation / Conversation-to-Account deadlock.
+
 #### `business_accounts`
 
 - `id`, `name`, `timezone`, `status`.

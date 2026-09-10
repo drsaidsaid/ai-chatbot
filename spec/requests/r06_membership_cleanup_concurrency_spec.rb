@@ -1,7 +1,7 @@
 require 'rails_helper'
 require 'timeout'
 
-RSpec.describe 'Membership restoration concurrent with queued cleanup', type: :request do
+RSpec.describe 'Membership cleanup concurrent with restoration and operator review', type: :request do
   self.use_transactional_tests = false
 
   let(:workers) { [] }
@@ -77,6 +77,34 @@ RSpec.describe 'Membership restoration concurrent with queued cleanup', type: :r
     get "/api/v1/accounts/#{scenario.fetch(:account).id}/conversations/#{scenario.fetch(:conversation).display_id}",
         headers: scenario.fetch(:member_headers)
     expect(response).to have_http_status(:ok)
+    expect_other_account_unchanged
+  end
+
+  it 'finishes cleanup while a locked Conversation creates an operator review through its Account foreign key' do
+    prepare_revocation
+    conversation = scenario.fetch(:conversation)
+    lead_message = create(:message, account: conversation.account, conversation: conversation, sender: conversation.contact)
+    review = nil
+
+    # Outbound delivery creates its review while holding the Conversation lock.
+    # Let the actual cleanup job reach unassignment before inserting the review;
+    # the real Account foreign key must not complete a circular lock dependency.
+    conversation.reload.with_lock do
+      _cleanup, cleanup_pid = start_worker { perform_cleanup }
+      wait_until { blocked_by?(cleanup_pid, backend_pid) }
+      review = HumanReviewRequest.create!(
+        account: conversation.account, conversation: conversation, lead_message: lead_message,
+        reason: :provider_failed, question: 'Synthetic delivery needs operator review'
+      )
+    end
+    finish_workers
+
+    expect(review.reload).to have_attributes(
+      account_id: conversation.account_id, conversation_id: conversation.id,
+      lead_message_id: lead_message.id, reason: 'provider_failed', status: 'open'
+    )
+    expect(conversation.reload.assignee_id).to be_nil
+    expect(scenario.fetch(:member).notification_settings.exists?(account_id: conversation.account_id)).to be(false)
     expect_other_account_unchanged
   end
 
