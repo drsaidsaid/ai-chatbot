@@ -1,0 +1,178 @@
+{
+  "branch": "codex/r10-provider-controls",
+  "base": "324ee6df9ca50dff708f41a4004cd105b23a784b",
+  "files": [
+    {
+      "path": "CONTEXT.md",
+      "sha256": "aa5929311e6f7ce24be823f1a279b301072a5e4c4ce50922f9a831ab8d514f69"
+    },
+    {
+      "path": "PRODUCT_REQUIREMENTS.md",
+      "sha256": "db24afa0c2ac269fddbd96cb13260e9eb657925b0b9cd7175a3a8e9e1b4a0dbc"
+    },
+    {
+      "path": "TECHNICAL_DESIGN.md",
+      "sha256": "56cc0965f15ac0a3dbebb8323a6900a806228b24e15ad7a0b3d5927fe1da8a9a"
+    },
+    {
+      "path": "app/controllers/api/v1/accounts/ai_provider_connections_controller.rb",
+      "sha256": "4cf16dd56f78aa71e88c1ee3cc52f0f8e8df81a756e890e4f6784840a000042a"
+    },
+    {
+      "path": "app/controllers/api/v1/accounts/evaluation_sandboxes_controller.rb",
+      "sha256": "d3e04e25664bdfe9c64c56142c6f2043217a23cc2ade51592a4981ec3279bc56"
+    },
+    {
+      "path": "app/javascript/dashboard/i18n/locale/en/aiLeadEmployee.json",
+      "sha256": "b249a7a9973a9a6088324f9b4578b0a26b151eaf68595eb0df50690f767c6b44"
+    },
+    {
+      "path": "app/javascript/dashboard/routes/dashboard/owned/AiProviderSettingsPage.vue",
+      "sha256": "ad26e5709e22e01ae9415edb2994203ce541f7feb4a4876accd93cb292e55f38"
+    },
+    {
+      "path": "app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js",
+      "sha256": "0685840275f2dbdda39e8c7f9a7942cf2122995a31e0ce3e8fc295849bfe43d9"
+    },
+    {
+      "path": "app/models/ai_lead_employee/ai_provider_connection.rb",
+      "sha256": "7de556dadf9e365f1035254bb4c837b5e5635bdb325a63a0a18f37056a032391"
+    },
+    {
+      "path": "app/models/ai_lead_employee/ai_provider_usage.rb",
+      "sha256": "22b5cfa9e267cbe62121e3045e7d11c9a904dc40bc8fa5a8dfff624cb659b4e7"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider.rb",
+      "sha256": "59d7685d56fd0ebbc042f65594c7079995ec81e188a0287677a2cef415e5d3f4"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/client_factory.rb",
+      "sha256": "22c540e93c9fdf512773803c060e117cf23159356bc9e9e1943dd654728abb65"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/configuration_changed_failure.rb",
+      "sha256": "2dbbf4700eb400594388e271a8580d780d42afc285181b310413e3ad543bfbf3"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/health_check.rb",
+      "sha256": "a12a37299556f878e3a2660ba717538ba9687a4f1586288af12e9f1779ce50d9"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/input_limit_failure.rb",
+      "sha256": "251d0fdd3ff362b923eaddc580d8b5faea3e00fbcca66af68697e3dbab21ec0e"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/metered_client.rb",
+      "sha256": "d65152daf51571030e7bfdf504bbb6b68bf678b940dd72f4d53f35f7a1acc198"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/open_router_adapter.rb",
+      "sha256": "9da84a5b3692e898177a74f9e1f0d43d2e5ca098ba043f4709a6c64e84d3cee2"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/output_limit_failure.rb",
+      "sha256": "c2d97bc8661e86ee130553bcafe11474d1da4a92e43857219db61b4ed2ab7be1"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/response.rb",
+      "sha256": "12a85f0d04e29438c851c789343422556c7597938ed5d4a2274e8fec77700556"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/runtime_control.rb",
+      "sha256": "38f2ddd5725246d32126fba0cc845c02306123321903ced0cfbb92b9314f27ef"
+    },
+    {
+      "path": "app/services/ai_lead_employee/ai_provider/usage_limit_failure.rb",
+      "sha256": "b4f4a7b152533e8efb48dd3a7ce9a17e49549f56846367ab930fb1587a1a4eb5"
+    },
+    {
+      "path": "app/services/ai_lead_employee/evaluation/report_builder.rb",
+      "sha256": "89ef7f9c4d9607a043782f5b4b4ed3a7fe0563405ce816e48e01f69b9d5a8c01"
+    },
+    {
+      "path": "app/services/ai_lead_employee/evaluation/sandbox_runner.rb",
+      "sha256": "5c6607cc2f63a813d2f94395bfda8003f74b0fbca838dca7d49f00bc4e035833"
+    },
+    {
+      "path": "app/services/ai_lead_employee/orchestration/intent_processor.rb",
+      "sha256": "c9c29f026f5d428a5ea91ee8a037c11670f537c674853486a8ad210f723b17ec"
+    },
+    {
+      "path": "app/services/whatsapp/outbound_eligibility.rb",
+      "sha256": "579d389538764373628d23716229158970acba72a3e27819d70443a74d5dd346"
+    },
+    {
+      "path": "db/migrate/20260910000100_add_ai_provider_runtime_controls.rb",
+      "sha256": "b07c5e9738af13844c46b74f58ecb6cb473bca8ec78fe1417a0f255d77533f07"
+    },
+    {
+      "path": "db/migrate/20260910000200_create_ai_provider_usages.rb",
+      "sha256": "14a394afde3c167f827cfc4ba6bb21ae162e2fb9256cff51cea99370562f3cc3"
+    },
+    {
+      "path": "db/schema.rb",
+      "sha256": "94c724552ce6f665a98409498066a702062e8b167b22de62ae227dcee7b2c6d5"
+    },
+    {
+      "path": "docs/adr/0007-secure-openai-compatible-provider-connection.md",
+      "sha256": "4f70baac16e48c05fcc32d1c4657dee4ca2f77052be9f80037055b072b99c7b3"
+    },
+    {
+      "path": "docs/issues/v1-completion-20260909/r10-connect-and-control-the-ai-provider-with-visible-health-and-limits.md",
+      "sha256": "a10aa4f1145bbd37f9f8ea02fa4efc6255c2bcc5fa69985a40bee2e163a7cb30"
+    },
+    {
+      "path": "docs/v1-completion-plan/2026-09-09/r10-provider-controls-preparation.md",
+      "sha256": "39b00eb0d6527c691328365a7d5f2d5e77a9b8003660b7e484ca676c5f261ca1"
+    },
+    {
+      "path": "script/release/r10_browser_server.rb",
+      "sha256": "812461c0498e579db41212a80152ab8d33070b4f60b29dff0c2d3936ba6f237b"
+    },
+    {
+      "path": "script/release/r10_seed_synthetic.rb",
+      "sha256": "d4674c2166f11a8abbb4a999af613b0bd7d30608941656b48298615cd779fe93"
+    },
+    {
+      "path": "spec/factories/ai_provider_connections.rb",
+      "sha256": "0a0341003353d2fc8fe5b4cf59bd089ce5b9289acd26c084e6a6018a9d67f91e"
+    },
+    {
+      "path": "spec/jobs/ai_lead_employee/orchestration_intent_job_spec.rb",
+      "sha256": "1319712fefcf59592f5ebce896389dbc21f80a54196518676ed323bd8d8cea14"
+    },
+    {
+      "path": "spec/requests/ai_lead_employee/ai_provider_delivery_controls_spec.rb",
+      "sha256": "1636b2dcab52881b7626c901862aaeb9d5dd8ec5c2fb80f9f55c6b1fa76974d1"
+    },
+    {
+      "path": "spec/requests/ai_lead_employee/ai_provider_usage_controls_spec.rb",
+      "sha256": "39c36c4abc7313062e1f925dcc8fc8e17c1154b53a4991dbb2d44a81d0176d4c"
+    },
+    {
+      "path": "spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb",
+      "sha256": "f2fb2de113703e6c666b2bf7c932baf8059c9591bbd0ae90c8d658dcbb5e941f"
+    },
+    {
+      "path": "spec/requests/api/v1/accounts/ai_provider_connections_controller_spec.rb",
+      "sha256": "153ce8fbc2c2620207ec394c0a1658b7f82a63762ab593549db3d50ac6978209"
+    },
+    {
+      "path": "spec/requests/api/v1/accounts/evaluation_sandbox_controller_spec.rb",
+      "sha256": "035c0715d8134a0cd9191b9f0e391f8cd2245fbb6fd04ef7b46ebab02818441d"
+    },
+    {
+      "path": "spec/requests/whatsapp_outbound_delivery_spec.rb",
+      "sha256": "29bf6fea0a4b59006db6c1363a14453fcf68d3c71411b250f87e22876aa92a0c"
+    },
+    {
+      "path": "spec/services/ai_lead_employee/evaluation/report_builder_spec.rb",
+      "sha256": "12d8f419b7313c6c40a52f4521406390941ba59ee0b4b3002fa23d59fdffaf56"
+    },
+    {
+      "path": "spec/services/ai_lead_employee/evaluation/sandbox_runner_spec.rb",
+      "sha256": "504e19cd981e7c784dea9df0f7375caf29087c880e4d5507814abd59d28c333e"
+    }
+  ]
+}

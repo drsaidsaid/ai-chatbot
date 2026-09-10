@@ -14,12 +14,14 @@ class AiLeadEmployee::AiProvider::ClientFactory
     raise AiLeadEmployee::AiProvider::DisabledFailure, 'AI provider connection is not configured' if connection.blank?
     raise AiLeadEmployee::AiProvider::DisabledFailure, 'AI provider connection is disabled' unless connection.configured?
 
-    case connection.provider
-    when 'openrouter'
-      AiLeadEmployee::AiProvider::OpenRouterAdapter.new(connection: connection)
-    else
-      raise AiLeadEmployee::AiProvider::DisabledFailure, 'AI provider is not supported'
-    end
+    adapter = case connection.provider
+              when 'openrouter'
+                AiLeadEmployee::AiProvider::OpenRouterAdapter.new(connection: connection)
+              else
+                raise AiLeadEmployee::AiProvider::DisabledFailure, 'AI provider is not supported'
+              end
+
+    AiLeadEmployee::AiProvider::MeteredClient.new(connection: connection, adapter: adapter)
   end
 
   private

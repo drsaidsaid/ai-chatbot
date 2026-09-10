@@ -30,8 +30,24 @@ RSpec.describe AiLeadEmployee::Evaluation::ReportBuilder do
     expect(report.fetch('blocking_reasons')).to include('Serious fabricated, harmful, or policy-breaking answers must be zero')
   end
 
+  it 'does not count reviewed evidence from an earlier provider configuration' do
+    connection = create(:ai_provider_connection, account: account, configuration_version: 1)
+    create_reviewed_run(
+      'approved_answer',
+      expected_quality: 'qualified',
+      actual_quality: 'qualified',
+      provider_snapshot: { 'provider' => 'openrouter', 'model' => connection.model, 'configuration_version' => 1 }
+    )
+    connection.update!(configuration_version: 2)
+
+    report = described_class.new(account: account).perform
+
+    expect(report.dig('scenario_results', 'approved_answer')).to include('reviewed' => false, 'passed' => false)
+    expect(report.fetch('blocking_reasons').join(' ')).to include('approved_answer')
+  end
+
   # rubocop:disable Metrics/MethodLength
-  def create_reviewed_run(scenario_key, expected_quality:, actual_quality:, serious: false)
+  def create_reviewed_run(scenario_key, expected_quality:, actual_quality:, serious: false, provider_snapshot: {})
     create(
       :ai_lead_employee_evaluation_run,
       account: account,
@@ -40,6 +56,7 @@ RSpec.describe AiLeadEmployee::Evaluation::ReportBuilder do
       scenario_name: scenario_key.humanize,
       automated_passed: true,
       review_status: :pending_review,
+      provider_snapshot: provider_snapshot,
       steps: [
         {
           'expected' => { 'quality' => expected_quality },

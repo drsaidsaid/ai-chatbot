@@ -1,0 +1,7 @@
+R10 frontend verification summary
+
+AiProviderSettingsPage Vitest: 5 tests passed, 0 failed.
+Exact changed-frontend ESLint: passed with no errors or warnings.
+Production Vite build: passed, 5,078 modules, 2m05s, Node heap 4 GiB.
+An earlier default 2 GiB build exhausted its heap and is retained as historical
+failed evidence. No frontend source changed after the successful 4 GiB build.

@@ -52,7 +52,8 @@ class AiLeadEmployee::Evaluation::SandboxRunner
     processed_intent = AiLeadEmployee::Orchestration::IntentProcessor.new(
       intent: intent,
       enqueue_deliveries: false,
-      enforce_launch_gate: false
+      enforce_launch_gate: false,
+      provider_purpose: 'evaluation'
     ).perform
     finalize_step(step_payload(index, event_id, message_payload, processed_intent))
   end
@@ -498,7 +499,12 @@ class AiLeadEmployee::Evaluation::SandboxRunner
 
   def provider_snapshot
     connection = account.ai_provider_connection
-    { 'provider' => connection&.provider, 'model' => connection&.model, 'status' => connection&.status }
+    {
+      'provider' => connection&.provider,
+      'model' => connection&.model,
+      'status' => connection&.status,
+      'configuration_version' => connection&.configuration_version
+    }
   end
 
   def provider_snapshot_for(steps)

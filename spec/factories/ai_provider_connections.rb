@@ -7,5 +7,6 @@ FactoryBot.define do
     model { 'openai/gpt-4.1-mini' }
     api_key { 'sk-or-test-secret' }
     status { 'active' }
+    daily_request_limit { 100 }
   end
 end

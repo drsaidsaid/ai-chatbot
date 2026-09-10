@@ -360,6 +360,25 @@ metadata on the server. Admins can rotate the credential, disable the
 connection, and run a health check. Team members cannot view or infer credential
 presence, and the browser never receives the raw API key.
 
+R10 must distinguish saved configuration from readiness to answer at the actual
+configured reply budget. A tiny successful probe cannot mask insufficient
+credits for a normal answer. Show the checked model/budget/time, safe failure
+reason and retry guidance; configuration changes invalidate stale readiness.
+Actual usage is collected where supplied; unavailable cost remains unknown.
+An explicit daily request allowance with bounded requests is V1's conservative
+usage guardrail, not a guaranteed monetary spending cap. Disablement or allowance
+exhaustion blocks new model work and pending automated delivery through the
+shared sender boundary; already authorized dispatch cannot be retracted.
+Provider/configuration changes invalidate relevant launch evidence.
+
+R11 owns a truthful non-model acknowledgment and Review Request on provider
+failure when automation is still permitted. It must preserve R04's delivery and
+control authority; a failure acknowledgment cannot bypass an explicit disable or
+exhausted local allowance. The [R10 preparation](docs/v1-completion-plan/2026-09-09/r10-provider-controls-preparation.md)
+specifies public acceptance boundaries. These are pending completion requirements,
+implemented on the focused R10 branch from `324ee6df` and verified there before
+the coordinator integrates them.
+
 ## 10. Booking
 
 Only highly qualified leads are automatically offered a call in v1.

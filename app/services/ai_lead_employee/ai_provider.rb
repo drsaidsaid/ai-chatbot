@@ -9,6 +9,10 @@ module AiLeadEmployee::AiProvider
     invalid_response: 'invalid_response',
     safety_refusal: 'safety_refusal',
     transport: 'transport_failure',
-    disabled: 'provider_disabled'
+    disabled: 'provider_disabled',
+    usage_limit: 'usage_limit_exhausted',
+    input_limit: 'input_limit_exceeded',
+    output_limit: 'output_limit_exceeded',
+    configuration_changed: 'provider_configuration_changed'
   }.freeze
 end

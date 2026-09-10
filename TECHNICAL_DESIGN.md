@@ -211,6 +211,41 @@ membership before any account selection or query.
   timeout, authentication, rate limit, invalid response, safety refusal,
   disabled, or transport errors.
 
+R10 extends the provider boundary with a non-secret
+configuration revision, configured reply ceiling, explicit daily attempt
+allowance and redacted readiness observation bound to that revision/budget.
+Keep health/usage timestamps separate from configuration versioning. The common
+provider client commits allowance admission before HTTP, preserves conservative
+accounting across provider errors and evaluation rollback, and records only
+sanitized outcome and supplied usage/cost. Missing cost is unknown. Readiness
+uses the same reply budget as R11's answer request rather than the current
+8-token probe; it reports the scope/time checked, never indefinite capacity.
+
+Extend R04's existing claimed-intent/output fence and
+`Whatsapp::OutboundEligibility` with current provider permission and revision.
+Keep HTTP outside locks and preserve its dispatch authorization point, unknown
+outcomes and current control/source checks. Configuration mutation releases its
+provider lock before Conversation cancellation; final dispatch must observe
+committed revocation even before cleanup finishes. Do not introduce a conflicting
+Account/Conversation lock order with R06. R11 owns the common provider-failure
+acknowledgment; R17 consumes the provider revision for full launch evidence.
+
+The provider permission lock order is Channel → owned Conversations in stable
+order → WhatsApp Outbound Delivery → AI Provider Connection. Configuration
+writers take only the Provider Connection lock, commit it, and then invalidate
+Conversations; they never hold the provider row while waiting on Conversation or
+delivery locks. Intent completion takes Conversation → Intent → Provider
+Connection. Admission and health take only Provider Connection and release it
+before HTTP. A dispatch authorization that commits first may finish; a provider
+revocation that commits first prevents authorization and therefore prevents HTTP.
+
+V1 caps the serialized UTF-8 bytes of provider message roles and content at 32
+KiB, independent of the configured 1–4096 output-token ceiling. Oversized input
+is rejected before allowance admission and HTTP, so it creates no provider-attempt
+ledger row and proceeds through the classified local failure/Review path.
+See [R10 preparation and acceptance](docs/v1-completion-plan/2026-09-09/r10-provider-controls-preparation.md)
+for the exact `324ee6df` source review, lock order and public verification cases.
+
 #### `ai_orchestration_intents`
 
 - `business_account_id`, conversation, triggering message, observed control

@@ -20,10 +20,11 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     [:human_reply_after_trigger, :human_reply_after_trigger?]
   ].freeze
 
-  def initialize(intent:, enqueue_deliveries: true, enforce_launch_gate: true)
+  def initialize(intent:, enqueue_deliveries: true, enforce_launch_gate: true, provider_purpose: 'answer')
     @intent = intent
     @enqueue_deliveries = enqueue_deliveries
     @enforce_launch_gate = enforce_launch_gate
+    @provider_purpose = provider_purpose
   end
 
   def perform
@@ -42,7 +43,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   private
 
-  attr_reader :intent, :enqueue_deliveries, :enforce_launch_gate
+  attr_reader :intent, :enqueue_deliveries, :enforce_launch_gate, :provider_purpose
 
   delegate :conversation, :triggering_message, :account, to: :intent
 
@@ -78,6 +79,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     conversation.with_lock do
       intent.lock!
       next unless owns_claim?
+      next block_intent!('provider_configuration_changed') unless provider_configuration_current?(response)
 
       block_reason = final_block_reason
       next block_intent!(block_reason) if block_reason.present?
@@ -85,6 +87,13 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
       complete_grounded_answer!(response, @answer_result, @qualification_result)
     end
+  end
+
+  def provider_configuration_current?(response)
+    AiLeadEmployee::AiProvider::RuntimeControl.current_configuration?(
+      account: account,
+      configuration_version: response.configuration_version
+    )
   end
 
   def sources_still_current?
@@ -285,8 +294,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   def build_provider_answer(answer_result)
     ai_provider_client.complete(
       messages: provider_messages(answer_result),
-      max_tokens: 64,
-      temperature: 0.1
+      temperature: 0.1,
+      purpose: provider_purpose
     )
   end
 

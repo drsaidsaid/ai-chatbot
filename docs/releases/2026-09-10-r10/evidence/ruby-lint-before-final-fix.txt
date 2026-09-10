@@ -1,0 +1,12 @@
+Initial final-lint correction
+
+The first final lint invocation incorrectly included generated db/schema.rb,
+which is outside this repository's changed-source lint scope and produced the
+schema generator's existing style noise. It also found one actionable offense:
+AiProvider::HealthCheck#perform was 20 lines against a 19-line limit.
+
+The provider snapshot was extracted into a private method while preserving the
+configuration version captured before ClientFactory classification. The affected
+8-example controller spec passed, the complete 42-example focused run passed,
+and the corrected 33-file changed-Ruby lint reported no offenses. See
+final-health-check-ruby.txt, final-focused-ruby.txt and final-ruby-lint.txt.

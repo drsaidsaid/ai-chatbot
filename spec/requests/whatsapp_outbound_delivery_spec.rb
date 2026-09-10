@@ -32,8 +32,17 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
   end
 
   def approve_launch!
+    connection = channel.account.ai_provider_connection
     AiLeadEmployee::Evaluation::ScenarioCatalog.required_keys.each do |scenario_key|
-      create(:ai_lead_employee_evaluation_run, :reviewed_pass, account: channel.account, user: admin, scenario_key: scenario_key)
+      attributes = { account: channel.account, user: admin, scenario_key: scenario_key }
+      if connection
+        attributes[:provider_snapshot] = {
+          'provider' => connection.provider,
+          'model' => connection.model,
+          'configuration_version' => connection.configuration_version
+        }
+      end
+      create(:ai_lead_employee_evaluation_run, :reviewed_pass, **attributes)
     end
     evaluator = AiLeadEmployee::Evaluation::LaunchGateEvaluator.new(account: channel.account)
     evaluator.update!(team_roleplay_completed: true, pilot_conversations_reviewed_count: 3)
@@ -310,8 +319,8 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
 
   it 'allows prompt human takeover while the model is still working and discards its late answer' do
     conversation.update!(control_state: :ai_active, assignee: nil)
-    approve_launch!
     create(:ai_provider_connection, account: channel.account)
+    approve_launch!
     create(:knowledge_item, account: channel.account, question: 'Do you offer AI employees?', answer: 'We build AI employees for businesses.')
     incoming = create(:message, account: channel.account, inbox: channel.inbox, conversation: conversation,
                                 message_type: :incoming, content: 'Do you offer AI employees?', provider_created_at: Time.current)
@@ -339,6 +348,117 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
   ensure
     release << true if release
     worker&.join
+  end
+
+  it 'discards an in-flight answer after a provider configuration change commits before cancellation' do # rubocop:disable RSpec/ExampleLength
+    conversation.update!(control_state: :ai_active, assignee: nil)
+    connection = create(:ai_provider_connection, account: channel.account)
+    approve_launch!
+    create(:knowledge_item, account: channel.account, question: 'Do you offer AI employees?', answer: 'We build AI employees for businesses.')
+    incoming = create(:message, account: channel.account, inbox: channel.inbox, conversation: conversation,
+                                message_type: :incoming, content: 'Do you offer AI employees?', provider_created_at: Time.current)
+    intent = AiLeadEmployee::OrchestrationIntentRecorder.new(message: incoming, enqueue: false).perform
+    provider_entered = Queue.new
+    release_provider = Queue.new
+    cancellation_entered = Queue.new
+    release_cancellation = Queue.new
+    stub_request(:post, 'https://openrouter.ai/api/v1/chat/completions').to_return do |request|
+      expect(JSON.parse(request.body)).to include('max_tokens' => connection.reply_token_limit)
+      provider_entered << true
+      release_provider.pop
+      { status: 200,
+        body: { id: 'r10-old-configuration', model: connection.model,
+                choices: [{ finish_reason: 'stop', message: { content: 'We build AI employees for businesses.' } }] }.to_json }
+    end
+    allow(AiLeadEmployee::AiProvider::RuntimeControl).to receive(:stop_pending_automation!).and_wrap_original do |original, **args|
+      cancellation_entered << true
+      release_cancellation.pop
+      original.call(**args)
+    end
+    job_worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection { AiLeadEmployee::OrchestrationIntentJob.perform_now(intent.id) }
+    end
+    Timeout.timeout(10) { provider_entered.pop }
+
+    session = ActionDispatch::Integration::Session.new(Rails.application)
+    headers = admin.create_new_auth_token
+    update_worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        session.patch(
+          "/api/v1/accounts/#{channel.account_id}/ai_provider_connection",
+          headers: headers,
+          params: { model: 'openai/gpt-5.2', reply_token_limit: 256, daily_request_limit: 100 },
+          as: :json
+        )
+      end
+    end
+    Timeout.timeout(10) { cancellation_entered.pop }
+    expect(connection.reload.configuration_version).to eq(2)
+
+    release_provider << true
+    job_worker.value
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_configuration_changed')
+    expect(conversation.messages.outgoing.count).to eq(0)
+  ensure
+    release_provider << true if release_provider
+    release_cancellation << true if release_cancellation
+    job_worker&.join
+    update_worker&.join
+  end
+
+  it 'serializes final send authorization with provider revocation' do
+    conversation.update!(control_state: :ai_active, assignee: nil)
+    connection = create(:ai_provider_connection, account: channel.account, daily_request_limit: 10)
+    approve_launch!
+    reply = create(:message, :bot_message, account: channel.account, inbox: channel.inbox, conversation: conversation,
+                                           sender: nil, message_type: :outgoing, content: 'Already authorized answer')
+    provider_request = stub_request(:post, provider_url)
+                       .to_return(status: 200, body: { messages: [{ id: 'wamid.R10.AUTHORIZED' }] }.to_json,
+                                  headers: { 'Content-Type' => 'application/json' })
+    authorization_read = Queue.new
+    release_authorization = Queue.new
+    allow(AiLeadEmployee::AiProvider::RuntimeControl).to receive(:failure_code).and_wrap_original do |original, **args|
+      result = original.call(**args)
+      authorization_read << true
+      release_authorization.pop
+      result
+    end
+    send_worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection { SendReplyJob.perform_now(reply.id) }
+    end
+    Timeout.timeout(10) { authorization_read.pop }
+
+    session = ActionDispatch::Integration::Session.new(Rails.application)
+    headers = admin.create_new_auth_token
+    update_started = Queue.new
+    update_worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        update_started << true
+        session.patch(
+          "/api/v1/accounts/#{channel.account_id}/ai_provider_connection",
+          headers: headers,
+          params: { model: 'openai/gpt-5.2', reply_token_limit: 512, daily_request_limit: 10 },
+          as: :json
+        )
+      end
+    end
+    update_started.pop
+    sleep 0.2
+
+    expect(connection.reload.configuration_version).to eq(1)
+
+    release_authorization << true
+    send_worker.value
+    update_worker.value
+
+    expect(reply.reload.source_id).to eq('wamid.R10.AUTHORIZED'), reply.whatsapp_outbound_delivery.attributes.inspect
+    expect(provider_request).to have_been_requested.once
+    expect(connection.reload.configuration_version).to eq(2)
+  ensure
+    release_authorization << true if release_authorization
+    send_worker&.join
+    update_worker&.join
   end
 
   it 'recovers an expired pre-dispatch claim but never reclaims dispatch-started work' do
@@ -761,6 +881,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
 
   it 'allows a fresh answer after resume without reviving a canceled greeting from an earlier control version' do
     conversation.update!(control_state: :ai_active, assignee: nil)
+    create(:ai_provider_connection, account: channel.account)
     approve_launch!
     channel.inbox.update!(greeting_enabled: true, greeting_message: 'Old greeting')
     Whatsapp::ChannelGreetingRecorder.new(conversation.messages.incoming.first).perform
