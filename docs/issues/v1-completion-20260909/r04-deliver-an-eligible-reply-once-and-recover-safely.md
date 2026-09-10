@@ -68,3 +68,11 @@ release directory. The final receipt correction also reserves client aliases
 that normalize to delivery/receipt/echo fields; actual HTTP responses feed the
 Inbox transform and MessageMeta regression, preserving ordinary attributes and
 trusted provider ingress. Browser acceptance remains pending.
+
+The first allocated browser pass created and dispatched a new operator reply,
+then exposed a stale live broadcast and hidden grouped-message metadata. Focused
+corrections refresh Message broadcasts from current persisted data and preserve
+each owned delivery's visible outcome. Canonical broadcast and actual MessageList
+regressions reproduce the failures; both targeted rereviews are clear. The
+corrected desktop/phone walkthrough remains queued after R06. See
+[browser correction evidence](../../releases/2026-09-10-r04/browser-corrections.md).

@@ -1,0 +1,5 @@
+load Rails.root.join('tmp/release-r04/browser_runtime.rb')
+require 'puma'
+server = Puma::Server.new(Rails.application)
+server.add_tcp_listener('127.0.0.1', 3224)
+server.run.join

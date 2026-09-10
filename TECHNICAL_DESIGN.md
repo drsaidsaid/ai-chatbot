@@ -388,6 +388,9 @@ Expired pre-dispatch claims recover; dispatch-started uncertainty cannot resend.
 Model claims likewise release Conversation locks during remote work and fence
 late output by owner and current authority. Inbox projection preserves local
 delivery outcomes separately from R03's monotonic provider-status facts.
+Message-update broadcasts read the current account-scoped persisted Message,
+retaining only the originating event's changes and performer metadata. Grouping
+adjacent replies must preserve each owned delivery's visible outcome.
 
 Payload preparation, including dispatch-time media capabilities, completes while
 the owner is claimed. Final authorization validates the prepared connection

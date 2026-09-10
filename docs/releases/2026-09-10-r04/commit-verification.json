@@ -29,5 +29,21 @@
   },
   "receipt_alias_commit": "562c6f407d2f489ee13c39a68837b1feb5ed0ca1",
   "receipt_alias_normal_repository_hooks_exit": 0,
-  "receipt_alias_hooks_bypassed": false
+  "receipt_alias_hooks_bypassed": false,
+  "browser_correction_validation": {
+    "ruby_examples": 301,
+    "ruby_failures": 0,
+    "vue_tests": 25,
+    "vue_failures": 0,
+    "production_build": "passed",
+    "build_modules": 5078,
+    "build_duration": "14m41s",
+    "rubocop_files": 3,
+    "rubocop_offenses": 0,
+    "eslint_errors": 0,
+    "eslint_warnings": 0,
+    "standards_findings": 0,
+    "spec_findings": 0,
+    "corrected_browser_walkthrough": "pending allocation after R06"
+  }
 }

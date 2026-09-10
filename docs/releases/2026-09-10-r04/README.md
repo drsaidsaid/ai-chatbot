@@ -37,17 +37,18 @@ copied or replaced.
 
 ## Validation
 
-- **292 selected Ruby examples passed** after the final receipt-alias correction, including 45 canonical outgoing cases,
+- **301 selected Ruby examples passed** after the browser-discovered corrections, including 50 canonical outgoing cases,
   two real Rails-process kill cases, R03 ingress/concurrency, existing canonical
   launch flow, orchestration, domain outbox, follow-up, handoff/review/booking,
   both WhatsApp providers, native Message/Bookings/Review APIs, the Message builder,
   nine independent-connection authority cases and five booking notice cases.
-- **18 Vue component tests passed** against the actual MessageMeta/MessageError
+- **25 Vue component tests passed** against the actual MessageList/Message/MessageMeta/MessageError
   components: pending/canceled/unknown display, acceptance awaiting receipt,
   projected sent/delivered/read advancement, provider failure, retry eligibility
   and ten client evidence aliases passed through the real deep camel-case
-  transform using actual HTTP response fixtures.
-- **Corrected production Vite build passed**, 1m19s. Existing Browserslist and bundle-size
+  transform using actual HTTP response fixtures, plus individual owned outcomes
+  within same-minute groups and preserved ordinary grouping.
+- **Latest production Vite build passed**, 14m41s, 5,078 modules. Existing Browserslist and bundle-size
   warnings remain. No dependency or lockfile change was made.
 - Ruby lint passed on changed Ruby files. Frontend lint has no errors and one
   finite translation-key mapping warning; it does not affect the production build.
@@ -66,7 +67,11 @@ after the provider accepts but before the Message ID commits. Recovery sends
 once in the former case and raises one unknown review without resending in the
 latter. These are canonical-path checks, not evaluation-sandbox labels.
 
-The latest results use `receipt-alias-*` logs. The previous 291-example and
+The latest results use `browser-fixes-*` and `browser-grouping-green.txt` logs.
+[Browser-discovered correction evidence](browser-corrections.md) records the
+actual stale live broadcast and hidden grouped metadata, their regressions and
+targeted rereviews. The corrected desktop/phone walkthrough remains pending.
+The 292-example receipt correction uses `receipt-alias-*` logs. The previous 291-example and
 8-component correction run and successful production build use `coordinator-*`
 logs; no production frontend source changed in the final alias correction.
 The earlier 235-example run and original build remain preserved as initial
@@ -88,6 +93,7 @@ database at the same time. Process-provider ports are allocated ephemerally.
 
 ```sh
 bundle exec rspec spec/requests/whatsapp_outbound_delivery_spec.rb \
+  spec/jobs/action_cable_broadcast_job_spec.rb \
   spec/requests/whatsapp_outbound_crash_spec.rb \
   spec/requests/whatsapp_alert_authority_spec.rb \
   spec/requests/whatsapp_booking_notice_spec.rb \
@@ -110,6 +116,7 @@ bundle exec rspec spec/requests/whatsapp_outbound_delivery_spec.rb \
   spec/builders/messages/message_builder_spec.rb
 pnpm exec vitest --run \
   app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js \
+  app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js \
   --minWorkers=1 --maxWorkers=1
 RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 pnpm exec vite build
 ```
@@ -143,4 +150,7 @@ After allocation, use only the in-app browser to:
 5. Record screenshots and API/database evidence, report the result to the
    coordinator, and leave integration/issue closure to that task.
 
-No browser tab, lock-screen retry or new owner unlock request was made by R04.
+After explicit allocation, R04 opened its own in-app tab and created/dispatched
+a new operator reply. This exposed the corrected broadcast/grouping defects.
+The browser was then released while fixes were checked. No lock-screen retry,
+new unlock request or R06/Meta tab interaction was made by R04.

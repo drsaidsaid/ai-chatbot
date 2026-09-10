@@ -78,3 +78,21 @@ Both local review agents completed read-only targeted rereviews of the shared
 filter and API-to-component contract. Standards: no actionable findings. Spec:
 no concrete remaining defect. The parent task owns the execution evidence.
 Browser acceptance remains pending and is not implied by these reviews.
+
+## Browser-discovered live state and grouping corrections
+
+The first actual operator-created send exposed a stale Message instance in the
+final live broadcast, and a same-minute group hid the Unknown label. Canonical
+broadcast and full MessageList rendering regressions reproduced both defects.
+
+Both local reviewers found the same issue in the initial broadcast correction:
+merging fresh data into the old payload retained optional fields, including
+removed attachments. A persisted attachment/native soft-delete regression
+reproduced that finding. Broadcasts now use fresh account-scoped Message data
+and preserve only the event's `previous_changes` and `performer` metadata.
+
+Both final targeted rereviews confirmed the optional-field finding resolved
+and reported no remaining targeted findings. Message grouping now preserves
+each owned delivery's metadata while ordinary grouping remains covered.
+Reviews were read-only; the implementation task owns test and browser evidence.
+The corrected desktop/phone browser walkthrough remains pending allocation.

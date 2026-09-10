@@ -105,6 +105,8 @@ const shouldGroupWithNext = (index, searchList) => {
   const current = searchList[index];
   const next = searchList[index + 1];
 
+  // Every owned delivery has its own outcome, even within one sender's minute.
+  if (current.contentAttributes?.whatsappDelivery?.state) return false;
   if (next.status === 'failed') return false;
 
   const nextSenderId = next.senderId ?? next.sender?.id;
