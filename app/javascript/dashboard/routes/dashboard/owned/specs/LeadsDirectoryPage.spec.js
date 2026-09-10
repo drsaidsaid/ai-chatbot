@@ -7,6 +7,7 @@ vi.mock('dashboard/api/leads', () => ({
   default: {
     get: vi.fn(),
     update: vi.fn(),
+    reconsent: vi.fn(),
     importLeads: vi.fn(),
     exportLeads: vi.fn(),
   },
@@ -314,6 +315,7 @@ describe('LeadsDirectoryPage', () => {
     vi.useFakeTimers();
     LeadsAPI.get.mockReset();
     LeadsAPI.update.mockReset();
+    LeadsAPI.reconsent.mockReset();
     LeadsAPI.importLeads.mockReset();
     LeadsAPI.exportLeads.mockReset();
     global.URL.createObjectURL = vi.fn(() => 'blob:leads');
@@ -454,6 +456,75 @@ describe('LeadsDirectoryPage', () => {
       expect.objectContaining({
         lead: expect.objectContaining({ name: 'Jane Nkosi Updated' }),
       })
+    );
+  });
+
+  it('lets an administrator record re-consent from the newer verified message', async () => {
+    const stoppedLead = {
+      ...leadPayload,
+      detail: {
+        ...leadPayload.detail,
+        automated_contact_consent: {
+          state: 'withdrawn',
+          evidence: {
+            id: 7,
+            text: 'Please stop messaging me.',
+            occurred_at: '2026-09-10T08:00:00Z',
+          },
+          reconsent_candidate: {
+            source_message_id: 9,
+            expected_event_id: 7,
+            text: 'Yes, you can message me again.',
+          },
+        },
+      },
+    };
+    const response = defaultResponse({
+      leads: [stoppedLead],
+      selected_lead: stoppedLead,
+    });
+    LeadsAPI.reconsent.mockResolvedValue({ data: leadPayload });
+    const { wrapper } = await mountPage({ response });
+
+    expect(
+      wrapper.find('[data-testid="lead-automated-contact-stop"]').text()
+    ).toContain('Please stop messaging me.');
+    await wrapper.find('[data-testid="record-reconsent"]').trigger('click');
+    await flushPromises();
+
+    expect(LeadsAPI.reconsent).toHaveBeenCalledWith(2, {
+      source_message_id: 9,
+      expected_event_id: 7,
+    });
+  });
+
+  it('shows granted automated-contact evidence independently of qualification', async () => {
+    const grantedLead = {
+      ...leadPayload,
+      detail: {
+        ...leadPayload.detail,
+        qualification: null,
+        automated_contact_consent: {
+          state: 'granted',
+          evidence: {
+            text: 'Yes, you can message me again.',
+            occurred_at: '2026-09-10T08:05:00Z',
+          },
+        },
+      },
+    };
+    const { wrapper } = await mountPage({
+      response: defaultResponse({
+        leads: [grantedLead],
+        selected_lead: grantedLead,
+      }),
+    });
+
+    expect(
+      wrapper.find('[data-testid="lead-automated-contact-granted"]').text()
+    ).toContain('Yes, you can message me again.');
+    expect(wrapper.find('[data-testid="record-reconsent"]').exists()).toBe(
+      false
     );
   });
 

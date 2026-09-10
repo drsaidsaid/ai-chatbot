@@ -25,9 +25,10 @@ class AiLeadEmployee::LeadsDirectoryService
     page = paginated_scope(page_scope)
     contacts = page.to_a
 
+    leads = rows_for(contacts)
     {
-      leads: rows_for(contacts),
-      selected_lead: selected_lead_payload(contacts),
+      leads: leads,
+      selected_lead: selected_lead_payload(contacts, leads),
       counts: quality_counts,
       filter_options: filter_options,
       meta: pagination_payload(page_scope, page)
@@ -191,7 +192,8 @@ class AiLeadEmployee::LeadsDirectoryService
       conversation: latest_conversation_for(contact),
       booking: latest_booking_for(contact),
       follow_up: next_follow_up_for(contact),
-      evidence: current_evidence_for(contact)
+      evidence: current_evidence_for(contact),
+      automated_contact_consent: automated_contact_consent_for(contact)
     }
   end
 
@@ -240,6 +242,7 @@ class AiLeadEmployee::LeadsDirectoryService
       strongest_evidence: context[:evidence].first(4).map { |item| evidence_payload(item) },
       missing_signals: context[:qualification]&.missing_signals || [],
       conversation_summary: conversation_summary_payload(context[:conversation]),
+      automated_contact_consent: automated_contact_consent_payload(contact, context),
       owner_follow_up: owner_follow_up_payload(context),
       related_conversations: related_conversations_for(contact),
       related_bookings: related_bookings_for(contact),
@@ -255,6 +258,16 @@ class AiLeadEmployee::LeadsDirectoryService
       follow_up_state: qualification&.follow_up_state || 'no_follow_up',
       last_evaluated_at: qualification&.last_evaluated_at
     }
+  end
+
+  def automated_contact_consent_payload(contact, context)
+    AiLeadEmployee::AutomatedContactConsentPresenter.new(
+      account: account,
+      user: user,
+      contact: contact,
+      include_reconsent_candidate: true,
+      preloaded: context[:automated_contact_consent]
+    ).payload
   end
 
   def why_this_lead_matters(qualification)
@@ -365,12 +378,14 @@ class AiLeadEmployee::LeadsDirectoryService
     qualification&.evidence_snapshot&.transform_values { |item| item['value'] } || {}
   end
 
-  def selected_lead_payload(contacts)
+  def selected_lead_payload(contacts, rows)
     selected_id = params[:lead_id].presence || contacts.first&.id
     return if selected_id.blank?
 
-    selected_contact = contacts.find { |contact| contact.id.to_s == selected_id.to_s } ||
-                       base_contact_scope.where(id: selected_id).first
+    page_index = contacts.index { |contact| contact.id.to_s == selected_id.to_s }
+    return rows[page_index] if page_index
+
+    selected_contact = base_contact_scope.where(id: selected_id).first
     return if selected_contact.blank?
 
     rows_for([selected_contact]).first
@@ -455,6 +470,7 @@ class AiLeadEmployee::LeadsDirectoryService
     @bookings_by_contact = bookings_by_contact(ids)
     @follow_ups_by_contact = follow_ups_by_contact(ids)
     @evidence_by_contact = evidence_by_contact(ids)
+    preload_consent_context(ids)
     conversation_ids = @conversation_by_contact.values.map(&:id)
     @latest_message_by_conversation = messages_by_position(conversation_ids, :last)
     @first_message_by_conversation = messages_by_position(conversation_ids, :first)
@@ -462,6 +478,53 @@ class AiLeadEmployee::LeadsDirectoryService
                              .unscope(:order)
                              .group(:conversation_id)
                              .count
+  end
+
+  def preload_consent_context(contact_ids)
+    @active_stop_by_contact = LeadFollowUpOptOut.where(account: account, contact_id: contact_ids)
+                                                .includes(:consent_event)
+                                                .index_by(&:contact_id)
+    @latest_consent_event_by_contact = LeadConsentEvent.where(
+      account: account,
+      contact_id: contact_ids,
+      purpose: AiLeadEmployee::AutomatedContactConsent::PURPOSE
+    ).order(occurred_at: :desc, id: :desc).group_by(&:contact_id).transform_values(&:first)
+    @consent_visible_conversation_ids = if administrator?
+                                          account.conversations.where(contact_id: contact_ids).pluck(:id).to_set
+                                        else
+                                          access.conversations.where(contact_id: contact_ids).pluck(:id).to_set
+                                        end
+    @reconsent_candidate_by_contact = reconsent_candidates_by_contact(contact_ids)
+  end
+
+  def reconsent_candidates_by_contact(contact_ids)
+    return {} unless administrator? && @active_stop_by_contact.present?
+
+    candidates = AiLeadEmployee::AutomatedContactConsent.verified_inbound_messages(
+      account: account,
+      contact_ids: contact_ids
+    ).reorder(provider_created_at: :desc, id: :desc).group_by(&:sender_id)
+
+    @active_stop_by_contact.to_h do |contact_id, active_stop|
+      [contact_id, reconsent_candidate_for(active_stop, candidates.fetch(contact_id, []))]
+    end
+  end
+
+  def reconsent_candidate_for(active_stop, messages)
+    messages.find do |message|
+      (message.provider_created_at || message.created_at) > AiLeadEmployee::AutomatedContactConsent.withdrawal_time(active_stop) &&
+        AiLeadEmployee::AutomatedContactConsent.explicit_grant?(message.content)
+    end
+  end
+
+  def automated_contact_consent_for(contact)
+    {
+      active_stop: @active_stop_by_contact[contact.id],
+      latest_event: @latest_consent_event_by_contact[contact.id],
+      visible_conversation_ids: @consent_visible_conversation_ids,
+      reconsent_candidate: @reconsent_candidate_by_contact[contact.id],
+      administrator: administrator?
+    }
   end
 
   def latest_conversation_by_contact(contact_ids)
@@ -582,7 +645,9 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def administrator?
-    @administrator ||= account.account_users.find_by(user: user)&.administrator?
+    return @administrator if defined?(@administrator)
+
+    @administrator = account.account_users.find_by(user: user)&.administrator?
   end
 end
 # rubocop:enable Metrics/ClassLength

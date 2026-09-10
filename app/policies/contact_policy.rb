@@ -33,6 +33,10 @@ class ContactPolicy < ApplicationPolicy
     allowed_contact?
   end
 
+  def reconsent?
+    access.administrator?
+  end
+
   def contactable_inboxes?
     allowed_contact?
   end

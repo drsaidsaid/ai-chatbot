@@ -9,7 +9,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   ].freeze
 
   before_action -> { check_authorization(Contact) }
-  before_action :set_contact, only: [:show, :update]
+  before_action :set_contact, only: [:show, :update, :reconsent]
 
   def index
     render json: directory_payload
@@ -31,6 +31,19 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     render json: directory_payload(lead_id: @contact.id)[:selected_lead]
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
+  end
+
+  def reconsent
+    AiLeadEmployee::AutomatedContactConsent.grant!(
+      contact: @contact,
+      source_message: current_account.messages.find(params.require(:source_message_id)),
+      expected_event_id: params.require(:expected_event_id),
+      actor: Current.user
+    )
+
+    render json: directory_payload(lead_id: @contact.id)[:selected_lead]
+  rescue ActiveRecord::RecordNotFound, ActionController::ParameterMissing, ArgumentError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def import

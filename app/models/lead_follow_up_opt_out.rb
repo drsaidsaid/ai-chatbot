@@ -13,6 +13,7 @@
 #  contact_id      :bigint           not null
 #  conversation_id :bigint
 #  message_id      :bigint
+#  consent_event_id :bigint
 #
 # Indexes
 #
@@ -34,10 +35,13 @@ class LeadFollowUpOptOut < ApplicationRecord
   belongs_to :contact
   belongs_to :conversation, optional: true
   belongs_to :message, optional: true
+  belongs_to :consent_event, class_name: 'LeadConsentEvent', optional: true
 
   validates :reason, :opted_out_at, presence: true
   validates :contact_id, uniqueness: { scope: :account_id }
-  validate :validate_account_scope
+  validate :contact_account_is_consistent
+  validate :conversation_account_is_consistent
+  validate :consent_event_is_consistent
   after_create :cancel_pending_automation
 
   private
@@ -48,8 +52,22 @@ class LeadFollowUpOptOut < ApplicationRecord
     end
   end
 
-  def validate_account_scope
+  def contact_account_is_consistent
     errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id
+  end
+
+  def conversation_account_is_consistent
     errors.add(:conversation, 'must belong to the same account') if conversation.present? && conversation.account_id != account_id
+  end
+
+  def consent_event_is_consistent
+    return if consent_event.blank? || active_withdrawal_event?
+
+    errors.add(:consent_event, 'must be the active automated-contact withdrawal for this Lead')
+  end
+
+  def active_withdrawal_event?
+    consent_event.account_id == account_id && consent_event.contact_id == contact_id &&
+      consent_event.purpose == 'automated_contact' && consent_event.event_kind == 'withdrawn'
   end
 end

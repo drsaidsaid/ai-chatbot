@@ -27,10 +27,10 @@ RSpec.describe AiLeadEmployee::OptOutService do
     opt_out = described_class.new(conversation: conversation, message: message).perform
 
     expect(opt_out).to be_present
-    expect(opt_out.reason).to eq('lead_requested_opt_out')
+    expect(opt_out.reason).to eq('lead_requested_stop')
     expect(follow_up.reload).to be_cancelled
     expect(follow_up.cancellation_reason).to eq('follow_up_opted_out')
-    expect(qualification.reload.follow_up_state).to eq('closed')
+    expect(qualification.reload.follow_up_state).to eq('nurture')
   end
 
   it 'ignores ordinary replies' do

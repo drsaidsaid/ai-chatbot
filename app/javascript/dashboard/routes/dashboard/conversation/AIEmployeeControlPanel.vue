@@ -48,10 +48,26 @@ const aiEmployeeDecision = computed(
 const leadQualification = computed(
   () => props.currentChat.lead_qualification || null
 );
-const leadFollowUps = computed(() => leadQualification.value?.follow_ups || []);
-const leadFollowUpOptedOut = computed(
-  () => leadQualification.value?.follow_up_opted_out || false
+const automatedContactConsent = computed(
+  () => props.currentChat.automated_contact_consent || { state: 'unknown' }
 );
+const automatedContactStopped = computed(
+  () => automatedContactConsent.value.state === 'withdrawn'
+);
+const automatedContactKnown = computed(() =>
+  ['withdrawn', 'granted'].includes(automatedContactConsent.value.state)
+);
+const automatedContactTitle = computed(() =>
+  automatedContactStopped.value
+    ? t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.STOPPED')
+    : t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.GRANTED')
+);
+const automatedContactDescription = computed(() =>
+  automatedContactStopped.value
+    ? t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.RESUME_NOTICE')
+    : t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.GRANTED_DESCRIPTION')
+);
+const leadFollowUps = computed(() => leadQualification.value?.follow_ups || []);
 const qualificationEvidence = computed(
   () => leadQualification.value?.evidence || {}
 );
@@ -229,6 +245,43 @@ const saveEvidenceCorrection = async () => {
       </span>
     </div>
 
+    <div
+      v-if="automatedContactKnown"
+      class="flex flex-col gap-1 rounded-md border p-3 text-xs"
+      :class="
+        automatedContactStopped
+          ? 'border-n-ruby-5 bg-n-ruby-2'
+          : 'border-n-teal-5 bg-n-teal-2'
+      "
+      :data-testid="
+        automatedContactStopped
+          ? 'automated-contact-stop'
+          : 'automated-contact-granted'
+      "
+    >
+      <span
+        class="font-medium"
+        :class="automatedContactStopped ? 'text-n-ruby-11' : 'text-n-teal-11'"
+      >
+        {{ automatedContactTitle }}
+      </span>
+      <span class="text-n-slate-11">
+        {{ automatedContactDescription }}
+      </span>
+      <span
+        v-if="automatedContactConsent.evidence?.text"
+        class="text-n-slate-12"
+      >
+        {{ automatedContactConsent.evidence.text }}
+      </span>
+      <span
+        v-if="automatedContactConsent.evidence?.occurred_at"
+        class="text-n-slate-11"
+      >
+        {{ formatDateTime(automatedContactConsent.evidence.occurred_at) }}
+      </span>
+    </div>
+
     <div v-if="controlEvents.length" class="flex flex-col gap-2">
       <div class="text-xs font-medium uppercase text-n-slate-11">
         {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.RECENT_CONTROL_EVENTS') }}
@@ -402,9 +455,6 @@ const saveEvidenceCorrection = async () => {
         >
           {{ reason }}
         </span>
-      </div>
-      <div v-if="leadFollowUpOptedOut" class="text-n-slate-12">
-        {{ $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.FOLLOW_UP.OPTED_OUT') }}
       </div>
       <div v-if="leadFollowUps.length" class="flex flex-col gap-1">
         <span class="text-n-slate-11">

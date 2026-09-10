@@ -83,13 +83,17 @@ The canonical WhatsApp path is:
    WhatsApp webhook.
 2. The existing WhatsApp event job and channel service create or update the
    tenant-scoped Lead identity, Conversation, and visible Inbound Message.
-3. If a Channel Greeting is configured and this is the first Lead message, the
+3. Before any automated response is recorded, explicit stop language is
+   recognized from the persisted Inbound Message and durably suppresses every
+   Conversation for that Lead in the Business Account.
+4. If a Channel Greeting is configured, this is the first Lead message, and the
+   Lead has not opted out, the
    greeting is recorded and sent as visible conversation history.
-4. After message persistence commits, durable AI Orchestration evaluates the
+5. After message persistence commits, durable AI Orchestration evaluates the
    actual Lead message with current Control State and approved Knowledge Items.
-5. The AI Employee creates a persisted Outbound Message intent with verified
+6. The AI Employee creates a persisted Outbound Message intent with verified
    Source References or creates safe Review Request behavior.
-6. The existing WhatsApp outbound sender delivers the reply through Meta and
+7. The existing WhatsApp outbound sender delivers the reply through Meta and
    delivery status webhooks reconcile the Message.
 
 The current release authority and reproducible schema decision are recorded in
@@ -322,7 +326,34 @@ The agent must escalate instead of improvising on:
 
 ### Opt-Out
 
-The system must recognize clear opt-out requests such as "stop messaging me," stop automated follow-up immediately, and record the opt-out status.
+The system must recognize clear English, Swahili, and mixed-language requests to
+stop automated contact, including polite forms such as "please stop messaging
+me" and "tafadhali usinitumie ujumbe tena." It must distinguish those requests
+from unrelated refusals, negated stop phrases, quoted examples, and questions
+about stopping. Recognition is deterministic and does not call the AI Provider.
+
+The verified Inbound Message and immutable Consent Evidence must commit before
+the canonical WhatsApp event is complete. The same transaction records the
+active Business Account/Lead suppression and invalidates unsent AI replies,
+Channel Greetings, and automatic follow-ups across the Lead's Conversations.
+Duplicate provider events have no second effect. A distinct later withdrawal is
+retained as additional evidence. Opt-out does not close or rewrite Qualification.
+
+An active withdrawal blocks automated Lead-facing messages at the final R04
+dispatch check, including work restored by queue recovery or process restart.
+If dispatch authorization committed before the withdrawal, the recorded
+accepted or unknown provider outcome remains truthful; later contact is still
+suppressed. The incoming stop Message remains visible for Human Operator review,
+and no automated acknowledgment is sent, including for a stop combined with a
+complaint, refund, support, or human request.
+
+Re-consent requires an administrator to select a newer verified Inbound Message
+that explicitly permits automated contact again. The action records immutable
+Consent Evidence, sends nothing, and never resumes the AI. It rejects ambiguous,
+foreign, stale, or previously used evidence and a concurrent newer withdrawal.
+AI resume, a generic "yes" or "hello," import, or Lead edit cannot clear opt-out.
+Clearing the current suppression does not revive canceled, failed, unknown, or
+pre-withdrawal work; only a fresh later eligible event may create new work.
 
 ## 9. Knowledge and Answering
 
@@ -458,7 +489,10 @@ The system follows up when a lead stops responding before qualification is compl
 - The message is based on where the conversation stopped.
 - Maximum one automated follow-up for incomplete qualification.
 - An optional second follow-up is allowed only for qualified leads.
-- No follow-up is sent after opt-out, closure, or human takeover unless a human explicitly schedules it.
+- No automatic follow-up is sent after opt-out. Human scheduling does not bypass
+  an active Automated Contact Consent withdrawal.
+- Closure or human takeover also stops automatic follow-up unless a Human
+  Operator explicitly schedules a permitted action under its own authority.
 
 ## 14. Dashboard Requirements
 

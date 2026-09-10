@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_10_000402) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -1409,6 +1409,34 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000402) do
     t.index ["title", "account_id"], name: "index_labels_on_title_and_account_id", unique: true
   end
 
+  create_table "lead_consent_events", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "message_id", null: false
+    t.bigint "whatsapp_webhook_event_id", null: false
+    t.string "event_kind", null: false
+    t.string "purpose", null: false
+    t.string "reason", null: false
+    t.text "evidence_text", null: false
+    t.string "recognizer_version", null: false
+    t.string "actor_type", null: false
+    t.bigint "actor_id", null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "recorded_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "contact_id", "purpose", "recorded_at"], name: "idx_lead_consent_events_on_history"
+    t.index ["account_id", "purpose", "message_id"], name: "idx_lead_consent_events_on_source", unique: true
+    t.index ["account_id"], name: "index_lead_consent_events_on_account_id"
+    t.index ["contact_id"], name: "index_lead_consent_events_on_contact_id"
+    t.index ["conversation_id"], name: "index_lead_consent_events_on_conversation_id"
+    t.index ["message_id"], name: "index_lead_consent_events_on_message_id"
+    t.index ["whatsapp_webhook_event_id"], name: "index_lead_consent_events_on_whatsapp_webhook_event_id"
+    t.check_constraint "event_kind::text = ANY (ARRAY['withdrawn'::character varying::text, 'granted'::character varying::text])", name: "lead_consent_events_kind"
+    t.check_constraint "purpose::text = 'automated_contact'::text", name: "lead_consent_events_purpose"
+  end
+
   create_table "lead_follow_up_opt_outs", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "contact_id", null: false
@@ -1418,8 +1446,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000402) do
     t.datetime "opted_out_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "consent_event_id"
     t.index ["account_id", "contact_id"], name: "index_lead_follow_up_opt_outs_on_account_id_and_contact_id", unique: true
     t.index ["account_id"], name: "index_lead_follow_up_opt_outs_on_account_id"
+    t.index ["consent_event_id"], name: "index_lead_follow_up_opt_outs_on_consent_event_id"
     t.index ["contact_id"], name: "index_lead_follow_up_opt_outs_on_contact_id"
     t.index ["conversation_id"], name: "index_lead_follow_up_opt_outs_on_conversation_id"
     t.index ["message_id"], name: "index_lead_follow_up_opt_outs_on_message_id"
@@ -2133,9 +2163,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000402) do
   add_foreign_key "knowledge_documents", "accounts"
   add_foreign_key "knowledge_documents", "users", column: "last_editor_id"
   add_foreign_key "knowledge_items", "accounts"
+  add_foreign_key "lead_consent_events", "accounts"
+  add_foreign_key "lead_consent_events", "contacts"
+  add_foreign_key "lead_consent_events", "conversations"
+  add_foreign_key "lead_consent_events", "messages"
+  add_foreign_key "lead_consent_events", "whatsapp_webhook_events"
   add_foreign_key "lead_follow_up_opt_outs", "accounts"
   add_foreign_key "lead_follow_up_opt_outs", "contacts"
   add_foreign_key "lead_follow_up_opt_outs", "conversations"
+  add_foreign_key "lead_follow_up_opt_outs", "lead_consent_events", column: "consent_event_id"
   add_foreign_key "lead_follow_up_opt_outs", "messages"
   add_foreign_key "lead_follow_ups", "accounts"
   add_foreign_key "lead_follow_ups", "contacts"

@@ -14,10 +14,12 @@ const props = defineProps({
   formatTime: { type: Function, required: true },
   qualityToneClass: { type: Function, required: true },
   t: { type: Function, required: true },
+  isAdmin: { type: Boolean, default: false },
+  isRecordingReconsent: { type: Boolean, default: false },
   mobile: { type: Boolean, default: false },
 });
 
-defineEmits(['edit']);
+defineEmits(['edit', 'reconsent']);
 
 const businessLocation = computed(() =>
   [props.lead.business_name, props.lead.location].filter(Boolean).join(' / ')
@@ -52,6 +54,28 @@ const relatedConversations = computed(
 const relatedBookings = computed(
   () => props.lead.detail?.related_bookings || []
 );
+
+const automatedContactConsent = computed(
+  () => props.lead.detail?.automated_contact_consent || { state: 'unknown' }
+);
+const automatedContactStopped = computed(
+  () => automatedContactConsent.value.state === 'withdrawn'
+);
+const automatedContactKnown = computed(() =>
+  ['withdrawn', 'granted'].includes(automatedContactConsent.value.state)
+);
+const automatedContactTitle = computed(() => {
+  if (automatedContactStopped.value) {
+    return props.t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.STOPPED');
+  }
+  return props.t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.GRANTED');
+});
+const automatedContactDescription = computed(() => {
+  if (automatedContactStopped.value) {
+    return props.t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.STOPPED_DESCRIPTION');
+  }
+  return props.t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.GRANTED_DESCRIPTION');
+});
 
 const conversationStateItems = computed(() =>
   [
@@ -122,6 +146,65 @@ const channelIcon = kind => {
             {{ channel.label }}
           </span>
         </p>
+      </div>
+    </section>
+
+    <section
+      v-if="automatedContactKnown"
+      class="border-b border-n-weak py-4"
+      :data-testid="
+        automatedContactStopped
+          ? 'lead-automated-contact-stop'
+          : 'lead-automated-contact-granted'
+      "
+    >
+      <h3
+        class="text-sm font-semibold"
+        :class="automatedContactStopped ? 'text-n-ruby-11' : 'text-n-teal-11'"
+      >
+        {{ automatedContactTitle }}
+      </h3>
+      <p class="mt-2 text-sm leading-5 text-n-slate-11">
+        {{ automatedContactDescription }}
+      </p>
+      <blockquote
+        v-if="automatedContactConsent.evidence?.text"
+        class="mt-3 rounded-md p-3 text-sm text-n-slate-12"
+        :class="automatedContactStopped ? 'bg-n-ruby-2' : 'bg-n-teal-2'"
+      >
+        {{ automatedContactConsent.evidence.text }}
+      </blockquote>
+      <p
+        v-if="automatedContactConsent.evidence?.occurred_at"
+        class="mt-2 text-xs text-n-slate-11"
+      >
+        {{ formatTime(automatedContactConsent.evidence.occurred_at) }}
+      </p>
+      <div
+        v-if="
+          automatedContactStopped &&
+          isAdmin &&
+          automatedContactConsent.reconsent_candidate
+        "
+        class="mt-3 rounded-md border border-n-weak p-3"
+      >
+        <p class="text-xs text-n-slate-11">
+          {{ t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.RECONSENT_EVIDENCE') }}
+        </p>
+        <p class="mt-1 text-sm text-n-slate-12">
+          {{ automatedContactConsent.reconsent_candidate.text }}
+        </p>
+        <button
+          type="button"
+          class="mt-3 inline-flex h-9 items-center justify-center rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:opacity-50"
+          :disabled="isRecordingReconsent"
+          data-testid="record-reconsent"
+          @click="
+            $emit('reconsent', automatedContactConsent.reconsent_candidate)
+          "
+        >
+          {{ t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.RECORD_RECONSENT') }}
+        </button>
       </div>
     </section>
 

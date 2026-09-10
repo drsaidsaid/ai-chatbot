@@ -4,6 +4,7 @@ class MessageTemplates::HookExecutionService
   def perform
     return if conversation.last_incoming_message.blank?
     return if message.auto_reply_email?
+    return if automated_contact_stopped?
 
     trigger_templates
   end
@@ -12,6 +13,10 @@ class MessageTemplates::HookExecutionService
 
   delegate :inbox, :conversation, to: :message
   delegate :contact, to: :conversation
+
+  def automated_contact_stopped?
+    message.incoming? && LeadFollowUpOptOut.exists?(account: conversation.account, contact: contact)
+  end
 
   def trigger_templates
     ::MessageTemplates::Template::OutOfOffice.new(conversation: conversation).perform if should_send_out_of_office_message?

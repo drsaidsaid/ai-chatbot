@@ -15,6 +15,10 @@ class LeadsAPI extends ApiClient {
     return axios.patch(`${this.url}/${id}`, data);
   }
 
+  reconsent(id, data) {
+    return axios.post(`${this.url}/${id}/reconsent`, data);
+  }
+
   importLeads(file) {
     const formData = new FormData();
     formData.append('import_file', file);

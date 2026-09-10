@@ -244,6 +244,24 @@ membership before any account selection or query.
 - Source, campaign, Meta referral metadata, opt-out timestamp, assigned membership, and last-contact timestamps.
 - Unique: `(business_account_id, primary_phone_e164)` for the WhatsApp MVP.
 
+#### `lead_consent_events`
+
+- Immutable, Business Account and Lead scoped evidence for the V1
+  `automated_contact` purpose.
+- Records `withdrawn` or `granted`, verified source Inbound Message and
+  Conversation, trusted provider/event identity and time, observed wording,
+  recognizer version, recording actor, and recorded timestamp.
+- Unique source-message identity per Business Account and consent purpose makes
+  verified event replay idempotent. A distinct later withdrawal remains a new
+  event even when the Lead is already suppressed.
+- Current permission follows event chronology by provider occurrence time, with
+  event ID as the deterministic tie-breaker. Delayed older evidence is retained
+  without overwriting a newer grant.
+- `lead_follow_up_opt_outs` remains the unique active suppression projection per
+  Business Account and Lead so R04 final dispatch checks stay small and stable.
+  New rows reference their withdrawal event; legacy rows may retain labeled
+  legacy evidence until a later evidenced transition archives it.
+
 #### `lead_qualifications`
 
 - `business_account_id`, `lead_id`, `offer_id`, Lead Quality, score, reasons JSON, missing signals JSON, version, evaluated timestamp.
@@ -330,6 +348,25 @@ Conversation before sending.
   invokes the encrypted provider adapter and records the grounded output and
   outbox event. R04/R10/R11 repair delivery, provider concurrency and grounding
   deficiencies identified by the audit; existing code is not launch proof.
+- R05 places one deep automated-contact consent module at the canonical incoming
+  Message seam. Given the persisted trusted Inbound Message, it recognizes and
+  records a withdrawal, updates the active suppression projection, invalidates
+  unsent work across the Lead's Conversations, and returns whether automated
+  processing must stop. The caller records neither Channel Greeting nor AI
+  Orchestration intent when it returns stopped. The conversation intent
+  classifier and orchestration processor do not own stop recognition.
+- Re-consent is a separate administrator-only HTTP mutation on a Lead. It takes
+  the selected newer source Message and expected current withdrawal evidence,
+  validates both through current Account and access scope, appends grant
+  evidence, removes only the active projection, and advances affected control
+  versions. It does not call AI resume, enqueue work, or send a Message.
+- Consent invalidation uses the R04 lock order: Channel, then all owned
+  Conversations in ID order, then their pending/claimed deliveries and AI
+  intents. Pending follow-up records retain their existing lock order and are
+  canceled when their delivery worker rechecks the active suppression. Already
+  recorded follow-up Messages use the shared delivery invalidation. A stop before R04 dispatch
+  authorization prevents provider HTTP; a stop after authorization cannot
+  rewrite accepted or unknown truth.
 - Conflict-free call bookings are persisted as `bookings`, scoped by account,
   contact, Conversation, Lead Qualification, assignee, calendar, confirmation,
   calendar event, invitation, alert-delivery, and retry idempotency metadata.
@@ -441,13 +478,15 @@ and status projector, preserving progress, provider-time ordering and safe error
 2. Use the existing Community Edition WhatsApp webhook, event job, and channel
    service as the only production inbound Meta path.
 3. Store and deduplicate the webhook before running AI logic.
-4. Persist the Lead's Inbound Message and any configured Channel Greeting before
-   AI Orchestration evaluates the Lead message.
-5. Serialize processing per Conversation.
-6. Immediately before sending an AI reply, lock and re-read Control State, inbox status, current owner, and `control_version` from PostgreSQL. Send only when the state is `ai_active`, the Conversation is still eligible, and the observed version still matches.
+4. Persist the Lead's Inbound Message, then record explicit stop evidence before
+   any configured Channel Greeting or AI Orchestration intent. An active
+   suppression returns without either automated response.
+5. Serialize processing per Conversation and consent changes across all of the
+   same Lead's Business Account Conversations.
+6. Immediately before sending an AI reply, lock and re-read Control State, inbox status, current owner, `control_version`, and active Automated Contact Consent from PostgreSQL. Send only when the state is `ai_active`, the Conversation is still eligible, consent permits it, and the observed version still matches.
 7. Persist the AI decision, Source References, outbound message intent, and outbox event in one database transaction.
 8. Send through the existing WhatsApp sender using an idempotency key where supported and reconcile the external message ID.
-9. A handoff request, human assignment, human reply, WhatsApp coexistence echo, manual pause, or resolution invalidates pending AI reply jobs. Human activity, pause, and resolution also invalidate automatic follow-up jobs.
+9. A handoff request, human assignment, human reply, WhatsApp coexistence echo, manual pause, resolution, or opt-out invalidates pending AI reply jobs. Human activity, pause, resolution, and opt-out also invalidate automatic follow-up jobs.
 10. Booking and alert creation are idempotent and retryable; Highly Qualified
     sales handoff alert idempotency is enforced by `lead_handoffs`.
 11. Every Lead Quality transition records evidence, reasons, configuration version, and actor.
@@ -455,6 +494,9 @@ and status projector, preserving progress, provider-time ordering and safe error
 13. A duplicate Meta event has no second logical effect, even when it arrives after the first event has been processed.
 14. Manual resume grants permission for future eligible work; it does not by itself send an AI reply.
 15. Missing, conflicting, unverified, sensitive, angry, and provider-failed AI outcomes create safe Review Request behavior and no fabricated fallback.
+16. Re-consent requires a newer explicit verified Inbound Message and an
+    administrator action. It records evidence but neither resumes AI nor revives
+    work invalidated before the withdrawal.
 
 ## 9. Security and Operations
 

@@ -32,6 +32,7 @@ const filterOptions = ref({
 const isAdmin = computed(() => meta.value.visibility === 'admin');
 const isLoading = ref(false);
 const isExporting = ref(false);
+const isRecordingReconsent = ref(false);
 const errorMessage = ref('');
 const statusMessage = ref('');
 const showMoreFilters = ref(false);
@@ -452,6 +453,30 @@ const saveLead = async () => {
     editErrors.value = [
       error.response?.data?.error || t('AI_LEAD_EMPLOYEE.LEADS.EDIT.ERROR'),
     ];
+  }
+};
+
+const recordReconsent = async candidate => {
+  if (!selectedLead.value || !candidate || isRecordingReconsent.value) return;
+
+  errorMessage.value = '';
+  isRecordingReconsent.value = true;
+  try {
+    const { data } = await LeadsAPI.reconsent(selectedLead.value.id, {
+      source_message_id: candidate.source_message_id,
+      expected_event_id: candidate.expected_event_id,
+    });
+    selectedLead.value = data;
+    statusMessage.value = t(
+      'AI_LEAD_EMPLOYEE.LEADS.CONSENT.RECONSENT_RECORDED'
+    );
+    await loadLeads();
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.error ||
+      t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.RECONSENT_ERROR');
+  } finally {
+    isRecordingReconsent.value = false;
   }
 };
 
@@ -1156,6 +1181,8 @@ watch(showEditModal, async value => {
           </button>
           <LeadDetail
             :lead="selectedLead"
+            :is-admin="isAdmin"
+            :is-recording-reconsent="isRecordingReconsent"
             :quality-label="qualityLabel"
             :follow-up-label="followUpLabel"
             :booking-status-label="bookingStatusLabel"
@@ -1168,6 +1195,7 @@ watch(showEditModal, async value => {
             :t="t"
             mobile
             @edit="openEditModal"
+            @reconsent="recordReconsent"
           />
         </div>
       </section>
@@ -1179,6 +1207,8 @@ watch(showEditModal, async value => {
         <LeadDetail
           v-if="selectedLead"
           :lead="selectedLead"
+          :is-admin="isAdmin"
+          :is-recording-reconsent="isRecordingReconsent"
           :quality-label="qualityLabel"
           :follow-up-label="followUpLabel"
           :booking-status-label="bookingStatusLabel"
@@ -1190,6 +1220,7 @@ watch(showEditModal, async value => {
           :quality-tone-class="qualityToneClass"
           :t="t"
           @edit="openEditModal"
+          @reconsent="recordReconsent"
         />
       </aside>
     </main>

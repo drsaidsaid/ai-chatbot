@@ -128,6 +128,49 @@ describe('AIEmployeeControlPanel', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
+  it('shows automated-contact withdrawal separately from qualification and AI control', async () => {
+    const { dispatch, wrapper } = createWrapper({
+      chat: {
+        control_state: 'ai_paused',
+        lead_qualification: null,
+        automated_contact_consent: {
+          state: 'withdrawn',
+          evidence: {
+            text: 'Please stop messaging me.',
+            occurred_at: '2026-09-10T08:00:00Z',
+          },
+        },
+      },
+    });
+
+    expect(
+      wrapper.find('[data-testid="automated-contact-stop"]').text()
+    ).toContain('Please stop messaging me.');
+    const resumeButton = wrapper.find('[data-testid="ai-control-resume"]');
+    expect(resumeButton.attributes('disabled')).toBeUndefined();
+    await resumeButton.trigger('click');
+    expect(dispatch).toHaveBeenCalledWith('resumeAI', { conversationId: 42 });
+  });
+
+  it('shows granted automated-contact evidence without qualification', () => {
+    const { wrapper } = createWrapper({
+      chat: {
+        lead_qualification: null,
+        automated_contact_consent: {
+          state: 'granted',
+          evidence: {
+            text: 'Yes, you can message me again.',
+            occurred_at: '2026-09-10T08:05:00Z',
+          },
+        },
+      },
+    });
+
+    expect(
+      wrapper.find('[data-testid="automated-contact-granted"]').text()
+    ).toContain('Yes, you can message me again.');
+  });
+
   it('shows qualification evidence review and handoff alert status', () => {
     const { wrapper } = createWrapper({
       chat: {

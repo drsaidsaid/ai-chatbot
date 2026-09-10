@@ -482,6 +482,12 @@
       "RECENT_EVENTS": "Recent Meta Events",
       "RECENT_CONTROL_EVENTS": "Recent Control Events",
       "HANDOFF_STATUS": "Handoff status",
+      "CONSENT": {
+        "STOPPED": "Automated contact stopped",
+        "RESUME_NOTICE": "Resume AI does not restart automated messages. An administrator must record a newer explicit re-consent message.",
+        "GRANTED": "Automated contact permitted",
+        "GRANTED_DESCRIPTION": "An administrator recorded the Lead's newer explicit permission for automated messages."
+      },
       "QUALIFICATION": {
         "TITLE": "Qualification",
         "QUALITY": "Quality",

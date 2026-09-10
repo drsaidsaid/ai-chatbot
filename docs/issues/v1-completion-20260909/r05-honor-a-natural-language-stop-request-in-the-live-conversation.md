@@ -1,6 +1,8 @@
 # R05 — Honor a natural-language stop request in the live conversation
 
-Status: Approved for implementation; blocked by the issues below.
+Status: Implementation and focused verification complete on the ticket branch;
+awaiting coordinator integration and in-app acceptance. R03 and R04 were accepted
+and integrated at `324ee6df9ca50dff708f41a4004cd105b23a784b` on 10 September 2026.
 
 ## Parent
 
@@ -20,21 +22,52 @@ Work within the owned Community Edition Rails/Vue product. Deliver the real narr
 
 ## Acceptance criteria
 
-- [ ] English, Swahili and mixed-language stop/refusal cases are tested with explicit distinction between opting out and unrelated negated phrases.
-- [ ] A recognized opt-out is stored durably with source message/time and appears in the authorized operator view.
-- [ ] Pending AI messages and follow-ups are canceled or blocked at dispatch; repeat events do not create duplicate effects.
-- [ ] Reordering, retries, later takeover and restart cannot silently restore messaging eligibility.
-- [ ] Re-consent requires a new explicit supported action and recorded evidence; resuming AI alone does not clear opt-out.
-- [ ] Prove canonical ingress → recorded stop → blocked send with an isolated provider and queue.
+- [x] English, Swahili and mixed-language stop/refusal cases are tested with explicit distinction between opting out and unrelated negated phrases.
+- [x] A recognized opt-out is stored durably with source message/time and appears in the authorized operator view.
+- [x] Pending AI messages and follow-ups are canceled or blocked at dispatch; repeat events do not create duplicate effects.
+- [x] Reordering, retries, later takeover and restart cannot silently restore messaging eligibility.
+- [x] Re-consent requires a new explicit supported action and recorded evidence; resuming AI alone does not clear opt-out.
+- [x] Prove canonical ingress → recorded stop → blocked send with an isolated provider and queue.
 
 ## Blocked by
 
-- https://github.com/drsaidsaid/ai-chatbot/issues/20 (R03).
-- https://github.com/drsaidsaid/ai-chatbot/issues/21 (R04).
+- Accepted: https://github.com/drsaidsaid/ai-chatbot/issues/20 (R03).
+- Accepted: https://github.com/drsaidsaid/ai-chatbot/issues/21 (R04).
+
+## Current implementation contract
+
+- Public acceptance seams confirmed by the coordinator: signed canonical
+  ingress, access-scoped Conversation and Lead reads/UI, administrator
+  re-consent from a newer explicit Inbound Message, and R04 dispatch/recovery
+  races.
+- Stop recognition lives in a focused consent module called before Channel
+  Greeting and AI intent creation. It does not modify the shared conversation
+  intent classifier or orchestration processor.
+- Stop takes precedence in mixed complaint, refund, support, and human-request
+  text. Preserve the Inbound Message for operator review and send no automated
+  acknowledgment. R05 does not import or depend on the unaccepted R11 candidate.
+- Re-consent records evidence and sends nothing. AI resume is separate and
+  cannot clear suppression or revive old work.
 
 ## Evidence and scope
 
 Based on the 9 September 2026 standalone UI/UX audit and the standalone portions of the functional/integration audit. Apply relevant product requirements and ADRs before building. Current UI audit fixtures do not prove production behavior. Test behavior changes first, run the relevant checks/build, inspect the in-app browser path, review the diff and record evidence before completion.
+
+## Focused verification evidence
+
+- Signed canonical webhook coverage proves direct English, Swahili, and mixed
+  withdrawal, quoted and negated controls, immutable evidence, no greeting, no
+  AI intent, no provider request, replay idempotence, AI resume separation,
+  administrator-only evidenced re-consent, and access-scoped reads.
+- Multi-Conversation coverage proves pending AI intents and deliveries are
+  invalidated and a late follow-up cancels before recording a send.
+- Independent-worker barriers prove both R04 orders: withdrawal first cancels a
+  claimed delivery before provider HTTP; provider authorization first preserves
+  its one accepted result and blocks the next automated reply.
+- The final post-review Rails matrix passes 52 examples, including 11 current
+  consent/concurrency/legacy-compatibility examples. Vue/API passes 23 tests;
+  focused RuboCop, ESLint, and normal commit hooks are clean. Coordinator
+  integration and in-app browser acceptance remain pending.
 
 
 ## Execution coordination

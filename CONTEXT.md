@@ -77,6 +77,22 @@ Delayed creation events preserve the saved outcome and reconcile the optimistic
 reply with its persisted Message as one Inbox row.
 See ADR 0011.
 
+**Automated Contact Consent**:
+The Lead's current permission for the AI Employee and automatic follow-ups to
+send Lead-facing WhatsApp messages. V1 records explicit withdrawal and explicit
+re-consent as immutable evidence for one automated-contact purpose. An active
+withdrawal suppresses every Conversation for that Lead in the Business Account.
+AI resume does not grant consent, and consent does not determine Qualification,
+Conversation ownership, or Inbox Conversation Status.
+_Avoid_: Follow-up status, AI control, marketing preference
+
+**Consent Evidence**:
+An immutable record of one explicit withdrawal or re-consent, linked to its
+verified Inbound Message, Conversation, Lead, observed wording, event time,
+recognizer version and recording actor. The active opt-out row is a current
+projection of this history for dispatch checks; it is not the evidence history.
+_Avoid_: Consent flag, resume event, inferred permission
+
 **AI Employee**:
 The automated participant that answers approved questions, gathers qualification evidence, and follows configured rules.
 _Avoid_: Chatbot, agent, bot

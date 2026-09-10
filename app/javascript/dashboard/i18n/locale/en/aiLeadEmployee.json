@@ -214,6 +214,16 @@
       "OPEN_CONVERSATION": "Open conversation",
       "EDIT_LEAD": "Edit lead",
       "BACK_TO_LIST": "Back to leads",
+      "CONSENT": {
+        "STOPPED": "Automated contact stopped",
+        "STOPPED_DESCRIPTION": "The Lead asked automated messages to stop. AI resume does not clear this instruction.",
+        "GRANTED": "Automated contact permitted",
+        "GRANTED_DESCRIPTION": "An administrator recorded the Lead's newer explicit permission for automated messages.",
+        "RECONSENT_EVIDENCE": "Newer explicit permission found",
+        "RECORD_RECONSENT": "Record re-consent",
+        "RECONSENT_RECORDED": "Re-consent recorded. Future incoming messages may use automation.",
+        "RECONSENT_ERROR": "Re-consent could not be recorded"
+      },
       "QUALITY": {
         "ALL": "All",
         "HIGHLY_QUALIFIED": "Highly Qualified",

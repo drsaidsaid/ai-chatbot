@@ -40,6 +40,15 @@ describe('#LeadsAPI', () => {
       });
     });
 
+    it('#reconsent sends the verified evidence identifiers', () => {
+      leads.reconsent(42, { source_message_id: 9, expected_event_id: 7 });
+
+      expect(axiosMock.post).toHaveBeenCalledWith(`${leads.url}/42/reconsent`, {
+        source_message_id: 9,
+        expected_event_id: 7,
+      });
+    });
+
     it('#importLeads sends multipart form data', () => {
       const file = new File(['name'], 'leads.csv', { type: 'text/csv' });
 

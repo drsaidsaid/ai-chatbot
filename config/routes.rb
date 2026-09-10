@@ -161,6 +161,7 @@ Rails.application.routes.draw do
           resource :operational_dashboard, only: [:show]
           resource :inbox_conversations, only: [:show]
           resources :leads, only: [:index, :show, :update] do
+            post :reconsent, on: :member
             collection do
               post :import
               post :export

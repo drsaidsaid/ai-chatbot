@@ -54,6 +54,11 @@ json.control_state conversation.control_state
 json.control_version conversation.control_version
 json.ai_employee_decision conversation.additional_attributes&.dig('ai_employee_last_decision')
 access = AiLeadEmployee::AccessScope.new(account: conversation.account, user: Current.user)
+json.automated_contact_consent AiLeadEmployee::AutomatedContactConsentPresenter.new(
+  account: conversation.account,
+  user: Current.user,
+  contact: conversation.contact
+).payload
 qualification = access.qualification(conversation.contact)
 if qualification.present?
   json.lead_qualification do
@@ -88,7 +93,6 @@ if qualification.present?
       json.alert_recipients handoff.alert_recipients
       json.alert_deliveries handoff.alert_deliveries
     end
-    json.follow_up_opted_out LeadFollowUpOptOut.exists?(account: conversation.account, contact: conversation.contact)
     json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
       json.id follow_up.id
       json.status follow_up.status

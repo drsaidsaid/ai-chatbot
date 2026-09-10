@@ -52,6 +52,9 @@ class Whatsapp::IncomingMessageWhatsappCloudService < Whatsapp::IncomingMessageB
   end
 
   def record_orchestration_intent!
+    consent = AiLeadEmployee::AutomatedContactConsent.record_inbound!(message: @message, webhook_event: durable_event)
+    return if consent.stopped?
+
     Whatsapp::ChannelGreetingRecorder.new(@message).perform if durable_event.present?
     AiLeadEmployee::OrchestrationIntentRecorder.new(message: @message, enqueue: durable_event.blank?).perform
   end
