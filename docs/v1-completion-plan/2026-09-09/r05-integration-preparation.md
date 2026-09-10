@@ -1,10 +1,11 @@
 # R05 integration preparation — 10 September 2026
 
-Status: Implementation and focused verification completed on 10 September 2026
-after the coordinator's explicit ownership handoff. R03 and R04 are accepted.
-The focused branch is `codex/r05-natural-language-stop-20260910` at exact
-baseline `324ee6df`; coordinator integration and in-app acceptance remain. This
-document supersedes the earlier preparation against `5c3bbc2f`.
+Status: Implementation, focused verification, production build, and desktop and
+phone in-app acceptance completed on 10 September 2026 after the coordinator's
+explicit ownership handoff. R03 and R04 are accepted. The focused branch is
+`codex/r05-natural-language-stop-20260910` at exact baseline `324ee6df`;
+coordinator integration remains. This document supersedes the earlier
+preparation against `5c3bbc2f`.
 
 ## Source and authority
 

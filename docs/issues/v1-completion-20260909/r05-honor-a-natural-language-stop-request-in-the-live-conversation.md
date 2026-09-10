@@ -64,14 +64,20 @@ Based on the 9 September 2026 standalone UI/UX audit and the standalone portions
 - Independent-worker barriers prove both R04 orders: withdrawal first cancels a
   claimed delivery before provider HTTP; provider authorization first preserves
   its one accepted result and blocks the next automated reply.
-- The final post-review Rails matrix passes 52 examples, including 11 current
-  consent/concurrency/legacy-compatibility examples. Vue/API passes 23 tests;
-  focused RuboCop, ESLint, and normal commit hooks are clean. Coordinator
-  integration and in-app browser acceptance remain pending.
-- Final review follow-up: the signed mixed stop/support case and access-scoped
-  Conversation-list suite pass in the 10-example public request file; isolated
-  concurrency/legacy compatibility passes 4 examples. Consent list queries are
-  fixed at 2 for both one and five real rows after reproducing the 2-to-10 red.
+- The final post-review Rails matrix is green. The public consent request file
+  passes 11 examples, the isolated concurrency/legacy compatibility set passes
+  4 examples, and the Vue/API set passes 23 tests. Focused RuboCop, ESLint, and
+  normal commit hooks are clean.
+- Final review follow-up: the signed mixed stop/complaint/refund/support/human
+  case and access-scoped Conversation-list suite pass in the 11-example public
+  request file; isolated concurrency/legacy compatibility passes 4 examples.
+  Consent list queries are fixed at 2 for both one and five Leads with real
+  three-event histories, while only one latest event is loaded per Lead.
+- In-app desktop acceptance proves the Swahili stop and immutable evidence are
+  visible, Resume AI leaves withdrawal intact, explicit administrator re-consent
+  changes only consent to permitted, and the owned Inbox then shows the newer
+  evidence. A 390×844 phone viewport keeps the consent card visible above the
+  composer. The exact production build completes successfully.
 
 
 ## Execution coordination
