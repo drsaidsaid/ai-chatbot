@@ -12,7 +12,6 @@ import Icon from 'next/icon/Icon.vue';
 import MessagesView from 'dashboard/components/widgets/conversation/MessagesView.vue';
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import ConversationApi from 'dashboard/api/inbox/conversation';
-import BookingsAPI from 'dashboard/api/bookings';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
 
 const props = defineProps({
@@ -81,8 +80,8 @@ const activeDetailTab = ref('summary');
 const isMobileBriefOpen = ref(false);
 
 const currentChat = useMapGetter('getSelectedChat');
-const currentUser = useMapGetter('getCurrentUser');
 const currentRole = useMapGetter('getCurrentRole');
+const availableAgents = useMapGetter('agents/getAgents');
 const isAdmin = computed(() => currentRole.value === 'administrator');
 
 const activeQueue = computed(() =>
@@ -308,9 +307,17 @@ const queueSummary = computed(() =>
   })
 );
 
+const aiControlAction = computed(() => {
+  if (currentChat.value?.control_state === 'ai_active') return 'pause';
+  if (
+    ['human_active', 'ai_paused'].includes(currentChat.value?.control_state)
+  ) {
+    return 'resume';
+  }
+  return null;
+});
 const canPauseAI = computed(
-  () =>
-    currentChat.value?.control_state === 'ai_active' && !isUpdatingAction.value
+  () => aiControlAction.value === 'pause' && !isUpdatingAction.value
 );
 const canTakeOver = computed(
   () =>
@@ -332,12 +339,17 @@ const controlsUnavailable = computed(
     currentChat.value?.control_state === 'closed' ||
     currentChat.value?.status === 'resolved'
 );
+const controlUnavailableMessage = computed(() => {
+  if (controlsUnavailable.value) {
+    return t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CLOSED_EXPLANATION');
+  }
+  if (currentChat.value?.control_state === 'handoff_requested') {
+    return t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.HANDOFF_CONTROL_EXPLANATION');
+  }
+  return '';
+});
 const canResumeAI = computed(
-  () =>
-    currentChat.value?.control_state &&
-    currentChat.value.control_state !== 'ai_active' &&
-    currentChat.value.control_state !== 'closed' &&
-    !isUpdatingAction.value
+  () => aiControlAction.value === 'resume' && !isUpdatingAction.value
 );
 
 const ensureQueueQuery = () => {
@@ -507,23 +519,18 @@ const resolveConversation = async () => {
   }
 };
 
-const assignToMe = async () => {
-  if (
-    !currentChat.value?.id ||
-    !currentUser.value?.id ||
-    isUpdatingAction.value
-  ) {
-    return;
-  }
+const assignConversation = async event => {
+  if (!currentChat.value?.id || isUpdatingAction.value) return;
 
+  const agentId = Number(event.target.value) || 0;
   actionStatus.value = '';
   actionError.value = '';
   isUpdatingAction.value = true;
   try {
     const succeeded = await store.dispatch('assignAgent', {
       conversationId: currentChat.value.id,
-      agentId: currentUser.value.id,
-      assigneeType: 'User',
+      agentId,
+      assigneeType: agentId ? 'User' : null,
     });
     if (succeeded === false) throw new Error('assignment_failed');
     await reloadCurrentConversation();
@@ -539,32 +546,6 @@ const startReviewReply = () => {
   store.dispatch('draftMessages/setReplyEditorMode', {
     mode: REPLY_EDITOR_MODES.REPLY,
   });
-};
-
-const confirmCallTime = async () => {
-  if (
-    !currentChat.value?.id ||
-    !latestBooking.value?.starts_at ||
-    isUpdatingAction.value
-  )
-    return;
-
-  isUpdatingAction.value = true;
-  try {
-    const startsAt = latestBooking.value.starts_at;
-    await BookingsAPI.create({
-      conversation_id: currentChat.value.id,
-      starts_at: startsAt,
-      idempotency_key: `cockpit-${currentChat.value.id}-${startsAt}`,
-    });
-    useAlert(t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CALL_CONFIRMED'));
-    await loadDashboard();
-    await reloadCurrentConversation();
-  } catch {
-    useAlert(t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CALL_CONFIRM_FAILED'));
-  } finally {
-    isUpdatingAction.value = false;
-  }
 };
 
 const clearFilters = () =>
@@ -1118,15 +1099,30 @@ onMounted(() => {
                 >
                   {{ nextAction.label }}
                 </a>
-                <button
-                  v-if="nextAction.kind === 'confirm_booking' && latestBooking"
-                  type="button"
-                  class="h-10 flex-1 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-                  :disabled="isUpdatingAction"
-                  @click="confirmCallTime"
+                <label
+                  v-if="isAdmin && !controlsUnavailable"
+                  class="flex min-w-44 flex-1 flex-col gap-1 text-xs text-n-slate-11"
                 >
-                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONFIRM_CALL') }}
-                </button>
+                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_OPERATOR') }}
+                  <select
+                    data-testid="mobile-assignee-control"
+                    class="h-10 rounded-lg border border-n-weak bg-n-background px-3 text-sm text-n-slate-12"
+                    :value="currentAssignee?.id || ''"
+                    :disabled="isUpdatingAction"
+                    @change="assignConversation"
+                  >
+                    <option value="" disabled>
+                      {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.UNASSIGNED') }}
+                    </option>
+                    <option
+                      v-for="agent in availableAgents"
+                      :key="agent.id"
+                      :value="agent.id"
+                    >
+                      {{ agent.name }}
+                    </option>
+                  </select>
+                </label>
                 <button
                   v-if="canTakeOver"
                   type="button"
@@ -1148,29 +1144,29 @@ onMounted(() => {
                   {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE') }}
                 </button>
                 <button
-                  v-if="!controlsUnavailable"
+                  v-if="aiControlAction"
                   type="button"
                   :data-testid="
-                    canPauseAI
+                    aiControlAction === 'pause'
                       ? 'mobile-pause-ai-action'
                       : 'mobile-resume-ai-action'
                   "
                   class="h-10 flex-1 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
-                  :disabled="!canPauseAI && !canResumeAI"
-                  @click="canPauseAI ? pauseAI() : resumeAI()"
+                  :disabled="isUpdatingAction"
+                  @click="aiControlAction === 'pause' ? pauseAI() : resumeAI()"
                 >
                   {{
-                    canPauseAI
+                    aiControlAction === 'pause'
                       ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_AI')
                       : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_AI')
                   }}
                 </button>
                 <p
-                  v-if="controlsUnavailable"
+                  v-if="controlUnavailableMessage"
                   data-testid="mobile-control-unavailable-reason"
                   class="w-full text-xs text-n-slate-11"
                 >
-                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CLOSED_EXPLANATION') }}
+                  {{ controlUnavailableMessage }}
                 </p>
               </div>
             </section>
@@ -1239,12 +1235,12 @@ onMounted(() => {
                 </details>
               </div>
               <div
-                v-if="nextAction.kind === 'confirm_booking' && latestBooking"
+                v-if="nextAction.kind === 'booking_confirmed' && latestBooking"
                 class="mt-3 grid gap-3 text-xs text-n-slate-11 md:grid-cols-3"
               >
                 <div>
                   <div class="font-medium text-n-slate-12">
-                    {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PROPOSED_TIME') }}
+                    {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKED_TIME') }}
                   </div>
                   <div>
                     {{
@@ -1288,26 +1284,33 @@ onMounted(() => {
                   {{ t('AI_LEAD_EMPLOYEE.NAV.KNOWLEDGE') }}
                   <Icon icon="i-lucide-external-link" class="size-4" />
                 </RouterLink>
-                <button
-                  v-if="nextAction.kind === 'confirm_booking' && latestBooking"
-                  type="button"
-                  class="inline-flex h-9 items-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-                  :disabled="isUpdatingAction"
-                  @click="confirmCallTime"
-                >
-                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONFIRM_CALL') }}
-                </button>
-                <button
+                <label
                   v-if="isAdmin && !controlsUnavailable"
-                  type="button"
-                  data-testid="assign-to-me-action"
-                  class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
-                  :disabled="isUpdatingAction"
-                  @click="assignToMe"
+                  class="inline-flex h-9 items-center gap-2 text-sm text-n-slate-11"
                 >
                   <Icon icon="i-lucide-user-round" class="size-4" />
-                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_TO_ME') }}
-                </button>
+                  <select
+                    data-testid="assignee-control"
+                    class="h-9 rounded-lg border border-n-weak bg-n-background px-3 text-sm text-n-slate-12"
+                    :value="currentAssignee?.id || ''"
+                    :disabled="isUpdatingAction"
+                    :aria-label="
+                      t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_OPERATOR')
+                    "
+                    @change="assignConversation"
+                  >
+                    <option value="" disabled>
+                      {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.UNASSIGNED') }}
+                    </option>
+                    <option
+                      v-for="agent in availableAgents"
+                      :key="agent.id"
+                      :value="agent.id"
+                    >
+                      {{ agent.name }}
+                    </option>
+                  </select>
+                </label>
                 <button
                   v-if="canTakeOver"
                   type="button"
@@ -1331,28 +1334,30 @@ onMounted(() => {
                   {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESOLVE') }}
                 </button>
                 <button
-                  v-if="!controlsUnavailable"
+                  v-if="aiControlAction"
                   type="button"
                   :data-testid="
-                    canPauseAI ? 'pause-ai-action' : 'resume-ai-action'
+                    aiControlAction === 'pause'
+                      ? 'pause-ai-action'
+                      : 'resume-ai-action'
                   "
                   class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak px-3 text-sm font-medium text-n-slate-12 disabled:cursor-not-allowed disabled:opacity-60"
-                  :disabled="!canPauseAI && !canResumeAI"
-                  @click="canPauseAI ? pauseAI() : resumeAI()"
+                  :disabled="isUpdatingAction"
+                  @click="aiControlAction === 'pause' ? pauseAI() : resumeAI()"
                 >
                   <Icon icon="i-lucide-send" class="size-4" />
                   {{
-                    canPauseAI
+                    aiControlAction === 'pause'
                       ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_AI')
                       : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_AI')
                   }}
                 </button>
                 <p
-                  v-if="controlsUnavailable"
+                  v-if="controlUnavailableMessage"
                   data-testid="control-unavailable-reason"
                   class="basis-full text-right text-xs text-n-slate-11"
                 >
-                  {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CLOSED_EXPLANATION') }}
+                  {{ controlUnavailableMessage }}
                 </p>
               </div>
             </article>

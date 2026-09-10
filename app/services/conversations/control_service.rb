@@ -17,8 +17,9 @@ class Conversations::ControlService
     end
   end
 
-  def initialize(conversation:)
+  def initialize(conversation:, actor: nil)
     @conversation = conversation
+    @actor = actor
   end
 
   def human_takeover!(operator: nil, action: 'human_takeover', block_reason: TAKEOVER_BLOCK_REASON)
@@ -48,10 +49,9 @@ class Conversations::ControlService
   end
 
   def resume_ai!
-    raise InvalidTransition, 'Cannot resume AI for a closed conversation' if conversation.closed?
-
     transition!({ control_state: :ai_active, assignee: nil, assignee_agent_bot: nil },
-                action: 'resume_ai', block_reason: AUTOMATION_BLOCK_REASON)
+                action: 'resume_ai', block_reason: AUTOMATION_BLOCK_REASON,
+                allowed_states: %w[human_active ai_paused])
   end
 
   def close!
@@ -66,10 +66,15 @@ class Conversations::ControlService
 
   private
 
-  attr_reader :conversation
+  attr_reader :actor, :conversation
 
-  def transition!(attributes, action:, block_reason:)
+  def transition!(attributes, action:, block_reason:, allowed_states: nil)
     conversation.reload.with_lock do
+      validate_actor_access!
+      if allowed_states.present? && !conversation.control_state.in?(allowed_states)
+        raise InvalidTransition, 'AI can resume only from human active or AI paused'
+      end
+
       previous_control_state = conversation.control_state
       previous_assignee_id = conversation.assignee_id
       conversation.assign_attributes(attributes)
@@ -79,6 +84,15 @@ class Conversations::ControlService
       audit_transition!(action, previous_control_state, previous_assignee_id)
     end
     cancel_follow_ups!(attributes[:control_state])
+  end
+
+  def validate_actor_access!
+    return if actor.blank?
+
+    access = AiLeadEmployee::AccessScope.new(account: conversation.account, user: actor)
+    return if access.conversations.exists?(id: conversation.id)
+
+    raise InvalidTransition, 'Conversation control access changed; refresh and try again'
   end
 
   def invalidate_pending_ai!(block_reason)

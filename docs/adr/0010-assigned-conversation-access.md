@@ -30,6 +30,18 @@ queued deliveries must check current membership/assignment. Reassignment removes
 old access; a content-free invalidation can tell clients to clear stale data.
 Revoking one account membership must preserve a user's access to other accounts.
 
+Explicitly resuming the AI from Human Active clears `assignee_id` as the
+Conversation returns to AI Active. This keeps ownership and access aligned: the
+Team Member who handed control back returns to their assigned Conversation list,
+while an administrator retains Business Account-wide visibility. Resume changes
+only future eligibility. Previously canceled orchestration intents and outbound
+deliveries remain terminal, no Message is created by the control action, and
+Automated Contact Consent remains an independent dispatch requirement.
+Public control requests recheck the actor's current account membership and
+Conversation assignment inside the same Conversation row lock that changes
+control. A request authorized before reassignment cannot clear or alter the new
+operator's ownership.
+
 Queued revocation cleanup must serialize its membership recheck and mutations
 with invitation creation under the Account row lock. Cleanup uses
 `FOR NO KEY UPDATE`: it still conflicts with AgentBuilder's `FOR UPDATE`, but

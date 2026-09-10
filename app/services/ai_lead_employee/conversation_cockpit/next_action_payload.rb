@@ -20,21 +20,21 @@ class AiLeadEmployee::ConversationCockpit::NextActionPayload
 
   def action_methods
     %i[
-      booked_action
+      closed_action
       review_action
+      booked_action
       missing_signal_action
       paused_action
       human_active_action
-      closed_action
     ]
   end
 
   def booked_action
-    return if context.latest_booking.blank?
+    return unless context.latest_booking&.confirmed?
 
     {
-      kind: 'confirm_booking',
-      label: 'Confirm call time',
+      kind: 'booking_confirmed',
+      label: 'Call booked',
       detail: context.booking_time_label(context.latest_booking)
     }
   end

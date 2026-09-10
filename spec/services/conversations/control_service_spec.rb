@@ -81,4 +81,33 @@ RSpec.describe Conversations::ControlService do
     expect(conversation.reload).to have_attributes(control_state: 'closed', control_version: 4)
     expect(pending_intent.reload).to have_attributes(state: 'pending')
   end
+
+  it 'does not resume directly from a requested handoff' do
+    stale_conversation = Conversation.find(conversation.id)
+    conversation.update!(control_state: :handoff_requested, control_version: 4)
+
+    expect do
+      described_class.new(conversation: stale_conversation).resume_ai!
+    end.to raise_error(described_class::InvalidTransition, /only from human active or AI paused/)
+
+    expect(conversation.reload).to have_attributes(control_state: 'handoff_requested', control_version: 4)
+    expect(pending_intent.reload).to have_attributes(state: 'pending')
+  end
+
+  it 'does not let a stale assignee resume after reassignment' do
+    original_operator = create(:user, account: account, role: :agent)
+    new_operator = create(:user, account: account, role: :agent)
+    conversation.update!(control_state: :human_active, control_version: 4, assignee: original_operator)
+    stale_conversation = Conversation.find(conversation.id)
+    conversation.update!(control_version: 5, assignee: new_operator)
+
+    expect do
+      described_class.new(conversation: stale_conversation, actor: original_operator).resume_ai!
+    end.to raise_error(described_class::InvalidTransition, /control access changed/)
+
+    expect(conversation.reload).to have_attributes(
+      control_state: 'human_active', control_version: 5, assignee: new_operator
+    )
+    expect(pending_intent.reload).to have_attributes(state: 'pending')
+  end
 end

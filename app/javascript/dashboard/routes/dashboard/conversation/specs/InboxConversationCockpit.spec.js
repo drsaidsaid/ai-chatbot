@@ -3,19 +3,12 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 import { createStore } from 'vuex';
 import InboxConversationCockpit from '../InboxConversationCockpit.vue';
 import ConversationApi from 'dashboard/api/inbox/conversation';
-import BookingsAPI from 'dashboard/api/bookings';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
 
 vi.mock('dashboard/api/inbox/conversation', () => ({
   default: {
     show: vi.fn(),
     search: vi.fn(),
-  },
-}));
-
-vi.mock('dashboard/api/bookings', () => ({
-  default: {
-    create: vi.fn(),
   },
 }));
 
@@ -71,15 +64,14 @@ vi.mock('vue-i18n', () => ({
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PROPOSED_NEXT_STEP':
           'Proposed next step',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TECHNICAL_DETAILS': 'Technical details',
-        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PROPOSED_TIME': 'Proposed time',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKED_TIME': 'Booked time',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ATTENDEE': 'Attendee',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CALL_TYPE': 'Call type',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PRODUCT_DEMO': 'Product demo',
-        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CONFIRM_CALL': 'Confirm call',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN': 'Assign',
-        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_TO_ME': 'Assign to me',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_OPERATOR': 'Assign operator',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN_SUCCESS':
-          'Conversation assigned to you. You now control public replies.',
+          'Conversation assignment updated. Human control is active when an operator is assigned.',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER': 'Take over',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAKE_OVER_SUCCESS':
           'You now control this Conversation. Pending automated replies were canceled.',
@@ -88,6 +80,8 @@ vi.mock('vue-i18n', () => ({
           'Conversation resolved. Pending automated replies were canceled.',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.CLOSED_EXPLANATION':
           'Reopen the Conversation before changing AI control.',
+        'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.HANDOFF_CONTROL_EXPLANATION':
+          'Assign or take over this Conversation before resuming AI.',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_AI': 'Pause AI',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_SUCCESS':
           'AI is paused for this Conversation. Pending automated replies were canceled.',
@@ -340,9 +334,9 @@ const conversationPayload = {
       },
     ],
     next_action: {
-      kind: 'confirm_booking',
-      label: 'Confirm call time',
-      detail: 'Aug 27, 2026 at 2:00 PM Africa/Dar_es_Salaam',
+      kind: 'answer_review',
+      label: 'Answer review request',
+      detail: 'Can we send pricing?',
     },
   },
   messages: [{ id: 1, content: 'I need WhatsApp automation this week.' }],
@@ -373,6 +367,10 @@ const buildStore = ({ role = 'administrator' } = {}) => {
       getSelectedChat: state => state.chat,
       getCurrentUser: () => ({ id: 9, name: 'Nia Operator', avatar_url: '' }),
       getCurrentRole: () => role,
+      'agents/getAgents': () => [
+        { id: 9, name: 'Nia Operator' },
+        { id: 10, name: 'Musa Operator' },
+      ],
       'inboxes/getInbox': () => inboxId => ({
         id: inboxId,
         name: 'WhatsApp Sales',
@@ -482,7 +480,6 @@ describe('InboxConversationCockpit', () => {
     ConversationApi.search.mockResolvedValue({
       data: { payload: [{ id: 101 }] },
     });
-    BookingsAPI.create.mockResolvedValue({ data: {} });
   });
 
   afterEach(() => {
@@ -580,7 +577,30 @@ describe('InboxConversationCockpit', () => {
       .get('button[aria-controls="mobile-lead-brief-panel"]')
       .trigger('click');
     expect(wrapper.text()).not.toContain('Confirm call');
-    expect(BookingsAPI.create).not.toHaveBeenCalled();
+  });
+
+  it('shows a confirmed Booking as information without offering another confirmation', async () => {
+    ConversationApi.show.mockResolvedValueOnce({
+      data: {
+        ...conversationPayload,
+        cockpit: {
+          ...conversationPayload.cockpit,
+          open_reviews: [],
+          next_action: {
+            kind: 'booking_confirmed',
+            label: 'Call booked',
+            detail: 'Aug 27, 2026 at 2:00 PM Africa/Dar_es_Salaam',
+          },
+        },
+      },
+    });
+    const { wrapper } = await mountCockpit();
+
+    expect(wrapper.text()).toContain('Call booked');
+    expect(wrapper.text()).toContain('Booked time');
+    expect(
+      wrapper.find('[data-testid="confirm-booking-action"]').exists()
+    ).toBe(false);
   });
 
   it('offers the review action without showing booking details for a Review Request', async () => {
@@ -708,6 +728,21 @@ describe('InboxConversationCockpit', () => {
     );
   });
 
+  it('does not offer resume while a handoff is still requested', async () => {
+    ConversationApi.show.mockResolvedValueOnce({
+      data: { ...conversationPayload, control_state: 'handoff_requested' },
+    });
+
+    const { wrapper } = await mountCockpit();
+
+    expect(wrapper.find('[data-testid="resume-ai-action"]').exists()).toBe(
+      false
+    );
+    expect(
+      wrapper.get('[data-testid="control-unavailable-reason"]').text()
+    ).toContain('Assign or take over this Conversation before resuming AI');
+  });
+
   it('lets an authorized operator take over an AI-controlled Conversation', async () => {
     const humanOwnedConversation = {
       ...conversationPayload,
@@ -802,7 +837,7 @@ describe('InboxConversationCockpit', () => {
     );
   });
 
-  it('assigns the Conversation to the current Human Operator and shows the outcome', async () => {
+  it('lets an Admin assign or reassign the Conversation to an operator', async () => {
     const unassignedConversation = {
       ...conversationPayload,
       meta: { ...conversationPayload.meta, assignee: null },
@@ -811,6 +846,10 @@ describe('InboxConversationCockpit', () => {
       ...conversationPayload,
       control_state: 'human_active',
       control_version: 6,
+      meta: {
+        ...conversationPayload.meta,
+        assignee: { id: 10, name: 'Musa Operator', avatar_url: '' },
+      },
     };
     ConversationApi.show
       .mockResolvedValueOnce({ data: unassignedConversation })
@@ -818,21 +857,52 @@ describe('InboxConversationCockpit', () => {
 
     const { wrapper, actions } = await mountCockpit();
 
-    await wrapper.get('[data-testid="assign-to-me-action"]').trigger('click');
+    await wrapper.get('[data-testid="assignee-control"]').setValue('10');
     await flushPromises();
 
     expect(actions.assignAgent).toHaveBeenCalledWith(expect.any(Object), {
       conversationId: 101,
-      agentId: 9,
+      agentId: 10,
       assigneeType: 'User',
     });
-    expect(wrapper.text()).toContain('Assignee: Nia Operator');
+    expect(wrapper.text()).toContain('Assignee: Musa Operator');
     expect(
       wrapper.get('[data-testid="conversation-control-state"]').text()
     ).toBe('Human Active');
     expect(wrapper.get('[role="status"]').text()).toContain(
-      'Conversation assigned to you'
+      'Conversation assignment updated'
     );
+  });
+
+  it('keeps assignment and control unchanged when reassignment fails', async () => {
+    const { wrapper, actions } = await mountCockpit();
+    actions.assignAgent.mockResolvedValueOnce(false);
+
+    await wrapper.get('[data-testid="assignee-control"]').setValue('10');
+    await flushPromises();
+
+    expect(ConversationApi.show).toHaveBeenCalledTimes(1);
+    expect(wrapper.text()).toContain('Assignee: Nia Operator');
+    expect(
+      wrapper.get('[data-testid="conversation-control-state"]').text()
+    ).toBe('AI Active');
+    expect(wrapper.get('[role="alert"]').text()).toContain(
+      'Conversation was not changed'
+    );
+  });
+
+  it('does not expose reassignment controls to a Team Member', async () => {
+    const { wrapper } = await mountCockpit({ role: 'agent' });
+    await wrapper
+      .get('button[aria-controls="mobile-lead-brief-panel"]')
+      .trigger('click');
+
+    expect(wrapper.find('[data-testid="assignee-control"]').exists()).toBe(
+      false
+    );
+    expect(
+      wrapper.find('[data-testid="mobile-assignee-control"]').exists()
+    ).toBe(false);
   });
 
   it('renders detail tabs, mobile brief disclosure, and AI handoff controls', async () => {

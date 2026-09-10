@@ -83,7 +83,7 @@ RSpec.describe 'Assigned Team Member access', type: :request do
     expect(response.body).to include('Hidden budget 987654')
   end
 
-  it 'permits assigned replies and notes but reserves assignment, creation, exports and settings to Admins' do
+  it 'permits assigned replies and notes but reserves assignment, creation, exports and settings to Admins' do # rubocop:disable RSpec/MultipleExpectations
     post account_path("conversations/#{assigned.display_id}/messages"),
          headers: headers,
          params: { content: 'Permitted private note', private: true, message_type: 'outgoing' }, as: :json
@@ -97,10 +97,12 @@ RSpec.describe 'Assigned Team Member access', type: :request do
          params: { content: 'Forbidden reply', message_type: 'outgoing' }, as: :json
     expect(response).to have_http_status(:unauthorized)
 
+    authority_before_forbidden_assignment = assigned.reload.slice(:assignee_id, :control_state, :control_version)
     post account_path("conversations/#{assigned.display_id}/assignments"),
          headers: headers,
          params: { assignee_id: colleague.id }, as: :json
     expect(response).to have_http_status(:unauthorized)
+    expect(assigned.reload.slice(:assignee_id, :control_state, :control_version)).to eq(authority_before_forbidden_assignment)
     post account_path('leads/export'), headers: headers
     expect(response).to have_http_status(:unauthorized)
     post account_path('contacts/export'), headers: headers

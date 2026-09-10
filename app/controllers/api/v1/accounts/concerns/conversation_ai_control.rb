@@ -5,7 +5,7 @@ module Api::V1::Accounts::Concerns::ConversationAiControl
 
   def control_ai!(action)
     authorize @conversation, :control?
-    Conversations::ControlService.new(conversation: @conversation).public_send(action)
+    Conversations::ControlService.new(conversation: @conversation, actor: Current.user).public_send(action)
   rescue Conversations::ControlService::InvalidTransition => e
     render_could_not_create_error(e.message)
   end

@@ -187,6 +187,21 @@ RSpec.describe 'Conversations API', type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(conversation.reload).to be_closed
     end
+
+    it 'rejects resume after a handoff request without changing ownership or pending work' do
+      pending_intent = create(:ai_orchestration_intent, conversation: conversation, account: account)
+      conversation.update!(control_state: :handoff_requested, control_version: 9)
+
+      post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/resume_ai",
+           headers: agent.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(conversation.reload).to have_attributes(
+        control_state: 'handoff_requested', control_version: 9, assignee: agent
+      )
+      expect(pending_intent.reload).to have_attributes(state: 'pending')
+    end
   end
 
   describe 'POST /api/v1/accounts/{account.id}/conversations/:id/handoff_ai' do
@@ -543,7 +558,7 @@ RSpec.describe 'Conversations API', type: :request do
           open_reviews: array_including(
             hash_including(question: 'Can we send the pricing answer?', status: 'open')
           ),
-          next_action: hash_including(kind: 'confirm_booking', label: 'Confirm call time'),
+          next_action: hash_including(kind: 'answer_review', label: 'Answer review request'),
           activity: array_including(
             hash_including(kind: 'booking'),
             hash_including(kind: 'review'),

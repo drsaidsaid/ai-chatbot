@@ -123,6 +123,11 @@ _Avoid_: Lead status, conversation status
 
 **Control State**:
 The authority governing who may reply automatically: AI Active, Handoff Requested, Human Active, AI Paused, or Closed.
+Explicit resume from Human Active returns the Conversation to AI Active and
+clears the Human Operator assignment. A Team Member then returns to their
+assigned Conversation list; only an administrator retains account-wide access.
+Resume permits only a later eligible Inbound Message to create new work. It does
+not revive canceled work or change Automated Contact Consent.
 _Avoid_: Conversation status, bot status
 
 **AI Orchestration**:
