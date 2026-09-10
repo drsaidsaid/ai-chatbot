@@ -10,6 +10,8 @@ RSpec.describe 'Owned Team Member invitation', type: :request do
   let(:password) { 'Local-member-Password1!' }
 
   def invite
+    # The SMTP override cannot change the transport selected at application boot.
+    expect(ActionMailer::Base).to have_attributes(delivery_method: :test)
     perform_enqueued_jobs(only: ActionMailer::MailDeliveryJob) do
       post "/api/v1/accounts/#{account.id}/agents",
            headers: admin.create_new_auth_token,

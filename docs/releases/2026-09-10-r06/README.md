@@ -131,6 +131,10 @@ correction is documented separately above.
 
 ## Isolated reproduction
 
+The accepted browser fixture is preserved and its Rails process has been stopped
+to release memory. Use [resume instructions](fixture-resume.md) for that existing
+fixture; the fresh-database instructions below are for a new disposable setup.
+
 Use the R01 documented runtime and a disposable PostgreSQL database. R06 used
 PostgreSQL port 55486, Redis 6396, Rails 3216 and Vite 3096. The spec database is
 `ale_release_r06_spec`; the browser database is `ale_release_r06_browser`.
