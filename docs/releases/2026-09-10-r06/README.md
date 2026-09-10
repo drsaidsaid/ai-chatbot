@@ -19,6 +19,14 @@ red proof and final green result. Independent Standards and Spec reviews of
 this later correction both have zero findings. The accepted browser evidence
 and fixture are unchanged.
 
+The combined invitation run also exposed a test-environment mailer override when
+SMTP was absent at boot. Correction `58adb4b904ab8b480c7723288bce7ebec900f8de`
+preserves the test mail catcher and leaves non-test delivery unchanged. All 14
+invitation and confirmation-mailer checks pass with SMTP unset, using the real
+generated invitation token. See [invitation mailer correction](invitation-mailer-correction/README.md)
+for the original combined failure and final startup/test proof. Independent
+Standards and Spec reviews of this later correction both have zero findings.
+
 ## Source and decision
 
 - Branch: `codex/r06-assigned-access-20260910`.

@@ -1,0 +1,13 @@
+RSpec.configure do |config|
+  config.before(:suite) do
+    snapshot = {
+      rails_test: Rails.env.test?,
+      smtp_blank_before_examples: ENV['SMTP_ADDRESS'].blank?,
+      sender_override_absent: ENV['MAILER_SENDER_EMAIL'].nil?,
+      configured_delivery: Rails.application.config.action_mailer.delivery_method.to_s,
+      effective_delivery: ActionMailer::Base.delivery_method.to_s
+    }
+    File.write(Rails.root.join('tmp/release/r06-mailer-boot.json'), JSON.pretty_generate(snapshot) + "\n")
+    raise 'Expected SMTP-unconfigured Rails test boot' unless snapshot[:rails_test] && snapshot[:smtp_blank_before_examples]
+  end
+end

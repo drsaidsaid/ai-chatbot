@@ -1,0 +1,97 @@
+{
+  "recorded_at_utc": "2026-09-10T10:52:44.992379+00:00",
+  "base_tip": "86f207f5ba4130b6f52e194b8fec90097a7fcd47",
+  "root_candidate": "c40a190",
+  "red": {
+    "source": "Coordinator invitation-isolation.log",
+    "examples": 3,
+    "failures": 2,
+    "duration_seconds": 9.04,
+    "load_seconds": 18.82,
+    "signal": "Real invitation request200 followed by missing captured email in two flows",
+    "evidence": "red.txt"
+  },
+  "environment_comparison": {
+    "private_values_printed": false,
+    "combined_smtp_key_present_before_boot": false,
+    "r06_smtp_nonblank_before_boot": true,
+    "compared_source_inputs": 9,
+    "compared_source_inputs_identical": true
+  },
+  "cause": "Sendmail fallback overrode the explicit test mail catcher when SMTP was blank at boot; per-example SMTP changes happened after transport selection",
+  "fix": "Exclude Rails test environment from sendmail fallback; preserve non-test behavior",
+  "regression": "Invitation helper asserts effective boot-selected ActionMailer test transport before POST; read-only before-suite probe observes startup before SMTP overrides; real generated invitation token flow retained",
+  "green": {
+    "status": "passed",
+    "smtp_before_boot": "unset",
+    "sender_override_before_boot": "unset to match coordinator and default-sender mailer contract",
+    "files": [
+      "spec/requests/r06_invitation_spec.rb",
+      "spec/mailers/confirmation_instructions_spec.rb"
+    ],
+    "examples": 14,
+    "invitation_flows": 3,
+    "confirmation_mailer_examples": 11,
+    "failures": 0,
+    "duration_seconds": 7.06,
+    "load_seconds": 8.78,
+    "log_level": "warn",
+    "evidence": "green.txt"
+  },
+  "tokens_faked": false,
+  "deliveries_manually_injected": false,
+  "tests_run_during_r09_slot": false,
+  "browser_or_fixture_server_started": false,
+  "root_private_env_contents_saved": false,
+  "code_tip": "58adb4b904ab8b480c7723288bce7ebec900f8de",
+  "boot_probe": {
+    "rails_test": true,
+    "smtp_blank_before_examples": true,
+    "sender_override_absent": true,
+    "configured_delivery": "test",
+    "effective_delivery": "test"
+  },
+  "prior_green_runs": [
+    {
+      "examples": 14,
+      "failures": 0,
+      "duration_seconds": 8.76,
+      "load_seconds": 19.81,
+      "evidence": "first-green.txt",
+      "follow_up": "RSpec disallowed expect in around hook; moved assertion before invitation POST"
+    },
+    {
+      "examples": 14,
+      "failures": 0,
+      "duration_seconds": 13.38,
+      "load_seconds": 26.65,
+      "evidence": "second-green.txt",
+      "follow_up": "Expressed same delivery_method assertion via have_attributes to satisfy helper complexity limit"
+    }
+  ],
+  "strict_lint": {
+    "files": 2,
+    "offenses": 0,
+    "disabled_rules": false
+  },
+  "normal_commit": {
+    "tip": "58adb4b904ab8b480c7723288bce7ebec900f8de",
+    "hooks_bypassed": false,
+    "exit_code": 0,
+    "ruby_files": 2,
+    "offenses": 0
+  },
+  "local_review": {
+    "standards_findings": 0,
+    "spec_findings": 0
+  },
+  "independent_review": {
+    "status": "passed",
+    "code_tip": "58adb4b904ab8b480c7723288bce7ebec900f8de",
+    "standards_findings": 0,
+    "spec_findings": 0,
+    "source_hashes_verified": 2,
+    "source_hash_mismatches": 0
+  },
+  "heavy_slot_released": true
+}
