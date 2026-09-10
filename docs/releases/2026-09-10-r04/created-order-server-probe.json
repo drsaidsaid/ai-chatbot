@@ -1,0 +1,25 @@
+{
+  "checked_at_utc": "2026-09-10T05:01:16.217481+00:00",
+  "implementation_commit": "3ade7aa34cc863ba2043e4a90f4bca79291abdbc",
+  "rails_pid": 83082,
+  "rails_port": 3224,
+  "provider_port": 3225,
+  "http_checks": [
+    {
+      "path": "/app/login",
+      "status": 200,
+      "final_url": "http://127.0.0.1:3224/app/login",
+      "expected_asset": "v3app-BTg8-Tos.js",
+      "current_asset_present": true
+    },
+    {
+      "path": "/app/accounts/1/conversations/1?queue=all",
+      "status": 200,
+      "final_url": "http://127.0.0.1:3224/app/accounts/1/conversations/1?queue=all",
+      "expected_asset": "dashboard-CBAPqSQd.js",
+      "current_asset_present": true
+    }
+  ],
+  "browser_acceptance": "pending coordinator allocation; HTTP probes only",
+  "local_provider_request_count": 5
+}

@@ -1,0 +1,218 @@
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/a823/AI Chatbot
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+7:41:19 AM [vite] (client) Failed to load source map for /Users/ghalyasaid/.codex/worktrees/a823/AI Chatbot/node_modules/.pnpm/@chatwoot+prosemirror-schema@1.4.1/node_modules/@chatwoot/prosemirror-schema/dist/index.es.js.
+Error: An error occurred while trying to read the map file at index.es.js.map
+Error: ENOENT: no such file or directory, open '/Users/ghalyasaid/.codex/worktrees/a823/AI Chatbot/node_modules/.pnpm/@chatwoot+prosemirror-schema@1.4.1/node_modules/@chatwoot/prosemirror-schema/dist/index.es.js.map'
+    at async open (node:internal/fs/promises:637:25)
+    at async Object.readFile (node:internal/fs/promises:1269:14)
+    at async extractSourcemapFromFile (file:///Users/ghalyasaid/.codex/worktrees/a823/AI%20Chatbot/node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:11154:53)
+    at async loadAndTransform (file:///Users/ghalyasaid/.codex/worktrees/a823/AI%20Chatbot/node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:35702:27)
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > keeps each pending reply outcome visible before the next same-minute reply
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > keeps each claimed reply outcome visible before the next same-minute reply
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > keeps each dispatching reply outcome visible before the next same-minute reply
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > keeps each unknown reply outcome visible before the next same-minute reply
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > keeps each canceled reply outcome visible before the next same-minute reply
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > keeps each accepted reply outcome visible before the next same-minute reply
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > 'accepted' remains visible when the original creation reaches the real store after its outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > 'unknown' remains visible when the original creation reaches the real store after its outcome
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > 'accepted' creation still reconciles the original optimistic reply through its echo ID
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+[Vue warn]: Invalid prop: type check failed for prop "id". Expected Number with value NaN, got String with value "echo-accepted".
+  at <Message ref_for=true id="echo-accepted" content="Operator reply 1"  ... >
+  at <MessageList messages= [
+  {
+    id: 'echo-accepted',
+    content: 'Operator reply 1',
+    status: 'progress',
+    source_id: null,
+    created_at: 1789015260,
+    message_type: 1,
+    sender: { id: 1, type: 'user', name: 'Operator' },
+    sender_id: 1,
+    conversation_id: 1,
+    private: false,
+    content_attributes: { whatsapp_delivery: [Object] }
+  }
+] current-user-id=1 >
+  at <Anonymous ref="VTU_COMPONENT" >
+  at <VTUROOT>
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > 'unknown' creation still reconciles the original optimistic reply through its echo ID
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+[Vue warn]: Invalid prop: type check failed for prop "id". Expected Number with value NaN, got String with value "echo-unknown".
+  at <Message ref_for=true id="echo-unknown" content="Operator reply 1"  ... >
+  at <MessageList messages= [
+  {
+    id: 'echo-unknown',
+    content: 'Operator reply 1',
+    status: 'progress',
+    source_id: null,
+    created_at: 1789015260,
+    message_type: 1,
+    sender: { id: 1, type: 'user', name: 'Operator' },
+    sender_id: 1,
+    conversation_id: 1,
+    private: false,
+    content_attributes: { whatsapp_delivery: [Object] }
+  }
+] current-user-id=1 >
+  at <Anonymous ref="VTU_COMPONENT" >
+  at <VTUROOT>
+
+stderr | app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > retains normal same-minute grouping for messages without owned delivery state
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Directive "tooltip" has already been registered in target app.
+
+ ❯ app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js (11 tests | 2 failed) 2718ms
+   ✓ WhatsApp outcomes in the actual grouped MessageList > keeps each pending reply outcome visible before the next same-minute reply 1268ms
+   ✓ WhatsApp outcomes in the actual grouped MessageList > keeps each claimed reply outcome visible before the next same-minute reply
+   ✓ WhatsApp outcomes in the actual grouped MessageList > keeps each dispatching reply outcome visible before the next same-minute reply
+   ✓ WhatsApp outcomes in the actual grouped MessageList > keeps each unknown reply outcome visible before the next same-minute reply
+   ✓ WhatsApp outcomes in the actual grouped MessageList > keeps each canceled reply outcome visible before the next same-minute reply
+   ✓ WhatsApp outcomes in the actual grouped MessageList > keeps each accepted reply outcome visible before the next same-minute reply
+   × WhatsApp outcomes in the actual grouped MessageList > 'accepted' remains visible when the original creation reaches the real store after its outcome 227ms
+     → expected 'Pending' to be 'Accepted by WhatsApp; awaiting delive…' // Object.is equality
+   × WhatsApp outcomes in the actual grouped MessageList > 'unknown' remains visible when the original creation reaches the real store after its outcome 141ms
+     → expected 'Pending' to be 'Delivery unknown' // Object.is equality
+   ✓ WhatsApp outcomes in the actual grouped MessageList > 'accepted' creation still reconciles the original optimistic reply through its echo ID
+   ✓ WhatsApp outcomes in the actual grouped MessageList > 'unknown' creation still reconciles the original optimistic reply through its echo ID
+   ✓ WhatsApp outcomes in the actual grouped MessageList > retains normal same-minute grouping for messages without owned delivery state
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > 'accepted' remains visible when the original creation reaches the real store after its outcome
+AssertionError: expected 'Pending' to be 'Accepted by WhatsApp; awaiting delive…' // Object.is equality
+
+Expected: "Accepted by WhatsApp; awaiting delivery"
+Received: "Pending"
+
+ ❯ app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js:114:64
+    112|       expect(wrapper.find('#message1 [role="status"]').text()).toBe(la…
+    113|       await store.dispatch('addMessage', { ...identity, ...created });
+    114|       expect(wrapper.find('#message1 [role="status"]').text()).toBe(la…
+       |                                                                ^
+    115|       expect(store.state.allConversations[0].messages).toHaveLength(1);
+    116|       expect(store.state.allConversations[0].messages[0]).toMatchObjec…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js > WhatsApp outcomes in the actual grouped MessageList > 'unknown' remains visible when the original creation reaches the real store after its outcome
+AssertionError: expected 'Pending' to be 'Delivery unknown' // Object.is equality
+
+Expected: "Delivery unknown"
+Received: "Pending"
+
+ ❯ app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js:114:64
+    112|       expect(wrapper.find('#message1 [role="status"]').text()).toBe(la…
+    113|       await store.dispatch('addMessage', { ...identity, ...created });
+    114|       expect(wrapper.find('#message1 [role="status"]').text()).toBe(la…
+       |                                                                ^
+    115|       expect(store.state.allConversations[0].messages).toHaveLength(1);
+    116|       expect(store.state.allConversations[0].messages[0]).toMatchObjec…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 9 passed (11)
+   Start at  07:40:12
+   Duration  75.90s (transform 35.67s, setup 2.89s, collect 48.22s, tests 2.72s, environment 10.73s, prepare 1.31s)

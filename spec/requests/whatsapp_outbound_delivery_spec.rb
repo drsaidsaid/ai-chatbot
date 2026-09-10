@@ -82,9 +82,18 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
                                            sender: nil, message_type: :outgoing, content: 'Pending AI answer')
     request = stub_request(:post, provider_url).to_return(status: 200, body: '{"messages":[{"id":"wamid.TOO.LATE"}]}')
 
-    Conversations::ControlService.new(conversation: conversation).human_takeover!(operator: admin)
-    SendReplyJob.perform_now(reply.id)
+    broadcasts = []
+    allow(ActionCable.server).to receive(:broadcast).and_wrap_original do |original, stream, payload|
+      broadcasts << payload.deep_dup if payload[:event] == 'message.updated' && payload.dig(:data, :id) == reply.id
+      original.call(stream, payload)
+    end
+    clear_enqueued_jobs
+    perform_enqueued_jobs(only: ActionCableBroadcastJob) do
+      Conversations::ControlService.new(conversation: conversation).human_takeover!(operator: admin)
+      SendReplyJob.perform_now(reply.id)
+    end
 
+    expect(broadcasts.last.dig(:data, :content_attributes, 'whatsapp_delivery', 'state')).to eq('canceled')
     expect(reply.reload.content_attributes.dig('whatsapp_delivery', 'state')).to eq('canceled')
     expect(request).not_to have_been_requested
   end
@@ -116,6 +125,103 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     sent = response.parsed_body.fetch('payload').find { |row| row['id'] == outgoing.id }
     expect(sent.dig('content_attributes', 'whatsapp_provider_status')).to eq('sent')
     expect(sent.dig('content_attributes', 'whatsapp_delivery', 'state')).to eq('accepted')
+  end
+
+  [
+    [200, '{"messages":[{"id":"wamid.LIVE.RECEIPT"}]}', 'accepted'],
+    [400, '{"error":{"code":100,"message":"Synthetic rejection"}}', 'failed'],
+    [503, '{"error":{"code":2,"message":"Synthetic uncertain outcome"}}', 'unknown']
+  ].each do |http_status, body, expected_state|
+    it "broadcasts the committed #{expected_state} outcome for an actual API-created reply" do
+      path = "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages"
+      headers = admin.create_new_auth_token
+      post path, headers: headers, params: { content: 'Browser-created reply outcome' }, as: :json
+      message = conversation.messages.outgoing.sole
+      broadcasts = []
+      allow(ActionCable.server).to receive(:broadcast).and_wrap_original do |original, stream, payload|
+        broadcasts << payload.deep_dup if payload[:event] == 'message.updated' && payload.dig(:data, :id) == message.id
+        original.call(stream, payload)
+      end
+      request = stub_request(:post, provider_url).to_return(status: http_status, body: body, headers: { 'Content-Type' => 'application/json' })
+      clear_enqueued_jobs
+      perform_enqueued_jobs(only: ActionCableBroadcastJob) { SendReplyJob.perform_now(message.id) }
+      get path, headers: headers
+      saved = response.parsed_body.fetch('payload').find { |row| row['id'] == message.id }
+      live = broadcasts.last.fetch(:data).deep_stringify_keys
+      expect(live.dig('content_attributes', 'whatsapp_delivery', 'state')).to eq(expected_state)
+      expect(live.slice('status', 'source_id', 'content_attributes')).to eq(saved.slice('status', 'source_id', 'content_attributes'))
+      expect(live.fetch('previous_changes')).to be_present
+      perform_enqueued_jobs(only: ActionCableBroadcastJob) { 3.times { SendReplyJob.perform_now(message.id) } }
+      expect(request).to have_been_requested.once
+      expect(HumanReviewRequest.where(lead_message_id: message.id, reason: :delivery_unknown).count).to eq(expected_state == 'unknown' ? 1 : 0)
+    end
+  end
+
+  it 'keeps terminal outcomes when the originally queued creation broadcast runs after dispatch updates' do
+    fixture_path = Rails.root.join('app/javascript/dashboard/components-next/message/specs/fixtures/whatsappCreatedOrdering.json')
+    projection = ->(payload) { payload.deep_stringify_keys.slice('status', 'source_id', 'content_attributes', 'echo_id') }
+    actual = [['accepted', 200], ['unknown', 503]].map do |expected_state, http_status|
+      clear_enqueued_jobs
+      path = "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages"
+      post path, headers: admin.create_new_auth_token, params: { content: "Queued creation #{expected_state}", echo_id: "echo-#{expected_state}" },
+                 as: :json
+      message = conversation.messages.outgoing.order(:id).last
+      created_job = enqueued_jobs.select { |job| job[:job] == ActionCableBroadcastJob && job[:args][1] == 'message.created' }.sole
+      creation_data = ActiveJob::Arguments.deserialize(created_job.fetch('arguments'))[2]
+      broadcasts = []
+      allow(ActionCable.server).to receive(:broadcast) do |_stream, payload|
+        broadcasts << payload.deep_dup if payload.dig(:data, :id) == message.id
+      end
+      body = http_status == 200 ? '{"messages":[{"id":"wamid.CREATED.ORDER"}]}' : '{"error":{"code":2}}'
+      stub_request(:post, provider_url).to_return(status: http_status, body: body, headers: { 'Content-Type' => 'application/json' })
+      clear_enqueued_jobs
+      perform_enqueued_jobs(only: ActionCableBroadcastJob) { SendReplyJob.perform_now(message.id) }
+      updated = broadcasts.last.fetch(:data)
+      ActiveJob::Base.execute(created_job)
+      { 'case' => expected_state, 'pending_creation' => projection.call(creation_data),
+        'updated' => projection.call(updated), 'late_creation' => projection.call(broadcasts.last.fetch(:data)) }
+    end
+    Rails.root.join('tmp/whatsapp_created_ordering.json').write(JSON.pretty_generate(actual))
+    actual.each do |item|
+      expect(item.dig('pending_creation', 'content_attributes', 'whatsapp_delivery', 'state')).to eq('pending')
+      expect(item.dig('late_creation', 'content_attributes', 'whatsapp_delivery', 'state')).to eq(item.fetch('case'))
+      expect(item.dig('late_creation', 'echo_id')).to eq("echo-#{item.fetch('case')}")
+    end
+    expect(actual).to eq(JSON.parse(fixture_path.read))
+  end
+
+  it 'broadcasts pending when the operator retries a definite failure through the Inbox API' do
+    stub_request(:post, provider_url).to_return(status: 400, body: '{"error":{"code":100}}', headers: { 'Content-Type' => 'application/json' })
+    SendReplyJob.perform_now(outgoing.id)
+    broadcasts = []
+    allow(ActionCable.server).to receive(:broadcast) { |_stream, payload| broadcasts << payload if payload[:event] == 'message.updated' }
+    clear_enqueued_jobs
+    perform_enqueued_jobs(only: ActionCableBroadcastJob) do
+      post "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages/#{outgoing.id}/retry",
+           headers: admin.create_new_auth_token
+    end
+
+    expect(response).to have_http_status(:ok)
+    retry_live = broadcasts.last.fetch(:data)
+    expect(retry_live.dig(:content_attributes, 'whatsapp_delivery', 'state')).to eq('pending')
+    expect(retry_live).to include(status: 'sent', source_id: nil)
+  end
+
+  it 'broadcasts a later provider failure without losing the accepted delivery identity' do
+    stub_request(:post, provider_url).to_return(status: 200, body: '{"messages":[{"id":"wamid.LIVE.RECEIPT"}]}',
+                                                headers: { 'Content-Type' => 'application/json' })
+    SendReplyJob.perform_now(outgoing.id)
+    broadcasts = []
+    allow(ActionCable.server).to receive(:broadcast) { |_stream, payload| broadcasts << payload if payload[:event] == 'message.updated' }
+    clear_enqueued_jobs
+    perform_enqueued_jobs(only: ActionCableBroadcastJob) do
+      Whatsapp::MessageStatusProjector.new(message: outgoing.reload, status: { status: 'failed', timestamp: Time.current.to_i.to_s }).perform
+    end
+
+    receipt = broadcasts.last.fetch(:data)
+    expect(receipt).to include(status: 'failed', source_id: 'wamid.LIVE.RECEIPT')
+    expect(receipt.dig(:content_attributes, 'whatsapp_delivery', 'state')).to eq('accepted')
+    expect(receipt.dig(:content_attributes, 'whatsapp_provider_status')).to eq('failed')
   end
 
   it 'rejects client-supplied provider receipt evidence when creating an outgoing Message' do

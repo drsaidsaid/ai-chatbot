@@ -74,6 +74,14 @@ camel-case conversion: casing, separators and supported Unicode trim/case forms.
 The API and new owned Message boundary share this filter. It removes only reserved
 top-level keys; ordinary attributes, nested customer data and trusted provider
 ingress retain their existing meanings.
+Message-created and Message-updated events are rebuilt from the current
+account-scoped persisted row when broadcast. Only the original event's
+`previous_changes` and `performer` metadata are retained, plus `echo_id` for
+creation events; stale optional content or attachments cannot be restored by an
+older queued event. A delayed creation carries the saved delivery outcome and
+reconciles both its optimistic echo ID and any persisted-ID row introduced by an
+earlier update into one Inbox Message. Each owned delivery keeps its own visible
+metadata even when adjacent replies share a sender and minute.
 Without reliable correlation, human review is the terminal recovery action.
 
 A recurring recovery job repairs lost enqueue operations, expired pre-dispatch

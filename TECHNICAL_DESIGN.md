@@ -398,6 +398,12 @@ Expired pre-dispatch claims recover; dispatch-started uncertainty cannot resend.
 Model claims likewise release Conversation locks during remote work and fence
 late output by owner and current authority. Inbox projection preserves local
 delivery outcomes separately from R03's monotonic provider-status facts.
+Message-created and Message-updated broadcasts read the current account-scoped
+persisted Message, retaining only the originating event's changes and performer
+metadata, plus the original creation echo ID. Delayed creation therefore carries
+the saved delivery outcome. Inbox creation reconciliation collapses both the
+optimistic echo ID and any persisted-ID row appended by an earlier update into
+one Message. Grouping adjacent replies preserves each owned delivery's outcome.
 
 Payload preparation, including dispatch-time media capabilities, completes while
 the owner is claimed. Final authorization validates the prepared connection

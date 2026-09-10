@@ -1,0 +1,15 @@
+abort 'Use the isolated R04 browser test database' unless Rails.env.test? && ActiveRecord::Base.connection_db_config.database == 'ale_release_r04_browser'
+abort 'Use the local R04 provider' unless ENV['WHATSAPP_CLOUD_BASE_URL'] == 'http://127.0.0.1:3225'
+abort 'No live launch approval is allowed in this fixture' if AiLeadEmployee::LaunchGate.where.not(approved_at: nil).exists?
+require 'webmock'
+WebMock.enable!
+WebMock.disable_net_connect!(allow_localhost: true)
+ActiveJob::Base.queue_adapter = :test
+ActionCableBroadcastJob.queue_adapter = :inline
+ActionMailer::Base.delivery_method = :file
+ActionMailer::Base.file_settings = { location: Rails.root.join('tmp/release-r04/mail').to_s }
+ActionCable.server.config.cable = { 'adapter' => 'redis', 'url' => ENV.fetch('REDIS_URL'), 'channel_prefix' => 'r04_browser' }
+ActionCable.server.config.allowed_request_origins = ['http://127.0.0.1:3224']
+Rails.application.routes.default_url_options = { host: '127.0.0.1', port: 3224 }
+ActionMailer::Base.default_url_options = { host: '127.0.0.1', port: 3224 }
+ViteRuby.reload_with(mode: 'production', auto_build: false, public_output_dir: 'vite')

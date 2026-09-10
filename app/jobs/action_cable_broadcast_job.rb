@@ -14,6 +14,8 @@ class ActionCableBroadcastJob < ApplicationJob
     return if members.blank?
 
     broadcast_data = prepare_broadcast_data(event_name, data)
+    return if broadcast_data.blank?
+
     broadcast_to_members(members, event_name, broadcast_data)
   end
 
@@ -21,8 +23,17 @@ class ActionCableBroadcastJob < ApplicationJob
 
   # Ensures that only the latest available data is sent to prevent UI issues
   # caused by out-of-order events during high-traffic periods. This prevents
-  # the conversation job from processing outdated data.
+  # jobs from publishing an older Message instance or Conversation snapshot.
   def prepare_broadcast_data(event_name, data)
+    if [MESSAGE_CREATED, MESSAGE_UPDATED].include?(event_name)
+      message = Message.find_by(id: data[:id], account_id: data[:account_id])
+      return if message.nil?
+
+      metadata = data.slice(:previous_changes, :performer)
+      metadata[:echo_id] = data[:echo_id] if event_name == MESSAGE_CREATED && data.key?(:echo_id)
+      return message.push_event_data.merge(metadata)
+    end
+
     return data unless CONVERSATION_UPDATE_EVENTS.include?(event_name)
 
     account = Account.find(data[:account_id])

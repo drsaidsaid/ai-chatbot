@@ -230,6 +230,14 @@ export const mutations = {
     const pendingMessageIndex = findPendingMessageIndex(chat, message);
     if (pendingMessageIndex !== -1) {
       chat.messages[pendingMessageIndex] = message;
+      if (message.echo_id) {
+        // An early update can append the persisted ID beside the optimistic reply.
+        chat.messages = chat.messages.filter(
+          (existing, index) =>
+            index === pendingMessageIndex ||
+            (existing.id !== message.id && existing.id !== message.echo_id)
+        );
+      }
     } else {
       chat.messages.push(message);
       chat.timestamp = message.created_at;

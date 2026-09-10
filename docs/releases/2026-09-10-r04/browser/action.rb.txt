@@ -1,0 +1,27 @@
+load Rails.root.join('tmp/release-r04/browser_runtime.rb')
+require 'net/http'
+require 'json'
+conversation = Conversation.find(1)
+abort 'Wrong fixture' unless conversation.account.name == 'R04 Synthetic Business'
+message = conversation.messages.find_by!(content: ENV.fetch('R04_MESSAGE')) if ENV['R04_MESSAGE']
+provider_state = -> { JSON.parse(Net::HTTP.get(URI('http://127.0.0.1:3225/_test/state'))) }
+before = provider_state.call
+case ENV.fetch('R04_ACTION', 'inspect')
+when 'dispatch'
+  SendReplyJob.perform_now(message.id)
+when 'repeat'
+  3.times { SendReplyJob.perform_now(message.id) }
+when 'provider_failed'
+  Whatsapp::MessageStatusProjector.new(message: message, status: { status: 'failed', timestamp: Time.current.to_i.to_s }).perform
+end
+rows = conversation.messages.order(:id).map do |row|
+  delivery = row.whatsapp_outbound_delivery
+  { id: row.id, content: row.content, sender_type: row.sender_type, sender_id: row.sender_id, status: row.status, source_id: row.source_id,
+    content_attributes: row.content_attributes, delivery: delivery&.attributes&.slice('state', 'failure_code', 'attempts'),
+    review_count: HumanReviewRequest.where(account_id: row.account_id, lead_message_id: row.id, reason: :delivery_unknown).count }
+end
+result = { action: ENV.fetch('R04_ACTION', 'inspect'), message_id: message&.id, before_provider: before, after_provider: provider_state.call,
+           messages: rows, launch_approved: AiLeadEmployee::LaunchGate.where(account_id: conversation.account_id).where.not(approved_at: nil).exists? }
+path = Rails.root.join('tmp/release-r04/evidence', ENV.fetch('R04_EVIDENCE'))
+path.write(JSON.pretty_generate(result))
+puts({ evidence: path.to_s, message_id: message&.id, provider_requests: result[:after_provider]['requests'].length }.to_json)

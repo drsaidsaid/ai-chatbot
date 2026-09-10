@@ -1,0 +1,314 @@
+{
+  "verified_at_utc": "2026-09-10T08:10:01.217317+00:00",
+  "implementation_commit": "3ade7aa34cc863ba2043e4a90f4bca79291abdbc",
+  "evidence_tip_at_browser_grant": "a0f9f7c5c501f50070feb8dd4df35ce0dee997ae",
+  "dashboard_asset": "dashboard-CBAPqSQd.js",
+  "browser": "Codex in-app browser; R04 localhost only",
+  "snapshots": [
+    {
+      "snapshot": "desktop-final-outcomes",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 13,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-fresh-optimistic",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 9,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-fresh-pending",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 9,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-initial-states",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 8,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-live-accepted",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 10,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-live-failed",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 11,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-live-unknown",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 11,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-reloaded-outcomes",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 11,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "desktop-retry-pending",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "message_rows": 11,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-canceled-and-pending",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 13,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-fresh-pending",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 12,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-grouped-unknown",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 13,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-initial-states",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 11,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-live-accepted",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 13,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-live-later-failure",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 13,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-live-unknown",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 13,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "snapshot": "phone-reloaded-outcomes",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "message_rows": 13,
+      "duplicate_ids": 0,
+      "duplicate_fresh_reply_texts": 0,
+      "horizontal_overflow": false
+    }
+  ],
+  "provider_checks": [
+    {
+      "evidence": "acceptance-desktop-dispatch.json",
+      "action": "dispatch",
+      "message_id": 9,
+      "provider_request_delta": 1,
+      "delivery_state": "accepted",
+      "message_status": "sent",
+      "source_id": "wamid.R04.BROWSER.6",
+      "review_count": 0
+    },
+    {
+      "evidence": "acceptance-desktop-failed.json",
+      "action": "dispatch",
+      "message_id": 10,
+      "provider_request_delta": 1,
+      "delivery_state": "failed",
+      "message_status": "failed",
+      "source_id": null,
+      "review_count": 0
+    },
+    {
+      "evidence": "acceptance-desktop-retry-dispatch.json",
+      "action": "dispatch",
+      "message_id": 10,
+      "provider_request_delta": 1,
+      "delivery_state": "failed",
+      "message_status": "failed",
+      "source_id": null,
+      "review_count": 0
+    },
+    {
+      "evidence": "acceptance-desktop-unknown-repeat.json",
+      "action": "repeat",
+      "message_id": 11,
+      "provider_request_delta": 0,
+      "delivery_state": "unknown",
+      "message_status": "sent",
+      "source_id": null,
+      "review_count": 1
+    },
+    {
+      "evidence": "acceptance-desktop-unknown.json",
+      "action": "dispatch",
+      "message_id": 11,
+      "provider_request_delta": 1,
+      "delivery_state": "unknown",
+      "message_status": "sent",
+      "source_id": null,
+      "review_count": 1
+    },
+    {
+      "evidence": "acceptance-phone-accepted-repeat.json",
+      "action": "repeat",
+      "message_id": 12,
+      "provider_request_delta": 0,
+      "delivery_state": "accepted",
+      "message_status": "sent",
+      "source_id": "wamid.R04.BROWSER.10",
+      "review_count": 0
+    },
+    {
+      "evidence": "acceptance-phone-dispatch.json",
+      "action": "dispatch",
+      "message_id": 12,
+      "provider_request_delta": 1,
+      "delivery_state": "accepted",
+      "message_status": "sent",
+      "source_id": "wamid.R04.BROWSER.10",
+      "review_count": 0
+    },
+    {
+      "evidence": "acceptance-phone-later-failure.json",
+      "action": "provider_failed",
+      "message_id": 12,
+      "provider_request_delta": 0,
+      "delivery_state": "accepted",
+      "message_status": "failed",
+      "source_id": "wamid.R04.BROWSER.10",
+      "review_count": 0
+    },
+    {
+      "evidence": "acceptance-phone-unknown-repeat.json",
+      "action": "repeat",
+      "message_id": 13,
+      "provider_request_delta": 0,
+      "delivery_state": "unknown",
+      "message_status": "sent",
+      "source_id": null,
+      "review_count": 1
+    },
+    {
+      "evidence": "acceptance-phone-unknown.json",
+      "action": "dispatch",
+      "message_id": 13,
+      "provider_request_delta": 1,
+      "delivery_state": "unknown",
+      "message_status": "sent",
+      "source_id": null,
+      "review_count": 1
+    }
+  ],
+  "final_provider_requests": 11,
+  "provider_requests_before_corrected_walkthrough": 5,
+  "fresh_reply_provider_counts": {
+    "R04 corrected desktop: deliver this fresh reply once.": 1,
+    "Failed: R04 corrected desktop retry check.": 2,
+    "Unknown: R04 corrected desktop review check.": 1,
+    "R04 corrected phone: deliver this fresh reply once.": 1,
+    "Unknown: R04 corrected phone review check.": 1
+  },
+  "final_message_count": 13,
+  "final_review_count": 3,
+  "new_unknown_reviews": 2,
+  "launch_approved": false,
+  "runtime_source_unchanged": true,
+  "browser_released_to_coordinator": true,
+  "new_code_defects_found": 0
+}

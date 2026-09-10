@@ -1,0 +1,294 @@
+{
+  "action": "dispatch",
+  "message_id": 10,
+  "before_provider": {
+    "requests": [
+      {
+        "id": "wamid.R04.BROWSER.1",
+        "recipient": "6703776292626",
+        "content": "Failed: the local provider definitely rejected this reply."
+      },
+      {
+        "id": "wamid.R04.BROWSER.2",
+        "recipient": "6703776292626",
+        "content": "Unknown: the local provider returned an uncertain outcome. Check the Review Request."
+      },
+      {
+        "id": "wamid.R04.BROWSER.3",
+        "recipient": "6703776292626",
+        "content": "Accepted: the local provider acknowledged this reply; delivery and reading are still separate."
+      },
+      {
+        "id": "wamid.R04.BROWSER.4",
+        "recipient": "6703776292626",
+        "content": "Delivery failed after acceptance: this reply must not be automatically resent."
+      },
+      {
+        "id": "wamid.R04.BROWSER.5",
+        "recipient": "6703776292626",
+        "content": "R04 desktop acceptance: this new operator reply must be delivered once."
+      },
+      {
+        "id": "wamid.R04.BROWSER.6",
+        "recipient": "6703776292626",
+        "content": "R04 corrected desktop: deliver this fresh reply once."
+      }
+    ]
+  },
+  "after_provider": {
+    "requests": [
+      {
+        "id": "wamid.R04.BROWSER.1",
+        "recipient": "6703776292626",
+        "content": "Failed: the local provider definitely rejected this reply."
+      },
+      {
+        "id": "wamid.R04.BROWSER.2",
+        "recipient": "6703776292626",
+        "content": "Unknown: the local provider returned an uncertain outcome. Check the Review Request."
+      },
+      {
+        "id": "wamid.R04.BROWSER.3",
+        "recipient": "6703776292626",
+        "content": "Accepted: the local provider acknowledged this reply; delivery and reading are still separate."
+      },
+      {
+        "id": "wamid.R04.BROWSER.4",
+        "recipient": "6703776292626",
+        "content": "Delivery failed after acceptance: this reply must not be automatically resent."
+      },
+      {
+        "id": "wamid.R04.BROWSER.5",
+        "recipient": "6703776292626",
+        "content": "R04 desktop acceptance: this new operator reply must be delivered once."
+      },
+      {
+        "id": "wamid.R04.BROWSER.6",
+        "recipient": "6703776292626",
+        "content": "R04 corrected desktop: deliver this fresh reply once."
+      },
+      {
+        "id": "wamid.R04.BROWSER.7",
+        "recipient": "6703776292626",
+        "content": "Failed: R04 corrected desktop retry check."
+      }
+    ]
+  },
+  "messages": [
+    {
+      "id": 1,
+      "content": "Please explain how my messages are delivered.",
+      "sender_type": "Contact",
+      "sender_id": 1,
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {},
+      "delivery": null,
+      "review_count": 0
+    },
+    {
+      "id": 2,
+      "content": "Canceled: the operator took over before this AI answer could send.",
+      "sender_type": null,
+      "sender_id": null,
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "canceled",
+          "failure_code": "assigned_to_human_operator"
+        }
+      },
+      "delivery": {
+        "state": "canceled",
+        "failure_code": "assigned_to_human_operator",
+        "attempts": 0
+      },
+      "review_count": 0
+    },
+    {
+      "id": 3,
+      "content": "Pending: this saved reply is waiting for the delivery worker.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "pending"
+        }
+      },
+      "delivery": {
+        "state": "pending",
+        "failure_code": null,
+        "attempts": 0
+      },
+      "review_count": 0
+    },
+    {
+      "id": 4,
+      "content": "Failed: the local provider definitely rejected this reply.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "failed",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "failed",
+          "failure_code": "provider_rejected"
+        },
+        "external_error": "WhatsApp could not deliver this message. Check the connection before retrying."
+      },
+      "delivery": {
+        "state": "failed",
+        "failure_code": "provider_rejected",
+        "attempts": 1
+      },
+      "review_count": 0
+    },
+    {
+      "id": 5,
+      "content": "Unknown: the local provider returned an uncertain outcome. Check the Review Request.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "unknown",
+          "failure_code": "acceptance_unknown"
+        }
+      },
+      "delivery": {
+        "state": "unknown",
+        "failure_code": "acceptance_unknown",
+        "attempts": 1
+      },
+      "review_count": 1
+    },
+    {
+      "id": 6,
+      "content": "Accepted: the local provider acknowledged this reply; delivery and reading are still separate.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "sent",
+      "source_id": "wamid.R04.BROWSER.3",
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      },
+      "delivery": {
+        "state": "accepted",
+        "failure_code": null,
+        "attempts": 1
+      },
+      "review_count": 0
+    },
+    {
+      "id": 7,
+      "content": "Delivery failed after acceptance: this reply must not be automatically resent.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "failed",
+      "source_id": "wamid.R04.BROWSER.4",
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        },
+        "whatsapp_delivery_timestamp": 1789000237,
+        "whatsapp_delivery_error_code": null,
+        "external_error": "WhatsApp could not deliver this message. Check the connection before retrying."
+      },
+      "delivery": {
+        "state": "accepted",
+        "failure_code": null,
+        "attempts": 1
+      },
+      "review_count": 0
+    },
+    {
+      "id": 8,
+      "content": "R04 desktop acceptance: this new operator reply must be delivered once.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "sent",
+      "source_id": "wamid.R04.BROWSER.5",
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      },
+      "delivery": {
+        "state": "accepted",
+        "failure_code": null,
+        "attempts": 1
+      },
+      "review_count": 0
+    },
+    {
+      "id": 9,
+      "content": "R04 corrected desktop: deliver this fresh reply once.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "sent",
+      "source_id": "wamid.R04.BROWSER.6",
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      },
+      "delivery": {
+        "state": "accepted",
+        "failure_code": null,
+        "attempts": 1
+      },
+      "review_count": 0
+    },
+    {
+      "id": 10,
+      "content": "Failed: R04 corrected desktop retry check.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "failed",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "failed",
+          "failure_code": "provider_rejected"
+        },
+        "external_error": "WhatsApp could not deliver this message. Check the connection before retrying."
+      },
+      "delivery": {
+        "state": "failed",
+        "failure_code": "provider_rejected",
+        "attempts": 1
+      },
+      "review_count": 0
+    },
+    {
+      "id": 11,
+      "content": "Unknown: R04 corrected desktop review check.",
+      "sender_type": "User",
+      "sender_id": 1,
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "pending"
+        }
+      },
+      "delivery": {
+        "state": "pending",
+        "failure_code": null,
+        "attempts": 0
+      },
+      "review_count": 0
+    }
+  ],
+  "launch_approved": false
+}

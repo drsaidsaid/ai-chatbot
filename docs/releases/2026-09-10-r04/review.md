@@ -1,5 +1,10 @@
 # R04 two-axis review
 
+The sections below preserve the review history. After the final source review,
+[corrected desktop/phone browser acceptance](browser-acceptance.md) passed with
+no new code defect. The coordinator independently cleared source `3ade7aa` on
+both review axes and verified its evidence/build hashes before browser allocation.
+
 Reviewed the working implementation against integrated R03
 `f2b184e1c332f0bf68c31dec460f7e5599657a72`, using separate Standards and Spec
 review agents. Both agents performed read-only reviews. They did not run tests
@@ -78,3 +83,42 @@ Both local review agents completed read-only targeted rereviews of the shared
 filter and API-to-component contract. Standards: no actionable findings. Spec:
 no concrete remaining defect. The parent task owns the execution evidence.
 Browser acceptance remains pending and is not implied by these reviews.
+
+## Browser-discovered live state and grouping corrections
+
+The first actual operator-created send exposed a stale Message instance in the
+final live broadcast, and a same-minute group hid the Unknown label. Canonical
+broadcast and full MessageList rendering regressions reproduced both defects.
+
+Both local reviewers found the same issue in the initial broadcast correction:
+merging fresh data into the old payload retained optional fields, including
+removed attachments. A persisted attachment/native soft-delete regression
+reproduced that finding. Broadcasts now use fresh account-scoped Message data
+and preserve only the event's `previous_changes` and `performer` metadata.
+
+Both final targeted rereviews confirmed the optional-field finding resolved
+and reported no remaining targeted findings. Message grouping now preserves
+each owned delivery's metadata while ordinary grouping remains covered.
+Reviews were read-only; the implementation task owns test and browser evidence.
+The corrected desktop/phone browser walkthrough remains pending allocation.
+
+## Delayed creation and optimistic reconciliation
+
+The coordinator found that the original queued Message creation still carried
+pending data and could arrive after an accepted/unknown update. The canonical
+Message API regression executes that exact serialized creation job last; captured
+payloads reproduce both outcomes reverting through the actual Inbox store/list.
+Both creation and update jobs now publish current account-scoped Message data,
+retaining creation echo correlation and the existing event-metadata whitelist.
+
+Standards and Spec independently found the combined optimistic → outcome →
+creation gap in the initial regression set: replacing only the first identity
+match left two copies of the persisted Message. The combined real-store/list
+tests reproduced accepted and unknown duplication before the correction. The
+mutation now reconciles both IDs while keeping the first position and unrelated
+same-content replies. Direct creation and persisted-row ordering remain covered.
+
+Both targeted rereviews report zero actionable findings and confirm the combined
+ordering tests cover the reported gap. These reviews were read-only; no reviewer
+ran validation processes or browser actions. Final findings: Standards 0; Spec 0.
+Corrected desktop/phone browser acceptance remains pending allocation.

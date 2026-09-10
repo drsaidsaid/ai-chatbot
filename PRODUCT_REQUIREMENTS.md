@@ -430,6 +430,8 @@ resending; lost queue operations and interrupted claims recover durably (ADR 001
 Acceptance displays as awaiting delivery until a provider receipt establishes
 sent/delivered/read history. A local preparation failure remains eligible for an
 authorized retry. Review rejection and alert dispatch authorization must serialize.
+Delayed creation notifications carry the saved delivery outcome and reconcile
+the operator's optimistic reply with its saved Message into one Inbox row.
 Booking cancel/reschedule notices use the same durable sender, attributed to the
 initiating operator, with one persisted notice per mutation identity.
 

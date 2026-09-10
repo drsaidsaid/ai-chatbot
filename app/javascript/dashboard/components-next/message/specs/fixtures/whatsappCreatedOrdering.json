@@ -1,0 +1,70 @@
+[
+  {
+    "case": "accepted",
+    "pending_creation": {
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "pending"
+        }
+      },
+      "echo_id": "echo-accepted"
+    },
+    "updated": {
+      "status": "sent",
+      "source_id": "wamid.CREATED.ORDER",
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      }
+    },
+    "late_creation": {
+      "status": "sent",
+      "source_id": "wamid.CREATED.ORDER",
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "accepted",
+          "failure_code": null
+        }
+      },
+      "echo_id": "echo-accepted"
+    }
+  },
+  {
+    "case": "unknown",
+    "pending_creation": {
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "pending"
+        }
+      },
+      "echo_id": "echo-unknown"
+    },
+    "updated": {
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "unknown",
+          "failure_code": "acceptance_unknown"
+        }
+      }
+    },
+    "late_creation": {
+      "status": "sent",
+      "source_id": null,
+      "content_attributes": {
+        "whatsapp_delivery": {
+          "state": "unknown",
+          "failure_code": "acceptance_unknown"
+        }
+      },
+      "echo_id": "echo-unknown"
+    }
+  }
+]

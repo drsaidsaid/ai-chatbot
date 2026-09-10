@@ -1,7 +1,7 @@
 # R04 — eligible outgoing replies and safe recovery
 
-Backend and component acceptance is verified. **In-app browser acceptance is
-pending the coordinator's allocation after R06.** Issue #21 remains open and
+Backend, component and **corrected in-app desktop/phone acceptance passed**.
+See [browser acceptance evidence](browser-acceptance.md). Issue #21 remains open and
 unintegrated. No customer provider, paid model call, live launch approval or
 external messaging was used.
 
@@ -10,6 +10,9 @@ Base: integrated R03 `f2b184e1c332f0bf68c31dec460f7e5599657a72`.
 Implementation commit: `4b5379610dafb948f5ff83fc347bc9355c9d4a5f` (normal repository hooks ran).
 Coordinator correction commit: `ca117f6bb37731ef104e797a85adc90ba107777f` (normal repository hooks ran).
 Receipt alias correction commit: `562c6f407d2f489ee13c39a68837b1feb5ed0ca1` (normal repository hooks ran).
+Browser correction commit: `4c5ce8e6c0dec222bcd40d300cd18a270c8c2eaa` (normal repository hooks ran).
+Delayed creation correction commit: `3ade7aa34cc863ba2043e4a90f4bca79291abdbc` (normal repository hooks ran).
+Completed browser acceptance commit: `f974a63b642ace5c551bf641631d0fc66bfe23ca` (normal repository hooks ran).
 Decision: [ADR 0011](../../adr/0011-owned-whatsapp-outbound-delivery.md).
 The coordinator alone integrates this branch.
 
@@ -37,20 +40,24 @@ copied or replaced.
 
 ## Validation
 
-- **292 selected Ruby examples passed** after the final receipt-alias correction, including 45 canonical outgoing cases,
+- **306 selected Ruby examples passed** after the delayed-creation corrections, including 51 canonical outgoing cases,
   two real Rails-process kill cases, R03 ingress/concurrency, existing canonical
   launch flow, orchestration, domain outbox, follow-up, handoff/review/booking,
   both WhatsApp providers, native Message/Bookings/Review APIs, the Message builder,
   nine independent-connection authority cases and five booking notice cases.
-- **18 Vue component tests passed** against the actual MessageMeta/MessageError
+- **56 Vue tests passed**, including 31 Inbox cases against the actual store and MessageList/Message/MessageMeta/MessageError
   components: pending/canceled/unknown display, acceptance awaiting receipt,
   projected sent/delivered/read advancement, provider failure, retry eligibility
   and ten client evidence aliases passed through the real deep camel-case
-  transform using actual HTTP response fixtures.
-- **Corrected production Vite build passed**, 1m19s. Existing Browserslist and bundle-size
+  transform using actual HTTP response fixtures, plus individual owned outcomes
+  within same-minute groups, delayed creation after outcomes, optimistic reply
+  reconciliation and preserved ordinary grouping. The remaining 25 cases cover
+  existing conversation mutations and helpers.
+- **Latest production Vite build passed**, 4m33s, 5,078 modules. Existing Browserslist and bundle-size
   warnings remain. No dependency or lockfile change was made.
-- Ruby lint passed on changed Ruby files. Frontend lint has no errors and one
-  finite translation-key mapping warning; it does not affect the production build.
+- Strict Ruby lint passed on all three changed Ruby files. The changed frontend
+  store and list test pass lint with no errors or warnings. Earlier full-branch
+  evidence retains one finite translation-key mapping warning.
 - Fresh schema and exact R03 checkpoint upgrade match canonical schema hash
   `ff7f8e39a5a0efe2eea6f069d6b1a17a60721fa30a286526defcfc504cbeb707`.
   A separate migration regression proves legacy unknown/accepted evidence is
@@ -66,7 +73,16 @@ after the provider accepts but before the Message ID commits. Recovery sends
 once in the former case and raises one unknown review without resending in the
 latter. These are canonical-path checks, not evaluation-sandbox labels.
 
-The latest results use `receipt-alias-*` logs. The previous 291-example and
+The latest backend/frontend/lint results use `created-order-*` logs.
+[Delayed creation and reconciliation evidence](created-order-corrections.md)
+records the canonical queued-event and actual store/list regressions.
+The previous 301-example/25-Inbox run uses `browser-fixes-*` and
+`browser-grouping-green.txt` logs.
+[Browser-discovered correction evidence](browser-corrections.md) records the
+actual stale live broadcast and hidden grouped metadata, their regressions and
+targeted rereviews. The corrected desktop/phone walkthrough subsequently passed;
+its screenshots and provider records are in `browser-acceptance/`.
+The 292-example receipt correction uses `receipt-alias-*` logs. The previous 291-example and
 8-component correction run and successful production build use `coordinator-*`
 logs; no production frontend source changed in the final alias correction.
 The earlier 235-example run and original build remain preserved as initial
@@ -88,6 +104,7 @@ database at the same time. Process-provider ports are allocated ephemerally.
 
 ```sh
 bundle exec rspec spec/requests/whatsapp_outbound_delivery_spec.rb \
+  spec/jobs/action_cable_broadcast_job_spec.rb \
   spec/requests/whatsapp_outbound_crash_spec.rb \
   spec/requests/whatsapp_alert_authority_spec.rb \
   spec/requests/whatsapp_booking_notice_spec.rb \
@@ -110,11 +127,14 @@ bundle exec rspec spec/requests/whatsapp_outbound_delivery_spec.rb \
   spec/builders/messages/message_builder_spec.rb
 pnpm exec vitest --run \
   app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js \
+  app/javascript/dashboard/components-next/message/specs/WhatsappDeliveryList.spec.js \
+  app/javascript/dashboard/store/modules/conversations/specs/mutations.spec.js \
+  app/javascript/dashboard/store/modules/specs/conversations/helpers.spec.js \
   --minWorkers=1 --maxWorkers=1
 RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 pnpm exec vite build
 ```
 
-## Pending in-app browser acceptance
+## Completed in-app browser acceptance
 
 The running fixture uses `ale_release_r04_browser`, Rails 3224 and a loopback
 provider on 3225. [seed_outbound.rb](../../../script/release/whatsapp/seed_outbound.rb)
@@ -128,7 +148,7 @@ The six seeded display states are **fixtures**. Their database states were
 verified through actual sender/control/projector services and are recorded in
 `browser-fixture-states.json`. They do not count as an operator interaction proof.
 
-After allocation, use only the in-app browser to:
+The allocated walkthrough completed the following checks in the in-app browser:
 
 1. Inspect the real Inbox at desktop and phone widths, including reload persistence
    of pending, canceled, failed, unknown, accepted and later delivery-failure states.
@@ -143,4 +163,15 @@ After allocation, use only the in-app browser to:
 5. Record screenshots and API/database evidence, report the result to the
    coordinator, and leave integration/issue closure to that task.
 
-No browser tab, lock-screen retry or new owner unlock request was made by R04.
+After explicit allocation, R04 opened its own in-app tab and created/dispatched
+a new operator reply. This exposed the corrected broadcast/grouping defects.
+The browser was then released while fixes were checked. No lock-screen retry,
+new unlock request or R06/Meta tab interaction was made by R04.
+
+The corrected walkthrough then created five fresh operator replies across
+desktop and phone widths and used the actual retry control. Live outcomes,
+reload persistence, grouped metadata, unique Message rows, no-resend behavior
+and one review per unknown reply all passed. The provider added six requests:
+five fresh replies and one explicit retry. See [final browser evidence](browser-acceptance.md).
+The browser slot was released to the coordinator. Runtime source, tests and
+build remain those already reviewed at `3ade7aa`; only acceptance evidence changed.

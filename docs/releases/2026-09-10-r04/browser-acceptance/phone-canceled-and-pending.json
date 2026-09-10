@@ -1,0 +1,91 @@
+{
+  "documentWidth": 390,
+  "rows": [
+    {
+      "id": "1",
+      "retryButtons": 0,
+      "status": null,
+      "text": "Please explain how my messages are delivered.\n\nSep 10, 3:30 AM"
+    },
+    {
+      "id": "2",
+      "retryButtons": 0,
+      "status": "Canceled",
+      "text": "B\n\nCanceled: the operator took over before this AI answer could send.\n\nSep 10, 3:30 AM\nCanceled"
+    },
+    {
+      "id": "3",
+      "retryButtons": 0,
+      "status": "Pending",
+      "text": "RO\n\nPending: this saved reply is waiting for the delivery worker.\n\nSep 10, 3:30 AM\nPending"
+    },
+    {
+      "id": "4",
+      "retryButtons": 1,
+      "status": "Failed to send",
+      "text": "RO\n\nFailed: the local provider definitely rejected this reply.\n\nSep 10, 3:30 AM\nFailed to send"
+    },
+    {
+      "id": "5",
+      "retryButtons": 0,
+      "status": "Delivery unknown",
+      "text": "RO\n\nUnknown: the local provider returned an uncertain outcome. Check the Review Request.\n\nSep 10, 3:30 AM\nDelivery unknown"
+    },
+    {
+      "id": "6",
+      "retryButtons": 0,
+      "status": "Accepted by WhatsApp; awaiting delivery",
+      "text": "RO\n\nAccepted: the local provider acknowledged this reply; delivery and reading are still separate.\n\nSep 10, 3:30 AM\nAccepted by WhatsApp; awaiting delivery"
+    },
+    {
+      "id": "7",
+      "retryButtons": 0,
+      "status": "Delivery failed",
+      "text": "RO\n\nDelivery failed after acceptance: this reply must not be automatically resent.\n\nSep 10, 3:30 AM\nDelivery failed"
+    },
+    {
+      "id": "8",
+      "retryButtons": 0,
+      "status": "Accepted by WhatsApp; awaiting delivery",
+      "text": "RO\n\nR04 desktop acceptance: this new operator reply must be delivered once.\n\nSep 10, 6:54 AM\nAccepted by WhatsApp; awaiting delivery"
+    },
+    {
+      "id": "9",
+      "retryButtons": 0,
+      "status": "Accepted by WhatsApp; awaiting delivery",
+      "text": "RO\n\nR04 corrected desktop: deliver this fresh reply once.\n\nSep 10, 9:21 AM\nAccepted by WhatsApp; awaiting delivery"
+    },
+    {
+      "id": "10",
+      "retryButtons": 1,
+      "status": "Failed to send",
+      "text": "RO\n\nFailed: R04 corrected desktop retry check.\n\nSep 10, 9:22 AM\nFailed to send"
+    },
+    {
+      "id": "11",
+      "retryButtons": 0,
+      "status": "Delivery unknown",
+      "text": "RO\n\nUnknown: R04 corrected desktop review check.\n\nSep 10, 9:23 AM\nDelivery unknown"
+    },
+    {
+      "id": "12",
+      "retryButtons": 0,
+      "status": "Accepted by WhatsApp; awaiting delivery",
+      "text": "RO\n\nR04 corrected phone: deliver this fresh reply once.\n\nSep 10, 9:26 AM\nAccepted by WhatsApp; awaiting delivery"
+    },
+    {
+      "id": "13",
+      "retryButtons": 0,
+      "status": "Pending",
+      "text": "RO\n\nUnknown: R04 corrected phone review check.\n\nSep 10, 9:28 AM\nPending"
+    }
+  ],
+  "scripts": [
+    "http://127.0.0.1:3224/vite/assets/dashboard-CBAPqSQd.js"
+  ],
+  "url": "http://127.0.0.1:3224/app/accounts/1/conversations/1?queue=all",
+  "viewport": {
+    "height": 844,
+    "width": 390
+  }
+}
