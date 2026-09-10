@@ -67,5 +67,8 @@
     "standards_findings": 0,
     "spec_findings": 0,
     "corrected_browser_walkthrough": "pending allocation after coordinator connection repair and R06"
-  }
+  },
+  "created_order_commit": "3ade7aa34cc863ba2043e4a90f4bca79291abdbc",
+  "created_order_normal_repository_hooks_exit": 0,
+  "created_order_hooks_bypassed": false
 }

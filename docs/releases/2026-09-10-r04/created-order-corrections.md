@@ -61,3 +61,10 @@ it does not assert global ordering across every transport or worker schedule.
 Both reviewers' targeted rereviews report zero remaining findings. They were
 read-only; the implementation task owns the execution evidence. The actual
 desktop/phone walkthrough remains pending and is not replaced by these checks.
+
+The corrected Rails process was restarted on port 3224 from the normal-hook
+implementation commit. Login and Conversation HTTP probes returned 200 with
+their new build entrypoints; the Conversation references `dashboard-CBAPqSQd.js`.
+See `created-order-server-probe.json`. These are server/asset checks only. The
+guarded fixture and held delivery jobs remain in place for the coordinator-allocated
+browser walkthrough.
