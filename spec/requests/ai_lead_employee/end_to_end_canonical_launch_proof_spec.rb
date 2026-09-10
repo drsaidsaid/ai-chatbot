@@ -22,7 +22,8 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
            })
   end
   let(:sender_number) { '255700111240' }
-  let(:provider_client) { instance_double(AiLeadEmployee::AiProvider::OpenRouterAdapter) }
+  let(:provider_client) { instance_double(AiLeadEmployee::AiProvider::MeteredClient) }
+  let!(:provider_connection) { create(:ai_provider_connection, account: account) }
 
   before do
     InstallationConfig.where(name: 'WHATSAPP_APP_SECRET').delete_all
@@ -151,7 +152,13 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
 
     conversation, intent = provider_failure_fixture('wamid.PROVIDER.SOURCE.UNVERIFIED')
     allow(provider_client).to receive(:complete).and_return(
-      AiLeadEmployee::AiProvider::Response.new(id: 'provider-review', model: 'openai/gpt-5.2', content: 'REVIEW_REQUIRED', finish_reason: 'stop')
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'provider-review',
+        model: 'openai/gpt-5.2',
+        content: 'REVIEW_REQUIRED',
+        finish_reason: 'stop',
+        configuration_version: provider_connection.configuration_version
+      )
     )
 
     AiLeadEmployee::OrchestrationIntentJob.perform_now(intent.id)
@@ -244,7 +251,11 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
 
   def expect_provider_configuration_not_leaked(provider_connection)
     expect_json_get("/api/v1/accounts/#{account.id}/ai_provider_connection", headers: admin.create_new_auth_token, status: :success)
-    expect(response.parsed_body).to include('status' => 'disabled', 'has_credentials' => false)
+    expect(response.parsed_body).to include(
+      'id' => self.provider_connection.id,
+      'status' => 'active',
+      'has_credentials' => true
+    )
     expect(response.parsed_body.to_json).not_to include(provider_connection.id.to_s, provider_connection.model)
   end
 
@@ -326,7 +337,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
 
   def expect_grounded_intent(intent, conversation, knowledge_item)
     expect(intent).to have_attributes(account_id: account.id, conversation_id: conversation.id, state: 'completed',
-                                      selected_provider: nil, model: 'openai/gpt-5.2')
+                                      selected_provider: 'openrouter', model: 'openai/gpt-5.2')
     expect(intent.source_references).to contain_exactly(
       include('id' => knowledge_item.id, 'title' => 'AI employee offer FAQ', 'status' => 'verified',
               'source_reference' => knowledge_item.source_reference)
@@ -340,6 +351,10 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
                                                 private: false)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'orchestration_intent_id')).to eq(intent.id)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'source_references').first['id']).to eq(knowledge_item.id)
+    expect(outbound_message.additional_attributes.fetch('ai_lead_employee')).to include(
+      'provider_configuration_version' => provider_connection.configuration_version,
+      'provider_usage_period_on' => Time.current.utc.to_date.iso8601
+    )
     expect(OutboxEvent.find_by!(aggregate: outbound_message)).to have_attributes(account_id: account.id,
                                                                                  event_type: 'ai_employee.outbound_intent_recorded')
   end
@@ -437,7 +452,9 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
       id: 'provider-launch-proof',
       model: 'openai/gpt-5.2',
       content: 'Yes, we build AI employees for qualified businesses.',
-      finish_reason: 'stop'
+      finish_reason: 'stop',
+      configuration_version: provider_connection.configuration_version,
+      usage_period_on: Time.current.utc.to_date
     )
   end
 

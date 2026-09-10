@@ -183,12 +183,19 @@ class Api::V1::Accounts::EvaluationSandboxesController < Api::V1::Accounts::Base
   def result_for(run)
     return 'running' if run.running?
     return 'cancelled' if run.cancelled?
-    return 'stale_configuration' if run.stale_configuration?
+    return 'stale_configuration' if run.stale_configuration? || stale_provider_configuration?(run)
     return 'failed_model_call' if run.failed_model_call?
     return 'passed' if run.passed?
     return 'needs_review' if run.automated_passed?
 
     'failed'
+  end
+
+  def stale_provider_configuration?(run)
+    connection = current_account.ai_provider_connection
+    return false unless connection
+
+    run.provider_snapshot['configuration_version'].to_i != connection.configuration_version
   end
 
   def filter_options

@@ -5,6 +5,7 @@ require 'rails_helper'
 RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
   let!(:whatsapp_channel) { create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false) }
   let(:account) { whatsapp_channel.account }
+  let!(:provider_connection) { create(:ai_provider_connection, account: account) }
   let(:contact) { create(:contact, account: account, phone_number: '+255700111231') }
   let(:contact_inbox) { create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: '255700111231') }
   let(:conversation) do
@@ -42,6 +43,23 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     allow(SendReplyJob).to receive(:perform_later)
     allow(AiLeadEmployee::OutboxDispatchJob).to receive(:perform_later)
     allow(AiLeadEmployee::AiProvider::ClientFactory).to receive(:for).and_return(provider_client)
+  end
+
+  it 'fails closed when provider output is missing its configuration revision' do
+    create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'unstamped-provider-response',
+        model: 'openai/gpt-5.2',
+        content: 'Yes, we build AI employees.',
+        finish_reason: 'stop'
+      )
+    )
+
+    described_class.perform_now(intent.id)
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_configuration_changed')
+    expect(conversation.messages.outgoing).to be_empty
   end
 
   it 'blocks live processing when the launch gate is not approved' do
@@ -153,14 +171,15 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
         id: 'provider-response-1',
         model: 'openai/gpt-5.2',
         content: 'Yes, we build AI employees for qualified businesses.',
-        finish_reason: 'stop'
+        finish_reason: 'stop',
+        configuration_version: provider_connection.configuration_version
       )
     )
 
     described_class.perform_now(intent.id)
     described_class.perform_now(intent.id)
 
-    expect(provider_client).to have_received(:complete).with(hash_including(max_tokens: 64)).once
+    expect(provider_client).to have_received(:complete).with(hash_excluding(:max_tokens)).once
 
     intent.reload
     outbound_message = intent.outbound_message
@@ -358,7 +377,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
         id: 'provider-response-review',
         model: 'openai/gpt-5.2',
         content: 'REVIEW_REQUIRED.',
-        finish_reason: 'stop'
+        finish_reason: 'stop',
+        configuration_version: provider_connection.configuration_version
       )
     )
 
@@ -384,7 +404,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
         id: 'provider-response-late',
         model: 'openai/gpt-5.2',
         content: 'Yes, we build AI employees for qualified businesses.',
-        finish_reason: 'stop'
+        finish_reason: 'stop',
+        configuration_version: provider_connection.configuration_version
       )
     end
 
@@ -423,6 +444,6 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
   end
 
   def provider_client
-    @provider_client ||= instance_double(AiLeadEmployee::AiProvider::OpenRouterAdapter)
+    @provider_client ||= instance_double(AiLeadEmployee::AiProvider::MeteredClient)
   end
 end

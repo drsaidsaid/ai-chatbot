@@ -1,6 +1,7 @@
 # R10 — Connect and control the AI provider with visible health and limits
 
-Status: Approved for implementation; blocked by the issues below.
+Status: Candidate handoff and review correction complete from accepted baseline
+`324ee6df9ca50dff708f41a4004cd105b23a784b`; coordinator integration pending.
 
 ## Parent
 
@@ -20,14 +21,14 @@ Work within the owned Community Edition Rails/Vue product. Deliver the real narr
 
 ## Acceptance criteria
 
-- [ ] Save, rotate, test and disable the supported provider through an admin-only account-scoped path, without exposing stored keys.
-- [ ] Persist and display health and failure reasons in plain language, with safe retry guidance and no false connected status.
-- [ ] Bound timeouts/retries and collect actual usage where the provider supplies it; unavailable cost data is shown as unknown.
-- [ ] An administrator can set a documented usage/spend guardrail or conservative enforceable equivalent and see why automation was paused.
-- [ ] Disabling or exhausting the permitted limit blocks new model work and pending automated delivery through the common boundary.
-- [ ] Model/configuration changes invalidate relevant launch evidence; test with fake provider responses before any separately authorized paid calls.
+- [x] Save, rotate, test and disable the supported provider through an admin-only account-scoped path, without exposing stored keys.
+- [x] Persist and display health and failure reasons in plain language, with safe retry guidance and no false connected status.
+- [x] Bound timeouts/retries and collect actual usage where the provider supplies it; unavailable cost data is shown as unknown.
+- [x] An administrator can set a documented usage/spend guardrail or conservative enforceable equivalent and see why automation was paused.
+- [x] Disabling or exhausting the permitted limit blocks new model work and pending automated delivery through the common boundary.
+- [x] Model/configuration changes invalidate relevant launch evidence; test with fake provider responses before any separately authorized paid calls.
 
-## Blocked by
+## Required predecessors (accepted)
 
 - https://github.com/drsaidsaid/ai-chatbot/issues/18 (R01).
 - https://github.com/drsaidsaid/ai-chatbot/issues/19 (R02).
@@ -41,3 +42,26 @@ Based on the 9 September 2026 standalone UI/UX audit and the standalone portions
 ## Execution coordination
 
 The owner approved implementation of all 18 completion tickets in separate Codex tasks until completion. Respect blockers and use the coordinator integration branch codex/v1-completion-20260909 as the source of integrated predecessor work after R01 validates it. Do not implement against the older saved checkout. Each task owns its focused branch and commit/PR evidence; the coordinator alone combines ticket work on the integration branch. Use the in-app browser for all browser validation.
+
+## Refreshed preparation
+
+[R10 design and public acceptance boundaries](../../v1-completion-plan/2026-09-09/r10-provider-controls-preparation.md)
+are reviewed against `324ee6df9ca50dff708f41a4004cd105b23a784b`, including the
+integrated R04 claims/final-send checks, R02 Settings layout and R06 roles.
+The observed small-probe/full-answer capacity mismatch is a required regression.
+R11 owns the shared Review acknowledgment and provider-failure reply; R10 owns
+honest readiness, usage/limits and the provider-permission boundary. R04's
+qualification-lock correction and R09 parser work remain separately coordinated.
+ADR 0012 is reserved. Runtime implementation follows this reviewed contract.
+The final bounded checks, independent rereviews and in-app desktop/phone evidence
+are recorded in `docs/releases/2026-09-10-r10/`.
+The later concurrency and final-authorization corrections are recorded separately
+in `docs/releases/2026-09-11-r10-follow-up/` so the original candidate evidence
+remains immutable.
+The final post-response accounting fence and its test-first evidence are recorded
+in `docs/releases/2026-09-11-r10-accounting-follow-up/` as a second immutable
+correction layer.
+The declared-provider-failure cleanup fence and its test-first evidence are
+recorded in `docs/releases/2026-09-11-r10-cleanup-follow-up/`. Provider failure
+classification remains terminal when failed-usage or health bookkeeping fails;
+the failure is logged safely and recovery cannot issue another provider request.

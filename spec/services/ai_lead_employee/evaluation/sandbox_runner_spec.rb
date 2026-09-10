@@ -7,6 +7,7 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
 
   let(:account) { create(:account, settings: { ai_review_alert_recipients: ['255700000001'] }) }
   let(:admin) { create(:user, :administrator, account: account) }
+  let!(:provider_connection) { create(:ai_provider_connection, account: account) }
 
   before do
     create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
@@ -17,7 +18,8 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
         id: 'provider-response-eval',
         model: 'openai/gpt-5.2',
         content: 'Yes, we build AI employees for qualified businesses.',
-        finish_reason: 'stop'
+        finish_reason: 'stop',
+        configuration_version: provider_connection.configuration_version
       )
     )
     allow(SendReplyJob).to receive(:perform_later)
@@ -121,6 +123,6 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
   end
 
   def provider_client
-    @provider_client ||= instance_double(AiLeadEmployee::AiProvider::OpenRouterAdapter)
+    @provider_client ||= instance_double(AiLeadEmployee::AiProvider::MeteredClient)
   end
 end

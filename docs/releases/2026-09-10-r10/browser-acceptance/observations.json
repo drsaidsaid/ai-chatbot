@@ -1,0 +1,52 @@
+{
+  "runtime": {
+    "database": "ale_release_r10_browser",
+    "rails_url": "http://127.0.0.1:3220",
+    "external_http_blocked": true,
+    "assets": "verified production Vite build"
+  },
+  "admin_desktop": {
+    "configured": true,
+    "readiness": "failed",
+    "failure_class": "insufficient_credits",
+    "checked_model": "openai/gpt-4.1-mini",
+    "checked_reply_token_limit": 512,
+    "saved_key_visible": false,
+    "provider_cost": null
+  },
+  "save_reload_health": {
+    "daily_request_limit": 26,
+    "configuration_version": 3,
+    "readiness_after_save": "not_checked",
+    "readiness_after_health_check": "failed",
+    "requests_used_after_health_check": 2,
+    "remaining_requests": 24
+  },
+  "exhausted_account": {
+    "requests_used": 3,
+    "daily_request_limit": 3,
+    "remaining_requests": 0,
+    "automation_paused": true,
+    "provider_cost": null
+  },
+  "phone": {
+    "width": 390,
+    "height": 844,
+    "status_and_controls_readable": true
+  },
+  "team_member": {
+    "direct_provider_route": "redirected_to_permitted_inbox",
+    "provider_controls_exposed": false
+  },
+  "disabled": {
+    "status": "disabled",
+    "has_credentials": false,
+    "configuration_version": 4,
+    "health_action_enabled": false
+  },
+  "console_errors": {
+    "admin": [],
+    "team_member": []
+  }
+}
+

@@ -1,0 +1,181 @@
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, pending: 2, snoozed: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/conversation.rb:88)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :priority, {low: 0, medium: 1, high: 2, urgent: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/conversation.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :control_state, {ai_active: 0, handoff_requested: 1, human_active: 2, ai_paused: 3, closed: 4}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/conversation.rb:90)
+........DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_type, {ongoing: 0, one_off: 1}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/campaign.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_status, {active: 0, completed: 1, processing: 2}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/campaign.rb:52)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {active: 0, inactive: 1}
+ (called from <class:AgentBotInbox> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/agent_bot_inbox.rb:22)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {disabled: 0, enabled: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/integrations/hook.rb:38)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :hook_type, {account: 0, inbox: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/integrations/hook.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :message_type, {incoming: 0, outgoing: 1, activity: 2, template: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/message.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :content_type, {text: 0, input_text: 1, input_textarea: 2, input_email: 3, input_select: 4, cards: 5, form: 6, article: 7, incoming_email: 8, input_csat: 9, integrations: 10, sticker: 11, voice_call: 12}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/message.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {sent: 0, delivered: 1, read: 2, failed: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/message.rb:105)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :bot_type, {webhook: 0}
+ (called from <class:AgentBot> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/agent_bot.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :file_type, {image: 0, audio: 1, video: 2, file: 3, location: 4, fallback: 5, share: 6, story_mention: 7, contact: 8, ig_reel: 9, ig_post: 10, ig_story: 11, embed: 12}
+ (called from <class:Attachment> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/attachment.rb:47)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {pending: 0, sent: 1, cancelled: 2, failed: 3}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_follow_up.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :stage, {incomplete_qualification: 0, qualified_nurture: 1}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_follow_up.rb:64)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reason, {no_approved_knowledge: 0, conflicting_knowledge: 1, sensitive_question: 2, qualification_blocker: 3, angry_question: 4, unsupported_media: 5, source_unverified: 6, provider_failed: 7, stale_knowledge: 8, delivery_unknown: 9}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/human_review_request.rb:55)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, rejected: 2}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/human_review_request.rb:67)
+.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source_kind, {faq: 0, offer: 1, pricing: 2, supporting_document: 3, objection: 4, policy: 5, refund: 6, guarantee: 7, eligibility: 8}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/knowledge_item.rb:33)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, approved: 1, rejected: 2, inactive: 3}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/knowledge_item.rb:44)
+..............DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source, {extracted: 0, human: 1}
+ (called from <class:QualificationEvidence> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/qualification_evidence.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {unknown: 0, unqualified: 1, low_qualified: 2, qualified: 3, highly_qualified: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {no_follow_up: 0, nurture: 1, human_review: 2, call_booked: 3, closed: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification.rb:48)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {"unknown" => 0, "unqualified" => 1, "low_qualified" => 2, "qualified" => 3, "highly_qualified" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification_decision.rb:40)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {"no_follow_up" => 0, "nurture" => 1, "human_review" => 2, "call_booked" => 3, "closed" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification_decision.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, completed: 1, canceled: 2}
+ (called from <class:LeadHandoff> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_handoff.rb:46)
+.................DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, published: 1, archived: 2, import_failed: 3}
+ (called from <class:KnowledgeDocument> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/knowledge_document.rb:40)
+.............DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {confirmed: 0, canceled: 1, completed: 2}
+ (called from <class:Booking> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/booking.rb:58)
+....-- execute("INSERT INTO whatsapp_outbound_deliveries (account_id, conversation_id, message_id, observed_control_version, state, provider_message_id, failure_code, created_at, updated_at) SELECT m.account_id, m.conversation_id, m.id, c.control_version, CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'unknown' ELSE 'accepted' END, NULLIF(m.source_id, ''), CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'legacy_acceptance_unknown' END, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM messages m JOIN conversations c ON c.id = m.conversation_id AND c.account_id = m.account_id JOIN inboxes i ON i.id = m.inbox_id AND i.id = c.inbox_id AND i.account_id = m.account_id WHERE i.channel_type = 'Channel::Whatsapp' AND m.message_type IN (1, 3) AND m.private = FALSE AND COALESCE(m.content_attributes->>'external_echo', '') NOT IN ('true', '1') ON CONFLICT (message_id) DO NOTHING")
+   -> 0.0018s
+-- execute("UPDATE messages m SET content_attributes = COALESCE(m.content_attributes::jsonb, '{}'::jsonb) || jsonb_build_object('whatsapp_delivery', jsonb_build_object('state', d.state, 'failure_code', d.failure_code)) FROM whatsapp_outbound_deliveries d WHERE m.id = d.message_id")
+   -> 0.0027s
+-- execute("INSERT INTO human_review_requests (account_id, conversation_id, lead_message_id, reason, status, question, created_at, updated_at) SELECT account_id, conversation_id, message_id, 9, 0, 'Legacy delivery outcome unknown. Check provider history before contacting the Lead again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM whatsapp_outbound_deliveries WHERE failure_code = 'legacy_acceptance_unknown' ON CONFLICT (account_id, conversation_id, lead_message_id, reason) DO NOTHING")
+   -> 0.0016s
+-- execute("UPDATE outbox_events e SET state = 4, failure_class = 'legacy_acceptance_unknown', failed_at = CURRENT_TIMESTAMP, delivered_at = NULL FROM whatsapp_outbound_deliveries d WHERE e.aggregate_type = 'Message' AND e.aggregate_id = d.message_id AND e.account_id = d.account_id AND d.failure_code = 'legacy_acceptance_unknown'")
+   -> 0.0010s
+-- execute("INSERT INTO whatsapp_outbound_deliveries (account_id, conversation_id, message_id, observed_control_version, state, provider_message_id, failure_code, created_at, updated_at) SELECT m.account_id, m.conversation_id, m.id, c.control_version, CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'unknown' ELSE 'accepted' END, NULLIF(m.source_id, ''), CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'legacy_acceptance_unknown' END, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM messages m JOIN conversations c ON c.id = m.conversation_id AND c.account_id = m.account_id JOIN inboxes i ON i.id = m.inbox_id AND i.id = c.inbox_id AND i.account_id = m.account_id WHERE i.channel_type = 'Channel::Whatsapp' AND m.message_type IN (1, 3) AND m.private = FALSE AND COALESCE(m.content_attributes->>'external_echo', '') NOT IN ('true', '1') ON CONFLICT (message_id) DO NOTHING")
+   -> 0.0010s
+-- execute("UPDATE messages m SET content_attributes = COALESCE(m.content_attributes::jsonb, '{}'::jsonb) || jsonb_build_object('whatsapp_delivery', jsonb_build_object('state', d.state, 'failure_code', d.failure_code)) FROM whatsapp_outbound_deliveries d WHERE m.id = d.message_id")
+   -> 0.0005s
+-- execute("INSERT INTO human_review_requests (account_id, conversation_id, lead_message_id, reason, status, question, created_at, updated_at) SELECT account_id, conversation_id, message_id, 9, 0, 'Legacy delivery outcome unknown. Check provider history before contacting the Lead again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM whatsapp_outbound_deliveries WHERE failure_code = 'legacy_acceptance_unknown' ON CONFLICT (account_id, conversation_id, lead_message_id, reason) DO NOTHING")
+   -> 0.0003s
+-- execute("UPDATE outbox_events e SET state = 4, failure_class = 'legacy_acceptance_unknown', failed_at = CURRENT_TIMESTAMP, delivered_at = NULL FROM whatsapp_outbound_deliveries d WHERE e.aggregate_type = 'Message' AND e.aggregate_id = d.message_id AND e.account_id = d.account_id AND d.failure_code = 'legacy_acceptance_unknown'")
+   -> 0.0003s
+.....
+
+Finished in 1 minute 41.51 seconds (files took 4.2 seconds to load)
+62 examples, 0 failures
+

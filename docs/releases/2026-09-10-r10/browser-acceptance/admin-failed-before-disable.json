@@ -1,0 +1,1 @@
+{"account_id":1,"status":"active","has_credentials":true,"configuration_version":3,"reply_token_limit":512,"daily_request_limit":26,"usage":{"requests":2,"cost_usd":null,"cost_data_complete":false},"health":{"readiness_status":"failed","last_health_checked_at":"2026-09-10T20:29:00.310Z","last_health_failure_class":"insufficient_credits","last_health_configuration_version":3}}

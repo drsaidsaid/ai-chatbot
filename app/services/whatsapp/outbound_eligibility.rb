@@ -93,7 +93,23 @@ class Whatsapp::OutboundEligibility
     alert = Whatsapp::OutboundAlertAuthority.new(@message)
     return alert.failure_code if alert.alert?
 
-    lead_automation_failure
+    lead_failure = lead_automation_failure
+    return lead_failure if lead_failure
+    return unless provider_control_required?
+
+    attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
+    AiLeadEmployee::AiProvider::RuntimeControl.failure_code(
+      account: @delivery.account,
+      configuration_version: attributes['provider_configuration_version'],
+      usage_period_on: attributes['provider_usage_period_on']
+    )
+  end
+
+  def provider_control_required?
+    attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
+    return false if @message.template? || attributes['delivery_type'].in?(%w[qualification_follow_up booking_confirmation])
+
+    @message.sender_type != 'User' || attributes['orchestration_intent_id'].present?
   end
 
   def lead_automation_failure

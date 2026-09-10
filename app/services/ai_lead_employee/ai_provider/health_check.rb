@@ -9,31 +9,57 @@ class AiLeadEmployee::AiProvider::HealthCheck
 
   def perform
     checked_at = Time.current
-    AiLeadEmployee::AiProvider::ClientFactory.for(account: connection.account).complete(
+    provider = {}
+    snapshot_provider!(provider)
+    response = provider.fetch(:client).complete(
       messages: [{ role: 'user', content: 'Reply with ok.' }],
-      max_tokens: 8,
-      temperature: 0
+      max_tokens: provider.fetch(:reply_token_limit),
+      temperature: 0,
+      purpose: 'health_check'
     )
-    update_connection!(checked_at: checked_at, status: 'healthy', failure_class: nil)
+    update_connection!(checked_at: checked_at, configuration_version: provider[:configuration_version],
+                       status: 'healthy', failure_class: nil, model: response.model)
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
-    update_connection!(checked_at: checked_at || Time.current, status: 'failed', failure_class: e.failure_class)
+    update_connection!(checked_at: Time.current, configuration_version: provider&.dig(:configuration_version),
+                       status: 'failed', failure_class: e.failure_class, model: connection.model)
   end
 
   private
 
   attr_reader :connection
 
-  def update_connection!(checked_at:, status:, failure_class:)
-    connection.update!(
-      last_health_checked_at: checked_at,
-      last_health_status: status,
-      last_health_failure_class: failure_class,
-      last_health_response: {
-        status: status,
-        failure_class: failure_class
-      }.compact
-    )
+  def snapshot_provider!(provider)
+    connection.with_lock do
+      provider[:configuration_version] = connection.configuration_version
+      provider[:reply_token_limit] = connection.reply_token_limit
+      provider[:client] = AiLeadEmployee::AiProvider::ClientFactory.for(account: connection.account)
+    end
+  end
+
+  def update_connection!(checked_at:, configuration_version:, status:, failure_class:, model:)
+    connection.with_lock do
+      return Result.new(status: 'stale', checked_at: checked_at) if stale_observation?(checked_at, configuration_version)
+
+      connection.update!(
+        last_health_checked_at: checked_at,
+        last_health_status: status,
+        last_health_failure_class: failure_class,
+        last_health_configuration_version: configuration_version,
+        last_health_response: {
+          status: status,
+          failure_class: failure_class,
+          configuration_version: configuration_version,
+          reply_token_limit: connection.reply_token_limit,
+          model: model
+        }.compact
+      )
+    end
 
     Result.new(status: status, failure_class: failure_class, checked_at: checked_at)
+  end
+
+  def stale_observation?(checked_at, configuration_version)
+    connection.configuration_version != configuration_version ||
+      (connection.last_health_checked_at && connection.last_health_checked_at >= checked_at)
   end
 end

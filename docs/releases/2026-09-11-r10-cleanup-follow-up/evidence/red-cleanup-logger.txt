@@ -1,0 +1,237 @@
+Run options: include {full_description: /cleanup\ and\ its\ logging\ both\ fail/}
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, pending: 2, snoozed: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/conversation.rb:88)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :priority, {low: 0, medium: 1, high: 2, urgent: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/conversation.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :control_state, {ai_active: 0, handoff_requested: 1, human_active: 2, ai_paused: 3, closed: 4}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/conversation.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_type, {ongoing: 0, one_off: 1}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/campaign.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_status, {active: 0, completed: 1, processing: 2}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/campaign.rb:52)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {active: 0, inactive: 1}
+ (called from <class:AgentBotInbox> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/agent_bot_inbox.rb:22)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {disabled: 0, enabled: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/integrations/hook.rb:38)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :hook_type, {account: 0, inbox: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/integrations/hook.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :message_type, {incoming: 0, outgoing: 1, activity: 2, template: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/message.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :content_type, {text: 0, input_text: 1, input_textarea: 2, input_email: 3, input_select: 4, cards: 5, form: 6, article: 7, incoming_email: 8, input_csat: 9, integrations: 10, sticker: 11, voice_call: 12}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/message.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {sent: 0, delivered: 1, read: 2, failed: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/message.rb:105)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :bot_type, {webhook: 0}
+ (called from <class:AgentBot> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/agent_bot.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :file_type, {image: 0, audio: 1, video: 2, file: 3, location: 4, fallback: 5, share: 6, story_mention: 7, contact: 8, ig_reel: 9, ig_post: 10, ig_story: 11, embed: 12}
+ (called from <class:Attachment> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/attachment.rb:47)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source_kind, {faq: 0, offer: 1, pricing: 2, supporting_document: 3, objection: 4, policy: 5, refund: 6, guarantee: 7, eligibility: 8}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/knowledge_item.rb:33)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, approved: 1, rejected: 2, inactive: 3}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/knowledge_item.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source, {extracted: 0, human: 1}
+ (called from <class:QualificationEvidence> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/qualification_evidence.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {unknown: 0, unqualified: 1, low_qualified: 2, qualified: 3, highly_qualified: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {no_follow_up: 0, nurture: 1, human_review: 2, call_booked: 3, closed: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification.rb:48)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {"unknown" => 0, "unqualified" => 1, "low_qualified" => 2, "qualified" => 3, "highly_qualified" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification_decision.rb:40)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {"no_follow_up" => 0, "nurture" => 1, "human_review" => 2, "call_booked" => 3, "closed" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_qualification_decision.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, completed: 1, canceled: 2}
+ (called from <class:LeadHandoff> at /Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/app/models/lead_handoff.rb:46)
+F
+
+Failures:
+
+  1) AI orchestration after uncertain provider accounting preserves a classified provider failure when failed-usage cleanup and its logging both fail
+     Got 7 failures and 1 other error:
+
+     1.1) Failure/Error: AiLeadEmployee::OrchestrationIntentJob.perform_now(records.fetch(:intent).id)
+
+            (#<ActiveSupport::BroadcastLogger:0x000000012a2ffc30 @broadcasts=[#<ActiveSupport::Logger:0x000000012a2bdbc8 @level=0, @progname=nil, @default_formatter=#<Logger::Formatter:0x000000012a2d25c8 @datetime_format=nil>, @formatter=#<ActiveSupport::Logger::SimpleFormatter:0x000000012a2d0048 @datetime_format=nil, @thread_key="activesupport_tagged_logging_tags:30248">, @logdev=#<Logger::LogDevice:0x0000000126de6238 @shift_period_suffix="%Y%m%d", @shift_size=1048576, @shift_age=0, @filename="/Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/log/test.log", @dev=#<File:/Users/ghalyasaid/.codex/worktrees/b98b/AI Chatbot/log/test.log>, @binmode=false, @reraise_write_errors=[], @skip_header=false, @mon_data=#<Monitor:0x000000012a2d24b0>, @mon_data_owner_object_id=25408>, @level_override={}, @local_level_key=:logger_thread_safe_level_30240>], @progname="Broadcast">).error(nil)
+                expected: 1 time with any arguments
+                received: 2 times with arguments: (nil)
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:136:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#run_and_recover'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:53:in 'block (2 levels) in <top (required)>'
+
+     1.2) Failure/Error:
+            expect(message).to include(
+              '[AI PROVIDER] provider_failure_cleanup_failed',
+              "operation=#{operation}",
+              "account_id=#{records.fetch(:account).id}",
+              "connection_id=#{records.fetch(:connection).id}",
+              "usage_id=#{usage.id}",
+              "provider_failure_class=#{failure_class}",
+              'cleanup_error_class=ActiveRecord::StatementInvalid'
+            )
+
+            expected nil to include "[AI PROVIDER] provider_failure_cleanup_failed", "operation=fail_usage", "account_id=1151", "connection_id=805", "usage_id=220", "provider_failure_class=insufficient_credits", and "cleanup_error_class=ActiveRecord::StatementInvalid", but it does not respond to `include?`
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:230:in 'block in RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_cleanup_error_log'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:136:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#run_and_recover'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:53:in 'block (2 levels) in <top (required)>'
+
+     1.3) Failure/Error: expect(message).not_to include(records.fetch(:connection).api_key)
+            expected nil not to include "sk-or-test-secret", but it does not respond to `include?`
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:239:in 'block in RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_cleanup_error_log'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:136:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#run_and_recover'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:53:in 'block (2 levels) in <top (required)>'
+
+     1.4) Failure/Error:
+            expect(message).to include(
+              '[AI PROVIDER] provider_failure_cleanup_failed',
+              "operation=#{operation}",
+              "account_id=#{records.fetch(:account).id}",
+              "connection_id=#{records.fetch(:connection).id}",
+              "usage_id=#{usage.id}",
+              "provider_failure_class=#{failure_class}",
+              'cleanup_error_class=ActiveRecord::StatementInvalid'
+            )
+
+            expected "Could not log \"perform.active_job\" event. StandardError: synthetic logging failure [\"/Users/ghaly...undle:25:in 'Kernel#load'\", \"/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle:25:in '<main>'\"]" to include "[AI PROVIDER] provider_failure_cleanup_failed", "operation=fail_usage", "account_id=1151", "connection_id=805", "usage_id=220", "provider_failure_class=insufficient_credits", and "cleanup_error_class=ActiveRecord::StatementInvalid"
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:230:in 'block in RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_cleanup_error_log'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:136:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#run_and_recover'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:53:in 'block (2 levels) in <top (required)>'
+
+     1.5) Failure/Error: expect(first_error).to be_nil
+
+            expected: nil
+                 got: #<StandardError: synthetic logging failure>
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:97:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_terminal_provider_failure'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:55:in 'block (2 levels) in <top (required)>'
+
+     1.6) Failure/Error: expect(provider_request).to have_been_requested.once
+
+            The request POST https://openrouter.ai/api/v1/chat/completions was expected to execute 1 time but it executed 2 times
+
+            The following requests were made:
+
+            POST https://openrouter.ai/api/v1/chat/completions with body '{"model":"openai/gpt-4.1-mini","messages":[{"role":"system","content":"Answer the lead only from the approved business source supplied. Do not add facts, pricing, guarantees, or policies not present in the source. If the source is insufficient, respond with exactly: REVIEW_REQUIRED."},{"role":"user","content":"Lead question: Do you offer AI employees?\nApproved source answer: Yes, we build AI employees."}],"max_tokens":512,"temperature":0.1,"stream":false,"provider":{"data_collection":"deny","zdr":true}}' with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Authorization'=>'Bearer sk-or-test-secret', 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby', 'X-Openrouter-Title'=>'AI Lead Employee'} was made 2 times
+
+            ============================================================
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:98:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_terminal_provider_failure'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:55:in 'block (2 levels) in <top (required)>'
+
+     1.7) Failure/Error:
+            expect(records.fetch(:intent).reload).to have_attributes(
+              state: 'blocked',
+              blocked_reason: 'provider_failure',
+              failure_class: failure_class
+            )
+
+            expected #<AiLeadEmployee::OrchestrationIntent id: 542, account_id: 1151, conversation_id: 972, triggering_mes...en: "aaef485d-c5f2-456e-a42e-a9cfd60e0686", lease_expires_at: "2026-09-10 22:19:11.538450000 +0000"> to have attributes {:blocked_reason => "provider_failure", :failure_class => "insufficient_credits", :state => "blocked"} but had attributes {:blocked_reason => nil, :failure_class => nil, :state => "processing"}
+            Diff:
+            @@ -1,4 +1,4 @@
+            -:blocked_reason => "provider_failure",
+            -:failure_class => "insufficient_credits",
+            -:state => "blocked",
+            +:blocked_reason => nil,
+            +:failure_class => nil,
+            +:state => "processing",
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:104:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_classified_intent'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:99:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_terminal_provider_failure'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:55:in 'block (2 levels) in <top (required)>'
+
+     1.8) Failure/Error:
+            expect(records.fetch(:connection).usages.sole).to have_attributes(
+              status: usage_status,
+              failure_class: usage_status == 'failed' ? failure_class : nil
+            )
+
+          ActiveRecord::SoleRecordExceeded:
+            Wanted only one AiLeadEmployee::AiProviderUsage
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:114:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_no_classified_provider_output'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:100:in 'RSpec::ExampleGroups::AIOrchestrationAfterUncertainProviderAccounting#expect_terminal_provider_failure'
+          # ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:55:in 'block (2 levels) in <top (required)>'
+
+Finished in 2.21 seconds (files took 4.67 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb:39 # AI orchestration after uncertain provider accounting preserves a classified provider failure when failed-usage cleanup and its logging both fail
+

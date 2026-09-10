@@ -52,6 +52,25 @@ RSpec.describe 'Evaluation Sandbox API', type: :request do
     expect(response.parsed_body).to include('ready_for_approval' => false, 'live_ai_enabled' => false)
   end
 
+  it 'keeps old provider-version results visible and labels them stale' do
+    connection = create(:ai_provider_connection, account: account, configuration_version: 2)
+    run = create(
+      :ai_lead_employee_evaluation_run,
+      account: account,
+      user: admin,
+      provider_snapshot: {
+        'provider' => connection.provider,
+        'model' => connection.model,
+        'configuration_version' => 1
+      }
+    )
+
+    get "#{endpoint}/runs", headers: admin.create_new_auth_token, as: :json
+
+    payload = response.parsed_body.find { |item| item['id'] == run.id }
+    expect(payload).to include('status' => 'completed', 'result' => 'stale_configuration')
+  end
+
   def passing_grades
     AiLeadEmployee::EvaluationRun::GRADE_KEYS.index_with { |_key| { passed: true, notes: '' } }
   end

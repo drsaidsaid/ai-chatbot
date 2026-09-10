@@ -51,6 +51,7 @@ RSpec.describe AiLeadEmployee::AutomatedContactConsent do
 
   before do
     clean_committed_fixtures
+    create(:ai_provider_connection, account: channel.account)
     incoming
     reply
     stop_event

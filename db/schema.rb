@@ -285,7 +285,37 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.jsonb "last_health_response", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "reply_token_limit", default: 512, null: false
+    t.integer "daily_request_limit", default: 0, null: false
+    t.integer "configuration_version", default: 1, null: false
+    t.integer "last_health_configuration_version"
     t.index ["account_id"], name: "index_ai_provider_connections_on_account_id", unique: true
+  end
+
+  create_table "ai_provider_usages", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "ai_provider_connection_id", null: false
+    t.integer "configuration_version", null: false
+    t.string "purpose", null: false
+    t.date "period_on", null: false
+    t.string "status", default: "reserved", null: false
+    t.integer "requested_output_tokens", null: false
+    t.string "provider_request_id"
+    t.string "model"
+    t.integer "input_tokens"
+    t.integer "output_tokens"
+    t.integer "total_tokens"
+    t.decimal "cost_usd", precision: 18, scale: 8
+    t.boolean "cost_available", default: false, null: false
+    t.string "failure_class"
+    t.datetime "started_at", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "period_on"], name: "index_ai_provider_usages_on_account_id_and_period_on"
+    t.index ["account_id"], name: "index_ai_provider_usages_on_account_id"
+    t.index ["ai_provider_connection_id", "configuration_version"], name: "idx_ai_provider_usages_on_connection_version"
+    t.index ["ai_provider_connection_id"], name: "index_ai_provider_usages_on_ai_provider_connection_id"
   end
 
   create_table "applied_slas", force: :cascade do |t|
@@ -2144,6 +2174,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
   add_foreign_key "ai_orchestration_intents", "messages", column: "outbound_message_id"
   add_foreign_key "ai_orchestration_intents", "messages", column: "triggering_message_id"
   add_foreign_key "ai_provider_connections", "accounts"
+  add_foreign_key "ai_provider_usages", "accounts"
+  add_foreign_key "ai_provider_usages", "ai_provider_connections"
   add_foreign_key "bookings", "accounts"
   add_foreign_key "bookings", "contacts"
   add_foreign_key "bookings", "conversations"

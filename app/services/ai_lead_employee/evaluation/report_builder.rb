@@ -59,7 +59,12 @@ class AiLeadEmployee::Evaluation::ReportBuilder
   end
 
   def latest_reviewed_run_for(scenario_key)
-    AiLeadEmployee::EvaluationRun.reviewed.where(account: account, scenario_key: scenario_key).latest_first.first
+    scope = AiLeadEmployee::EvaluationRun.reviewed.where(account: account, scenario_key: scenario_key)
+    connection = account.ai_provider_connection
+    return unless connection
+
+    scope = scope.where("provider_snapshot ->> 'configuration_version' = ?", connection.configuration_version.to_s)
+    scope.latest_first.first
   end
 
   def latest_reviewed_runs

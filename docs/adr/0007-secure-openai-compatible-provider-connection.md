@@ -33,3 +33,41 @@ References are available.
   orchestration domain services.
 - Deployments must configure Rails Active Record encryption before enabling AI
   Provider Connections.
+
+## R10 control extension
+
+The encrypted provider ownership above remains accepted. R10's
+[refreshed preparation](../v1-completion-plan/2026-09-09/r10-provider-controls-preparation.md)
+adds explicit answer-budget readiness, an enforceable daily attempt allowance,
+committed usage accounting and provider configuration revisions. A tiny probe
+cannot establish capacity for a normal answer, and unavailable cost cannot be
+reported as zero. The focused R10 branch implements this extension from reviewed
+baseline `324ee6df`.
+
+Follow-up review requires durable admission to use a separate bounded database
+pool whenever provider work runs inside an application transaction. Checkout
+failure blocks provider HTTP, while bookkeeping failure after HTTP suppresses
+the output, leaves the reservation conservative, and terminates orchestration
+recovery before another provider attempt. Provider-produced Messages
+retain both the configuration revision and UTC allowance date used for admission;
+the final WhatsApp boundary rejects either stale value. Health writes also reject
+observations older than the latest persisted provider result. Evaluation evidence
+cannot certify launch when no current provider connection exists.
+
+For a classified provider failure, failed-usage and health updates are separate
+best-effort cleanup steps. Logging a cleanup exception uses identifiers and error
+classes but no credentials; logging failure cannot replace the original terminal
+provider classification. If failed-usage persistence fails, the reservation
+stays `reserved`; if it succeeds, it stays `failed` and counted even when the
+health update fails. No automatic reconciliation or provider retry follows.
+
+Provider permission extends the existing ADR 0011 model/output/dispatch boundary;
+it does not introduce another sender or hold Conversation locks during provider
+HTTP. Explicit disablement or exhausted local allowance blocks pending automation.
+R11 owns the common truthful provider-failure acknowledgment while permission
+remains valid; no acknowledgment can bypass an administrative stop. R17 owns the
+broader launch-evidence fingerprint and consumes R10's provider revision.
+
+ADR 0012 is reserved by the coordinator for other work, so this implementation
+extends the existing decision without allocating another ADR number. Verification
+uses local fake-provider responses and does not authorize live provider calls.

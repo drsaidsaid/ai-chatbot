@@ -15,9 +15,27 @@ const connection = ref({
   last_health_status: null,
   last_health_checked_at: null,
   last_health_failure_class: null,
+  last_health_model: null,
+  last_health_reply_token_limit: null,
+  last_health_configuration_version: null,
+  last_health_checked_at_label: null,
+  readiness_status: 'disabled',
+  configuration_version: 1,
+  reply_token_limit: 512,
+  daily_request_limit: 0,
+  requests_used_today: 0,
+  requests_remaining_today: 0,
+  usage_resets_at: null,
+  usage_resets_at_label: null,
+  automation_allowed: false,
+  automation_paused_reason: 'provider_disabled',
+  cost_usd_today: null,
+  cost_data_complete: false,
 });
 const model = ref('');
 const apiKey = ref('');
+const replyTokenLimit = ref(512);
+const dailyRequestLimit = ref(0);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const isChecking = ref(false);
@@ -29,26 +47,113 @@ const isConfigured = computed(
 
 const statusLabel = computed(() =>
   isConfigured.value
-    ? t('AI_LEAD_EMPLOYEE.AI_PROVIDER.CONNECTED')
+    ? t('AI_LEAD_EMPLOYEE.AI_PROVIDER.CONFIGURED')
     : t('AI_LEAD_EMPLOYEE.AI_PROVIDER.NOT_CONNECTED')
 );
 
 const healthLabel = computed(() => {
-  if (!connection.value.last_health_status) {
+  if (connection.value.readiness_status === 'disabled') {
+    return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.DISABLED_STATUS');
+  }
+  if (connection.value.readiness_status === 'not_checked') {
     return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.NOT_CHECKED');
   }
-  if (connection.value.last_health_status === 'healthy') {
+  if (connection.value.readiness_status === 'healthy') {
     return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.HEALTHY');
   }
   return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.NEEDS_ATTENTION');
 });
 
+const usageLabel = computed(
+  () =>
+    `${connection.value.requests_used_today} / ${connection.value.daily_request_limit}`
+);
+
+const costLabel = computed(() => {
+  if (
+    !connection.value.cost_data_complete ||
+    connection.value.cost_usd_today === null
+  ) {
+    return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.COST_UNKNOWN');
+  }
+  return `$${Number(connection.value.cost_usd_today).toFixed(4)}`;
+});
+
+const resetLabel = computed(() => {
+  return connection.value.usage_resets_at_label || '';
+});
+
+const hasHealthObservation = computed(
+  () =>
+    connection.value.last_health_checked_at &&
+    connection.value.last_health_configuration_version
+);
+
+const failureGuidance = computed(() => {
+  const failure = connection.value.last_health_failure_class;
+  if (!failure) return [];
+  const messages = {
+    authentication_failure: t(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.AUTHENTICATION_FAILURE'
+    ),
+    insufficient_credits: t(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.INSUFFICIENT_CREDITS'
+    ),
+    rate_limit: t('AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.RATE_LIMIT'),
+    timeout: t('AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.TIMEOUT'),
+    transport_failure: t(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.TRANSPORT_FAILURE'
+    ),
+    invalid_response: t(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.INVALID_RESPONSE'
+    ),
+    safety_refusal: t('AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.SAFETY_REFUSAL'),
+    usage_limit_exhausted: t(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.USAGE_LIMIT_EXHAUSTED'
+    ),
+    provider_disabled: t(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.PROVIDER_DISABLED'
+    ),
+  };
+  const message = messages[failure];
+  if (!message) {
+    return [
+      t('AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.UNKNOWN'),
+      t('AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.RETRY'),
+    ];
+  }
+  const retry =
+    failure === 'insufficient_credits'
+      ? t('AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.RETRY_AFTER_CREDITS')
+      : t('AI_LEAD_EMPLOYEE.AI_PROVIDER.FAILURE.RETRY');
+  return [message, retry];
+});
+
+const pauseLabel = computed(() => {
+  const reason = connection.value.automation_paused_reason;
+  if (!reason) return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.AUTOMATION_ALLOWED');
+  if (reason === 'usage_limit_exhausted') {
+    return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.PAUSE.USAGE_LIMIT_EXHAUSTED');
+  }
+  return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.PAUSE.PROVIDER_DISABLED');
+});
+
+const applyConnection = data => {
+  connection.value = { ...connection.value, ...data };
+  if (Object.hasOwn(data, 'model')) model.value = data.model || '';
+  if (Object.hasOwn(data, 'reply_token_limit')) {
+    replyTokenLimit.value = data.reply_token_limit;
+  }
+  if (Object.hasOwn(data, 'daily_request_limit')) {
+    dailyRequestLimit.value = data.daily_request_limit;
+  }
+};
+
 const load = async () => {
   isLoading.value = true;
   try {
     const { data } = await aiProviderConnectionAPI.get();
-    connection.value = { ...connection.value, ...data };
-    model.value = data.model || '';
+    applyConnection(data);
   } finally {
     isLoading.value = false;
   }
@@ -60,11 +165,13 @@ const save = async () => {
     const payload = {
       provider: 'openrouter',
       model: model.value.trim(),
+      reply_token_limit: Number(replyTokenLimit.value),
+      daily_request_limit: Number(dailyRequestLimit.value),
     };
     if (apiKey.value.trim()) payload.api_key = apiKey.value.trim();
 
     const { data } = await aiProviderConnectionAPI.save(payload);
-    connection.value = { ...connection.value, ...data };
+    applyConnection(data);
     apiKey.value = '';
     useAlert(t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SAVED'));
   } catch {
@@ -77,13 +184,9 @@ const save = async () => {
 const checkHealth = async () => {
   isChecking.value = true;
   try {
-    const { data } = await aiProviderConnectionAPI.healthCheck();
-    connection.value = {
-      ...connection.value,
-      last_health_status: data.status,
-      last_health_checked_at: data.checked_at,
-      last_health_failure_class: data.failure_class || null,
-    };
+    await aiProviderConnectionAPI.healthCheck();
+    const { data } = await aiProviderConnectionAPI.get();
+    applyConnection(data);
     useAlert(t('AI_LEAD_EMPLOYEE.AI_PROVIDER.HEALTH_CHECKED'));
   } catch {
     useAlert(t('AI_LEAD_EMPLOYEE.AI_PROVIDER.HEALTH_ERROR'));
@@ -141,6 +244,87 @@ onMounted(load);
               {{ healthLabel }}
             </p>
           </div>
+          <div>
+            <p class="text-xs font-medium uppercase text-n-slate-11">
+              {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.USAGE_TODAY') }}
+            </p>
+            <p class="mt-1 text-sm font-medium text-n-slate-12">
+              {{ usageLabel }}
+            </p>
+            <p class="mt-1 text-xs text-n-slate-11">
+              {{
+                t('AI_LEAD_EMPLOYEE.AI_PROVIDER.REQUESTS_REMAINING', {
+                  count: connection.requests_remaining_today,
+                })
+              }}
+            </p>
+            <p v-if="resetLabel" class="mt-1 text-xs text-n-slate-11">
+              {{
+                t('AI_LEAD_EMPLOYEE.AI_PROVIDER.RESETS_AT', {
+                  time: resetLabel,
+                })
+              }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs font-medium uppercase text-n-slate-11">
+              {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.COST_TODAY') }}
+            </p>
+            <p class="mt-1 text-sm font-medium text-n-slate-12">
+              {{ costLabel }}
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="mt-4 rounded-md border border-n-weak bg-n-solid-2 px-3 py-2 text-sm text-n-slate-12"
+          role="status"
+        >
+          {{ pauseLabel }}
+        </div>
+
+        <dl
+          v-if="hasHealthObservation"
+          class="mt-4 grid gap-2 rounded-md border border-n-weak px-3 py-3 text-sm sm:grid-cols-2"
+        >
+          <div>
+            <dt class="text-n-slate-11">
+              {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.LAST_CHECK') }}
+            </dt>
+            <dd class="font-medium text-n-slate-12">
+              {{ connection.last_health_checked_at_label }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-n-slate-11">
+              {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.CHECKED_CONFIGURATION') }}
+            </dt>
+            <dd class="font-medium text-n-slate-12">
+              {{
+                t('AI_LEAD_EMPLOYEE.AI_PROVIDER.CHECKED_CONFIGURATION_VALUE', {
+                  model: connection.last_health_model,
+                  tokens: connection.last_health_reply_token_limit,
+                  revision: connection.last_health_configuration_version,
+                })
+              }}
+            </dd>
+          </div>
+        </dl>
+
+        <div
+          v-if="failureGuidance.length"
+          class="mt-4 rounded-md border border-n-ruby-6 bg-n-ruby-2 px-3 py-3 text-sm text-n-ruby-11"
+          role="alert"
+        >
+          <p>{{ failureGuidance[0] }}</p>
+          <p class="mt-1">
+            {{ failureGuidance[1] }}
+            {{
+              t('AI_LEAD_EMPLOYEE.AI_PROVIDER.CHECKED_BUDGET', {
+                count: connection.reply_token_limit,
+              })
+            }}
+          </p>
         </div>
 
         <form class="mt-6 grid gap-5" @submit.prevent="save">
@@ -155,6 +339,36 @@ onMounted(load);
               </option>
             </select>
           </label>
+          <div class="grid gap-5 sm:grid-cols-2">
+            <label class="grid gap-1.5 text-sm font-medium text-n-slate-12">
+              {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.REPLY_TOKEN_LIMIT') }}
+              <input
+                v-model.number="replyTokenLimit"
+                required
+                type="number"
+                min="1"
+                max="4096"
+                class="h-10 rounded-md border border-n-weak bg-n-background px-3 text-sm"
+              />
+              <span class="text-xs font-normal text-n-slate-11">
+                {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.REPLY_TOKEN_HELP') }}
+              </span>
+            </label>
+            <label class="grid gap-1.5 text-sm font-medium text-n-slate-12">
+              {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.DAILY_REQUEST_LIMIT') }}
+              <input
+                v-model.number="dailyRequestLimit"
+                required
+                type="number"
+                min="0"
+                max="100000"
+                class="h-10 rounded-md border border-n-weak bg-n-background px-3 text-sm"
+              />
+              <span class="text-xs font-normal text-n-slate-11">
+                {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.DAILY_LIMIT_HELP') }}
+              </span>
+            </label>
+          </div>
           <label class="grid gap-1.5 text-sm font-medium text-n-slate-12">
             {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.MODEL') }}
             <input

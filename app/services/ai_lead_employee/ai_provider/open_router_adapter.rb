@@ -91,24 +91,46 @@ class AiLeadEmployee::AiProvider::OpenRouterAdapter
     payload = JSON.parse(body)
     raise AiLeadEmployee::AiProvider::InvalidResponseFailure, 'AI provider response was not an object' unless payload.is_a?(Hash)
 
-    choice = Array(payload['choices']).first
-    raise AiLeadEmployee::AiProvider::InvalidResponseFailure, 'AI provider response did not include a choice' unless choice.is_a?(Hash)
-
+    choice = response_choice(payload)
     message = choice.fetch('message', nil)
     finish_reason = choice.fetch('finish_reason', nil)
     raise AiLeadEmployee::AiProvider::InvalidResponseFailure, 'AI provider response did not include an assistant message' unless message.is_a?(Hash)
-
     raise AiLeadEmployee::AiProvider::SafetyRefusalFailure, 'AI provider refused the request' if safety_refusal?(message, finish_reason)
 
     content = message.fetch('content', nil)
     raise AiLeadEmployee::AiProvider::InvalidResponseFailure, 'AI provider response did not include assistant content' if content.blank?
 
+    build_response(payload, content, finish_reason)
+  end
+
+  def response_choice(payload)
+    choice = Array(payload['choices']).first
+    return choice if choice.is_a?(Hash)
+
+    raise AiLeadEmployee::AiProvider::InvalidResponseFailure, 'AI provider response did not include a choice'
+  end
+
+  def build_response(payload, content, finish_reason)
     AiLeadEmployee::AiProvider::Response.new(
       id: payload['id'],
       model: payload['model'] || connection.model,
       content: content,
-      finish_reason: finish_reason
+      finish_reason: finish_reason,
+      input_tokens: integer_usage(payload, 'prompt_tokens'),
+      output_tokens: integer_usage(payload, 'completion_tokens'),
+      total_tokens: integer_usage(payload, 'total_tokens'),
+      cost_usd: decimal_usage(payload, 'cost')
     )
+  end
+
+  def integer_usage(payload, key)
+    value = payload.dig('usage', key)
+    value.to_i if value.is_a?(Integer) && value >= 0
+  end
+
+  def decimal_usage(payload, key)
+    value = payload.dig('usage', key)
+    BigDecimal(value.to_s) if value.is_a?(Numeric) && value >= 0
   end
 
   def safety_refusal?(message, finish_reason)

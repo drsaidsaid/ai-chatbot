@@ -69,7 +69,8 @@ RSpec.describe '/api/v1/accounts/{account.id}/contacts/:id/conversations', type:
       end
 
       context 'with user as agent' do
-        it 'returns conversations from the inboxes which agent has access to' do
+        it 'returns only conversations assigned to the agent' do
+          account.conversations.where(inbox: inbox_1).find_each { |conversation| conversation.update!(assignee: agent) }
           get "/api/v1/accounts/#{account.id}/contacts/#{contact.id}/conversations", headers: agent.create_new_auth_token
 
           expect(response).to have_http_status(:success)
@@ -99,13 +100,10 @@ RSpec.describe '/api/v1/accounts/{account.id}/contacts/:id/conversations', type:
       end
 
       context 'with user as unknown role' do
-        it 'returns conversations from no inboxes' do
+        it 'does not expose the contact to a user without a supported role' do
           get "/api/v1/accounts/#{account.id}/contacts/#{contact.id}/conversations", headers: unknown.create_new_auth_token
 
-          expect(response).to have_http_status(:success)
-          json_response = response.parsed_body
-
-          expect(json_response['payload'].length).to eq 0
+          expect(response).to have_http_status(:not_found)
         end
       end
     end

@@ -132,6 +132,11 @@ _Avoid_: Inline reply, webhook response, model call
 
 **AI Provider Connection**:
 The Business Account-owned, server-side OpenAI-compatible model connection used by AI Orchestration and grounded answer work. It stores encrypted credentials outside `Account.settings`, exposes only redacted status to admins, and keeps provider-specific request details inside adapters.
+R10's [provider control contract](docs/v1-completion-plan/2026-09-09/r10-provider-controls-preparation.md)
+separates configured credentials, observed readiness at the configured reply
+budget, and permission to automate within an explicit daily request allowance.
+The R10 branch implements these controls from baseline `324ee6df`; its ticket
+records bounded fake-provider, UI, build and browser verification before acceptance.
 _Avoid_: OpenRouter settings, browser API key, account settings secret
 
 **Handoff**:
