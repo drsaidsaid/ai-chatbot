@@ -28,7 +28,7 @@ class AiLeadEmployee::AutomatedContactConsentPresenter
 
   def self.active_stops(account, contact_ids)
     LeadFollowUpOptOut.where(account: account, contact_id: contact_ids)
-                      .includes(:consent_event)
+                      .eager_load(:consent_event)
                       .index_by(&:contact_id)
   end
   private_class_method :active_stops
@@ -38,7 +38,9 @@ class AiLeadEmployee::AutomatedContactConsentPresenter
       account: account,
       contact_id: contact_ids,
       purpose: AiLeadEmployee::AutomatedContactConsent::PURPOSE
-    ).order(occurred_at: :desc, id: :desc).group_by(&:contact_id).transform_values(&:first)
+    ).select('DISTINCT ON (contact_id) lead_consent_events.*')
+                    .order(:contact_id, occurred_at: :desc, id: :desc)
+                    .index_by(&:contact_id)
   end
   private_class_method :latest_events
 

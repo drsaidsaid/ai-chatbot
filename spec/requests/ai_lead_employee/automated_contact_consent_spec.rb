@@ -67,7 +67,7 @@ RSpec.describe 'Automated Contact Consent', type: :request do
 
   it 'keeps a mixed stop and support request visible without automated acknowledgement', :aggregate_failures do
     provider_request = stub_request(:post, %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages})
-    content = 'Please stop messaging me. I need a human to help with a refund.'
+    content = 'Please stop messaging me. I have a complaint about a refund and need human support.'
     post_signed_stop(body: content, message_id: 'wamid.R05.STOP.SUPPORT', sender: '255700000109')
 
     Webhooks::WhatsappEventsJob.perform_now(response.parsed_body.fetch('receipt_id'))
@@ -238,14 +238,18 @@ RSpec.describe 'Automated Contact Consent', type: :request do
   end
 
   it 'loads consent state with a fixed query count for a real Conversation list' do
-    create_conversation_for_phone('255700000131')
-    single_count = consent_query_count
-    4.times { |index| create_conversation_for_phone("25570000014#{index}") }
+    process_repeated_stops('255700000131', 'SINGLE')
+    single_count, single_events, single_payload = consent_list_metrics
+    4.times { |index| process_repeated_stops("25570000014#{index}", "PAGE.#{index}") }
 
-    page_count = consent_query_count
+    page_count, page_events, page_payload = consent_list_metrics
 
-    expect(single_count).to be_positive
+    expect(single_count).to eq(2)
     expect(page_count).to eq(single_count)
+    expect(single_events).to eq(1)
+    expect(page_events).to eq(5)
+    expect(single_payload.pluck('automated_contact_consent').pluck('state')).to all(eq('withdrawn'))
+    expect(page_payload.pluck('automated_contact_consent').pluck('state')).to all(eq('withdrawn'))
   end
 
   it 'keeps inaccessible source evidence out of a preloaded Conversation list' do
@@ -262,6 +266,31 @@ RSpec.describe 'Automated Contact Consent', type: :request do
 
     expect(consent).to include('state' => 'withdrawn')
     expect(consent).not_to have_key('evidence')
+  end
+
+  it 'preloads withdrawn consent with fixed queries and scoped evidence for filtered Conversations', :aggregate_failures do
+    operator = create(:user, account: channel.account, role: :agent)
+    process_repeated_stops('255700000151', 'FILTER.SINGLE')
+    first_contact = channel.account.contacts.find_by!(phone_number: '+255700000151')
+    create_conversation_for_contact(first_contact, assignee: operator)
+    single_count, single_events, single_payload = consent_list_metrics(filter: true, user: operator)
+
+    4.times do |index|
+      sender = "25570000016#{index}"
+      process_repeated_stops(sender, "FILTER.PAGE.#{index}")
+      contact = channel.account.contacts.find_by!(phone_number: "+#{sender}")
+      create_conversation_for_contact(contact, assignee: operator)
+    end
+    page_count, page_events, page_payload = consent_list_metrics(filter: true, user: operator)
+
+    expect(single_count).to eq(2)
+    expect(page_count).to eq(single_count)
+    expect(single_events).to eq(1)
+    expect(page_events).to eq(5)
+    expect(single_payload.size).to eq(1)
+    expect(page_payload.size).to eq(5)
+    expect(page_payload.pluck('automated_contact_consent').pluck('state')).to all(eq('withdrawn'))
+    expect(page_payload.pluck('automated_contact_consent')).to all(satisfy { |consent| !consent.key?('evidence') })
   end
 
   it 'invalidates pending automation across every Lead conversation and blocks a late follow-up delivery' do
@@ -343,18 +372,50 @@ RSpec.describe 'Automated Contact Consent', type: :request do
     )
   end
 
-  def consent_query_count
+  def consent_list_metrics(filter: false, user: admin)
+    track_consent_loads { fetch_conversation_list(filter: filter, user: user) }
+  end
+
+  def track_consent_loads
     queries = []
-    subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _start, _finish, _id, payload|
+    consent_event_records = 0
+    sql_subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _start, _finish, _id, payload|
       next if payload[:cached]
       next unless payload[:sql].match?(/FROM "(?:lead_follow_up_opt_outs|lead_consent_events)"/)
 
       queries << payload[:sql]
     end
-    get "/api/v1/accounts/#{channel.account_id}/conversations", headers: admin.create_new_auth_token, as: :json
-    queries.size
+    records_subscriber = ActiveSupport::Notifications.subscribe('instantiation.active_record') do |_name, _start, _finish, _id, payload|
+      consent_event_records += payload[:record_count] if payload[:class_name] == 'LeadConsentEvent'
+    end
+    payload = yield
+    [queries.size, consent_event_records, payload]
   ensure
-    ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
+    ActiveSupport::Notifications.unsubscribe(sql_subscriber) if sql_subscriber
+    ActiveSupport::Notifications.unsubscribe(records_subscriber) if records_subscriber
+  end
+
+  def fetch_conversation_list(filter:, user:)
+    if filter
+      post "/api/v1/accounts/#{channel.account_id}/conversations/filter",
+           headers: user.create_new_auth_token,
+           params: { payload: [{ attribute_key: 'status', filter_operator: 'equal_to', values: ['open'] }] },
+           as: :json
+    else
+      get "/api/v1/accounts/#{channel.account_id}/conversations", headers: user.create_new_auth_token, as: :json
+    end
+    filter ? response.parsed_body.fetch('payload') : response.parsed_body.dig('data', 'payload')
+  end
+
+  def process_repeated_stops(sender, message_prefix)
+    3.times do |index|
+      process_signed_message(
+        body: 'Please stop messaging me.',
+        message_id: "wamid.R05.#{message_prefix}.#{index}",
+        sender: sender,
+        timestamp: (1_789_000_000 + index).to_s
+      )
+    end
   end
 
   def process_signed_message(body:, message_id:, sender:, timestamp: '1789000000')

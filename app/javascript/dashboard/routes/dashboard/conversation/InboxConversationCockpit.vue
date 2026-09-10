@@ -138,6 +138,25 @@ function humanize(value) {
 
 const cockpit = computed(() => currentChat.value?.cockpit || {});
 const qualification = computed(() => currentChat.value?.lead_qualification);
+const automatedContactConsent = computed(
+  () => currentChat.value?.automated_contact_consent || { state: 'unknown' }
+);
+const automatedContactStopped = computed(
+  () => automatedContactConsent.value.state === 'withdrawn'
+);
+const automatedContactKnown = computed(() =>
+  ['withdrawn', 'granted'].includes(automatedContactConsent.value.state)
+);
+const automatedContactTitle = computed(() =>
+  automatedContactStopped.value
+    ? t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.STOPPED')
+    : t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.GRANTED')
+);
+const automatedContactDescription = computed(() =>
+  automatedContactStopped.value
+    ? t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.RESUME_NOTICE')
+    : t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.GRANTED_DESCRIPTION')
+);
 const currentAssignee = computed(() => currentChat.value?.meta?.assignee);
 const currentInbox = computed(() =>
   currentChat.value?.inbox_id
@@ -860,6 +879,44 @@ onMounted(() => {
           <section
             class="shrink-0 border-t border-n-weak bg-n-background px-3 py-2"
           >
+            <div
+              v-if="automatedContactKnown"
+              class="mb-2 flex flex-col gap-1 rounded-lg border p-3 text-xs"
+              :class="
+                automatedContactStopped
+                  ? 'border-n-ruby-5 bg-n-ruby-2'
+                  : 'border-n-teal-5 bg-n-teal-2'
+              "
+              :data-testid="
+                automatedContactStopped
+                  ? 'cockpit-automated-contact-stop'
+                  : 'cockpit-automated-contact-granted'
+              "
+            >
+              <span
+                class="font-medium"
+                :class="
+                  automatedContactStopped ? 'text-n-ruby-11' : 'text-n-teal-11'
+                "
+              >
+                {{ automatedContactTitle }}
+              </span>
+              <span class="text-n-slate-11">
+                {{ automatedContactDescription }}
+              </span>
+              <span
+                v-if="automatedContactConsent.evidence?.text"
+                class="text-n-slate-12"
+              >
+                {{ quotedText(automatedContactConsent.evidence.text) }}
+              </span>
+              <span
+                v-if="automatedContactConsent.evidence?.occurred_at"
+                class="text-n-slate-11"
+              >
+                {{ formatTime(automatedContactConsent.evidence.occurred_at) }}
+              </span>
+            </div>
             <button
               type="button"
               class="flex w-full items-center gap-3 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-3 text-left shadow-sm hover:bg-n-alpha-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand lg:hidden"

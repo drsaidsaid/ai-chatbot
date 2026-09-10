@@ -79,6 +79,14 @@ vi.mock('vue-i18n', () => ({
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.ASSIGN': 'Assign',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.PAUSE_AI': 'Pause AI',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.RESUME_AI': 'Resume AI',
+        'CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.STOPPED':
+          'Automated contact stopped',
+        'CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.RESUME_NOTICE':
+          'Resume AI does not restart automated messages. An administrator must record a newer explicit re-consent message.',
+        'CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.GRANTED':
+          'Automated contact permitted',
+        'CONVERSATION_SIDEBAR.AI_EMPLOYEE.CONSENT.GRANTED_DESCRIPTION':
+          'A newer explicit permission message was recorded.',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAB.SUMMARY': 'Summary',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAB.EVIDENCE': 'Evidence',
         'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.TAB.ACTIVITY': 'Activity',
@@ -258,6 +266,13 @@ const conversationPayload = {
     score: 92,
     reasons: ['Clinic owner asked for WhatsApp automation'],
     missing_signals: ['preferred_demo_time'],
+  },
+  automated_contact_consent: {
+    state: 'withdrawn',
+    evidence: {
+      text: 'Tafadhali usinitumie ujumbe tena.',
+      occurred_at: '2026-08-26T08:58:00Z',
+    },
   },
   cockpit: {
     summary: {
@@ -557,6 +572,13 @@ describe('InboxConversationCockpit', () => {
     expect(wrapper.text()).toContain('Clinic owner');
     expect(wrapper.text()).toContain('1 review open: No Approved Knowledge');
     expect(wrapper.text()).toContain('Reply composer');
+    expect(
+      wrapper.get('[data-testid="cockpit-automated-contact-stop"]').text()
+    ).toContain('Automated contact stopped');
+    expect(wrapper.text()).toContain('Tafadhali usinitumie ujumbe tena.');
+    expect(wrapper.text()).toContain(
+      'Resume AI does not restart automated messages.'
+    );
 
     await wrapper
       .get('button[aria-controls="mobile-lead-brief-panel"]')
