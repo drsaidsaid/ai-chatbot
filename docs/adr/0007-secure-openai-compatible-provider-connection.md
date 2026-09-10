@@ -54,6 +54,13 @@ the final WhatsApp boundary rejects either stale value. Health writes also rejec
 observations older than the latest persisted provider result. Evaluation evidence
 cannot certify launch when no current provider connection exists.
 
+For a classified provider failure, failed-usage and health updates are separate
+best-effort cleanup steps. Logging a cleanup exception uses identifiers and error
+classes but no credentials; logging failure cannot replace the original terminal
+provider classification. If failed-usage persistence fails, the reservation
+stays `reserved`; if it succeeds, it stays `failed` and counted even when the
+health update fails. No automatic reconciliation or provider retry follows.
+
 Provider permission extends the existing ADR 0011 model/output/dispatch boundary;
 it does not introduce another sender or hold Conversation locks during provider
 HTTP. Explicit disablement or exhausted local allowance blocks pending automation.

@@ -61,3 +61,7 @@ remains immutable.
 The final post-response accounting fence and its test-first evidence are recorded
 in `docs/releases/2026-09-11-r10-accounting-follow-up/` as a second immutable
 correction layer.
+The declared-provider-failure cleanup fence and its test-first evidence are
+recorded in `docs/releases/2026-09-11-r10-cleanup-follow-up/`. Provider failure
+classification remains terminal when failed-usage or health bookkeeping fails;
+the failure is logged safely and recovery cannot issue another provider request.

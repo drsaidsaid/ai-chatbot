@@ -226,6 +226,13 @@ cannot be checked out, the request fails closed before provider HTTP. A failure
 to complete accounting after HTTP suppresses the returned output and retains the
 reserved attempt conservatively. That uncertain post-response state becomes a
 terminal orchestration failure so recovery cannot call the provider again.
+When the provider already returned a classified failure, that classification
+remains terminal even if failed-usage or health bookkeeping also fails. Each
+cleanup write is attempted independently and a sanitized error is logged on a
+best-effort basis that cannot mask the provider failure. A
+failed usage write leaves the reservation `reserved`; a successful failed-usage
+write remains `failed` and counted even if the health write fails. Cleanup does
+not reconcile or retry either state automatically.
 
 Extend R04's existing claimed-intent/output fence and
 `Whatsapp::OutboundEligibility` with current provider permission and revision.

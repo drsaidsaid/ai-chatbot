@@ -181,14 +181,27 @@ class AiLeadEmployee::AiProvider::MeteredClient
     raise AiLeadEmployee::AiProvider::AdmissionUnavailableFailure, "AI provider usage admission unavailable: #{e.message}"
   end
 
-  def attempt_cleanup
+  def attempt_cleanup(operation:, reservation:, failure:)
     yield
-  rescue AiLeadEmployee::AiProvider::AdmissionUnavailableFailure, ActiveRecord::RecordNotFound
+  rescue StandardError => e
+    report_cleanup_failure(operation: operation, reservation: reservation, failure: failure, error: e)
+    nil
+  end
+
+  def report_cleanup_failure(operation:, reservation:, failure:, error:)
+    Rails.logger.error(
+      '[AI PROVIDER] provider_failure_cleanup_failed ' \
+      "operation=#{operation} account_id=#{connection.account_id} connection_id=#{connection.id} " \
+      "usage_id=#{reservation&.usage_id || 'none'} provider_failure_class=#{failure.failure_class} " \
+      "cleanup_error_class=#{error.class.name}"
+    )
+  rescue StandardError
     nil
   end
 
   def clean_up_provider_failure(reservation, failure)
-    attempt_cleanup { fail_usage!(reservation&.usage_id, failure.failure_class) }
-    attempt_cleanup { record_provider_failure!(reservation, failure.failure_class) }
+    cleanup_context = { reservation: reservation, failure: failure }
+    attempt_cleanup(operation: 'fail_usage', **cleanup_context) { fail_usage!(reservation&.usage_id, failure.failure_class) }
+    attempt_cleanup(operation: 'record_provider_failure', **cleanup_context) { record_provider_failure!(reservation, failure.failure_class) }
   end
 end
