@@ -97,4 +97,7 @@ its independent Standards and Spec reviews also found no violations. Review
 reports and hashes accompany this document. No old Extra High reviewer was resumed.
 
 The local PostgreSQL and Redis services were stopped after testing. Normal commit
-hooks and post-hook hash verification are recorded separately when completed.
+hooks passed at source commit `6f0b3fdd7a608014b4d5f1aa5736bf4f25b70c5d`; all 18 reviewed
+Ruby hashes and all packaged artifact hashes matched afterward. The first attempt
+stopped for a missing generated Husky helper, restored with the already installed
+Husky installer; no hook was bypassed. See `normal-commit.txt` and `source-commit.json`.

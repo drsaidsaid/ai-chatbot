@@ -1,7 +1,8 @@
 # Emergency conversation repair candidate handoff
 
 The bounded customer-silence/routing repair is implemented on combined development
-base `1aa85090f638c6140aa42939a8d1355762452ab4`. Its exact reviewed content is pinned by `source-sha256.json`. Full R11 and release
+base `1aa85090f638c6140aa42939a8d1355762452ab4`. Source commit: `6f0b3fdd7a608014b4d5f1aa5736bf4f25b70c5d`.
+Its exact reviewed content is pinned by `source-sha256.json`. Full R11 and release
 acceptance remain blocked/incomplete.
 
 ## Behavior
@@ -66,3 +67,6 @@ not evidence of live WhatsApp delivery. All checks here use synthetic local data
 and controlled HTTP; no live provider, Meta, deployment, Launch Gate or knowledge
 mutation has been performed in this task. The coordinator owns integration,
 deployment and live acceptance. No push or full R11 closure is authorized here.
+
+Normal commit hooks passed. All 18 reviewed Ruby hashes and packaged artifact
+hashes matched afterward. See `source-commit.json` and `normal-commit.txt`.

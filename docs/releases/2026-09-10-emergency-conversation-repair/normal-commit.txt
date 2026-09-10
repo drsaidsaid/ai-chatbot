@@ -1,0 +1,9 @@
+Source commit: 6f0b3fdd7a608014b4d5f1aa5736bf4f25b70c5d
+Parent: 1aa85090f638c6140aa42939a8d1355762452ab4
+Normal source commit exit: 0
+Hooks path: .husky
+Clean Ruby hook reports: 18
+Post-hook verification: all 18 reviewed Ruby files and 11 packaged artifacts match.
+Working tree was clean immediately after source commit.
+Initial attempt stopped because the generated local Husky helper was missing. The installed Husky 7.0.4 installer restored it; no hook was bypassed or tracked hook changed.
+All test limitations remain visible; this is not release acceptance.
