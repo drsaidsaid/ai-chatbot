@@ -1,14 +1,15 @@
 # R04 — Deliver an eligible reply once and recover safely
 
-Status: Backend and component acceptance verified; in-app browser acceptance pending.
+Status: Backend, component and in-app desktop/phone acceptance verified; ready for coordinator integration.
 Implemented from integrated R03 baseline
 `f2b184e1c332f0bf68c31dec460f7e5599657a72`; R03 accepted by the coordinator.
 
 Decision: [ADR 0011](../../adr/0011-owned-whatsapp-outbound-delivery.md).
 Acceptance seams: canonical Rails jobs/message APIs, independent database and
 process workers, isolated fake provider HTTP, and the existing Inbox UI.
-Browser validation awaits the coordinator's allocation. No live assets or launch
-approval are implied. Issue remains open until integration verification.
+Browser validation passed in the coordinator-allocated synthetic localhost
+fixture. No live assets or launch approval are implied. Issue remains open until
+coordinator integration verification.
 
 ## Parent
 
@@ -33,12 +34,12 @@ Work within the owned Community Edition Rails/Vue product. Deliver the real narr
 - [x] Assignment, takeover, private/human reply, pause, closure and gate withdrawal invalidate pending automation as required by the product rules.
 - [x] Slow model work does not hold a conversation lock that prevents prompt human takeover.
 - [x] Crash and timeout paths distinguish failed, sent and uncertain acceptance; uncertain sends are reconciled or raised for review without automatic duplicate delivery.
-- [ ] Intent creation and queue-enqueue failures are repaired by a real recovery path; the inbox shows accurate pending/canceled/failed/unknown outcomes.
+- [x] Intent creation and queue-enqueue failures are repaired by a real recovery path; the inbox shows accurate pending/canceled/failed/unknown outcomes.
 - [x] Verify competing-worker and crash cases across the canonical application boundary, not only sandbox decision labels.
 
 ## Blocked by
 
-- https://github.com/drsaidsaid/ai-chatbot/issues/20 (R03).
+- https://github.com/drsaidsaid/ai-chatbot/issues/20 (R03), satisfied by the integrated baseline above.
 
 ## Evidence and scope
 
@@ -52,11 +53,13 @@ The owner approved implementation of all 18 completion tickets in separate Codex
 ## Implementation evidence
 
 See [R04 release evidence](../../releases/2026-09-10-r04/README.md).
-The remaining Inbox criterion has verified API and Vue component checks, plus
-seeded local display fixtures. Real desktop/phone in-app interaction, reload
-persistence and an operator-created send through the running Rails sender to
-the loopback provider remain pending the coordinator's browser allocation.
-#21 remains open and unintegrated until that acceptance is complete.
+The Inbox criterion has verified API/store/component checks and real
+desktop/phone in-app interaction. Five fresh operator-created replies passed
+through the running Rails sender and loopback provider. Live updates, actual
+retry, unknown no-retry, one review per uncertain reply, reload persistence and
+single-row reconciliation passed. See
+[completed browser acceptance](../../releases/2026-09-10-r04/browser-acceptance.md).
+#21 remains open and unintegrated until coordinator integration verification.
 
 Coordinator follow-up scope: correct local payload preparation versus dispatch
 uncertainty, accepted-before-receipt display/evidence, and originating review
@@ -67,14 +70,14 @@ blocked R13 work. Follow-up red/green and rereview evidence is recorded in the
 release directory. The final receipt correction also reserves client aliases
 that normalize to delivery/receipt/echo fields; actual HTTP responses feed the
 Inbox transform and MessageMeta regression, preserving ordinary attributes and
-trusted provider ingress. Browser acceptance remains pending.
+trusted provider ingress. The subsequent corrected browser walkthrough passed.
 
 The first allocated browser pass created and dispatched a new operator reply,
 then exposed a stale live broadcast and hidden grouped-message metadata. Focused
 corrections refresh Message broadcasts from current persisted data and preserve
 each owned delivery's visible outcome. Canonical broadcast and actual MessageList
 regressions reproduce the failures; both targeted rereviews are clear. The
-corrected desktop/phone walkthrough remains queued after R06. See
+corrected desktop/phone walkthrough subsequently passed. See
 [browser correction evidence](../../releases/2026-09-10-r04/browser-corrections.md).
 
 The coordinator's subsequent P2 review reproduced an older `message.created`
@@ -85,4 +88,7 @@ also exposed duplicate Inbox rows. Creation reconciliation collapses both IDs
 while preserving unrelated replies. Canonical queued-job and actual store/list
 evidence is recorded in
 [creation ordering corrections](../../releases/2026-09-10-r04/created-order-corrections.md).
-The corrected desktop/phone walkthrough remains blocked on browser allocation.
+The corrected desktop/phone walkthrough completed on source `3ade7aa`, with no
+new code defect. Browser access was returned to the coordinator. The existing
+306 Ruby examples, 56 frontend checks, production build and clear two-axis
+reviews were retained without rerunning passed checks.

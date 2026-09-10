@@ -3,8 +3,8 @@
 The coordinator's review of `be6ff3a5003783fd1c909e04e081f84d83d1f6d2`
 found that `message.created` still carried the original pending payload. An older
 creation job executed after an outcome update could replace accepted/unknown
-with Pending through the actual Inbox store. Browser acceptance remains pending
-the coordinator's allocation after R06.
+with Pending through the actual Inbox store. The subsequent coordinator-allocated
+[desktop and phone browser acceptance](browser-acceptance.md) passed.
 
 ## Reproduction and correction
 
@@ -60,11 +60,11 @@ it does not assert global ordering across every transport or worker schedule.
 
 Both reviewers' targeted rereviews report zero remaining findings. They were
 read-only; the implementation task owns the execution evidence. The actual
-desktop/phone walkthrough remains pending and is not replaced by these checks.
+desktop/phone walkthrough subsequently passed and is recorded separately.
 
 The corrected Rails process was restarted on port 3224 from the normal-hook
 implementation commit. Login and Conversation HTTP probes returned 200 with
 their new build entrypoints; the Conversation references `dashboard-CBAPqSQd.js`.
 See `created-order-server-probe.json`. These are server/asset checks only. The
-guarded fixture and held delivery jobs remain in place for the coordinator-allocated
+guarded fixture and held delivery jobs remain available after the completed
 browser walkthrough.

@@ -1,5 +1,10 @@
 # R04 two-axis review
 
+The sections below preserve the review history. After the final source review,
+[corrected desktop/phone browser acceptance](browser-acceptance.md) passed with
+no new code defect. The coordinator independently cleared source `3ade7aa` on
+both review axes and verified its evidence/build hashes before browser allocation.
+
 Reviewed the working implementation against integrated R03
 `f2b184e1c332f0bf68c31dec460f7e5599657a72`, using separate Standards and Spec
 review agents. Both agents performed read-only reviews. They did not run tests

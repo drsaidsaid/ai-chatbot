@@ -3,7 +3,8 @@
 The first allocated in-app browser walkthrough used accepted source
 `e1158876814e18617432065ee3b821048aedf4d6`, the preserved synthetic R04 account,
 Rails 3224 and the loopback provider 3225. It exposed two concrete defects.
-**The corrected browser walkthrough is still pending allocation after R06.**
+**The corrected browser walkthrough subsequently passed.** See
+[completed desktop and phone acceptance](browser-acceptance.md).
 
 ## Observed failures
 
@@ -95,6 +96,6 @@ evidence, and verifies no launch gate has been approved.
 
 The browser slot was released to the coordinator/R06 while these corrections
 were implemented and checked. No R06 tab, service, combined verification
-checkout or shared integration was changed. Final browser acceptance still needs
-fresh desktop and phone replies, live/reloaded outcomes, retry controls and
-duplicate-send/review checks before R04 can be integrated.
+checkout or shared integration was changed. The subsequent final browser pass
+verified fresh desktop and phone replies, live/reloaded outcomes, retry controls
+and duplicate-send/review checks. Integration remains with the coordinator.

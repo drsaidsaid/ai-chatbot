@@ -2,7 +2,7 @@
   "implementation_commit": "4b5379610dafb948f5ff83fc347bc9355c9d4a5f",
   "normal_repository_hooks_exit": 0,
   "hooks_bypassed": false,
-  "browser_acceptance": "pending coordinator allocation",
+  "browser_acceptance": "passed corrected synthetic in-app desktop and phone walkthrough",
   "integration_performed": false,
   "follow_up_commit": "ca117f6bb37731ef104e797a85adc90ba107777f",
   "follow_up_normal_repository_hooks_exit": 0,
@@ -66,9 +66,35 @@
     "eslint_warnings": 0,
     "standards_findings": 0,
     "spec_findings": 0,
-    "corrected_browser_walkthrough": "pending allocation after coordinator connection repair and R06"
+    "corrected_browser_walkthrough": "passed on source 3ade7aa; see browser-acceptance.md"
   },
   "created_order_commit": "3ade7aa34cc863ba2043e4a90f4bca79291abdbc",
   "created_order_normal_repository_hooks_exit": 0,
-  "created_order_hooks_bypassed": false
+  "created_order_hooks_bypassed": false,
+  "browser_acceptance_validation": {
+    "implementation_commit": "3ade7aa34cc863ba2043e4a90f4bca79291abdbc",
+    "dashboard_asset": "dashboard-CBAPqSQd.js",
+    "desktop_viewport": "1440x1000",
+    "phone_viewport": "390x844",
+    "snapshots": 17,
+    "provider_records": 10,
+    "fresh_messages": [
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "final_message_count": 13,
+    "provider_requests_before": 5,
+    "provider_requests_after": 11,
+    "explicit_operator_retries": 1,
+    "new_unknown_reviews": 2,
+    "new_code_defects": 0,
+    "runtime_source_changed": false,
+    "passed_tests_or_build_rerun": false,
+    "browser_slot_released": true,
+    "launch_approved": false,
+    "integration_performed": false
+  }
 }

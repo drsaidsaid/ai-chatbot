@@ -1,0 +1,116 @@
+- complementary:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - navigation "AI Lead Employee primary navigation":
+    - list:
+      - link "Inbox":
+        - /url: /app/accounts/1/dashboard
+        - generic: Inbox
+      - link "Leads":
+        - /url: /app/accounts/1/leads
+        - generic: Leads
+      - link "Bookings":
+        - /url: /app/accounts/1/bookings
+        - generic: Bookings
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - generic: Knowledge
+      - link "Settings":
+        - /url: /app/accounts/1/settings/ai-lead-employee/offers-qualification
+        - generic: Settings
+  - button "Bobbi r04-operator@example.test":
+    - generic: Bobbi
+    - generic: r04-operator@example.test
+- main:
+  - complementary "Inbox conversations":
+    - heading "Inbox" [level=1]
+    - button "Filters"
+    - generic "Inbox quick queues":
+      - link "All 1":
+        - /url: /app/accounts/1/dashboard?queue=all
+        - generic: All
+        - generic: "1"
+      - link "Needs review 1":
+        - /url: /app/accounts/1/dashboard?queue=review
+        - generic: Needs review
+        - generic: "1"
+      - link "Hot leads 0":
+        - /url: /app/accounts/1/dashboard?queue=hot
+        - generic: Hot leads
+        - generic: "0"
+    - generic: Search name, phone, or message
+    - searchbox "Search name, phone, or message"
+    - 'button "Open Amina — synthetic R04 Lead conversation #1"':
+      - generic: A—
+      - generic: Amina — synthetic R04 Lead
+      - generic: 6:54
+      - paragraph: "R04 desktop acceptance: this new operator reply must be delivered once."
+      - generic: Unknown
+    - generic: 1 conversations
+  - main:
+    - button "Back to list"
+    - heading "Amina — synthetic R04 Lead" [level=1]
+    - generic: Human Active
+    - generic: "Assignee: Release Operator"
+    - button "Lead details": Lead details
+    - list:
+      - paragraph: Please explain how my messages are delivered.
+      - time: Sep 10, 3:30 AM
+      - paragraph: "Canceled: the operator took over before this AI answer could send."
+      - time: Sep 10, 3:30 AM
+      - status: Canceled
+      - paragraph: "Pending: this saved reply is waiting for the delivery worker."
+      - time: Sep 10, 3:30 AM
+      - status: Pending
+      - paragraph: "Failed: the local provider definitely rejected this reply."
+      - time: Sep 10, 3:30 AM
+      - status: Failed to send
+      - button "Retry delivery"
+      - paragraph: "Unknown: the local provider returned an uncertain outcome. Check the Review Request."
+      - time: Sep 10, 3:30 AM
+      - status: Delivery unknown
+      - paragraph: "Accepted: the local provider acknowledged this reply; delivery and reading are still separate."
+      - time: Sep 10, 3:30 AM
+      - status: Accepted by WhatsApp; awaiting delivery
+      - paragraph: "Delivery failed after acceptance: this reply must not be automatically resent."
+      - time: Sep 10, 3:30 AM
+      - status: Delivery failed
+      - paragraph: "R04 desktop acceptance: this new operator reply must be delivered once."
+      - time: Sep 10, 6:54 AM
+      - status: Accepted by WhatsApp; awaiting delivery
+      - paragraph: "R04 corrected desktop: deliver this fresh reply once."
+      - time: Sep 10, 9:21 AM
+      - status: Accepted by WhatsApp; awaiting delivery
+      - paragraph: "Failed: R04 corrected desktop retry check."
+      - time: Sep 10, 9:22 AM
+      - status: Pending
+      - paragraph: "Unknown: R04 corrected desktop review check."
+      - time: Sep 10, 9:23 AM
+      - status: Delivery unknown
+    - article:
+      - heading "AI proposed next step" [level=2]
+      - generic: Answer Review
+      - paragraph: Delivery outcome unknown for message 5. Check the provider outcome before contacting the Lead again.
+      - generic: "1 review open: Delivery Unknown"
+      - generic "Technical details"
+      - link "Knowledge":
+        - /url: /app/accounts/1/knowledge
+        - text: Knowledge
+      - button "Assign": Assign
+      - button "Resume AI" [disabled]: Resume AI
+    - button "Reply Private Note":
+      - generic: Reply
+      - generic: Private Note
+    - button "Writing tools"
+    - button "Resize reply editor"
+    - paragraph: Shift + enter for new line. Start with '/' to select a Canned Response.
+    - button "Show emoji selector"
+    - generic "Attach files":
+      - button "Attach files"
+      - button
+    - button "Record audio"
+    - button "Enable signature"
+    - button "Whatsapp Templates"
+    - button "Send (⌘ + ↵)" [disabled]:
+      - generic: Send (⌘ + ↵)

@@ -1,7 +1,7 @@
 # R04 — eligible outgoing replies and safe recovery
 
-Backend and component acceptance is verified. **In-app browser acceptance is
-pending the coordinator's allocation after R06.** Issue #21 remains open and
+Backend, component and **corrected in-app desktop/phone acceptance passed**.
+See [browser acceptance evidence](browser-acceptance.md). Issue #21 remains open and
 unintegrated. No customer provider, paid model call, live launch approval or
 external messaging was used.
 
@@ -79,7 +79,8 @@ The previous 301-example/25-Inbox run uses `browser-fixes-*` and
 `browser-grouping-green.txt` logs.
 [Browser-discovered correction evidence](browser-corrections.md) records the
 actual stale live broadcast and hidden grouped metadata, their regressions and
-targeted rereviews. The corrected desktop/phone walkthrough remains pending.
+targeted rereviews. The corrected desktop/phone walkthrough subsequently passed;
+its screenshots and provider records are in `browser-acceptance/`.
 The 292-example receipt correction uses `receipt-alias-*` logs. The previous 291-example and
 8-component correction run and successful production build use `coordinator-*`
 logs; no production frontend source changed in the final alias correction.
@@ -132,7 +133,7 @@ pnpm exec vitest --run \
 RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 pnpm exec vite build
 ```
 
-## Pending in-app browser acceptance
+## Completed in-app browser acceptance
 
 The running fixture uses `ale_release_r04_browser`, Rails 3224 and a loopback
 provider on 3225. [seed_outbound.rb](../../../script/release/whatsapp/seed_outbound.rb)
@@ -146,7 +147,7 @@ The six seeded display states are **fixtures**. Their database states were
 verified through actual sender/control/projector services and are recorded in
 `browser-fixture-states.json`. They do not count as an operator interaction proof.
 
-After allocation, use only the in-app browser to:
+The allocated walkthrough completed the following checks in the in-app browser:
 
 1. Inspect the real Inbox at desktop and phone widths, including reload persistence
    of pending, canceled, failed, unknown, accepted and later delivery-failure states.
@@ -165,3 +166,11 @@ After explicit allocation, R04 opened its own in-app tab and created/dispatched
 a new operator reply. This exposed the corrected broadcast/grouping defects.
 The browser was then released while fixes were checked. No lock-screen retry,
 new unlock request or R06/Meta tab interaction was made by R04.
+
+The corrected walkthrough then created five fresh operator replies across
+desktop and phone widths and used the actual retry control. Live outcomes,
+reload persistence, grouped metadata, unique Message rows, no-resend behavior
+and one review per unknown reply all passed. The provider added six requests:
+five fresh replies and one explicit retry. See [final browser evidence](browser-acceptance.md).
+The browser slot was released to the coordinator. Runtime source, tests and
+build remain those already reviewed at `3ade7aa`; only acceptance evidence changed.

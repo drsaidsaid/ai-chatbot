@@ -1,0 +1,87 @@
+- main:
+  - main:
+    - button "Back to list"
+    - heading "Amina — synthetic R04 Lead" [level=1]
+    - generic: Human Active
+    - generic: "Assignee: Release Operator"
+    - list:
+      - paragraph: Please explain how my messages are delivered.
+      - time: Sep 10, 3:30 AM
+      - paragraph: "Canceled: the operator took over before this AI answer could send."
+      - time: Sep 10, 3:30 AM
+      - status: Canceled
+      - paragraph: "Pending: this saved reply is waiting for the delivery worker."
+      - time: Sep 10, 3:30 AM
+      - status: Pending
+      - paragraph: "Failed: the local provider definitely rejected this reply."
+      - time: Sep 10, 3:30 AM
+      - status: Failed to send
+      - button "Retry delivery"
+      - paragraph: "Unknown: the local provider returned an uncertain outcome. Check the Review Request."
+      - time: Sep 10, 3:30 AM
+      - status: Delivery unknown
+      - paragraph: "Accepted: the local provider acknowledged this reply; delivery and reading are still separate."
+      - time: Sep 10, 3:30 AM
+      - status: Accepted by WhatsApp; awaiting delivery
+      - paragraph: "Delivery failed after acceptance: this reply must not be automatically resent."
+      - time: Sep 10, 3:30 AM
+      - status: Delivery failed
+      - paragraph: "R04 desktop acceptance: this new operator reply must be delivered once."
+      - time: Sep 10, 6:54 AM
+      - status: Accepted by WhatsApp; awaiting delivery
+      - paragraph: "R04 corrected desktop: deliver this fresh reply once."
+      - time: Sep 10, 9:21 AM
+      - status: Accepted by WhatsApp; awaiting delivery
+      - paragraph: "Failed: R04 corrected desktop retry check."
+      - time: Sep 10, 9:22 AM
+      - status: Failed to send
+      - button "Retry delivery"
+      - paragraph: "Unknown: R04 corrected desktop review check."
+      - time: Sep 10, 9:23 AM
+      - status: Delivery unknown
+      - paragraph: "R04 corrected phone: deliver this fresh reply once."
+      - time: Sep 10, 9:26 AM
+      - status: Delivery failed
+      - paragraph: "Unknown: R04 corrected phone review check."
+      - time: Sep 10, 9:28 AM
+      - status: Delivery unknown
+    - button "Not captured · Score 0 · Answer review request":
+      - generic: Not captured · Score 0 · Answer review request
+    - button "Reply Private Note":
+      - generic: Reply
+      - generic: Private Note
+    - button "Writing tools"
+    - button "Resize reply editor"
+    - paragraph: Shift + enter for new line. Start with '/' to select a Canned Response.
+    - button "Show emoji selector"
+    - generic "Attach files":
+      - button "Attach files"
+      - button
+    - button "Record audio"
+    - button "Enable signature"
+    - button "Whatsapp Templates"
+    - button "Send (⌘ + ↵)" [disabled]:
+      - generic: Send (⌘ + ↵)
+- banner:
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+    - text: AI
+  - link "AI Lead Employee":
+    - /url: /app/accounts/1/dashboard
+  - link "Notifications":
+    - /url: /app/accounts/1/inbox-view
+  - link "Your profile":
+    - /url: /app/accounts/1/profile/settings
+- navigation "AI Lead Employee mobile navigation":
+  - list:
+    - link "Inbox":
+      - /url: /app/accounts/1/dashboard
+      - generic: Inbox
+    - link "Leads":
+      - /url: /app/accounts/1/leads
+      - generic: Leads
+    - link "Bookings":
+      - /url: /app/accounts/1/bookings
+      - generic: Bookings
+    - button "More":
+      - generic: More
