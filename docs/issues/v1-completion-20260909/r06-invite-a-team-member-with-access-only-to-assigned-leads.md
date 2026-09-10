@@ -74,3 +74,15 @@ Independent coordinator Standards and Spec reviews both have zero findings;
 issue #23 stays open for combined integration. Accepted browser fixtures/evidence
 are preserved, with no extra build or browser run.
 See `docs/releases/2026-09-10-r06/combined-lock-correction/README.md`.
+
+## Combined test mail capture follow-up
+
+An isolated combined run reproduced two invitation failures because a sendmail
+fallback replaced the explicit test mail catcher when SMTP was absent at boot.
+Correction `58adb4b904ab8b480c7723288bce7ebec900f8de` adds the missing
+test-environment guard and asserts the effective transport before invitation
+requests. The final SMTP-unset run passes all 14 invitation/confirmation-mailer
+examples with actual generated tokens and unchanged acceptance/expiry checks.
+Strict lint and normal hooks pass; independent Standards and Spec reviews both
+have zero findings. No browser, server or frontend build was needed. Evidence is under
+`docs/releases/2026-09-10-r06/invitation-mailer-correction/`.

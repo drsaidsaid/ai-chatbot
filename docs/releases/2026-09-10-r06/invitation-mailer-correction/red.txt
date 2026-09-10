@@ -1,0 +1,66 @@
+
+Owned Team Member invitation
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/Documents/projects/AI-Lead-V1-Combined-Verification/app/models/contact.rb:74)
+  accepts the local invitation, signs in, and revokes only the selected Business Account (FAILED - 1)
+  rejects expired invitation credentials (FAILED - 2)
+  reinvites a revoked member and retains separate notification preferences for each Business Account
+
+Failures:
+
+  1) Owned Team Member invitation accepts the local invitation, signs in, and revokes only the selected Business Account
+     Failure/Error: expect(mail).to be_present
+       expected `nil.present?` to be truthy, got false
+     # ./spec/requests/r06_invitation_spec.rb:20:in 'RSpec::ExampleGroups::OwnedTeamMemberInvitation#invite'
+     # ./spec/requests/r06_invitation_spec.rb:25:in 'block (2 levels) in <top (required)>'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (3 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:24:in 'block in ClimateControl#modify'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'Monitor#synchronize'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'ClimateControl#modify'
+     # ./spec/spec_helper.rb:17:in 'Object#with_modified_env'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  2) Owned Team Member invitation rejects expired invitation credentials
+     Failure/Error: expect(mail).to be_present
+       expected `nil.present?` to be truthy, got false
+     # ./spec/requests/r06_invitation_spec.rb:20:in 'RSpec::ExampleGroups::OwnedTeamMemberInvitation#invite'
+     # ./spec/requests/r06_invitation_spec.rb:49:in 'block (2 levels) in <top (required)>'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (3 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:24:in 'block in ClimateControl#modify'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'Monitor#synchronize'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/climate_control-1.2.0/lib/climate_control.rb:15:in 'ClimateControl#modify'
+     # ./spec/spec_helper.rb:17:in 'Object#with_modified_env'
+     # ./spec/requests/r06_invitation_spec.rb:5:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+Finished in 9.04 seconds (files took 18.82 seconds to load)
+3 examples, 2 failures
+
+Failed examples:
+
+rspec ./spec/requests/r06_invitation_spec.rb:24 # Owned Team Member invitation accepts the local invitation, signs in, and revokes only the selected Business Account
+rspec ./spec/requests/r06_invitation_spec.rb:48 # Owned Team Member invitation rejects expired invitation credentials

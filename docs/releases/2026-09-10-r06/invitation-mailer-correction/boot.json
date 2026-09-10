@@ -1,0 +1,7 @@
+{
+  "rails_test": true,
+  "smtp_blank_before_examples": true,
+  "sender_override_absent": true,
+  "configured_delivery": "test",
+  "effective_delivery": "test"
+}

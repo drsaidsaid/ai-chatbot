@@ -1,0 +1,6 @@
+SMTP_ADDRESS and MAILER_SENDER_EMAIL unset before Rails boot.
+LOG_LEVEL=warn; POSTGRES_DATABASE=ale_release_r06_spec.
+RSpec selection: spec/requests/r06_invitation_spec.rb, spec/mailers/confirmation_instructions_spec.rb; read-only pre-suite boot-probe.
+
+Finished in 7.06 seconds (files took 8.78 seconds to load)
+14 examples, 0 failures

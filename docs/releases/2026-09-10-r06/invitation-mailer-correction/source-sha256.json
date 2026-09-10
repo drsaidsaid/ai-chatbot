@@ -1,0 +1,4 @@
+{
+  "config/initializers/mailer.rb": "4867e3e2eacd48f1a4224d84e3c53a5f946cd7442bc7f9cab8950497ee5c3d92",
+  "spec/requests/r06_invitation_spec.rb": "0f3b4f200a87c1edd047c86568ccf9a513887826b3549f067e0b14e613a3e658"
+}
