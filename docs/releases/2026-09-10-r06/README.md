@@ -9,6 +9,15 @@ re-reviews have zero findings. The browser and build slots are released.
 Issue #23 remains open for coordinator review and integration. This is not a
 production launch approval.
 
+A subsequent combined review found a deadlock between membership cleanup and
+operator-review creation. The backend correction at
+`dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f` changes cleanup's Account lock
+strength and passes all 20 focused membership examples, including a real
+two-connection deadlock regression and both re-invitation orderings. See
+[combined lock correction](combined-lock-correction/README.md) for the preserved
+red proof and final green result. Independent review of this later correction
+is pending. The accepted browser evidence and fixture are unchanged.
+
 ## Source and decision
 
 - Branch: `codex/r06-assigned-access-20260910`.
@@ -116,7 +125,8 @@ real concurrent cleanup and invitation in both orderings.
 See [browser evidence and correction](browser-acceptance/README.md) for exact
 provenance, screenshots, completed cases and regression evidence. Issue #23 remains
 open until coordinator integration. Final browser evidence and source hashes
-record the accepted local result; no further runtime changes followed the checks.
+record the accepted browser checkpoint; the later backend lock-strength
+correction is documented separately above.
 
 ## Isolated reproduction
 

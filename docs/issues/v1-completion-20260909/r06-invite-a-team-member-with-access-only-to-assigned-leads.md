@@ -60,3 +60,16 @@ remain separate; R04 final-send work is not part of this refresh.
 Combined test/build evidence lives under `docs/releases/2026-09-10-r06/integration-refresh/`.
 Local browser acceptance is complete. Shared integration and closing #23 remain
 the coordinator's responsibility.
+
+## Combined lock interaction follow-up
+
+Combined review of tree `f2dc31d4` found a real circular wait between membership
+cleanup's Account lock and R04's Conversation-locked operator-review creation.
+Correction `dd49ef996b1b9e0cb1f9e5c9b356bf781e06b21f` uses Account
+`FOR NO KEY UPDATE`, retaining invitation serialization while permitting Account
+foreign-key checks. The actual two-connection regression fails with a PostgreSQL
+deadlock before correction; the final serial suite passes 20 examples, including
+both existing cleanup/invitation orderings. Lint and normal hooks pass.
+Independent coordinator review is pending; issue #23 stays open. Accepted browser
+fixtures/evidence are preserved, with no extra build or browser run.
+See `docs/releases/2026-09-10-r06/combined-lock-correction/README.md`.
