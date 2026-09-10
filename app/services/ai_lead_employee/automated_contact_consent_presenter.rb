@@ -135,7 +135,7 @@ class AiLeadEmployee::AutomatedContactConsentPresenter
   end
 
   def evidence_visible_for_conversation?(conversation_id)
-    return preloaded[:visible_conversation_ids].include?(conversation_id) if preloaded
+    return preloaded[:administrator] || preloaded[:visible_conversation_ids].include?(conversation_id) if preloaded
 
     access.administrator? || access.conversations.exists?(id: conversation_id)
   end

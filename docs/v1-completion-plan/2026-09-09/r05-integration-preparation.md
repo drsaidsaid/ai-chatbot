@@ -172,7 +172,7 @@ These are future acceptance checks, not results from this preparation.
 | Ownership and restart | Use existing assignment/takeover/pause/resume endpoints, restart isolated workers, and replay recovery. None removes consent suppression or revives canceled work. |
 | Re-consent mutation | Proposed `POST /api/v1/accounts/:account_id/leads/:id/reconsent` rejects unauthorized actors, foreign/old/ambiguous evidence, stale expected stop and plain resume. Fresh explicit evidence records once; sends nothing; a later eligible inbound can proceed subject to every other gate. |
 | Mixed support | Signed stop-plus-refund/support/human-request text records suppression and one local R11 Review Request through the agreed review-only seam; no customer-facing automated acknowledgement. Complaint-only controls retain R11 behavior. |
-| Operator reads and UI | Existing `GET /api/v1/accounts/:account_id/conversations/:display_id`, its messages endpoint, and `GET /api/v1/accounts/:account_id/leads/:id` expose current status and only authorized evidence. Later inspect actual desktop/phone Inbox and Lead detail in R05's allocated in-app tab. |
+| Operator reads and UI | Existing `GET /api/v1/accounts/:account_id/conversations/:display_id`, its messages endpoint, and `GET /api/v1/accounts/:account_id/leads/:id` expose current status and only authorized evidence. Desktop and phone Inbox and Lead detail acceptance completed in R05's allocated in-app tab. |
 
 Use dedicated synthetic Account/Lead data, an isolated database/queue, and the
 existing R03/R04 fake-provider harness after resource allocation. No live customer
@@ -203,18 +203,18 @@ no automated acknowledgment is sent. Core R05 does not wait for or import the
 unaccepted R11 candidate. A future accepted R11 integration may add a local
 review hook without changing the consent interface.
 
-Three coordinator-allocated test intervals used dedicated PostgreSQL and Redis
-services and released them after use. The final post-review focused Rails matrix
-passes 52 examples, including 11 current consent/concurrency/legacy-compatibility
-examples. Focused Vue/API verification passes 23 tests; focused RuboCop, ESLint,
-and normal commit hooks complete cleanly. No live provider, deployment, browser,
-shared processor, or R11 candidate was used. R15 retains its later scheduling
-redesign and must consume the active suppression and pre-withdrawal invalidation
-contract. Do not close issue 22 until coordinator integration and in-app
-acceptance.
+Coordinator-allocated test intervals used dedicated PostgreSQL and Redis services
+and released them after use. The final focused Rails matrix is green, including
+12 public consent request examples and the isolated concurrency and legacy
+compatibility set. Focused Vue/API verification passes 23 tests; focused
+RuboCop, ESLint, and normal commit hooks complete cleanly. Synthetic desktop and
+phone acceptance used the allocated in-app browser. No live provider,
+deployment, shared processor, or R11 candidate was used. R15 retains its later
+scheduling redesign and must consume the active suppression and pre-withdrawal
+invalidation contract. Do not close issue 22 until coordinator integration.
 
 A final review follow-up adds signed mixed stop-plus-support proof and batches
 consent state for the Conversation list. The real list query-count test first
 reproduced growth from 2 consent queries for one row to 10 for five rows, then
-passed at a fixed 2 queries. The updated public request suite passes 10 examples;
+passed at a fixed 2 queries. The updated public request suite passes 12 examples;
 the isolated concurrency and legacy compatibility suite passes 4 examples.

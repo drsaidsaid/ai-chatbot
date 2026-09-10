@@ -37,6 +37,35 @@ RSpec.describe '/api/v1/accounts/{account.id}/contacts/:id/conversations', type:
 
           expect(json_response['payload'].length).to eq 4
         end
+
+        it 'loads consent once for up to 20 Conversations of the same contact' do
+          16.times do
+            create(:conversation, account: account, inbox: inbox_1, contact: contact, contact_inbox: contact_inbox_1)
+          end
+          opted_out_at = Time.zone.at(1_788_999_900)
+          create(
+            :lead_follow_up_opt_out,
+            account: account,
+            contact: contact,
+            conversation: nil,
+            reason: 'legacy_import',
+            opted_out_at: opted_out_at
+          )
+
+          queries, payload = consent_queries do
+            get "/api/v1/accounts/#{account.id}/contacts/#{contact.id}/conversations",
+                headers: admin.create_new_auth_token
+          end
+
+          expect(queries).to eq(2)
+          expect(payload.size).to eq(20)
+          expect(payload.pluck('automated_contact_consent')).to all(
+            include(
+              'state' => 'withdrawn',
+              'evidence' => { 'legacy' => true, 'occurred_at' => opted_out_at.iso8601 }
+            )
+          )
+        end
       end
 
       context 'with user as agent' do
@@ -47,6 +76,25 @@ RSpec.describe '/api/v1/accounts/{account.id}/contacts/:id/conversations', type:
           json_response = response.parsed_body
 
           expect(json_response['payload'].length).to eq 2
+        end
+
+        it 'keeps legacy evidence without a source Conversation hidden' do
+          account.conversations.where(inbox: inbox_1).find_each { |conversation| conversation.update!(assignee: agent) }
+          create(
+            :lead_follow_up_opt_out,
+            account: account,
+            contact: contact,
+            conversation: nil,
+            reason: 'legacy_import'
+          )
+
+          get "/api/v1/accounts/#{account.id}/contacts/#{contact.id}/conversations",
+              headers: agent.create_new_auth_token
+          expect(response).to have_http_status(:success)
+          consent = response.parsed_body.fetch('payload').first.fetch('automated_contact_consent')
+
+          expect(consent).to include('state' => 'withdrawn', 'reason' => 'legacy_import')
+          expect(consent).not_to have_key('evidence')
         end
       end
 
@@ -61,5 +109,18 @@ RSpec.describe '/api/v1/accounts/{account.id}/contacts/:id/conversations', type:
         end
       end
     end
+  end
+
+  def consent_queries(&)
+    queries = []
+    subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _start, _finish, _id, payload|
+      next unless payload[:sql].match?(/FROM "(?:lead_follow_up_opt_outs|lead_consent_events)"/)
+
+      queries << payload[:sql]
+    end
+    ActiveRecord::Base.uncached(&)
+    [queries.size, response.parsed_body.fetch('payload')]
+  ensure
+    ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
   end
 end

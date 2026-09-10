@@ -268,6 +268,37 @@ RSpec.describe 'Automated Contact Consent', type: :request do
     expect(consent).not_to have_key('evidence')
   end
 
+  it 'keeps the same available legacy evidence for an administrator in Conversation detail and list reads' do
+    contact = create(:contact, account: channel.account)
+    conversation = create_conversation_for_contact(contact, source_id: '255700000170')
+    opted_out_at = Time.zone.at(1_788_999_900)
+    create(
+      :lead_follow_up_opt_out,
+      account: channel.account,
+      contact: contact,
+      conversation: nil,
+      reason: 'legacy_import',
+      opted_out_at: opted_out_at
+    )
+
+    get "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}",
+        headers: admin.create_new_auth_token,
+        as: :json
+    detail_consent = response.parsed_body.fetch('automated_contact_consent')
+
+    get "/api/v1/accounts/#{channel.account_id}/conversations", headers: admin.create_new_auth_token, as: :json
+    list_consent = response.parsed_body.dig('data', 'payload').find do |item|
+      item.fetch('id') == conversation.display_id
+    end.fetch('automated_contact_consent')
+
+    expect(detail_consent).to include(
+      'state' => 'withdrawn',
+      'reason' => 'legacy_import',
+      'evidence' => { 'legacy' => true, 'occurred_at' => opted_out_at.iso8601 }
+    )
+    expect(list_consent).to eq(detail_consent)
+  end
+
   it 'preloads withdrawn consent with fixed queries and scoped evidence for filtered Conversations', :aggregate_failures do
     operator = create(:user, account: channel.account, role: :agent)
     process_repeated_stops('255700000151', 'FILTER.SINGLE')

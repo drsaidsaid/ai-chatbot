@@ -1,8 +1,9 @@
 # R05 — Honor a natural-language stop request in the live conversation
 
-Status: Implementation and focused verification complete on the ticket branch;
-awaiting coordinator integration and in-app acceptance. R03 and R04 were accepted
-and integrated at `324ee6df9ca50dff708f41a4004cd105b23a784b` on 10 September 2026.
+Status: Implementation, focused verification, production build, and desktop and
+phone in-app acceptance are complete on the ticket branch; awaiting coordinator
+integration. R03 and R04 were accepted and integrated at
+`324ee6df9ca50dff708f41a4004cd105b23a784b` on 10 September 2026.
 
 ## Parent
 

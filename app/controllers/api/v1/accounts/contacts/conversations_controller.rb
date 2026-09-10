@@ -1,4 +1,6 @@
 class Api::V1::Accounts::Contacts::ConversationsController < Api::V1::Accounts::Contacts::BaseController
+  prepend Api::V1::Accounts::Concerns::ConversationConsentPreload
+
   def index
     # Start with all conversations for this contact
     conversations = Current.account.conversations.includes(
