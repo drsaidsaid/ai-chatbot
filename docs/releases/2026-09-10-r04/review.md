@@ -32,3 +32,30 @@ The final Spec rereview confirmed no remaining targeted findings.
 
 Final findings: Standards 0; Spec 0. In-app browser acceptance remains pending
 allocation and is recorded separately from code-review findings.
+
+
+## Coordinator follow-up review
+
+The coordinator independently found three gaps at `99cc25e`: Standards identified
+local attachment preparation being classified unknown; Spec identified accepted
+messages showing Sent without provider receipts, and rejection racing review-alert
+authorization. Each received a canonical red/green regression and a correction.
+
+The follow-up two-axis review also identified stale prepared credentials,
+client-supplied receipt evidence, recovery/retry lock inversion and late acceptance
+overwriting a concurrent human review decision. Further targeted review required
+token-only credential rotation coverage and Channel-before-Conversation locking
+consistent with R03 ingress. These are covered by creation APIs, persisted Messages,
+signed webhook processing, real provider seams and independent database connections.
+The local review agents' final targeted rereviews confirmed both the merged
+credential snapshot and consistent Channel → Conversation → delivery lock order,
+with no remaining actionable targeted finding. Reviews were read-only; the parent
+task owns execution evidence.
+
+The coordinator also explicitly included BookingMutationService's existing direct
+provider bypass in R04. Its cancel/reschedule notices now share atomic Message
+recording, operator authority and common dispatch/recovery. Separate connection
+regressions cover booking preparation competing with dispatch or cancellation,
+plus review/booking/handoff revocation. Broader calendar correctness remains R13.
+
+Follow-up final findings: Standards 0; Spec 0. Browser acceptance remains pending.

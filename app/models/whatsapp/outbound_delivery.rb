@@ -13,7 +13,8 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
   }
 
   def recover!
-    with_lock do
+    conversation.with_lock do
+      lock!
       if pending?
         update!(updated_at: Time.current) # A queue outage must not starve later rows.
         return true
@@ -38,9 +39,9 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
     end
   end
 
-  def fail_preparation!
+  def fail_preparation!(owner: nil)
     with_lock do
-      return false unless pending?
+      return false unless owner ? claimed? && owner_token == owner : pending?
 
       update!(state: :failed, failure_code: 'preparation_failed')
       message.update!(status: :failed, external_error: 'This reply could not be prepared. Review its content or template before retrying.')

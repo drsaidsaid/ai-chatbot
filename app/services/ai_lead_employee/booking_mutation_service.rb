@@ -13,15 +13,17 @@ class AiLeadEmployee::BookingMutationService
   end
 
   def perform
-    return booking if applied?
+    # Allow booking preparation's Message foreign-key inserts while waiting for
+    # its Booking lock; human activity is still serialized on this Conversation.
+    booking.conversation.with_lock('FOR NO KEY UPDATE') do
+      booking.lock!
+      next if applied?
 
-    Booking.transaction do
       action == 'cancel' ? cancel! : reschedule!
-      remember_mutation!
+      remember_mutation!(record_whatsapp_notice!)
       audit_mutation!
     end
 
-    send_whatsapp_notice!
     booking.reload
   end
 
@@ -73,15 +75,16 @@ class AiLeadEmployee::BookingMutationService
             .exists?(['starts_at < ? AND ends_at > ?', ends_at, starts_at])
   end
 
-  def remember_mutation!
+  def remember_mutation!(message)
     current_payload = booking.reload.calendar_event_payload.to_h
     mutations = current_payload.fetch('mutations', {})
     mutations[idempotency_key] = {
       'action' => action,
       'user_id' => user.id,
+      'message_id' => message.id,
       'applied_at' => Time.current.iso8601
     }
-    booking.update!(calendar_event_payload: current_payload.merge('mutations' => mutations))
+    booking.update!(calendar_event_payload: current_payload.merge('mutations' => mutations), confirmation_message_id: message.id.to_s)
   end
 
   def audit_mutation!
@@ -101,22 +104,16 @@ class AiLeadEmployee::BookingMutationService
     )
   end
 
-  def send_whatsapp_notice!
-    provider_message_id = text_message_client.send_text!(
-      recipient: booking.conversation.contact_inbox.source_id,
-      content: notice_text
-    )
-    Message.create!(
+  def record_whatsapp_notice!
+    booking.conversation.messages.create!(
       account: account,
       inbox: booking.conversation.inbox,
-      conversation: booking.conversation,
+      sender: user,
       message_type: :outgoing,
       content_type: :text,
       content: notice_text,
-      status: :sent,
-      source_id: provider_message_id
+      additional_attributes: { ai_lead_employee: { booking_id: booking.id, booking_mutation_key: idempotency_key } }
     )
-    booking.update!(confirmation_message_id: provider_message_id)
   end
 
   def notice_text
@@ -125,10 +122,6 @@ class AiLeadEmployee::BookingMutationService
     else
       "Your call has been rescheduled for #{booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z')}."
     end
-  end
-
-  def text_message_client
-    @text_message_client ||= Meta::Whatsapp::TextMessageClient.new(whatsapp_channel: booking.conversation.inbox.channel)
   end
 
   def event_payload

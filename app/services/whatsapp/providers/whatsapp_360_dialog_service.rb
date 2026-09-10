@@ -1,18 +1,18 @@
 class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseService
   prepend Whatsapp::OutboundProviderGuard
-  def send_message(phone_number, message)
+  def send_message(phone_number, message, &)
     @message = message
     if message.attachments.present?
-      send_attachment_message(phone_number, message)
+      send_attachment_message(phone_number, message, &)
     elsif message.content_type == 'input_select'
-      send_interactive_text_message(phone_number, message)
+      send_interactive_text_message(phone_number, message, &)
     else
-      send_text_message(phone_number, message)
+      send_text_message(phone_number, message, &)
     end
   end
 
   def send_template(phone_number, template_info, message)
-    response = HTTParty.post(
+    response = yield(
       "#{api_base_path}/messages",
       headers: api_headers,
       timeout: 10,
@@ -60,7 +60,7 @@ class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseS
   end
 
   def send_text_message(phone_number, message)
-    response = HTTParty.post(
+    response = yield(
       "#{api_base_path}/messages",
       headers: api_headers,
       timeout: 10,
@@ -83,7 +83,7 @@ class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseS
     type_content['caption'] = message.outgoing_content unless %w[audio sticker].include?(type)
     type_content['filename'] = attachment.file.filename if type == 'document'
 
-    response = HTTParty.post(
+    response = yield(
       "#{api_base_path}/messages",
       headers: api_headers,
       timeout: 10,
@@ -117,7 +117,7 @@ class Whatsapp::Providers::Whatsapp360DialogService < Whatsapp::Providers::BaseS
   def send_interactive_text_message(phone_number, message)
     payload = create_payload_based_on_items(message)
 
-    response = HTTParty.post(
+    response = yield(
       "#{api_base_path}/messages",
       headers: api_headers,
       timeout: 10,

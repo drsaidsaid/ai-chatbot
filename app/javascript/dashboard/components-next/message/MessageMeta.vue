@@ -40,6 +40,15 @@ const readableTime = computed(() =>
 const { t } = useI18n();
 const localDeliveryLabel = computed(() => {
   if (isPrivate.value || status.value === MESSAGE_STATUS.FAILED) return '';
+  const attributes = contentAttributes.value;
+  if (
+    attributes?.whatsappDelivery?.state === 'accepted' &&
+    status.value === MESSAGE_STATUS.SENT &&
+    !attributes.whatsappProviderStatus &&
+    !attributes.whatsappDeliveryTimestamp
+  ) {
+    return t('CHAT_LIST.DELIVERY_ACCEPTED');
+  }
   const labels = {
     pending: 'CHAT_LIST.DELIVERY_PENDING',
     claimed: 'CHAT_LIST.SENDING',

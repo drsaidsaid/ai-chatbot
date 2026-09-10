@@ -27,7 +27,8 @@ class Whatsapp::MessageStatusProjector
   end
 
   def projected_attributes
-    attributes = @message.content_attributes.merge('whatsapp_delivery_timestamp' => @provider_created_at&.to_i)
+    attributes = @message.content_attributes.merge('whatsapp_delivery_timestamp' => @provider_created_at&.to_i,
+                                                   'whatsapp_provider_status' => @status['status'])
     if @status['status'] == 'failed'
       attributes['whatsapp_delivery_error_code'] = @status.dig('errors', 0, 'code').to_s[/\A\d+\z/]
       attributes['external_error'] = SAFE_DELIVERY_ERROR

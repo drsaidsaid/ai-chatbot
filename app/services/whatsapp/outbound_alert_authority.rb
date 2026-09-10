@@ -17,7 +17,13 @@ class Whatsapp::OutboundAlertAuthority
   end
 
   def failure_code
-    return 'alert_authority_unavailable' unless record && origin_id == record.conversation_id
+    return 'alert_authority_unavailable' unless record
+
+    # The dispatch transaction already owns Conversation and delivery locks.
+    # Serialize all authority updates, including the review rejection API, until
+    # dispatching commits. Provider HTTP begins only after these locks are released.
+    record.lock!
+    return 'alert_authority_unavailable' unless origin_id == record.conversation_id
 
     origin = record.conversation.reload
     return 'control_changed' unless origin_current?(origin)
@@ -52,7 +58,6 @@ class Whatsapp::OutboundAlertAuthority
   end
 
   def record_current?
-    record.reload
     current = record.is_a?(Booking) ? record.confirmed? : record.open?
     return false unless current
     return true if record.is_a?(HumanReviewRequest) || record.assignee_id.nil?

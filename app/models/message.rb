@@ -428,7 +428,8 @@ class Message < ApplicationRecord
   def initialize_whatsapp_delivery_status
     return unless whatsapp_delivery_required?
 
-    self.content_attributes = content_attributes.merge('whatsapp_delivery' => { 'state' => 'pending' })
+    self.content_attributes = content_attributes.except('whatsapp_provider_status', 'whatsapp_delivery_timestamp', 'whatsapp_delivery_error_code')
+                                                .merge('whatsapp_delivery' => { 'state' => 'pending' })
   end
 
   def protect_whatsapp_human_reply

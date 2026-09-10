@@ -1,11 +1,13 @@
 class Whatsapp::OutboundDispatch
   Rejected = Class.new(StandardError)
   AcceptanceUnknown = Class.new(StandardError)
+  AuthorizationCanceled = Class.new(StandardError)
   def initialize(message:, channel:, recipient:, template: nil)
     @message = message
     @delivery = message&.whatsapp_outbound_delivery
     @owner = SecureRandom.uuid
     @channel = channel
+    @connection_snapshot = connection_snapshot
     @recipient = recipient
     @template = template
   end
@@ -13,20 +15,29 @@ class Whatsapp::OutboundDispatch
   def perform
     return unless @delivery
     return unless claim
-    return unless authorize
 
-    provider_id = yield
+    provider_id = yield(method(:request))
     usable_provider_id?(provider_id) ? accept(provider_id) : unknown!
     provider_id
+  rescue AuthorizationCanceled
+    nil
   rescue Rejected
     fail!
     nil
   rescue StandardError
-    unknown!
+    unknown! unless @delivery&.fail_preparation!(owner: @owner)
     nil
   end
 
   private
+
+  # Arguments are fully prepared before this call, including dispatch-time media
+  # capabilities and JSON serialization. Only the HTTP operation crosses the boundary.
+  def request(url, **options)
+    raise AuthorizationCanceled unless authorize
+
+    HTTParty.post(url, options)
+  end
 
   def usable_provider_id?(provider_id)
     provider_id.is_a?(String) && provider_id.present? && provider_id.bytesize <= 512
@@ -48,7 +59,7 @@ class Whatsapp::OutboundDispatch
 
       next false unless greeting_ready?
 
-      code = Whatsapp::OutboundEligibility.new(delivery: @delivery, channel: @channel, recipient: @recipient, template: @template).failure_code
+      code = eligibility_failure
       if code
         @delivery.update!(state: :canceled, failure_code: code)
         @delivery.publish!
@@ -60,12 +71,27 @@ class Whatsapp::OutboundDispatch
     end
   end
 
+  def connection_snapshot
+    [@channel.provider, @channel.phone_number, @channel.provider_config.deep_dup]
+  end
+
+  def eligibility_failure
+    return 'connection_changed' unless @connection_snapshot == connection_snapshot
+
+    Whatsapp::OutboundEligibility.new(delivery: @delivery, channel: @channel, recipient: @recipient, template: @template).failure_code
+  end
+
   def with_authority_locks
     @message.reload
     origin_id = Whatsapp::OutboundAlertAuthority.new(@message).origin_id
     Conversation.transaction do
+      # Canonical ingress also locks Channel before Conversation.
+      @channel.lock!
       # Lock only owned Conversations, in stable order, including an alert's origin.
-      Conversation.where(account_id: @delivery.account_id, id: [@delivery.conversation_id, origin_id].compact).order(:id).lock.load
+      # NO KEY UPDATE still serializes control changes while allowing foreign-key
+      # inserts by booking preparation already holding its originating record.
+      Conversation.where(account_id: @delivery.account_id, id: [@delivery.conversation_id, origin_id].compact)
+                  .order(:id).lock('FOR NO KEY UPDATE').load
       @delivery.conversation.reload
       yield
     end
@@ -99,7 +125,8 @@ class Whatsapp::OutboundDispatch
 
       @message.update!(source_id: provider_id, external_error: nil)
       @delivery.update!(state: :accepted, provider_message_id: provider_id, accepted_at: Time.current, failure_code: nil)
-      HumanReviewRequest.open.where(account_id: @delivery.account_id, lead_message_id: @message.id, reason: :delivery_unknown).find_each do |review|
+      HumanReviewRequest.open.where(account_id: @delivery.account_id, lead_message_id: @message.id,
+                                    reason: :delivery_unknown).lock.find_each do |review|
         review.update!(status: :resolved, resolved_at: Time.current, resolution_kind: 'provider_accepted')
       end
       @delivery.publish!
@@ -109,7 +136,8 @@ class Whatsapp::OutboundDispatch
   def unknown!
     return unless @delivery
 
-    @delivery.with_lock do
+    @delivery.conversation.with_lock do
+      @delivery.lock!
       return unless @delivery.owner_token == @owner && @delivery.dispatching?
 
       @delivery.record_unknown!

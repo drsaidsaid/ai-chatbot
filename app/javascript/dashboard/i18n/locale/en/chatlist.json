@@ -8,6 +8,7 @@
     },
     "FAILED_TO_SEND": "Failed to send",
     "DELIVERY_PENDING": "Pending",
+    "DELIVERY_ACCEPTED": "Accepted by WhatsApp; awaiting delivery",
     "DELIVERY_CANCELED": "Canceled",
     "DELIVERY_UNKNOWN": "Delivery unknown",
     "DELIVERY_FAILED": "Delivery failed",

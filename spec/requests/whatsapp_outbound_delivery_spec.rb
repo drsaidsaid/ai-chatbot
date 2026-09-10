@@ -100,6 +100,49 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     expect(HumanReviewRequest.count).to eq(0)
   end
 
+  it 'keeps provider acceptance distinct from projected sent history through the Message API' do
+    stub_request(:post, provider_url).to_return(status: 200, body: '{"messages":[{"id":"wamid.RECEIPT.HISTORY"}]}',
+                                                headers: { 'Content-Type' => 'application/json' })
+    SendReplyJob.perform_now(outgoing.id)
+    path = "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages"
+    headers = admin.create_new_auth_token
+    get path, headers: headers
+    accepted = response.parsed_body.fetch('payload').find { |row| row['id'] == outgoing.id }
+    expect(accepted.dig('content_attributes', 'whatsapp_delivery', 'state')).to eq('accepted')
+    expect(accepted.dig('content_attributes', 'whatsapp_provider_status')).to be_nil
+
+    Whatsapp::MessageStatusProjector.new(message: outgoing.reload, status: { status: 'sent', timestamp: Time.current.to_i.to_s }).perform
+    get path, headers: headers
+    sent = response.parsed_body.fetch('payload').find { |row| row['id'] == outgoing.id }
+    expect(sent.dig('content_attributes', 'whatsapp_provider_status')).to eq('sent')
+    expect(sent.dig('content_attributes', 'whatsapp_delivery', 'state')).to eq('accepted')
+  end
+
+  it 'rejects client-supplied provider receipt evidence when creating an outgoing Message' do
+    post "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages",
+         headers: admin.create_new_auth_token,
+         params: { content: 'Wait for a real receipt', content_attributes: {
+           whatsapp_provider_status: 'sent', whatsapp_delivery_timestamp: Time.current.to_i, whatsapp_delivery_error_code: '190'
+         } }, as: :json
+    expect(response).to have_http_status(:ok)
+    message = conversation.messages.outgoing.sole
+    expect(message.content_attributes).not_to include('whatsapp_provider_status', 'whatsapp_delivery_timestamp', 'whatsapp_delivery_error_code')
+    expect(message.whatsapp_outbound_delivery).to be_pending
+  end
+
+  it 'does not allow the creation API to impersonate a provider-accepted echo' do
+    post "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages",
+         headers: admin.create_new_auth_token, params: {
+           content: 'Client metadata is not provider evidence', source_id: 'wamid.FORGED',
+           content_attributes: { external_echo: true, whatsapp_delivery: { state: 'accepted' }, whatsapp_provider_status: 'sent' }
+         }, as: :json
+    expect(response).to have_http_status(:ok)
+    message = conversation.messages.outgoing.sole
+    expect(message.source_id).to be_nil
+    expect(message.content_attributes).not_to include('external_echo', 'whatsapp_provider_status')
+    expect(message.whatsapp_outbound_delivery).to be_pending
+  end
+
   it 'recovers an outgoing Message committed during a queue outage without asking the operator to recreate it' do
     adapter_class = Class.new do
       def enqueue(*)
@@ -378,6 +421,70 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     expect(outgoing.external_error).to be_nil
     expect(request).to have_been_requested.twice
   end
+
+  # The worker reloads persisted Attachments; intercept only their dispatch-time media capability boundary.
+  # rubocop:disable RSpec/AnyInstance
+  %w[whatsapp_cloud default].each do |provider|
+    it "keeps #{provider} local attachment preparation failure retryable without making a provider request" do
+      channel.update!(provider: provider)
+      attachment = outgoing.attachments.new(account: channel.account, file_type: :image)
+      attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+      attachment.save!
+      # Media capability generation is a local boundary and can fail before any HTTP request.
+      allow_any_instance_of(Attachment).to receive(:download_url).and_raise(ActiveSupport::MessageVerifier::InvalidSignature)
+      url = provider == 'default' ? 'https://waba.360dialog.io/v1/messages' : provider_url
+      request = stub_request(:post, url).to_return(status: 200, body: '{"messages":[{"id":"wamid.MEDIA.RETRY"}]}',
+                                                   headers: { 'Content-Type' => 'application/json' })
+
+      SendReplyJob.perform_now(outgoing.id)
+
+      expect(request).not_to have_been_requested
+      expect(outgoing.reload.whatsapp_outbound_delivery).to have_attributes(state: 'failed', failure_code: 'preparation_failed',
+                                                                            dispatch_started_at: nil)
+      expect(HumanReviewRequest.where(lead_message: outgoing, reason: :delivery_unknown)).to be_empty
+      allow_any_instance_of(Attachment).to receive(:download_url).and_call_original
+      perform_enqueued_jobs(only: SendReplyJob) do
+        post "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation.display_id}/messages/#{outgoing.id}/retry",
+             headers: admin.create_new_auth_token
+      end
+      expect(response).to have_http_status(:ok)
+      expect(outgoing.reload.source_id).to eq('wamid.MEDIA.RETRY')
+      expect(request).to have_been_requested.once
+    end
+  end
+
+  %w[token_only routing].each do |rotation|
+    it "cancels prepared media after a #{rotation} connection change before authorization" do
+      attachment = outgoing.attachments.new(account: channel.account, file_type: :image)
+      attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+      attachment.save!
+      entered = Queue.new
+      release = Queue.new
+      allow_any_instance_of(Attachment).to receive(:download_url).and_wrap_original do |method|
+        entered << true
+        release.pop
+        method.call
+      end
+      request = stub_request(:post, provider_url).to_return(status: 200, body: '{"messages":[{"id":"wamid.STALE.CONNECTION"}]}',
+                                                            headers: { 'Content-Type' => 'application/json' })
+      message_id = outgoing.id
+      worker = Thread.new { ActiveRecord::Base.connection_pool.with_connection { SendReplyJob.perform_now(message_id) } }
+      Timeout.timeout(10) { entered.pop }
+      changed = channel.provider_config.merge('api_key' => 'rotated-test-key')
+      changed['phone_number_id'] = '987654321' if rotation == 'routing'
+      channel.update!(provider_config: changed)
+      release << true
+      worker.value
+
+      expect(request).not_to have_been_requested
+      expect(outgoing.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'connection_changed')
+    ensure
+      release << true if release
+      worker&.join
+    end
+  end
+
+  # rubocop:enable RSpec/AnyInstance
 
   %w[membership_removed assignee_changed].each do |change|
     it "rechecks the human sender at the actual dispatch boundary after #{change}" do

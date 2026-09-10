@@ -1,14 +1,14 @@
 class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseService # rubocop:disable Metrics/ClassLength
   prepend Whatsapp::OutboundProviderGuard
-  def send_message(phone_number, message)
+  def send_message(phone_number, message, &)
     @message = message
 
     if message.attachments.present?
-      send_attachment_message(phone_number, message)
+      send_attachment_message(phone_number, message, &)
     elsif message.content_type == 'input_select'
-      send_interactive_text_message(phone_number, message)
+      send_interactive_text_message(phone_number, message, &)
     else
-      send_text_message(phone_number, message)
+      send_text_message(phone_number, message, &)
     end
   end
 
@@ -24,7 +24,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
       template: template_body
     }
 
-    response = HTTParty.post(
+    response = yield(
       "#{phone_id_path}/messages",
       headers: api_headers,
       timeout: 10,
@@ -130,7 +130,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
   def business_account_path = "#{api_base_path}/v14.0/#{whatsapp_channel.provider_config['business_account_id']}"
 
   def send_text_message(phone_number, message)
-    response = HTTParty.post(
+    response = yield(
       "#{phone_id_path}/messages",
       headers: api_headers,
       timeout: 10,
@@ -151,7 +151,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     normalize_opus_content_type(attachment)
     type = %w[image audio video].include?(attachment.file_type) ? attachment.file_type : 'document'
     type_content = build_attachment_content(type, attachment, message)
-    response = HTTParty.post(
+    response = yield(
       "#{phone_id_path('v24.0')}/messages",
       headers: api_headers,
       timeout: 10,
@@ -248,7 +248,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
   def send_interactive_text_message(phone_number, message)
     payload = create_payload_based_on_items(message)
 
-    response = HTTParty.post(
+    response = yield(
       "#{phone_id_path}/messages",
       headers: api_headers,
       timeout: 10,

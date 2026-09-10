@@ -1,9 +1,10 @@
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref, toRef } from 'vue';
 import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import { createI18n } from 'vue-i18n';
 import MessageMeta from '../MessageMeta.vue';
 import MessageError from '../MessageError.vue';
+import MessageStatus from '../MessageStatus.vue';
 import { provideMessageContext } from '../provider';
 import chatlist from 'dashboard/i18n/locale/en/chatlist.json';
 
@@ -11,19 +12,23 @@ const wrappers = [];
 const mountDelivery = (state, status = 'sent', sourceId = null) => {
   const TestHost = defineComponent({
     components: { MessageMeta, MessageError },
-    setup() {
+    props: {
+      status: { type: String, required: true },
+      contentAttributes: { type: Object, required: true },
+    },
+    setup(props) {
       provideMessageContext({
-        status: ref(status),
+        status: toRef(props, 'status'),
         isPrivate: ref(false),
         createdAt: ref(Math.floor(Date.now() / 1000)),
         sourceId: ref(sourceId),
         messageType: ref(1),
-        contentAttributes: ref({ whatsappDelivery: { state } }),
+        contentAttributes: toRef(props, 'contentAttributes'),
         orientation: ref('right'),
         content: ref('A persisted reply'),
         attachments: ref([]),
       });
-      return { failed: status === 'failed' };
+      return { failed: computed(() => props.status === 'failed') };
     },
     template:
       '<div><MessageMeta /><MessageError v-if="failed" error="Check the connection." /></div>',
@@ -39,6 +44,7 @@ const mountDelivery = (state, status = 'sent', sourceId = null) => {
     },
   });
   const wrapper = mount(TestHost, {
+    props: { status, contentAttributes: { whatsappDelivery: { state } } },
     global: {
       plugins: [
         store,
@@ -78,4 +84,31 @@ describe('WhatsApp delivery outcomes in the Inbox', () => {
     await wrapper.get('button').trigger('click');
     expect(wrapper.getComponent(MessageError).emitted('retry')).toHaveLength(1);
   });
+
+  it.each(['sent', 'delivered', 'read'])(
+    'waits for provider evidence before advancing to %s',
+    async providerStatus => {
+      const wrapper = mountDelivery('accepted', 'sent', 'wamid.ACCEPTED');
+      expect(wrapper.text()).toContain(
+        'Accepted by WhatsApp; awaiting delivery'
+      );
+      expect(wrapper.findComponent(MessageStatus).exists()).toBe(false);
+
+      await wrapper.setProps({
+        status: providerStatus,
+        contentAttributes: {
+          whatsappDelivery: { state: 'accepted' },
+          whatsappProviderStatus: providerStatus,
+        },
+      });
+      expect(wrapper.text()).not.toContain('awaiting delivery');
+      expect(wrapper.getComponent(MessageStatus).props('status')).toBe(
+        providerStatus
+      );
+      await wrapper.setProps({ status: 'failed' });
+      expect(wrapper.findComponent(MessageStatus).exists()).toBe(false);
+      expect(wrapper.text()).toContain('Delivery failed');
+      expect(wrapper.find('button').exists()).toBe(false);
+    }
+  );
 });

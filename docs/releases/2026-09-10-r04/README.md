@@ -24,7 +24,7 @@ A definite rejection or preparation failure is failed; uncertain acceptance is
 unknown, creates one local Review Request and cannot be retried automatically or
 through the generic Inbox retry action. A late acknowledgment from the original
 owner can reconcile that review. Provider acceptance remains separate from
-verified delivered/read status. Recovery repairs lost enqueues and abandoned
+verified sent/delivered/read status. Recovery repairs lost enqueues and abandoned
 claims in bounded batches. Legacy messages without provider IDs become unknown
 on upgrade and are not replayed.
 
@@ -35,13 +35,15 @@ copied or replaced.
 
 ## Validation
 
-- **235 selected Ruby examples passed**, including 37 canonical outgoing cases,
+- **291 selected Ruby examples passed** after coordinator corrections, including 44 canonical outgoing cases,
   two real Rails-process kill cases, R03 ingress/concurrency, existing canonical
   launch flow, orchestration, domain outbox, follow-up, handoff/review/booking,
-  both WhatsApp providers and native MessagesController regressions.
-- **5 Vue component tests passed** against the actual MessageMeta/MessageError
-  components: pending/canceled/unknown display and retry eligibility.
-- **Production Vite build passed**, 1m57s. Existing Browserslist and bundle-size
+  both WhatsApp providers, native Message/Bookings/Review APIs, the Message builder,
+  nine independent-connection authority cases and five booking notice cases.
+- **8 Vue component tests passed** against the actual MessageMeta/MessageError
+  components: pending/canceled/unknown display, acceptance awaiting receipt,
+  projected sent/delivered/read advancement, provider failure and retry eligibility.
+- **Corrected production Vite build passed**, 1m19s. Existing Browserslist and bundle-size
   warnings remain. No dependency or lockfile change was made.
 - Ruby lint passed on changed Ruby files. Frontend lint has no errors and one
   finite translation-key mapping warning; it does not affect the production build.
@@ -60,6 +62,11 @@ after the provider accepts but before the Message ID commits. Recovery sends
 once in the former case and raises one unknown review without resending in the
 latter. These are canonical-path checks, not evaluation-sandbox labels.
 
+The current follow-up results use `coordinator-*` logs. The earlier 235-example
+run and original build remain preserved as initial implementation evidence.
+[Coordinator correction details](coordinator-follow-up.md) map each regression to
+its red/green evidence and define the narrow booking scope.
+
 Logs and [SHA-256 manifest](SHA256SUMS) are in this directory. All fixtures are
 synthetic. Frozen audit artifacts were not modified.
 
@@ -75,6 +82,8 @@ database at the same time. Process-provider ports are allocated ephemerally.
 ```sh
 bundle exec rspec spec/requests/whatsapp_outbound_delivery_spec.rb \
   spec/requests/whatsapp_outbound_crash_spec.rb \
+  spec/requests/whatsapp_alert_authority_spec.rb \
+  spec/requests/whatsapp_booking_notice_spec.rb \
   spec/requests/whatsapp_ingress_spec.rb spec/requests/whatsapp_concurrency_spec.rb \
   spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb \
   spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb \
@@ -88,7 +97,10 @@ bundle exec rspec spec/requests/whatsapp_outbound_delivery_spec.rb \
   spec/services/conversations/message_window_service_spec.rb \
   spec/services/whatsapp/send_on_whatsapp_service_spec.rb \
   spec/services/whatsapp/providers \
-  spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb
+  spec/controllers/api/v1/accounts/conversations/messages_controller_spec.rb \
+  spec/controllers/api/v1/accounts/bookings_controller_spec.rb \
+  spec/requests/api/v1/accounts/human_review_requests_controller_spec.rb \
+  spec/builders/messages/message_builder_spec.rb
 pnpm exec vitest --run \
   app/javascript/dashboard/components-next/message/specs/WhatsappDelivery.spec.js \
   --minWorkers=1 --maxWorkers=1

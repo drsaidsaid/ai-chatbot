@@ -57,3 +57,10 @@ seeded local display fixtures. Real desktop/phone in-app interaction, reload
 persistence and an operator-created send through the running Rails sender to
 the loopback provider remain pending the coordinator's browser allocation.
 #21 remains open and unintegrated until that acceptance is complete.
+
+Coordinator follow-up scope: correct local payload preparation versus dispatch
+uncertainty, accepted-before-receipt display/evidence, and originating review
+rejection serialization. Include the reachable booking cancel/reschedule notice
+bypass: atomically record one operator-authored Message per mutation identity and
+use shared dispatch/recovery. Broader calendar/rescheduling correctness remains
+blocked R13 work. Follow-up red/green and rereview evidence is being recorded.
