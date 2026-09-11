@@ -12,7 +12,7 @@ class AiLeadEmployee::BotHandoffDispatchJob < ApplicationJob
 
       conversation = event.account.conversations.find(event.payload.fetch('conversation_id'))
       validate_event!(event, conversation)
-      dispatched = conversation.dispatch_bot_handoff_event(outbox_event_id: event.id)
+      dispatched = conversation.dispatch_bot_handoff_event(outbox_event_id: event.id, occurred_at: event.created_at)
       raise DispatchFailed, 'Bot handoff event enqueue failed' if dispatched == false
 
       event.update!(state: :delivered, attempts: event.attempts + 1, delivered_at: Time.current,

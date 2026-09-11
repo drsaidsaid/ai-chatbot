@@ -137,6 +137,10 @@ Bot Handoff commits a durable Outbox Event with the Control State transition.
 Each notification and reporting consumer records a unique receipt with its
 effect, allowing safe retry after a worker interruption. The scheduled outbox
 dispatcher recovers committed handoffs whose immediate enqueue is lost.
+An Agent Bot may request that handoff only while it is still the active bot for
+the Conversation's Inbox and remains the exact bot assigned to the Conversation;
+the service rechecks all three facts while holding the Conversation lock. A
+recovered handoff retains the Outbox Event creation time as its occurrence time.
 _Avoid_: Conversation status, bot status
 
 **AI Orchestration**:

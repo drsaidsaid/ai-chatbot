@@ -114,8 +114,41 @@ failed. Those logs are retained at `tmp/release-r07/red-final-backend.log` and
   and completed in 2 minutes 59 seconds with a 4 GiB Node heap. Its local log is
   `tmp/release-r07/build-final.log` (SHA-256
   `088c1051e8b231e0441f54fe8ac874dfc30190f8820c6bbbe909375aa178c3e4`).
-  The final `public/vite/.vite/manifest.json` SHA-256 is
+The final `public/vite/.vite/manifest.json` SHA-256 is
   `f051781f2afd3383cb4fe12c3b5f8c0cbdbc4783b6a0b09c38f9241b60f65a91`.
+
+## Post-commit review follow-up
+
+Integration review after evidence commit `c47f771` found two further bounded
+public-control cases. The prepared follow-up passes the authenticated Agent Bot
+into the locked service transition and rechecks that it remains accessible,
+actively associated with the Conversation Inbox and the exact assigned bot. It
+also dispatches recovery with the Outbox Event creation time so reporting does
+not treat a delayed recovery as the handoff occurrence time.
+
+Public regressions cover an unrelated Inbox bot and reassignment between the
+controller guard and service lock, preserving status, Control State, control
+version, assignment, pending intent and outbox absence on rejection. The
+recovery regression covers original occurrence time and repeated recovery
+idempotency.
+
+All three regressions failed for their intended reasons against immutable
+evidence commit `c47f771`: both unauthorized bot requests returned HTTP 200, and
+the delayed recovery dispatched with the recovery time two hours after the
+Outbox Event. The log is `tmp/release-r07/red-post-c47.log` (SHA-256
+`9c8122a822a066264c25c35d3da8d8c6db4f562bb8f6144a9de0953baf6278b0`).
+
+With the follow-up restored, 7 focused public authorization, recovery, reporting
+and consumer-receipt examples passed. A further 15 existing control-service,
+handoff-job and receipt examples passed. The logs are
+`tmp/release-r07/green-post-c47.log` (SHA-256
+`9bb3aeb345eca6ef5f965a3bf60faa37e576ed0fa975e937820f858c50b947c7`)
+and `tmp/release-r07/green-post-c47-preservation.log` (SHA-256
+`abf1de2cd1ebd6c4aa33ced3dc22d33d531b700f03856be6b78298530d7b9d58`).
+All changed Ruby files pass RuboCop and `git diff --check` is clean. Frontend
+bytes are unchanged from source commit `89d96da`, so its verified 89 tests and
+production build remain the applicable UI evidence; no additional UI build is
+required for this backend-only follow-up.
 - The first-candidate production Vite build transformed 5,078 modules with a 4 GiB Node heap.
   Its full output is preserved locally at `tmp/release-r07/build.log` (SHA-256
   `91ae2187086ad698b7a045b11b0ab198ba1a1bde80a8ade94ddca9a69f5ad27b`).

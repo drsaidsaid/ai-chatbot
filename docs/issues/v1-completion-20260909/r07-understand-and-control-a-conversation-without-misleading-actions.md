@@ -47,7 +47,11 @@ runtime was prepared without provider credentials or outbound traffic. Independe
 review then required durable handoff recovery and false-enqueue handling. Those
 corrections pass the final automated checks and both final reviews, while their
 normal commit hooks left the reviewed tree unchanged and the exact-source
-production build passed. The
+production build passed. Post-commit integration review then required a bounded
+follow-up for locked Agent Bot identity/assignment checks and original handoff
+occurrence time during scheduled recovery. All three regressions failed for the
+intended reasons against `c47f771`; the corrected authorization, recovery and
+preservation checks pass with clean changed-file lint. The
 in-app browser could not be used because the host reported that the Mac was
 locked and automatic unlock failed. The final criterion remains open until the
 final source candidate completes the required desktop, phone and keyboard walk.

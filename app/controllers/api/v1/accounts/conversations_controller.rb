@@ -84,7 +84,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
 
   def toggle_status
     if bot_handoff?
-      service = Conversations::ControlService.new(conversation: @conversation)
+      service = Conversations::ControlService.new(conversation: @conversation, actor: Current.user)
       event = service.handoff_requested!
       AiLeadEmployee::BotHandoffDispatchJob.perform_later(event.id)
     elsif Current.user.is_a?(User)

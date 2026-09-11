@@ -1147,7 +1147,7 @@ RSpec.describe 'Conversations API', type: :request do
       it 'triggers handoff event when moving from pending to open' do
         create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
         allow(Rails.configuration.dispatcher).to receive(:dispatch)
-        pending_conversation.update!(control_state: :ai_active, control_version: 2)
+        pending_conversation.update!(control_state: :ai_active, control_version: 2, assignee_agent_bot: agent_bot)
 
         post "/api/v1/accounts/#{account.id}/conversations/#{pending_conversation.display_id}/toggle_status",
              headers: { api_access_token: agent_bot.access_token.token },
@@ -1168,6 +1168,56 @@ RSpec.describe 'Conversations API', type: :request do
           .with(Events::Types::CONVERSATION_BOT_HANDOFF, kind_of(Time), conversation: pending_conversation, notifiable_assignee_change: false,
                                                                         changed_attributes: anything, performed_by: anything,
                                                                         outbox_event_id: event.id)
+      end
+
+      it 'rejects handoff from an unrelated inbox bot without changing state or pending work' do
+        assigned_bot = create(:agent_bot, account: account)
+        create(:agent_bot_inbox, inbox: inbox, agent_bot: assigned_bot)
+        create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
+        pending_conversation.update!(control_state: :ai_active, control_version: 2, assignee_agent_bot: assigned_bot)
+        pending_intent = create(:ai_orchestration_intent, account: account, conversation: pending_conversation)
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{pending_conversation.display_id}/toggle_status",
+             headers: { api_access_token: agent_bot.access_token.token },
+             params: { status: 'open' },
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(pending_conversation.reload).to have_attributes(
+          status: 'pending', control_state: 'ai_active', control_version: 2, assignee_agent_bot: assigned_bot
+        )
+        expect(pending_intent.reload).to be_pending
+        expect(OutboxEvent.where(aggregate: pending_conversation)).to be_empty
+      end
+
+      it 'rejects handoff when the bot is reassigned before the control lock' do
+        replacement_bot = create(:agent_bot, account: account)
+        create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
+        create(:agent_bot_inbox, inbox: inbox, agent_bot: replacement_bot)
+        pending_conversation.update!(control_state: :ai_active, control_version: 2, assignee_agent_bot: agent_bot)
+        pending_intent = create(:ai_orchestration_intent, account: account, conversation: pending_conversation)
+        reassigned = false
+        allow(Conversations::ControlService).to receive(:new).and_wrap_original do |original, **arguments|
+          unless reassigned
+            # rubocop:disable Rails/SkipsModelValidations -- Deterministically reassign after the controller guard.
+            Conversation.where(id: pending_conversation.id).update_all(assignee_agent_bot_id: replacement_bot.id)
+            # rubocop:enable Rails/SkipsModelValidations
+            reassigned = true
+          end
+          original.call(**arguments)
+        end
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{pending_conversation.display_id}/toggle_status",
+             headers: { api_access_token: agent_bot.access_token.token },
+             params: { status: 'open' },
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(pending_conversation.reload).to have_attributes(
+          status: 'pending', control_state: 'ai_active', control_version: 2, assignee_agent_bot: replacement_bot
+        )
+        expect(pending_intent.reload).to be_pending
+        expect(OutboxEvent.where(aggregate: pending_conversation)).to be_empty
       end
 
       it 'does not change Inbox status or dispatch handoff when the locked transition fails' do
@@ -1193,7 +1243,7 @@ RSpec.describe 'Conversations API', type: :request do
         expect(Rails.configuration.dispatcher).not_to have_received(:dispatch)
       end
 
-      it 'deduplicates handoff requests and retries the durable event once' do
+      it 'rejects a repeated bot request after handoff and retries the durable event once' do
         create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
         pending_conversation.update!(control_state: :ai_active, control_version: 2, assignee_agent_bot: agent_bot)
 
@@ -1207,7 +1257,7 @@ RSpec.describe 'Conversations API', type: :request do
              params: { status: 'open' },
              as: :json
 
-        expect(response).to have_http_status(:success)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(pending_conversation.reload).to have_attributes(
           status: 'open', control_state: 'handoff_requested', control_version: 3, assignee_agent_bot: nil
         )

@@ -155,6 +155,10 @@ effect, so replay after a worker interruption cannot apply an effect twice. The
 scheduled outbox dispatcher recovers a committed handoff when its immediate job
 enqueue is lost. An asynchronous dispatcher rejection is recorded as a failed
 attempt and leaves the event pending for recovery.
+The authenticated Agent Bot, its active Inbox association and its exact
+Conversation assignment are rechecked under the same Conversation lock before
+the transition. Dispatch uses the Outbox Event creation time, preserving the
+handoff occurrence time when scheduled recovery runs later.
 
 Explicit resume from Human Active clears the Human Operator assignment as it
 returns the Conversation to AI Active. This preserves the assigned-only access

@@ -169,10 +169,12 @@ class Conversations::ControlService
   def validate_actor_access!
     return if actor.blank?
 
-    access = AiLeadEmployee::AccessScope.new(account: conversation.account, user: actor)
-    return if access.conversations.exists?(id: conversation.id)
-
-    raise InvalidTransition, 'Conversation control access changed; refresh and try again'
+    allowed = if actor.is_a?(AgentBot)
+                Conversations::AgentBotControlAccess.allowed?(conversation: conversation, agent_bot: actor)
+              else
+                AiLeadEmployee::AccessScope.new(account: conversation.account, user: actor).conversations.exists?(id: conversation.id)
+              end
+    raise InvalidTransition, 'Conversation control access changed; refresh and try again' unless allowed
   end
 
   def invalidate_pending_ai!(block_reason)

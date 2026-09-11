@@ -56,6 +56,11 @@ concurrent jobs cannot repeat the state transition. Notification and reporting
 consumers claim unique database receipts with their effects so replay after a
 worker interruption cannot apply an effect twice. The existing scheduled outbox
 dispatcher also recovers committed handoffs whose immediate enqueue is lost.
+Bot-triggered handoff additionally requires the authenticated bot to remain the
+exact Conversation assignee with an active association to that Inbox; these
+facts are rechecked inside the Conversation lock. Recovery dispatches with the
+Outbox Event creation time so reporting reflects the transition rather than the
+later recovery run.
 
 Queued revocation cleanup must serialize its membership recheck and mutations
 with invitation creation under the Account row lock. Cleanup uses
