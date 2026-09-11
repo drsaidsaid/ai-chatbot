@@ -126,6 +126,12 @@ actively associated with the Conversation Inbox and the exact assigned bot. It
 also dispatches recovery with the Outbox Event creation time so reporting does
 not treat a delayed recovery as the handoff occurrence time.
 
+The immutable follow-up source is commit
+`54c8713f4be95cab718cc9e13b2c9f2f0a261b45`, with tree
+`083cd69ecbf50e75ff5b3324f601a0d7d5501592`. The staged tree before normal
+commit hooks had the same identity, so the hooks did not alter the reviewed and
+tested source.
+
 Public regressions cover an unrelated Inbox bot and reassignment between the
 controller guard and service lock, preserving status, Control State, control
 version, assignment, pending intent and outbox absence on rejection. The

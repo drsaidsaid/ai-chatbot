@@ -51,7 +51,8 @@ production build passed. Post-commit integration review then required a bounded
 follow-up for locked Agent Bot identity/assignment checks and original handoff
 occurrence time during scheduled recovery. All three regressions failed for the
 intended reasons against `c47f771`; the corrected authorization, recovery and
-preservation checks pass with clean changed-file lint. The
+preservation checks pass with clean changed-file lint. Normal hooks preserved
+the reviewed source as immutable follow-up commit `54c8713`. The
 in-app browser could not be used because the host reported that the Mac was
 locked and automatic unlock failed. The final criterion remains open until the
 final source candidate completes the required desktop, phone and keyboard walk.
