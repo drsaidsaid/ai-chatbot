@@ -85,3 +85,17 @@ after commit. The identity/business-only LeadUpdateService path does not call
 `latest_conversation`, assignment, qualification or provider services; it saves
 the Contact and writes its audit row. This supports the proposed lock order for
 the narrow import shape, but it does not make the candidate accepted.
+
+The R08 candidate at `96c2ae7b5d7dea261ba901b000462499edc0c55c`
+implements only this import boundary. Authorization and file reading occur
+before the transaction. Within apply, local lock and statement timeouts are
+configured, and the contacts table lock is the first acquired database lock.
+Identity resolution and signed-token verification then run under that lock.
+Before resolution and before every row write, statement timeout is reset to the
+remaining monotonic budget. An outer Ruby timeout covers the complete transaction
+wall time, including Ruby work and database calls; PostgreSQL 16 cannot provide
+a native transaction timeout. Either the one-second lock wait, a database query
+timeout, or the outer deadline raises through the transaction and rolls every row
+back. The API maps those cases to `import_retry_later`. This is a reviewed V1
+candidate rather than a claim that Ruby asynchronous timeout has database-native
+hard-deadline semantics.
