@@ -35,9 +35,15 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
 
   def submit
     revision = @template.latest_revision
-    return render json: { error: 'Only a local draft can be submitted.' }, status: :conflict unless revision&.draft?
+    accepted = revision&.with_lock do
+      revision.reload
+      next false unless revision.draft?
 
-    revision.update!(status: :submission_pending, submitted_at: Time.current, submitted_by: Current.user)
+      revision.update!(status: :submission_pending, submitted_at: Time.current, submitted_by: Current.user)
+      true
+    end
+    return render json: { error: 'Only a local draft can be submitted.' }, status: :conflict unless accepted
+
     Whatsapp::TemplateSubmissionJob.perform_later(revision)
     render json: payload(@template), status: :accepted
   end

@@ -9,12 +9,15 @@ class Whatsapp::TemplateSubmissionService
 
   def perform(reconcile: false)
     return reconcile! if reconcile
-    return unless @revision.submission_pending?
+    return unless claim_submission!
 
     response = HTTParty.post(endpoint, headers: headers, body: request_body.to_json, timeout: 10)
     return unknown! unless response.success?
 
-    @revision.update!(provider_template_id: response['id'], status: :submitted, status_synced_at: Time.current)
+    provider_id = response_payload(response)['id']
+    return unknown! if provider_id.blank?
+
+    @revision.update!(provider_template_id: provider_id, status: :submitted, status_synced_at: Time.current)
   rescue Timeout::Error
     unknown!
   end
@@ -25,7 +28,7 @@ class Whatsapp::TemplateSubmissionService
     response = HTTParty.get("#{endpoint}?name=#{CGI.escape(@revision.whatsapp_template.name)}", headers: headers, timeout: 10)
     return unknown! unless response.success?
 
-    provider = Array(response['data']).find { |item| item['name'] == @revision.whatsapp_template.name }
+    provider = Array(response_payload(response)['data']).find { |item| item['name'] == @revision.whatsapp_template.name }
     return unknown! unless provider
 
     status = provider['status'].to_s.downcase
@@ -38,6 +41,20 @@ class Whatsapp::TemplateSubmissionService
 
   def unknown!
     @revision.update!(status: :unknown, status_synced_at: Time.current) unless @revision.unknown?
+  end
+
+  def claim_submission!
+    @revision.with_lock do
+      @revision.reload
+      next false unless @revision.submission_pending?
+
+      @revision.update!(status: :submitting)
+      true
+    end
+  end
+
+  def response_payload(response)
+    response.parsed_response.is_a?(Hash) ? response.parsed_response : {}
   end
 
   def endpoint

@@ -9,17 +9,36 @@ import Button from 'dashboard/components-next/button/Button.vue';
 const store = useStore();
 const templates = ref([]);
 const saving = ref(false);
+const variableExamples = ref({});
 const form = ref({
   inbox_id: '',
   name: '',
   language: 'en_US',
   category: 'UTILITY',
   body: '',
-  buttons: [],
+  media_type: '',
+  media_url: '',
+  button_type: '',
+  button_text: '',
+  button_url: '',
 });
 const inboxes = computed(() =>
   store.getters['inboxes/getInboxes'].filter(
     inbox => inbox.channel_type === 'Channel::Whatsapp'
+  )
+);
+const variablePositions = computed(() => [
+  ...new Set(
+    [...form.value.body.matchAll(/\{\{\s*(\d+)\s*\}\}/g)].map(match =>
+      Number(match[1])
+    )
+  ),
+]);
+const previewBody = computed(() =>
+  form.value.body.replace(/\{\{\s*(\d+)\s*\}\}/g, (placeholder, position) =>
+    variableExamples.value[position]?.trim()
+      ? variableExamples.value[position]
+      : placeholder
   )
 );
 
@@ -32,12 +51,35 @@ const load = async () => {
 const save = async () => {
   saving.value = true;
   try {
-    const variables = [...form.value.body.matchAll(/\{\{\s*(\d+)\s*\}\}/g)].map(
-      match => ({ position: Number(match[1]) })
-    );
+    const variables = variablePositions.value.map(position => ({
+      position,
+      example: variableExamples.value[position]?.trim() || '',
+    }));
+    const media =
+      form.value.media_type && form.value.media_url
+        ? {
+            format: form.value.media_type,
+            example: { header_handle: [form.value.media_url] },
+          }
+        : {};
+    const buttons = form.value.button_type
+      ? [
+          {
+            type: form.value.button_type,
+            text: form.value.button_text,
+            url: form.value.button_url,
+          },
+        ]
+      : [];
     const { data } = await whatsappTemplatesAPI.create({
-      ...form.value,
+      inbox_id: form.value.inbox_id,
+      name: form.value.name,
+      language: form.value.language,
+      category: form.value.category,
+      body: form.value.body,
       variables,
+      media,
+      buttons,
     });
     templates.value.unshift(data);
     form.value = {
@@ -46,8 +88,13 @@ const save = async () => {
       language: 'en_US',
       category: 'UTILITY',
       body: '',
-      buttons: [],
+      media_type: '',
+      media_url: '',
+      button_type: '',
+      button_text: '',
+      button_url: '',
     };
+    variableExamples.value = {};
     useAlert('Draft saved. Local validation is not Meta approval.');
   } catch (error) {
     useAlert(
@@ -135,10 +182,97 @@ onMounted(load);
             class="mt-1 w-full rounded border border-n-weak p-2"
           />
         </label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="text-sm font-medium text-n-slate-12">
+            Optional media header
+            <select
+              v-model="form.media_type"
+              class="mt-1 w-full rounded border border-n-weak p-2"
+            >
+              <option value="">No media</option>
+              <option value="IMAGE">Image</option>
+              <option value="VIDEO">Video</option>
+              <option value="DOCUMENT">Document</option>
+            </select>
+          </label>
+          <label
+            v-if="form.media_type"
+            class="text-sm font-medium text-n-slate-12"
+          >
+            Public sample media URL
+            <input
+              id="whatsapp-template-media-url"
+              v-model.trim="form.media_url"
+              required
+              type="url"
+              class="mt-1 w-full rounded border border-n-weak p-2"
+            />
+          </label>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="text-sm font-medium text-n-slate-12">
+            Optional button
+            <select
+              v-model="form.button_type"
+              class="mt-1 w-full rounded border border-n-weak p-2"
+            >
+              <option value="">No button</option>
+              <option value="QUICK_REPLY">Quick reply</option>
+              <option value="URL">Website</option>
+              <option value="PHONE_NUMBER">Phone number</option>
+            </select>
+          </label>
+          <label
+            v-if="form.button_type"
+            class="text-sm font-medium text-n-slate-12"
+          >
+            Button text
+            <input
+              id="whatsapp-template-button-text"
+              v-model.trim="form.button_text"
+              required
+              class="mt-1 w-full rounded border border-n-weak p-2"
+            />
+          </label>
+          <label
+            v-if="form.button_type === 'URL'"
+            class="text-sm font-medium text-n-slate-12"
+          >
+            Button URL
+            <input
+              id="whatsapp-template-button-url"
+              v-model.trim="form.button_url"
+              required
+              type="url"
+              class="mt-1 w-full rounded border border-n-weak p-2"
+            />
+          </label>
+        </div>
+        <div
+          v-if="variablePositions.length"
+          class="grid gap-3 rounded border border-n-weak p-4"
+        >
+          <p class="text-sm font-medium text-n-slate-12">
+            Variable sample values
+          </p>
+          <label
+            v-for="position in variablePositions"
+            :key="position"
+            class="text-sm text-n-slate-11"
+          >
+            Variable &#123;&#123;{{ position }}&#125;&#125;
+            <input
+              :id="`whatsapp-template-variable-${position}`"
+              v-model.trim="variableExamples[position]"
+              required
+              class="mt-1 w-full rounded border border-n-weak p-2"
+            />
+          </label>
+        </div>
         <aside class="rounded bg-n-solid-2 p-4 text-sm text-n-slate-12">
           <p class="font-medium">Recipient preview</p>
           <p class="mt-2 whitespace-pre-wrap">
-            {{ form.body || 'Your template text will appear here.' }}
+            {{ previewBody || 'Your template text will appear here.' }}
           </p>
           <p class="mt-2 text-n-slate-11">
             Use numbered variables such as &#123;&#123;1&#125;&#125;. They are
@@ -171,7 +305,7 @@ onMounted(load);
                 Meta charge:
                 {{
                   record.meta_charge_estimate
-                    ? `${record.meta_charge_estimate.amount} ${record.meta_charge_estimate.currency} · ${record.meta_charge_estimate.market} · ${record.meta_charge_estimate.source}`
+                    ? `${record.meta_charge_estimate.amount} ${record.meta_charge_estimate.currency} · ${record.meta_charge_estimate.market} · ${record.meta_charge_estimate.effective_on} · ${record.meta_charge_estimate.source}`
                     : 'Unknown — obtain a current Meta estimate before broadcast.'
                 }}
               </p>
@@ -184,11 +318,12 @@ onMounted(load);
               >
                 Submit to Meta </Button
               ><Button
-                v-if="record.status === 'unknown'"
+                v-if="!['draft', 'submission_pending'].includes(record.status)"
+                data-testid="sync-meta-status"
                 sm
                 @click="reconcile(record)"
               >
-                Reconcile
+                Sync Meta status
               </Button>
             </div>
           </div>
