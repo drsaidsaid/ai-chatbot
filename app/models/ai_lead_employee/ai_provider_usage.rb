@@ -15,6 +15,16 @@ class AiLeadEmployee::AiProviderUsage < ApplicationRecord
   validates :purpose, inclusion: { in: PURPOSES }
   validates :status, inclusion: { in: STATUSES }
   validates :period_on, :started_at, presence: true
+  validate :account_matches_connection
 
   scope :for_utc_day, ->(day) { where(period_on: day) }
+
+  private
+
+  def account_matches_connection
+    return if account_id.blank? || ai_provider_connection.blank?
+    return if account_id == ai_provider_connection.account_id
+
+    errors.add(:account, 'must match the AI provider connection Business Account')
+  end
 end

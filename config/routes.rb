@@ -200,9 +200,7 @@ Rails.application.routes.draw do
               post :resolve
             end
           end
-          resource :ai_provider_connection, only: [:show, :update, :destroy] do
-            post :health_check
-          end
+          resource :ai_provider_connection, only: [:show]
           resource :qualification_configuration, only: [:show, :update]
           resource :whatsapp_connection, only: [:show, :update] do
             post :health_check
@@ -663,6 +661,9 @@ Rails.application.routes.draw do
           delete :avatar, on: :member
         end
         resources :accounts, only: [:index, :create, :show, :update, :destroy] do
+          resource :ai_provider_connection, only: [:show, :update, :destroy] do
+            post :health_check
+          end
           resources :account_users, only: [:index, :create] do
             collection do
               delete :destroy

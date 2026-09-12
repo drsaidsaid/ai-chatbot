@@ -35,10 +35,10 @@ RSpec.describe 'AI provider usage controls', type: :request do
 
     expect(response).to have_http_status(:success)
     expect(response.parsed_body).to include(
-      'requests_used_today' => 1,
-      'cost_usd_today' => nil,
-      'cost_data_complete' => false
+      'managed_service' => true,
+      'requests_used_today' => 1
     )
+    expect(response.parsed_body).not_to have_key('cost_usd_today')
     expect(provider_response).to have_attributes(
       configuration_version: account.ai_provider_connection.configuration_version,
       usage_period_on: Time.current.utc.to_date

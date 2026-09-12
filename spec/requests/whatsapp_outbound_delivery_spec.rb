@@ -380,12 +380,14 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     end
     Timeout.timeout(10) { provider_entered.pop }
 
+    platform_app = create(:platform_app)
+    create(:platform_app_permissible, platform_app: platform_app, permissible: channel.account)
     session = ActionDispatch::Integration::Session.new(Rails.application)
-    headers = admin.create_new_auth_token
+    headers = { api_access_token: platform_app.access_token.token }
     update_worker = Thread.new do
       ActiveRecord::Base.connection_pool.with_connection do
         session.patch(
-          "/api/v1/accounts/#{channel.account_id}/ai_provider_connection",
+          "/platform/api/v1/accounts/#{channel.account_id}/ai_provider_connection",
           headers: headers,
           params: { model: 'openai/gpt-5.2', reply_token_limit: 256, daily_request_limit: 100 },
           as: :json
@@ -429,14 +431,16 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     end
     Timeout.timeout(10) { authorization_read.pop }
 
+    platform_app = create(:platform_app)
+    create(:platform_app_permissible, platform_app: platform_app, permissible: channel.account)
     session = ActionDispatch::Integration::Session.new(Rails.application)
-    headers = admin.create_new_auth_token
+    headers = { api_access_token: platform_app.access_token.token }
     update_started = Queue.new
     update_worker = Thread.new do
       ActiveRecord::Base.connection_pool.with_connection do
         update_started << true
         session.patch(
-          "/api/v1/accounts/#{channel.account_id}/ai_provider_connection",
+          "/platform/api/v1/accounts/#{channel.account_id}/ai_provider_connection",
           headers: headers,
           params: { model: 'openai/gpt-5.2', reply_token_limit: 512, daily_request_limit: 10 },
           as: :json

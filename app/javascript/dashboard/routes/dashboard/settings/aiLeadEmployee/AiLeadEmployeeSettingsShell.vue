@@ -31,7 +31,7 @@ const sections = computed(() => [
   {
     key: 'ai_provider',
     routeName: 'owned_ai_provider_settings',
-    label: 'AI provider',
+    label: 'Managed AI',
     icon: 'i-lucide-brain-circuit',
   },
   {
