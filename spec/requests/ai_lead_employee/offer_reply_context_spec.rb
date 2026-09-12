@@ -94,7 +94,7 @@ RSpec.describe 'Frozen Offer context for normal replies and handoffs', type: :re
   end
 
   def handoff_scenario
-    offer = r09_create_offer(r09_configuration(currency: 'USD', minimum: '1000.00'))
+    offer = r09_create_offer(r09_sales_call_configuration(currency: 'USD'))
     conversation = r09_conversation(offer: offer)
     account.update!(settings: account.settings.deep_merge('ai_lead_employee' => {
                                                             'alert_routes' => { AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE => [{
@@ -104,7 +104,10 @@ RSpec.describe 'Frozen Offer context for normal replies and handoffs', type: :re
     incoming = create(:message, account: account, inbox: conversation.inbox, conversation: conversation,
                                 sender: conversation.contact, message_type: :incoming,
                                 content: 'I need more leads now. I am the owner of the agency and can spend $2500.')
-    result = AiLeadEmployee::QualificationService.new(conversation: conversation, incoming_message: incoming).perform
+    AiLeadEmployee::QualificationService.new(conversation: conversation, incoming_message: incoming).perform
+    r09_record_offer_evidence(conversation, offer, 'contact_details', '+255700111231')
+    r09_record_offer_evidence(conversation, offer, 'sales_call_agreement', true)
+    result = AiLeadEmployee::QualificationService.new(conversation: conversation).perform
     [offer, conversation, result]
   end
 

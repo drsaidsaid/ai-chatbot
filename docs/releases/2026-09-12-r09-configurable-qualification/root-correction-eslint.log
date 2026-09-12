@@ -1,0 +1,5 @@
+
+/Users/ghalyasaid/Documents/projects/AI-Lead-R09-Final-Review/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue
+  38:22  warning  '`AI_LEAD_EMPLOYEE.OFFERS.${key}`' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
+
+✖ 1 problem (0 errors, 1 warning)

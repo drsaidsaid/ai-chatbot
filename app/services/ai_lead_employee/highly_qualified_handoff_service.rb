@@ -2,6 +2,8 @@
 
 class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/ClassLength
   ALERT_TYPE = 'highly_qualified_sales_handoff'
+  SALES_CALL_AGREEMENT_FIELD = 'sales_call_agreement'
+  SALES_CALL_DIMENSIONS = %w[fit readiness action_eligibility].freeze
   DEFAULT_UNQUALIFIED_HUMAN_REQUEST_EXPLANATION =
     'I need to confirm a few details first so the right Human Operator can help you.'
 
@@ -122,8 +124,26 @@ class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/Cl
   def qualification_action_allowed?
     return legacy_highly_qualified? unless qualification.offer
     return false unless qualification.offer.next_step['kind'] == 'sales_call'
+    return false if qualification.unqualified?
 
-    qualification.assessment.values.all? { |dimension| dimension['status'].in?(%w[met not_required]) }
+    valid_sales_call_assessment? && explicit_sales_call_agreement?
+  end
+
+  def valid_sales_call_assessment?
+    assessment = qualification.assessment
+    assessment.is_a?(Hash) && SALES_CALL_DIMENSIONS.all? do |dimension|
+      dimension_assessment = assessment[dimension]
+      dimension_assessment.is_a?(Hash) && dimension_assessment['status'] == 'met' &&
+        dimension_assessment['missing_fields'] == [] && dimension_assessment['reasons'] == []
+    end
+  end
+
+  def explicit_sales_call_agreement?
+    question = qualification.offer.questions.find { |candidate| candidate['key'] == SALES_CALL_AGREEMENT_FIELD }
+    return false unless question&.[]('answer_type') == 'boolean'
+
+    agreement = qualification.evidence_snapshot[SALES_CALL_AGREEMENT_FIELD]
+    agreement.is_a?(Hash) && agreement['typed_value'] == true && agreement['polarity'] == 'positive'
   end
 
   def legacy_highly_qualified?

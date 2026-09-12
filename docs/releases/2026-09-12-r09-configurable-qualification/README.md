@@ -25,6 +25,18 @@ Fresh acceptance was completed in the Codex in-app browser against the local app
 
 ## Integrity
 
-The independent final amendment review is recorded in [final-amendment-code-review.md](final-amendment-code-review.md). It found one blocking P1 contract mismatch, one hard documentation-flow violation, and two non-blocking duplication findings.
+The independent final amendment review is recorded in [final-amendment-code-review.md](final-amendment-code-review.md). It found one blocking P1 contract mismatch, one hard documentation-flow violation, and two non-blocking duplication findings. The later root review identified the repeated-rule overwrite and the fail-open sales-call admission in [root-review-findings.md](root-review-findings.md); its clarified gate supersedes the earlier action-eligibility-only recommendation.
+
+## Root correction
+
+The authorised correction preserves every same-field requirement as an order-independent conjunction and makes automated sales-call admission fail closed. It requires canonical met fit/readiness/action assessments, no Unqualified exclusion, and explicit positive boolean `sales_call_agreement` evidence. The existing settings panel exposes that stable boolean field without adding fixed business qualification questions.
+
+- Focused Rails behavior and delivery revisions: 59 examples, 0 failures. See [root-correction-rails.log](root-correction-rails.log).
+- Additional amended Offer behavior: 47 examples, 0 failures. See [root-correction-rails-additional.log](root-correction-rails-additional.log).
+- Offer authority and configuration concurrency: 11 examples, 0 failures. See [root-correction-concurrency.log](root-correction-concurrency.log).
+- Offer settings Vue suite: 1 file, 9 tests passed. See [root-correction-vue.log](root-correction-vue.log).
+- Focused RuboCop: 9 files inspected, no offenses. See [root-correction-rubocop.log](root-correction-rubocop.log).
+- Focused ESLint: 0 errors and the existing dynamic-i18n-key warning. See [root-correction-eslint.log](root-correction-eslint.log).
+- The final two-axis correction review found three test/validation gaps and one metadata-coupling issue; all were resolved before these checks. The remaining manifest-refresh observation is resolved by the checksums below.
 
 SHA-256 checksums for the evidence files are recorded in [manifest.sha256](manifest.sha256). The unrelated untracked `graft/` directory was excluded.

@@ -53,7 +53,7 @@ RSpec.describe 'Optional business-defined Offer qualification', type: :request d
     expect(first.fetch('assessment')).to include(
       'fit' => include('status' => 'met', 'missing_fields' => []),
       'readiness' => include('status' => 'missing', 'missing_fields' => ['urgency']),
-      'action_eligibility' => include('status' => 'missing', 'missing_fields' => ['contact_details'])
+      'action_eligibility' => include('status' => 'missing', 'missing_fields' => %w[contact_details sales_call_agreement])
     )
 
     record_evidence(conversation, offer, 'contact_details', '+255700222333')
@@ -61,11 +61,12 @@ RSpec.describe 'Optional business-defined Offer qualification', type: :request d
     expect(second.fetch('assessment')).to include(
       'fit' => include('status' => 'met'),
       'readiness' => include('status' => 'missing'),
-      'action_eligibility' => include('status' => 'met')
+      'action_eligibility' => include('status' => 'missing', 'missing_fields' => ['sales_call_agreement'])
     )
     expect(second.fetch('next_question')).to eq('How soon would you like to begin?')
 
     record_evidence(conversation, offer, 'urgency', 'We are ready now')
+    record_evidence(conversation, offer, 'sales_call_agreement', true)
     final = qualification_payload(offer)
     expect(final.fetch('assessment').values.pluck('status')).to eq(%w[met met met])
     expect(final.fetch('next_question')).to be_nil
@@ -82,6 +83,7 @@ RSpec.describe 'Optional business-defined Offer qualification', type: :request d
     record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
     record_evidence(conversation, offer, 'contact_details', '+255700222333')
     record_evidence(conversation, offer, 'urgency', 'We are ready now')
+    record_evidence(conversation, offer, 'sales_call_agreement', true)
     qualification = r09_qualification(offer)
 
     expect(qualification).to be_qualified
@@ -97,6 +99,130 @@ RSpec.describe 'Optional business-defined Offer qualification', type: :request d
     expect(result.handoff.qualification_snapshot.fetch('assessment').dig('action_eligibility', 'status')).to eq('met')
   end
 
+  it 'does not create a sales handoff without explicit Lead agreement' do
+    configuration = enabled_configuration
+    configuration['questions'].reject! { |question| question['key'] == 'sales_call_agreement' }
+    configuration['rules'].reject! { |rule| rule[:field] == 'sales_call_agreement' }
+    offer = r09_create_offer(configuration)
+    conversation = r09_conversation(offer: offer)
+    record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+    record_evidence(conversation, offer, 'contact_details', '+255700222333')
+    record_evidence(conversation, offer, 'urgency', 'We are ready now')
+    qualification = r09_qualification(offer)
+
+    result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification,
+      qualification_context: latest_context(conversation, qualification),
+      defer_alert_delivery: true
+    ).perform
+
+    expect(result.handoff).to be_nil
+    expect(conversation.reload).to be_ai_active
+  end
+
+  it 'uses explicit agreement without treating editable question metadata as handoff authority' do
+    configuration = enabled_configuration
+    agreement = configuration['questions'].find { |question| question['key'] == 'sales_call_agreement' }
+    agreement['required'] = false
+    agreement['purpose'] = 'fit'
+    offer = r09_create_offer(configuration)
+    conversation = r09_conversation(offer: offer)
+    record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+    record_evidence(conversation, offer, 'contact_details', '+255700222333')
+    record_evidence(conversation, offer, 'urgency', 'We are ready now')
+    record_evidence(conversation, offer, 'sales_call_agreement', true)
+    qualification = r09_qualification(offer)
+
+    result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification,
+      qualification_context: latest_context(conversation, qualification),
+      defer_alert_delivery: true
+    ).perform
+
+    expect(result.handoff).to be_persisted
+  end
+
+  it 'does not create a sales handoff when a hard rule excludes the Lead' do
+    configuration = enabled_configuration
+    configuration['rules'] << { kind: 'hard_rule', field: 'problem', operator: 'positive', value: nil,
+                                forced_outcome: 'unqualified', priority: 0, enabled: true }
+    offer = r09_create_offer(configuration)
+    conversation = r09_conversation(offer: offer)
+    record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+    record_evidence(conversation, offer, 'contact_details', '+255700222333')
+    record_evidence(conversation, offer, 'urgency', 'We are ready now')
+    record_evidence(conversation, offer, 'sales_call_agreement', true)
+    qualification = r09_qualification(offer)
+
+    result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification,
+      qualification_context: latest_context(conversation, qualification),
+      defer_alert_delivery: true
+    ).perform
+
+    expect(qualification).to be_unqualified
+    expect(qualification.assessment.values.pluck('status')).to eq(%w[met met met])
+    expect(result.handoff).to be_nil
+    expect(conversation.reload).to be_ai_active
+  end
+
+  it 'fails closed for absent or malformed sales-call assessments' do
+    canonical = -> { { 'status' => 'met', 'missing_fields' => [], 'reasons' => [] } }
+    invalid_assessments = [
+      {},
+      { 'fit' => nil, 'readiness' => 'met', 'action_eligibility' => [] },
+      { 'fit' => canonical.call.merge('missing_fields' => 'damaged'),
+        'readiness' => canonical.call, 'action_eligibility' => canonical.call }
+    ]
+    invalid_assessments.each_with_index do |assessment, index|
+      offer = r09_create_offer(enabled_configuration.merge('name' => "Invalid assessment #{index}"))
+      conversation = r09_conversation(offer: offer)
+      record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+      record_evidence(conversation, offer, 'contact_details', '+255700222333')
+      record_evidence(conversation, offer, 'urgency', 'We are ready now')
+      record_evidence(conversation, offer, 'sales_call_agreement', true)
+      qualification = r09_qualification(offer)
+      qualification.update!(assessment: assessment)
+
+      result = nil
+      expect do
+        result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+          conversation: conversation,
+          qualification: qualification,
+          qualification_context: latest_context(conversation, qualification),
+          defer_alert_delivery: true
+        ).perform
+      end.not_to raise_error
+      expect(result.handoff).to be_nil
+      expect(conversation.reload).to be_ai_active
+    end
+  end
+
+  it 'does not turn unrelated evidence into a sales handoff when readiness and action prerequisites are absent' do
+    problem = r09_question('problem', answer_type: 'text', prompt: 'What outcome do you need?', purpose: 'fit')
+    offer = r09_create_offer(
+      r09_configuration(name: 'No sales prerequisites', questions: [problem], rules: [requirement('problem', 'fit', 'positive')],
+                        score_weights: {}, legacy_contract: false, next_step: { kind: 'sales_call' })
+    )
+    conversation = r09_conversation(offer: offer)
+    record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+    qualification = r09_qualification(offer)
+
+    result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification,
+      qualification_context: latest_context(conversation, qualification),
+      defer_alert_delivery: true
+    ).perform
+
+    expect(qualification.assessment.values.pluck('status')).to eq(%w[met not_required not_required])
+    expect(result.handoff).to be_nil
+    expect(conversation.reload).to be_ai_active
+  end
+
   def mode_configuration(name, mode)
     r09_configuration(name: name, questions: [], budget_ranges: [], rules: [], legacy_contract: false,
                       qualification_mode: mode, next_step: { kind: 'answer_only' })
@@ -106,12 +232,15 @@ RSpec.describe 'Optional business-defined Offer qualification', type: :request d
     questions = [
       r09_question('problem', answer_type: 'text', prompt: 'What outcome do you need?', purpose: 'fit'),
       r09_question('urgency', answer_type: 'text', prompt: 'How soon would you like to begin?', purpose: 'readiness'),
-      r09_question('contact_details', answer_type: 'text', prompt: 'How should our sales team contact you?', purpose: 'action_eligibility')
+      r09_question('contact_details', answer_type: 'text', prompt: 'How should our sales team contact you?', purpose: 'action_eligibility'),
+      r09_question('sales_call_agreement', answer_type: 'boolean', prompt: 'Would you like our sales team to call you?',
+                                           purpose: 'action_eligibility', position: 3)
     ]
     rules = [
       requirement('problem', 'fit', 'positive'),
       requirement('urgency', 'readiness', 'positive'),
-      requirement('contact_details', 'action_eligibility', 'known')
+      requirement('contact_details', 'action_eligibility', 'known'),
+      requirement('sales_call_agreement', 'action_eligibility', 'eq').merge(value: true)
     ]
     r09_configuration(
       questions: questions, rules: rules, budget_ranges: [], score_weights: {}, legacy_contract: false,

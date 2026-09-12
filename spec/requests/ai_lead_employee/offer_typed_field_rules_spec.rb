@@ -115,6 +115,40 @@ RSpec.describe 'Typed Offer answers and qualification rules', type: :request do
     expect(r09_qualification(offer).reasons.join(' ').downcase).to include('team size')
   end
 
+  it 'requires every rule for the same field regardless of rule order', :aggregate_failures do
+    question = r09_question('revenue', answer_type: 'number', prompt: 'What is your annual revenue?')
+    lower_bound = { kind: 'requirement', dimension: 'fit', field: 'revenue', operator: 'gte', value: 1_000_000,
+                    priority: 0, enabled: true }
+    upper_bound = lower_bound.merge(operator: 'lte', value: 10_000_000)
+
+    [[lower_bound, upper_bound], [upper_bound, lower_bound]].each_with_index do |rules, index|
+      offer = r09_create_offer(r09_configuration(name: "Revenue range #{index}", questions: [question], rules: rules,
+                                                 score_weights: {}, legacy_contract: false))
+      conversation = r09_conversation(offer: offer)
+      expect(offer.fetch('rules')).to contain_exactly(include('operator' => 'gte'), include('operator' => 'lte'))
+
+      record_typed_evidence(conversation, offer, 500_000)
+      expect(r09_qualification(offer).assessment.dig('fit', 'status')).to eq('not_met')
+
+      record_typed_evidence(conversation, offer, 5_000_000)
+      expect(r09_qualification(offer).assessment.dig('fit', 'status')).to eq('met')
+
+      record_typed_evidence(conversation, offer, 15_000_000)
+      expect(r09_qualification(offer).assessment.dig('fit', 'status')).to eq('not_met')
+    end
+
+    impossible = r09_create_offer(
+      r09_configuration(name: 'Impossible revenue range', questions: [question],
+                        rules: [lower_bound.merge(value: 10_000_000), upper_bound.merge(value: 1_000_000)],
+                        score_weights: {}, legacy_contract: false)
+    )
+    impossible_conversation = r09_conversation(offer: impossible)
+    record_typed_evidence(impossible_conversation, impossible, 5_000_000)
+    expect(r09_qualification(impossible).assessment.dig('fit', 'reasons')).to eq(
+      ['Revenue did not meet the configured requirement']
+    )
+  end
+
   it 'rejects an incompatible rule atomically instead of saving a field comparison it cannot evaluate' do
     question = r09_question('uses_crm', answer_type: 'boolean', prompt: 'Do you currently use a CRM?')
     offer = r09_create_offer(r09_configuration(questions: [question], legacy_contract: false))
@@ -125,6 +159,14 @@ RSpec.describe 'Typed Offer answers and qualification rules', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
     get "#{r09_offers_url}/#{offer.fetch('id')}", headers: r09_headers, as: :json
     expect(response.parsed_body).to include('name' => offer.fetch('name'), 'version' => offer.fetch('version'), 'rules' => [])
+  end
+
+  def record_typed_evidence(conversation, offer, value)
+    post "/api/v1/accounts/#{account.id}/lead_qualifications/#{r09_lead.id}/evidence",
+         headers: r09_headers,
+         params: { offer_id: offer.fetch('id'), conversation_id: conversation.display_id, field_key: 'revenue', value: value },
+         as: :json
+    expect(response).to have_http_status(:success)
   end
 
   it 'uses each Offer rule for the same custom field while keeping both source answers separate' do

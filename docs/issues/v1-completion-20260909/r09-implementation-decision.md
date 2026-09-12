@@ -60,7 +60,17 @@ or override the PRD's buying-evidence and handoff requirements. Highly Qualified
 requires supported pain, urgency, sufficient purchasing budget and authority.
 An explicit absence of business/relevant professional activity is Unqualified;
 unknown business activity is missing information, not an automatic rejection.
-An Offer may require additional evidence and set its scoring thresholds.
+An Offer may require additional evidence and set its scoring thresholds. Every
+enabled requirement is evaluated; rules sharing one field form an order-independent
+conjunction rather than overwriting one another.
+
+For an Offer whose next step is a sales call, automatic assignment requires
+current met fit, readiness and action eligibility, no hard-rule exclusion, and
+explicit positive boolean evidence for the stable `sales_call_agreement` field.
+Absent or malformed assessment data fails closed. The agreement field is an
+owner-configurable question, not a global script; no fixed budget, urgency,
+authority or answer count is restored. Basic human assistance remains a separate
+R14 route and does not authorize a sales call.
 
 Currency inputs and API output use labeled major-unit decimal strings. Convert
 exactly at the persistence boundary to integer minor units; never use floating

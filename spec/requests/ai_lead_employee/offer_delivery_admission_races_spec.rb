@@ -16,8 +16,10 @@ RSpec.describe 'Offer authority at the real provider admission transaction', typ
   prepend_before { clean_committed_fixtures }
 
   before do
-    delivery_records[:offer_payload] = r09_create_offer
+    delivery_records[:offer_payload] = r09_create_offer(r09_sales_call_configuration)
     delivery_records[:conversation] = r09_conversation(offer: delivery_records[:offer_payload])
+    r09_record_offer_evidence(delivery_records[:conversation], delivery_records[:offer_payload], 'contact_details', '+255700111231')
+    r09_record_offer_evidence(delivery_records[:conversation], delivery_records[:offer_payload], 'sales_call_agreement', true)
     incoming, intent = r09_receive(delivery_records[:conversation], 'Hello')
     incoming.update!(provider_created_at: Time.current)
     delivery_records[:message] = intent.outbound_message
@@ -104,11 +106,8 @@ RSpec.describe 'Offer authority at the real provider admission transaction', typ
 
   %w[configuration evidence].each do |change|
     it "does not assign a handoff after a #{change} writer wins the origin authority lock" do
-      incoming = create(:message, account: account, inbox: delivery_records[:conversation].inbox, conversation: delivery_records[:conversation],
-                                  sender: delivery_records[:conversation].contact, message_type: :incoming,
-                                  content: 'I need more leads now. I am the owner of the agency and can spend TZS 600000.')
-      result = AiLeadEmployee::QualificationService.new(conversation: delivery_records[:conversation], incoming_message: incoming).perform
-      expect(result.qualification).to be_highly_qualified
+      result = current_handoff_result
+      expect(result.qualification.assessment.values.pluck('status')).to eq(%w[met met met])
       changed = Queue.new
       writer, writer_pid = start_worker do
         ApplicationRecord.transaction do
@@ -136,6 +135,17 @@ RSpec.describe 'Offer authority at the real provider admission transaction', typ
     end
   end
 
+  it 'admits the same sales-call handoff when no writer changes its authority' do
+    result = current_handoff_result
+
+    outcome = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: delivery_records[:conversation], qualification: result.qualification,
+      qualification_context: result.qualification_context, defer_alert_delivery: true
+    ).perform
+
+    expect(outcome.handoff).to be_persisted
+  end
+
   def edit_offer
     offer = AiLeadEmployee::Offer.find(delivery_records[:offer_payload].fetch('id'))
     AiLeadEmployee::OfferConfigurationWriter.new(offer: offer, attributes: offer.payload.merge('name' => 'Changed at admission')).perform
@@ -146,6 +156,14 @@ RSpec.describe 'Offer authority at the real provider admission transaction', typ
                                                  offer: AiLeadEmployee::Offer.find(delivery_records[:offer_payload].fetch('id')),
                                                  user: User.find(r09_admin.id),
                                                  field_key: 'budget', value: 'TZS 600000').perform
+  end
+
+  def current_handoff_result
+    conversation = delivery_records[:conversation]
+    incoming = create(:message, account: account, inbox: conversation.inbox, conversation: conversation,
+                                sender: conversation.contact, message_type: :incoming,
+                                content: 'I need more leads now and I am ready to proceed.')
+    AiLeadEmployee::QualificationService.new(conversation: conversation, incoming_message: incoming).perform
   end
 
   def start_worker

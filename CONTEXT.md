@@ -155,6 +155,10 @@ _Avoid_: OpenRouter settings, browser API key, account settings secret
 The controlled transfer of a Conversation from the AI Employee to a Human Operator.
 _Avoid_: Escalation, assignment
 
+**Sales Call Agreement**:
+Current explicit boolean Qualification Evidence that the Lead wants the configured sales call. It is recorded under the stable `sales_call_agreement` field for that Offer and does not follow from contact details, general interest, automated-contact consent, or a request for basic human help.
+_Avoid_: Implied consent, contactability, human-help request
+
 **Knowledge Item**:
 An approved, versioned answer or rule that the AI Employee may use when responding.
 _Avoid_: Memory, training data

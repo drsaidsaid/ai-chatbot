@@ -1,6 +1,42 @@
 # frozen_string_literal: true
 
+module R09SalesCallRequests
+  def r09_sales_call_configuration(name: 'Sales call', currency: 'TZS')
+    questions = [
+      r09_question('problem', answer_type: 'text', prompt: 'What problem should we solve?', purpose: 'fit'),
+      r09_question('urgency', answer_type: 'text', prompt: 'When are you ready to proceed?', purpose: 'readiness', position: 1),
+      r09_question('contact_details', answer_type: 'text', prompt: 'How should we contact you?', purpose: 'action_eligibility', position: 2),
+      r09_question('sales_call_agreement', answer_type: 'boolean', prompt: 'Would you like a sales call?',
+                                           purpose: 'action_eligibility', position: 3)
+    ]
+    rules = [
+      r09_requirement('problem', 'fit', 'positive'),
+      r09_requirement('urgency', 'readiness', 'positive'),
+      r09_requirement('contact_details', 'action_eligibility', 'known'),
+      r09_requirement('sales_call_agreement', 'action_eligibility', 'eq').merge(value: true)
+    ]
+    r09_configuration(name: name, currency: currency, questions: questions, rules: rules, score_weights: {},
+                      score_thresholds: { qualified: 0, highly_qualified: 100 }, next_step: { kind: 'sales_call' },
+                      legacy_contract: false)
+  end
+
+  def r09_requirement(field, dimension, operator)
+    { kind: 'requirement', dimension: dimension, field: field, operator: operator,
+      value: nil, priority: 0, enabled: true }
+  end
+
+  def r09_record_offer_evidence(conversation, offer, field, value)
+    post "/api/v1/accounts/#{account.id}/lead_qualifications/#{r09_lead.id}/evidence",
+         headers: r09_headers,
+         params: { offer_id: offer.fetch('id'), conversation_id: conversation.display_id, field_key: field, value: value },
+         as: :json
+    expect(response).to have_http_status(:success)
+  end
+end
+
 module OfferQualificationRequests
+  include R09SalesCallRequests
+
   def r09_question(key, answer_type:, prompt:, **attributes)
     { 'key' => key, 'meaning' => key.humanize, 'answer_type' => answer_type,
       'prompt' => prompt, 'position' => 0, 'enabled' => true, 'required' => true, 'purpose' => 'fit' }.merge(attributes.stringify_keys)

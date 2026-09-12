@@ -5,7 +5,7 @@ class AiLeadEmployee::OfferRules
   BUILTIN_TYPES = {
     'business_type' => 'text', 'problem' => 'text', 'lead_volume' => 'number',
     'urgency' => 'text', 'budget' => 'money', 'decision_authority' => 'boolean',
-    'contact_details' => 'text', 'name' => 'text'
+    'contact_details' => 'text', 'name' => 'text', 'sales_call_agreement' => 'boolean'
   }.freeze
   POLARITY_OPERATORS = %w[positive negative known].freeze
   ORDERED_OPERATORS = %w[lt lte gt gte].freeze

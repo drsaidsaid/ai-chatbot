@@ -111,9 +111,9 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
     AiLeadEmployee::OfferRules::REQUIREMENT_DIMENSIONS.index_with do |dimension|
       dimension_requirements = rules.requirements.select { |rule| rule['dimension'] == dimension }
       question_fields = offer.questions.select { |question| question['required'] && question.fetch('purpose', 'fit') == dimension }.pluck('key')
-      requirement_states = dimension_requirements.to_h { |rule| [rule['field'], rules.requirement_state(rule)] }
-      question_states = question_fields.index_with { |field| evidence_state(snapshot[field]) }
-      states = question_states.merge(requirement_states)
+      requirement_states = dimension_requirements.map { |rule| [rule['field'], rules.requirement_state(rule)] }
+      question_states = question_fields.map { |field| [field, evidence_state(snapshot[field])] }
+      states = question_states + requirement_states
       dimension_assessment(states)
     end
   end
@@ -127,17 +127,17 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
   def dimension_assessment(states) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     status = if states.empty?
                'not_required'
-             elsif states.value?(:not_met)
+             elsif states.any? { |_field, state| state == :not_met }
                'not_met'
-             elsif states.value?(:missing)
+             elsif states.any? { |_field, state| state == :missing }
                'missing'
              else
                'met'
              end
     {
       'status' => status,
-      'missing_fields' => states.filter_map { |field, state| field if state == :missing },
-      'reasons' => states.filter_map { |field, state| "#{field.humanize} did not meet the configured requirement" if state == :not_met }
+      'missing_fields' => states.filter_map { |field, state| field if state == :missing }.uniq,
+      'reasons' => states.filter_map { |field, state| "#{field.humanize} did not meet the configured requirement" if state == :not_met }.uniq
     }
   end
 

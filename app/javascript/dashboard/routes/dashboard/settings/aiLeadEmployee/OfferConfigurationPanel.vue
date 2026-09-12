@@ -16,6 +16,7 @@ const builtinFields = {
   decision_authority: ['Decision authority', 'boolean'],
   contact_details: ['Contact details', 'text'],
   name: ['Name', 'text'],
+  sales_call_agreement: ['Sales call agreement', 'boolean'],
 };
 const fields = computed(() => ({
   ...Object.fromEntries(

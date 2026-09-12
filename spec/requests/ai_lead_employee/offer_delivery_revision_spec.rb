@@ -28,6 +28,18 @@ RSpec.describe 'Offer revision at queued delivery boundaries', type: :request do
     AiLeadEmployee::OutboxDispatchJob.perform_now
   end
 
+  def sales_handoff_scenario
+    offer = r09_create_offer(r09_sales_call_configuration(currency: 'USD'))
+    conversation = r09_conversation(offer: offer)
+    r09_record_offer_evidence(conversation, offer, 'contact_details', '+255700111231')
+    r09_record_offer_evidence(conversation, offer, 'sales_call_agreement', true)
+    incoming = create(:message, account: account, inbox: conversation.inbox, conversation: conversation,
+                                sender: conversation.contact, message_type: :incoming,
+                                content: 'I need more leads now and I am ready to proceed.')
+    result = AiLeadEmployee::QualificationService.new(conversation: conversation, incoming_message: incoming).perform
+    [offer, conversation, result]
+  end
+
   it 'retains the evaluated Offer and revision in both the actual Message and its queued event' do
     offer, _conversation, message = queued_reply
     context = { 'offer_id' => offer.fetch('id'), 'configuration_version' => offer.fetch('version') }
@@ -133,19 +145,26 @@ RSpec.describe 'Offer revision at queued delivery boundaries', type: :request do
     expect(follow_up.message_id).to be_nil
   end
 
+  it 'allows an otherwise current qualification to assign the configured sales-call handoff' do
+    _offer, conversation, result = sales_handoff_scenario
+
+    handoff = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation, qualification: result.qualification,
+      qualification_context: result.qualification_context, defer_alert_delivery: true
+    ).perform
+
+    expect(handoff.handoff).to be_persisted
+  end
+
   it 'does not assign a Human Operator using a qualification invalidated by an Offer edit' do
-    offer = r09_create_offer(r09_configuration(currency: 'USD', minimum: '1000.00'))
-    conversation = r09_conversation(offer: offer)
-    incoming = create(:message, account: account, inbox: conversation.inbox, conversation: conversation,
-                                sender: conversation.contact, message_type: :incoming,
-                                content: 'I need more leads now. I am the owner of the agency and can spend $2500.')
-    result = AiLeadEmployee::QualificationService.new(conversation: conversation, incoming_message: incoming).perform
-    expect(result.qualification).to be_highly_qualified
+    offer, conversation, result = sales_handoff_scenario
     r09_update_offer(offer, budget_ranges: [{ label: 'New minimum', minimum: '5000.00', enabled: true, position: 0 }])
     expect(response).to have_http_status(:success)
 
-    handoff = AiLeadEmployee::HighlyQualifiedHandoffService.new(conversation: conversation, qualification: result.qualification,
-                                                                defer_alert_delivery: true).perform
+    handoff = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation, qualification: result.qualification,
+      qualification_context: result.qualification_context, defer_alert_delivery: true
+    ).perform
 
     expect(handoff.handoff).to be_nil
     expect(conversation.reload).to be_ai_active

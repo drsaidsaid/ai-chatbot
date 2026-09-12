@@ -96,6 +96,30 @@ it('saves explicit qualification mode, question purpose, requirement dimension a
   });
 });
 
+it('offers a stable boolean field for explicit sales-call agreement', async () => {
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper
+    .get('[data-testid="new-question-field"]')
+    .setValue('sales_call_agreement');
+  await wrapper.get('[data-testid="add-question"]').trigger('click');
+  await wrapper
+    .get('[data-testid="question-purpose-1"]')
+    .setValue('action_eligibility');
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(axios.patch.mock.calls[0][1].offer.questions).toContainEqual(
+    expect.objectContaining({
+      key: 'sales_call_agreement',
+      meaning: 'Sales call agreement',
+      answer_type: 'boolean',
+      purpose: 'action_eligibility',
+    })
+  );
+});
+
 it('edits one Offer while preserving exact human currency units and its revision', async () => {
   const wrapper = mountPanel();
   await flushPromises();
