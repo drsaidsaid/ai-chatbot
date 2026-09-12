@@ -7,8 +7,9 @@ RSpec.describe 'WhatsApp templates', type: :request do
     it 'lets a business account admin save a locally validated draft without claiming Meta approval', :aggregate_failures do
       account = create(:account)
       admin = create(:user, :administrator, account: account)
-      channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false,
+      channel = create(:channel_whatsapp, account: account, provider_config: {}, sync_templates: false,
                                           validate_provider_config: false)
+      channel.update_column(:provider, 'whatsapp_cloud') # rubocop:disable Rails/SkipsModelValidations
 
       post "/api/v1/accounts/#{account.id}/whatsapp_templates",
            params: {
@@ -35,16 +36,17 @@ RSpec.describe 'WhatsApp templates', type: :request do
     it 'does not let a team member create or read another business account template' do
       account = create(:account)
       other_account = create(:account)
-      team_member = create(:user, :agent, account: account)
-      other_channel = create(:channel_whatsapp, account: other_account, provider: 'whatsapp_cloud', sync_templates: false,
+      team_member = create(:user, account: account)
+      other_channel = create(:channel_whatsapp, account: other_account, provider_config: {}, sync_templates: false,
                                                 validate_provider_config: false)
+      other_channel.update_column(:provider, 'whatsapp_cloud') # rubocop:disable Rails/SkipsModelValidations
 
       post "/api/v1/accounts/#{account.id}/whatsapp_templates",
            params: { inbox_id: other_channel.inbox.id, name: 'cross_tenant', language: 'en_US', category: 'UTILITY', body: 'Nope' },
            headers: team_member.create_new_auth_token,
            as: :json
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 end

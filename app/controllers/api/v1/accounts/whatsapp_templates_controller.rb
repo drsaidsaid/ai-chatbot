@@ -14,6 +14,8 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
 
   def create
     channel = current_account.whatsapp_channels.find_by!(inbox: current_account.inboxes.find(template_params.fetch(:inbox_id)))
+    raise ActiveRecord::RecordNotFound unless channel.provider == 'whatsapp_cloud'
+
     record = ActiveRecord::Base.transaction do
       created = current_account.whatsapp_templates.create!(channel: channel, created_by: Current.user, name: template_params.fetch(:name))
       create_revision!(created)
