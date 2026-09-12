@@ -17,7 +17,6 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
     authorize lead_qualification_for_evidence, :evidence?
 
     evidence = record_legacy_evidence
-    AiLeadEmployee::QualificationService.new(conversation: latest_conversation).perform
 
     render json: qualification_payload(access.qualification(contact) || empty_qualification).merge(evidence_id: evidence.id)
   end

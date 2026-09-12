@@ -10,10 +10,14 @@ class AiLeadEmployee::CommercialClaimValidator
     eligibility: %w[eligibility eligible qualify qualifies ustahiki stahili anastahili unastahili hustahili],
     refund: %w[refund refunds refundable marejesho kurejeshewa]
   }.freeze
+  CONTROLLED_TERMS = CONTROLLED_CLAIMS.values.flatten.freeze
   NEGATIONS = %w[
-    no not never without cannot can't hakuna si sio hapana hayapatikani haipatikani hapatikani
-    hayajahakikishwa hajahakikishwa haijahakikishwa hustahili hastahili hawastahili
+    no not never without cannot can't hakuna si sio hapana unavailable ineligible
+    hayapatikani haipatikani hapatikani hayajahakikishwa hajahakikishwa haijahakikishwa
   ].freeze
+  NEGATED_CLAIM_FORMS = %w[hayajahakikishwa hajahakikishwa haijahakikishwa hustahili hastahili hawastahili].freeze
+  POSITIVE_PREDICATES = %w[available eligible guaranteed refundable yanapatikana yamehakikishwa anastahili unastahili].freeze
+  COORDINATORS = %w[and or na au].freeze
 
   def initialize(approved_content:, candidate_content:)
     @approved_content = approved_content.to_s
@@ -45,14 +49,29 @@ class AiLeadEmployee::CommercialClaimValidator
   end
 
   def mentions_claim?(content, terms)
-    claim_clauses(content, terms).present?
+    claim_clauses(content, terms).any?
   end
 
   def affirmative_claim?(content, terms)
     claim_occurrences(content, terms).any? do |words, index|
-      window = words[[index - 5, 0].max..[index + 5, words.length - 1].min]
-      !window.intersect?(NEGATIONS)
+      !negated_occurrence?(words, index)
     end
+  end
+
+  def negated_occurrence?(words, index)
+    return true if NEGATED_CLAIM_FORMS.include?(words[index])
+
+    preceding = words[[index - 5, 0].max...index]
+    coordinator_index = preceding.rindex { |word| COORDINATORS.include?(word) }
+    coordinated_claim = coordinator_index && preceding.take(coordinator_index).intersect?(CONTROLLED_TERMS)
+    preceding = preceding.drop(coordinator_index + 1) if coordinated_claim
+    return true if preceding.intersect?(NEGATIONS)
+
+    following = words[(index + 1)..].to_a.first(5)
+    negation_index = following.index { |word| NEGATIONS.include?(word) }
+    return false if negation_index.nil?
+
+    !following.take(negation_index).intersect?(POSITIVE_PREDICATES)
   end
 
   def claim_clauses(content, terms)

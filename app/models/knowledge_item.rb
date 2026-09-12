@@ -51,6 +51,8 @@ class KnowledgeItem < ApplicationRecord
   }
 
   validates :title, :question, :answer, :source_kind, :status, presence: true
+  before_save :lock_knowledge_authority!
+  before_destroy :lock_knowledge_authority!
 
   scope :usable_by_ai_employee, -> { approved.where(deactivated_at: nil) }
   scope :sensitive_claims, -> { where(source_kind: [:pricing, :refund, :guarantee, :eligibility, :policy]) }
@@ -120,6 +122,10 @@ class KnowledgeItem < ApplicationRecord
 
   def authority_metadata
     metadata.slice(*AUTHORITY_METADATA_KEYS).deep_dup
+  end
+
+  def lock_knowledge_authority!
+    AiLeadEmployee::KnowledgeAuthorityLock.acquire!(account_id)
   end
 
   def approval_source_reference(approved_at)

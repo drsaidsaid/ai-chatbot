@@ -22,11 +22,13 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     [:human_reply_after_trigger, :human_reply_after_trigger?]
   ].freeze
 
-  def initialize(intent:, enqueue_deliveries: true, enforce_launch_gate: true, provider_purpose: 'answer')
+  def initialize(intent:, enqueue_deliveries: true, enforce_launch_gate: true, provider_purpose: 'answer',
+                 knowledge_document_scope: nil)
     @intent = intent
     @enqueue_deliveries = enqueue_deliveries
     @enforce_launch_gate = enforce_launch_gate
     @provider_purpose = provider_purpose
+    @knowledge_document_scope = knowledge_document_scope
   end
 
   def perform
@@ -85,6 +87,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       block_reason = final_block_reason
       next block_intent!(block_reason) if block_reason.present?
 
+      AiLeadEmployee::KnowledgeAuthorityLock.acquire!(account.id)
       lock_answer_sources!
       next request_review!('source_unverified') if provider_review_required?(response) || !sources_still_current?
 
@@ -214,7 +217,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def complete_conversation_reply!(qualification_result)
     content = AiLeadEmployee::SafeConversationReplyService.new(
-      message: triggering_message.content, qualification_result: qualification_result
+      message: triggering_message.content, qualification_result: qualification_result, classification: classification
     ).perform
     outbound_message = create_outbound_message!(content: content, source_references: [],
                                                 qualification_result: qualification_result, status: 'conversation_reply')
@@ -228,7 +231,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       account: account,
       question: triggering_message.content,
       offer: selected_offer,
-      language: classification.language
+      language: classification.language,
+      document_scope: @knowledge_document_scope
     ).perform
   end
 
@@ -446,12 +450,19 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     AiLeadEmployee::SafeConversationReplyService.new(
       message: triggering_message.content,
       refusal_reason: answer_result.refusal_reason,
-      qualification_result: qualification_result
+      qualification_result: qualification_result,
+      classification: classification
     ).perform
   end
 
   def classification
-    @classification ||= AiLeadEmployee::ConversationIntentClassifier.new(message: triggering_message.content).perform
+    @classification ||= AiLeadEmployee::ConversationIntentClassifier.new(
+      message: triggering_message.content,
+      account: account,
+      conversation: conversation,
+      incoming_message: triggering_message,
+      offer: selected_offer
+    ).perform
   end
 
   def selected_offer

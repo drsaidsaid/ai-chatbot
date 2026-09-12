@@ -72,4 +72,27 @@ RSpec.describe AiLeadEmployee::CommercialClaimValidator do
       expect(described_class.new(approved_content: approved_content, candidate_content: candidate_content)).not_to be_valid
     end
   end
+
+  it 'does not let negation from another claim or condition mask an affirmative refund' do
+    denied_refund = 'Refunds are not available.'
+
+    expect(
+      described_class.new(
+        approved_content: "#{denied_refund} Eligibility is not guaranteed.",
+        candidate_content: 'Refunds are available and eligibility is not guaranteed.'
+      )
+    ).not_to be_valid
+    expect(
+      described_class.new(
+        approved_content: denied_refund,
+        candidate_content: 'Refunds are available if not disputed.'
+      )
+    ).not_to be_valid
+    expect(
+      described_class.new(
+        approved_content: 'Marejesho hayapatikani.',
+        candidate_content: 'Marejesho yanapatikana ikiwa hakuna tatizo.'
+      )
+    ).not_to be_valid
+  end
 end

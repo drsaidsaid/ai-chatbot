@@ -48,6 +48,8 @@ class KnowledgeDocument < ApplicationRecord
   validates :body, presence: true, unless: :import_failed?
   validate :last_editor_belongs_to_account
   before_validation :record_initial_published_content_digest, on: :create
+  before_save :lock_knowledge_authority!
+  before_destroy :lock_knowledge_authority!
 
   scope :search, lambda { |query|
     next all if query.blank?
@@ -102,6 +104,10 @@ class KnowledgeDocument < ApplicationRecord
 
   def available_to_answer?
     general_question_access? || offer_ids.present?
+  end
+
+  def lock_knowledge_authority!
+    AiLeadEmployee::KnowledgeAuthorityLock.acquire!(account_id)
   end
 
   def content_digest

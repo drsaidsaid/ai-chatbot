@@ -52,6 +52,72 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(LeadQualification.where(contact: contact)).to be_empty
   end
 
+  it 'treats the same external how-to question according to the approved Business scope' do
+    triggering_message.update!(content: 'How do I repair my bicycle?')
+    create(:knowledge_item, account: account, question: 'How can I grow my coaching business?',
+                            answer: 'Use the approved coaching programme.')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+  end
+
+  it 'answers an external how-to question when approved Business knowledge covers that work' do
+    triggering_message.update!(content: 'How do I repair my bicycle?')
+    create(:knowledge_item, account: account, question: 'How do I repair my bicycle?',
+                            answer: 'Bring the bicycle to our repair workshop for an inspection.')
+    connection = create(:ai_provider_connection, account: account)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r11-bike-answer', model: connection.model,
+        content: 'Bring the bicycle to our repair workshop for an inspection.',
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('Bring the bicycle to our repair workshop for an inspection.')
+  end
+
+  it 'records a typed answer to the current configured Offer question even without fixed qualification words' do
+    configured_question = question('clinic_count', 'How many clinics?').merge('answer_type' => 'text')
+    offer = create_offer(qualification_mode: 'enabled', questions: [configured_question])
+    conversation.update!(offer: offer)
+    create(
+      :message,
+      account: account,
+      inbox: channel.inbox,
+      conversation: conversation,
+      message_type: :outgoing,
+      content: "Thanks.\n\nHow many clinics?",
+      additional_attributes: {
+        'ai_lead_employee' => {
+          'qualification' => {
+            'offer_id' => offer.id,
+            'configuration_version' => offer.configuration_version,
+            'next_question' => 'How many clinics?',
+            'next_question_key' => 'clinic_count'
+          }
+        }
+      }
+    )
+    triggering_message.update!(content: 'Five')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    evidence = QualificationEvidence.find_by!(account: account, contact: contact, offer: offer, field_key: 'clinic_count')
+    expect(evidence.value).to include('typed_value' => 'Five', 'polarity' => 'positive')
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('Thanks for those details.')
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+  end
+
   it 'records an explicit human-help Review without inserting a qualification question' do
     triggering_message.update!(content: 'Please let me speak to a human.')
     conversation.reload

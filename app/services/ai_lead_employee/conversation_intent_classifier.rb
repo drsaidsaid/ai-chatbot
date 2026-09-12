@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AiLeadEmployee::ConversationIntentClassifier
+class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/ClassLength
   Result = Struct.new(:intent, :language, keyword_init: true) do
     def safe_conversation?
       %i[greeting language_question acknowledgment qualification_answer generic_safe unrelated].include?(intent)
@@ -65,8 +65,12 @@ class AiLeadEmployee::ConversationIntentClassifier
     business_question: :business_question?
   }.freeze
 
-  def initialize(message:)
+  def initialize(message:, account: nil, conversation: nil, incoming_message: nil, offer: nil)
     @message = message.to_s
+    @account = account
+    @conversation = conversation
+    @incoming_message = incoming_message
+    @offer = offer
   end
 
   def perform
@@ -75,7 +79,7 @@ class AiLeadEmployee::ConversationIntentClassifier
 
   private
 
-  attr_reader :message
+  attr_reader :account, :conversation, :incoming_message, :message, :offer
 
   def intent
     requested_intent || content_intent
@@ -86,7 +90,10 @@ class AiLeadEmployee::ConversationIntentClassifier
   end
 
   def unrelated?
-    UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
+    return true if UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
+    return false unless account
+
+    AiLeadEmployee::BusinessScopeRelevance.new(account: account, message: message, offer: offer).clearly_outside_scope?
   end
 
   def personalized_strategy?
@@ -148,7 +155,15 @@ class AiLeadEmployee::ConversationIntentClassifier
   end
 
   def qualification_answer?
-    token_match?(QUALIFICATION_TOKENS) && !question?
+    pending_offer_answer? || (token_match?(QUALIFICATION_TOKENS) && !question?)
+  end
+
+  def pending_offer_answer?
+    return false unless conversation && incoming_message && offer
+
+    AiLeadEmployee::OfferEvidenceRecorder.new(
+      conversation: conversation, offer: offer, incoming_message: incoming_message
+    ).answers_pending_question?
   end
 
   def acknowledgment?

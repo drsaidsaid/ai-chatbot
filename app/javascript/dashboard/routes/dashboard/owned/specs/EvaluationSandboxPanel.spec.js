@@ -21,7 +21,6 @@ vi.mock('dashboard/api/evaluationSandbox', () => ({
 vi.mock('dashboard/api/knowledgeDocuments', () => ({
   default: {
     show: vi.fn(),
-    test: vi.fn(),
   },
 }));
 
@@ -398,17 +397,24 @@ describe('EvaluationSandboxPanel', () => {
         status: 'published',
       },
     });
-    KnowledgeDocumentsAPI.test.mockResolvedValue({
-      data: {
-        answered: true,
-        answer: 'Refunds are unavailable after enrollment.',
-        refusal_reason: null,
-        sources: [{ title: 'Refund policy document' }],
-      },
-    });
   });
 
   it('loads and tests the knowledge document identified by the contextual shortcut', async () => {
+    EvaluationSandboxAPI.runScenario.mockResolvedValueOnce({
+      data: {
+        ...run,
+        id: 9,
+        scenario_key: 'knowledge_document_context',
+        scenario_name: 'Knowledge document: Refund policy document',
+        steps: [
+          {
+            ...run.steps[0],
+            selected_answer: 'Refunds are unavailable after enrollment.',
+            sources: [{ title: 'Refund policy document' }],
+          },
+        ],
+      },
+    });
     const { wrapper } = await mountComponent(
       '/app/accounts/1/test-center?tab=scenarios&knowledge_document_id=42'
     );
@@ -424,10 +430,23 @@ describe('EvaluationSandboxPanel', () => {
       .trigger('click');
     await flushPromises();
 
-    expect(KnowledgeDocumentsAPI.test).toHaveBeenCalledWith(
-      '42',
-      'Can I get a refund?'
+    expect(EvaluationSandboxAPI.runScenario).toHaveBeenCalledWith(
+      'knowledge_document_context',
+      {
+        knowledge_document_id: '42',
+        question: 'Can I get a refund?',
+      }
     );
+    expect(
+      wrapper
+        .get('[data-testid="test-center-tab-results"]')
+        .attributes('aria-selected')
+    ).toBe('true');
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Open transcript')
+      .trigger('click');
+    await flushPromises();
     expect(wrapper.text()).toContain(
       'Refunds are unavailable after enrollment.'
     );

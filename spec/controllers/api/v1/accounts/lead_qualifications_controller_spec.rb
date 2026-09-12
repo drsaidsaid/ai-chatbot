@@ -8,7 +8,24 @@ RSpec.describe 'Lead Qualifications API', type: :request do
   let(:conversation) { create(:conversation, account: account, assignee: agent) }
 
   it 'lets an authorized Human Operator correct evidence and re-evaluates the Lead' do
-    create(:qualification_evidence, account: account, contact: conversation.contact, signal: :budget, value: { 'value' => '$50' })
+    offer = create_offer
+    conversation.update!(offer: offer)
+    create(:qualification_evidence, account: account, contact: conversation.contact, conversation: conversation,
+                                    offer: offer, field_key: 'budget', signal: :budget, value: { 'value' => '$50' })
+
+    post "/api/v1/accounts/#{account.id}/lead_qualifications/#{conversation.contact.id}/evidence",
+         headers: agent.create_new_auth_token,
+         params: { offer_id: offer.id, conversation_id: conversation.display_id, field_key: 'budget', value: '$2500' },
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body['evidence']['budget']['value']).to eq('$2500')
+    expect(response.parsed_body['quality']).to eq('low_qualified')
+    expect(QualificationEvidence.where(contact: conversation.contact, offer: offer, field_key: 'budget').current.count).to eq(1)
+  end
+
+  it 'does not create a legacy qualification from evidence when the Business has no configured Offer' do
+    expect(AiLeadEmployee::QualificationService).not_to receive(:configured_question_pairs)
 
     post "/api/v1/accounts/#{account.id}/lead_qualifications/#{conversation.contact.id}/evidence",
          headers: agent.create_new_auth_token,
@@ -16,9 +33,9 @@ RSpec.describe 'Lead Qualifications API', type: :request do
          as: :json
 
     expect(response).to have_http_status(:success)
-    expect(response.parsed_body['evidence']['budget']['value']).to eq('$2500')
-    expect(response.parsed_body['quality']).to eq('low_qualified')
-    expect(QualificationEvidence.where(contact: conversation.contact, signal: :budget).current.count).to eq(1)
+    expect(response.parsed_body).to include('quality' => 'unknown', 'next_question' => nil,
+                                            'evidence_id' => an_instance_of(Integer))
+    expect(LeadQualification.where(account: account, contact: conversation.contact)).to be_empty
   end
 
   it 'shows an existing decision without re-evaluating it' do
@@ -93,5 +110,23 @@ RSpec.describe 'Lead Qualifications API', type: :request do
 
     expect(response).to have_http_status(:not_found)
     expect(QualificationEvidence.where(contact: other_conversation.contact)).to be_empty
+  end
+
+  def create_offer
+    AiLeadEmployee::Offer.create!(
+      account: account, name: 'Consulting', currency: 'USD', enabled: true,
+      configuration: {
+        'qualification_mode' => 'enabled',
+        'next_step' => { 'kind' => 'answer_only' },
+        'questions' => [
+          {
+            'key' => 'budget', 'meaning' => 'Budget', 'answer_type' => 'money', 'prompt' => 'What is your budget?',
+            'position' => 0, 'enabled' => true, 'required' => true, 'purpose' => 'fit'
+          }
+        ],
+        'budget_ranges' => [], 'rules' => [], 'score_weights' => { 'budget' => 20 },
+        'score_thresholds' => { 'qualified' => 60, 'highly_qualified' => 80 }
+      }
+    )
   end
 end

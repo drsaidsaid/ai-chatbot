@@ -52,6 +52,35 @@ RSpec.describe 'Evaluation Sandbox API', type: :request do
     expect(response.parsed_body).to include('ready_for_approval' => false, 'live_ai_enabled' => false)
   end
 
+  it 'passes an account-owned Knowledge Document into the persisted evaluation run path' do
+    document = create(:knowledge_document, account: account)
+    runner = instance_double(AiLeadEmployee::Evaluation::SandboxRunner)
+    result = AiLeadEmployee::Evaluation::SandboxRunner::Result.new(
+      run: create(:ai_lead_employee_evaluation_run, account: account, user: admin,
+                                                    scenario_key: 'knowledge_document_context')
+    )
+    allow(AiLeadEmployee::Evaluation::SandboxRunner).to receive(:new).and_return(runner)
+    allow(runner).to receive(:perform).and_return(result)
+
+    post "#{endpoint}/runs",
+         headers: admin.create_new_auth_token,
+         params: {
+           scenario_key: 'knowledge_document_context',
+           knowledge_document_id: document.id,
+           question: 'How does this help agencies?'
+         },
+         as: :json
+
+    expect(response).to have_http_status(:created)
+    expect(AiLeadEmployee::Evaluation::SandboxRunner).to have_received(:new).with(
+      account: account,
+      user: admin,
+      scenario_key: 'knowledge_document_context',
+      knowledge_document: document,
+      question: 'How does this help agencies?'
+    )
+  end
+
   it 'keeps old provider-version results visible and labels them stale' do
     connection = create(:ai_provider_connection, account: account, configuration_version: 2)
     run = create(

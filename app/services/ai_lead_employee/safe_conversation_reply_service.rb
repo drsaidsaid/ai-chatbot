@@ -19,10 +19,11 @@ class AiLeadEmployee::SafeConversationReplyService
     }
   }.freeze
 
-  def initialize(message:, qualification_result:, refusal_reason: nil)
+  def initialize(message:, qualification_result:, refusal_reason: nil, classification: nil)
     @message = message.to_s
     @refusal_reason = refusal_reason.to_s
     @qualification_result = qualification_result
+    @classification = classification
   end
 
   def perform

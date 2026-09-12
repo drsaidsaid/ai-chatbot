@@ -15,8 +15,11 @@ class EvaluationSandboxAPI extends ApiClient {
     return axios.get(`${this.url}/runs`, { params });
   }
 
-  runScenario(scenarioKey) {
-    return axios.post(`${this.url}/runs`, { scenario_key: scenarioKey });
+  runScenario(scenarioKey, context = {}) {
+    return axios.post(`${this.url}/runs`, {
+      scenario_key: scenarioKey,
+      ...context,
+    });
   }
 
   gradeRun(runId, data) {

@@ -47,7 +47,9 @@ class Api::V1::Accounts::EvaluationSandboxesController < Api::V1::Accounts::Base
     result = AiLeadEmployee::Evaluation::SandboxRunner.new(
       account: current_account,
       user: Current.user,
-      scenario_key: params.require(:scenario_key)
+      scenario_key: params.require(:scenario_key),
+      knowledge_document: contextual_knowledge_document,
+      question: params[:question]
     ).perform
 
     render json: run_payload(result.run), status: :created
@@ -99,6 +101,12 @@ class Api::V1::Accounts::EvaluationSandboxesController < Api::V1::Accounts::Base
   end
 
   private
+
+  def contextual_knowledge_document
+    return if params[:knowledge_document_id].blank?
+
+    current_account.knowledge_documents.find(params[:knowledge_document_id])
+  end
 
   def sandbox_payload
     {

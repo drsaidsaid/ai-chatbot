@@ -261,7 +261,6 @@ const selectedScenarioKey = ref(route.query.scenario_key?.toString() || '');
 const selectedRunId = ref(route.query.run_id?.toString() || '');
 const knowledgeDocument = ref(null);
 const knowledgeTestQuestion = ref('');
-const knowledgeTestResult = ref(null);
 const isTestingKnowledge = ref(false);
 const isLoading = ref(false);
 const isRunning = ref(false);
@@ -528,7 +527,6 @@ const loadKnowledgeContext = async () => {
   const documentId = route.query.knowledge_document_id?.toString();
   knowledgeDocument.value = null;
   knowledgeTestQuestion.value = '';
-  knowledgeTestResult.value = null;
   if (!documentId) return;
 
   try {
@@ -537,25 +535,6 @@ const loadKnowledgeContext = async () => {
   } catch (error) {
     errorMessage.value =
       error.response?.data?.error || label('KNOWLEDGE_CONTEXT_LOAD_ERROR');
-  }
-};
-
-const runKnowledgeDocumentTest = async () => {
-  const documentId = route.query.knowledge_document_id?.toString();
-  if (!documentId || !knowledgeTestQuestion.value.trim()) return;
-
-  isTestingKnowledge.value = true;
-  try {
-    const { data } = await KnowledgeDocumentsAPI.test(
-      documentId,
-      knowledgeTestQuestion.value.trim()
-    );
-    knowledgeTestResult.value = data;
-  } catch (error) {
-    errorMessage.value =
-      error.response?.data?.error || label('KNOWLEDGE_TEST_ERROR');
-  } finally {
-    isTestingKnowledge.value = false;
   }
 };
 
@@ -633,14 +612,17 @@ const replaceRun = run => {
   syncGrades(run);
 };
 
-const runScenario = async scenarioKey => {
+async function executeScenario(scenarioKey, context = {}) {
   const key = scenarioKey || selectedScenarioKey.value;
   if (!key) return;
 
   isRunning.value = true;
   errorMessage.value = '';
   try {
-    const { data } = await EvaluationSandboxAPI.runScenario(key);
+    const request = Object.keys(context).length
+      ? EvaluationSandboxAPI.runScenario(key, context)
+      : EvaluationSandboxAPI.runScenario(key);
+    const { data } = await request;
     replaceRun(data);
     activeTab.value = 'results';
     replaceQuery({ tab: 'results', scenario_key: key, run_id: data.id });
@@ -651,7 +633,27 @@ const runScenario = async scenarioKey => {
   } finally {
     isRunning.value = false;
   }
+}
+
+const runKnowledgeDocumentTest = async () => {
+  const documentId = route.query.knowledge_document_id?.toString();
+  if (!documentId || !knowledgeTestQuestion.value.trim()) return;
+
+  isTestingKnowledge.value = true;
+  try {
+    await executeScenario('knowledge_document_context', {
+      knowledge_document_id: documentId,
+      question: knowledgeTestQuestion.value.trim(),
+    });
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.error || label('KNOWLEDGE_TEST_ERROR');
+  } finally {
+    isTestingKnowledge.value = false;
+  }
 };
+
+const runScenario = scenarioKey => executeScenario(scenarioKey);
 
 const saveGrades = async () => {
   if (!selectedRun.value) return;
@@ -917,15 +919,6 @@ const liveAiStateLabel = () =>
           {{ isTestingKnowledge ? label('TESTING') : label('TRY_THIS_ANSWER') }}
         </button>
       </div>
-      <p
-        v-if="knowledgeTestResult"
-        class="mt-4 rounded-md bg-n-slate-2 p-3 text-sm text-n-slate-12"
-      >
-        {{
-          knowledgeTestResult.answer ||
-          humanize(knowledgeTestResult.refusal_reason)
-        }}
-      </p>
     </form>
 
     <section

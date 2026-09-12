@@ -10,13 +10,17 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   let(:release_provider) { Queue.new }
   let(:release_final_check) { Queue.new }
 
-  before { clean_committed_fixtures }
+  before do
+    skip 'requires an explicitly opted-in R11 task-owned database' unless destructive_cleanup_authorized?
+
+    clean_committed_fixtures
+  end
 
   after do
     release_provider << true
     release_final_check << true
     workers.each { |worker| worker.join(15) || worker.kill.join }
-    clean_committed_fixtures
+    clean_committed_fixtures if destructive_cleanup_authorized?
   end
 
   it 'rejects an answer when the source mutation commits before the final source lock' do
@@ -30,7 +34,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     processor, = start_worker { process_intent(records.fetch(:intent).id) }
     Timeout.timeout(15) { provider_entered.pop }
-    records.fetch(:item).deactivate!
+    records.fetch(:competing_item).approve!
     release_provider << true
     finish_workers
 
@@ -51,7 +55,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     processor, processor_pid = start_worker { processor_service.perform }
     Timeout.timeout(15) { final_check_entered.pop }
-    writer, writer_pid = start_worker { KnowledgeItem.find(records.fetch(:item).id).deactivate! }
+    writer, writer_pid = start_worker { KnowledgeItem.find(records.fetch(:competing_item).id).approve! }
     wait_until { !writer.alive? || blocked_by?(writer_pid, processor_pid) }
 
     expect(blocked_by?(writer_pid, processor_pid)).to be(true)
@@ -60,29 +64,41 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     finish_workers
 
     expect(processor.value.reload).to be_completed
-    expect(records.fetch(:item).reload).to be_inactive
+    expect(records.fetch(:competing_item).reload).to be_approved
   end
 
   def scenario
     @scenario ||= begin
-      channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
-      account = channel.account
-      contact = create(:contact, account: account, phone_number: '+255700444987')
-      contact_inbox = create(:contact_inbox, contact: contact, inbox: channel.inbox, source_id: '255700444987')
-      conversation = create(:conversation, account: account, inbox: channel.inbox, contact: contact,
-                                           contact_inbox: contact_inbox, control_state: :ai_active,
-                                           control_version: 2, assignee: nil, status: :open)
-      message = create(:message, account: account, inbox: channel.inbox, conversation: conversation, sender: contact,
-                                 message_type: :incoming, content: 'Do you integrate with Acme CRM?', source_id: 'wamid.R11.race')
+      context = create_conversation_context
+      account = context.fetch(:account)
+      conversation = context.fetch(:conversation)
+      message = context.fetch(:message)
       intent = create(:ai_orchestration_intent, account: account, conversation: conversation,
                                                 triggering_message: message, observed_control_version: 2)
       item = create(:knowledge_item, account: account, status: :draft, approved_at: nil,
                                      question: message.content, answer: 'We integrate with Acme CRM.', metadata: {})
       item.approve!
+      competing_item = create(:knowledge_item, account: account, status: :draft, approved_at: nil,
+                                               question: message.content,
+                                               answer: 'A conflicting Acme answer.', metadata: {})
       connection = create(:ai_provider_connection, account: account)
       allow(AiLeadEmployee::AiProvider::ClientFactory).to receive(:for).and_return(provider_client)
-      { intent: intent, item: item, connection: connection }
+      { intent: intent, item: item, competing_item: competing_item, connection: connection }
     end
+  end
+
+  def create_conversation_context
+    channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    account = channel.account
+    contact = create(:contact, account: account, phone_number: '+255700444987')
+    contact_inbox = create(:contact_inbox, contact: contact, inbox: channel.inbox, source_id: '255700444987')
+    conversation = create(:conversation, account: account, inbox: channel.inbox, contact: contact,
+                                         contact_inbox: contact_inbox, control_state: :ai_active,
+                                         control_version: 2, assignee: nil, status: :open)
+    message = create(:message, account: account, inbox: channel.inbox, conversation: conversation, sender: contact,
+                               message_type: :incoming, content: 'Do you integrate with Acme CRM?',
+                               source_id: 'wamid.R11.race')
+    { account: account, conversation: conversation, message: message }
   end
 
   def provider_client
@@ -156,5 +172,13 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     database = ActiveRecord::Base.connection
     tables = database.tables - %w[schema_migrations ar_internal_metadata installation_configs]
     database.execute("TRUNCATE #{tables.map { |table| database.quote_table_name(table) }.join(', ')} CASCADE")
+  end
+
+  def destructive_cleanup_authorized?
+    R11TaskOwnedDatabaseGuard.authorized?(
+      database_name: ActiveRecord::Base.connection_db_config.database,
+      allowed_database: ENV.fetch('R11_SOURCE_CONCURRENCY_DATABASE', nil),
+      truncate_opt_in: ENV.fetch('R11_SOURCE_CONCURRENCY_ALLOW_TRUNCATE', nil)
+    )
   end
 end
