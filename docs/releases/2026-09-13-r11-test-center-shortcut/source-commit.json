@@ -1,0 +1,9 @@
+{
+  "source_commit": "04eb40328c0328afed449d6d161bcf11a4e0f110",
+  "parent_commit": "8af6a2ec40df763459e0c140bc6cc94c14550bea",
+  "scope": "Route Knowledge workspace testing through the existing owned Test Center scenario route.",
+  "files": {
+    "app/javascript/dashboard/routes/dashboard/owned/KnowledgeItemsPanel.vue": "e7ceb8022a0e2b66e8744e83a2ec885551c3a2fe24ae1896cb73912eaaa884ef",
+    "app/javascript/dashboard/routes/dashboard/owned/specs/KnowledgeItemsPanel.spec.js": "68f0b3c86e50e9c70f7774a12a4b3c3d6dc5bb14f47ed0a27e074d4497f18522"
+  }
+}
