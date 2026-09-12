@@ -204,17 +204,57 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
     expect(revision.reload).to have_attributes(status: 'unknown', provider_template_id: 'meta-expected')
   end
 
-  it 'records a definitive provider rejection instead of losing a 4xx response as unknown' do
-    provider_request = stub_request(:post, endpoint).to_return(
-      status: 400,
-      body: { error: { message: 'Invalid template category', code: 100 } }.to_json,
-      headers: { 'Content-Type' => 'application/json' }
-    )
+  [
+    [400, 'request_rejected', 'Invalid template category', 100],
+    [401, 'authentication', 'Invalid OAuth access token', 190],
+    [403, 'authentication', 'Permission denied', 10],
+    [429, 'throttled', 'Too many requests', 4]
+  ].each do |http_status, kind, message, provider_code|
+    it "records HTTP #{http_status} as a submission failure rather than a Meta review rejection" do
+      provider_request = stub_request(:post, endpoint).to_return(
+        status: http_status,
+        body: { error: { message: message, code: provider_code } }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+      described_class.new(revision: revision).perform
+
+      expect(provider_request).to have_been_requested.once
+      expect(revision.reload).to have_attributes(status: 'submission_failed', rejection_reason: nil)
+      expect(revision.submission_failure).to include(
+        'kind' => kind, 'http_status' => http_status, 'provider_code' => provider_code, 'message' => message
+      )
+    end
+  end
+
+  it 'keeps an unavailable provider response unknown and requires reconciliation before another mutation' do
+    provider_request = stub_request(:post, endpoint).to_return(status: 503)
 
     described_class.new(revision: revision).perform
+    described_class.new(revision: revision.reload).perform
 
     expect(provider_request).to have_been_requested.once
-    expect(revision.reload).to have_attributes(status: 'rejected', rejection_reason: 'Invalid template category (code 100)')
+    expect(revision.reload).to have_attributes(status: 'unknown', rejection_reason: nil)
+    expect(revision.submission_failure).to include('kind' => 'provider_unavailable', 'http_status' => 503)
+  end
+
+  [SocketError, Errno::ECONNREFUSED, OpenSSL::SSL::SSLError].each do |error_class|
+    it "keeps #{error_class} unknown and never repeats the provider mutation" do
+      failed_revision = WhatsappTemplateRevision.create!(
+        whatsapp_template: template, account: account, channel: channel,
+        revision_number: WhatsappTemplateRevision.maximum(:revision_number).to_i + 1,
+        language: 'en_US', category: 'UTILITY', body: 'Transport failure', submission_key: SecureRandom.uuid,
+        content_digest: SecureRandom.hex, status: :submission_pending, submitted_at: Time.current, submitted_by: admin
+      )
+      provider_request = stub_request(:post, endpoint).to_raise(error_class.new)
+
+      described_class.new(revision: failed_revision).perform
+      described_class.new(revision: failed_revision.reload).perform
+
+      expect(provider_request).to have_been_requested.once
+      expect(failed_revision.reload).to have_attributes(status: 'unknown', rejection_reason: nil)
+      expect(failed_revision.submission_failure).to include('kind' => 'transport_unknown')
+    end
   end
 
   it 'timestamps every unresolved reconciliation attempt even when the state remains unknown' do

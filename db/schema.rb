@@ -2120,6 +2120,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000400) do
     t.integer "status", default: 0, null: false
     t.string "provider_template_id"
     t.text "rejection_reason"
+    t.jsonb "submission_failure", default: {}, null: false
     t.datetime "submitted_at"
     t.datetime "status_synced_at"
     t.string "submission_key", null: false

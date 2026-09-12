@@ -709,6 +709,52 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     expect(request).not_to have_been_requested
   end
 
+  it 'cancels a cached provider approval when the current owned revision is a draft' do
+    channel.update!(message_templates: [
+                      { 'id' => 'meta-owned', 'name' => 'owned_update', 'language' => 'en_US',
+                        'status' => 'APPROVED', 'components' => [{ 'type' => 'BODY', 'text' => 'Old {{1}}' }] }
+                    ])
+    template = WhatsappTemplate.create!(account: channel.account, channel: channel, created_by: admin, name: 'owned_update')
+    template.revisions.create!(account: channel.account, channel: channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+                               body: 'Old {{1}}', variables: [{ 'position' => 1, 'example' => 'Asha' }], status: :approved,
+                               provider_template_id: 'meta-owned', submitted_at: Time.current, submission_key: SecureRandom.uuid,
+                               content_digest: 'old-owned-digest')
+    template.revisions.create!(account: channel.account, channel: channel, revision_number: 2, language: 'en_US', category: 'UTILITY',
+                               body: 'New {{1}}', variables: [{ 'position' => 1, 'example' => 'Asha' }], status: :draft,
+                               submission_key: SecureRandom.uuid, content_digest: 'new-owned-digest')
+    outgoing.update!(additional_attributes: {
+                       template_params: { name: 'owned_update', language: 'en_US', processed_params: { body: { '1' => 'Asha' } } }
+                     })
+    request = stub_request(:post, provider_url)
+
+    SendReplyJob.perform_now(outgoing.id)
+
+    expect(outgoing.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'template_unavailable')
+    expect(request).not_to have_been_requested
+  end
+
+  it 'dispatches the current approved owned revision when the provider cache is empty' do
+    channel.update!(message_templates: [])
+    template = WhatsappTemplate.create!(account: channel.account, channel: channel, created_by: admin, name: 'owned_update')
+    template.revisions.create!(account: channel.account, channel: channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+                               body: 'Hello {{1}}', variables: [{ 'position' => 1, 'example' => 'Asha' }], status: :approved,
+                               provider_template_id: 'meta-owned', submitted_at: Time.current, submission_key: SecureRandom.uuid,
+                               content_digest: 'approved-owned-digest')
+    outgoing.update!(additional_attributes: {
+                       template_params: { name: 'owned_update', language: 'en_US', processed_params: { body: { '1' => 'Asha' } } }
+                     })
+    request = stub_request(:post, provider_url).to_return(
+      status: 200, body: { messages: [{ id: 'wamid.OWNED.APPROVED' }] }.to_json,
+      headers: { 'Content-Type' => 'application/json' }
+    )
+
+    SendReplyJob.perform_now(outgoing.id)
+
+    expect(outgoing.reload.source_id).to eq('wamid.OWNED.APPROVED')
+    expect(outgoing.whatsapp_outbound_delivery).to have_attributes(state: 'accepted', failure_code: nil)
+    expect(request).to have_been_requested.once
+  end
+
   it 'allows an authorized Inbox retry only after a definite rejection' do
     request = stub_request(:post, provider_url).to_return(
       { status: 400, body: '{"error":{"code":100}}', headers: { 'Content-Type' => 'application/json' } },

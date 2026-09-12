@@ -100,6 +100,31 @@ RSpec.describe 'WhatsApp templates', type: :request do
       expect(second_revision.reload).to have_attributes(body: 'Updated content', status: 'submission_pending')
     end
 
+    it 'allows an administrator to retry a provider-declined submission after correcting its cause' do
+      account = create(:account)
+      admin = create(:user, :administrator, account: account)
+      channel = cloud_channel(account)
+      post "/api/v1/accounts/#{account.id}/whatsapp_templates", params: draft_params(channel, body: 'Order ready'),
+                                                                headers: admin.create_new_auth_token, as: :json
+      template = WhatsappTemplate.find(response.parsed_body.fetch('id'))
+      template.latest_revision.update!(status: :submission_failed, submitted_at: Time.current,
+                                       submission_failure: { 'kind' => 'authentication', 'message' => 'Invalid token' })
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/whatsapp_templates/#{template.id}/reconcile",
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to have_enqueued_job(Whatsapp::TemplateSubmissionJob)
+      expect(response).to have_http_status(:conflict)
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/whatsapp_templates/#{template.id}/submit",
+             headers: admin.create_new_auth_token, as: :json
+      end.to have_enqueued_job(Whatsapp::TemplateSubmissionJob).with(template.latest_revision)
+
+      expect(response).to have_http_status(:accepted)
+      expect(template.reload.latest_revision).to have_attributes(status: 'submission_pending', submission_failure: {})
+    end
+
     it 'returns immutable history and edits an approved template by creating a new resubmittable draft', :aggregate_failures do
       account = create(:account)
       admin = create(:user, :administrator, account: account)

@@ -3,6 +3,9 @@
 # Owns the Meta template submission state machine. A transport timeout is deliberately
 # unknown: it is reconciled by reading Meta, never retried by creating a second template.
 class Whatsapp::TemplateSubmissionService
+  TRANSPORT_ERRORS = [Timeout::Error, SocketError, OpenSSL::SSL::SSLError, EOFError, Errno::ECONNREFUSED, Errno::ECONNRESET,
+                      Errno::EHOSTUNREACH, Errno::ETIMEDOUT].freeze
+
   def initialize(revision:)
     @revision = revision
   end
@@ -12,21 +15,25 @@ class Whatsapp::TemplateSubmissionService
     return unless claim_submission!
 
     response = HTTParty.post(submission_endpoint, headers: headers, body: submission_body.to_json, timeout: 10)
-    return submission_failed!(response) unless response.success?
+    return handle_unsuccessful_submission!(response) unless response.success?
 
     provider_id = response_payload(response)['id'].presence || edit_target_id
     return unknown! if provider_id.blank?
 
-    @revision.update!(provider_template_id: provider_id, status: :submitted, status_synced_at: Time.current)
-  rescue Timeout::Error
-    unknown!
+    @revision.update!(provider_template_id: provider_id, status: :submitted, rejection_reason: nil, submission_failure: {},
+                      status_synced_at: Time.current)
+  rescue *TRANSPORT_ERRORS
+    unknown!(failure: failure_payload(kind: 'transport_unknown', message: 'Provider connection failed; reconcile before retrying.'))
   end
 
   private
 
   def reconcile!
     response = HTTParty.get("#{endpoint}?name=#{CGI.escape(@revision.whatsapp_template.name)}", headers: headers, timeout: 10)
-    return unknown! unless response.success?
+    unless response.success?
+      return unknown!(failure: failure_payload(kind: 'reconciliation_unavailable', message: 'Provider status could not be read.',
+                                               response: response))
+    end
 
     provider = Array(response_payload(response)['data']).find { |item| provider_matches_revision?(item) }
     return unknown! unless provider
@@ -34,22 +41,37 @@ class Whatsapp::TemplateSubmissionService
     status = provider['status'].to_s.downcase
     mapped_status = { 'approved' => :approved, 'rejected' => :rejected, 'paused' => :paused, 'disabled' => :disabled }.fetch(status, :submitted)
     @revision.update!(provider_template_id: provider['id'], status: mapped_status, rejection_reason: provider['rejected_reason'],
-                      status_synced_at: Time.current)
-  rescue Timeout::Error
-    unknown!
+                      submission_failure: {}, status_synced_at: Time.current)
+  rescue *TRANSPORT_ERRORS
+    unknown!(failure: failure_payload(kind: 'reconciliation_unavailable', message: 'Provider status could not be read.'))
   end
 
-  def unknown!
-    @revision.update!(status: :unknown, rejection_reason: nil, status_synced_at: Time.current)
+  def unknown!(failure: nil)
+    @revision.update!(status: :unknown, rejection_reason: nil, submission_failure: failure || {}, status_synced_at: Time.current)
   end
 
-  def submission_failed!(response)
-    return unknown! unless response.code.to_i.between?(400, 499)
-
+  def handle_unsuccessful_submission!(response)
+    unless response.code.to_i.between?(400, 499)
+      return unknown!(failure: failure_payload(kind: 'provider_unavailable',
+                                               message: 'Provider submission was unavailable; reconcile before retrying.',
+                                               response: response))
+    end
     error = response_payload(response)['error'].to_h
-    reason = error['message'].presence || "Provider rejected template submission (HTTP #{response.code})"
-    reason = "#{reason} (code #{error['code']})" if error['code'].present?
-    @revision.update!(status: :rejected, rejection_reason: reason, status_synced_at: Time.current)
+    kind = case response.code.to_i
+           when 401, 403 then 'authentication'
+           when 429 then 'throttled'
+           else 'request_rejected'
+           end
+    message = error['message'].presence || 'Provider did not accept the template submission.'
+    @revision.update!(status: :submission_failed, rejection_reason: nil,
+                      submission_failure: failure_payload(kind: kind, message: message, response: response,
+                                                          provider_code: error['code']),
+                      status_synced_at: Time.current)
+  end
+
+  def failure_payload(kind:, message:, response: nil, provider_code: nil)
+    { 'kind' => kind, 'message' => message.to_s.first(500), 'http_status' => response&.code&.to_i,
+      'provider_code' => provider_code, 'observed_at' => Time.current.iso8601 }.compact
   end
 
   def claim_submission!

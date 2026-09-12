@@ -8,6 +8,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 
 const store = useStore();
 const templates = ref([]);
+const resubmittableStatuses = ['draft', 'submission_failed'];
 const saving = ref(false);
 const loading = ref(false);
 const editingTemplateId = ref(null);
@@ -532,13 +533,24 @@ onMounted(load);
                 Edit as new revision
               </button>
               <Button
-                v-if="record.status === 'draft'"
+                v-if="resubmittableStatuses.includes(record.status)"
+                :data-testid="`submit-template-${record.id}`"
                 sm
                 @click="submit(record)"
               >
-                Submit to Meta </Button
+                {{
+                  record.status === 'draft'
+                    ? 'Submit to Meta'
+                    : 'Retry submission'
+                }} </Button
               ><Button
-                v-if="!['draft', 'submission_pending'].includes(record.status)"
+                v-if="
+                  ![
+                    'draft',
+                    'submission_pending',
+                    'submission_failed',
+                  ].includes(record.status)
+                "
                 data-testid="sync-meta-status"
                 sm
                 @click="reconcile(record)"
@@ -549,6 +561,10 @@ onMounted(load);
           </div>
           <p v-if="record.rejection_reason" class="mt-2 text-n-ruby-11">
             Meta rejection: {{ record.rejection_reason }}
+          </p>
+          <p v-if="record.submission_failure" class="mt-2 text-n-ruby-11">
+            Submission failed ({{ record.submission_failure.kind }}):
+            {{ record.submission_failure.message }}
           </p>
           <details v-if="record.revisions?.length" class="mt-3">
             <summary class="cursor-pointer font-medium text-n-slate-12">

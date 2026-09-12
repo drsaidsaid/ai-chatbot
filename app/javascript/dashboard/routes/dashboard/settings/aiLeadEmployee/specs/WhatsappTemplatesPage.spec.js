@@ -90,6 +90,21 @@ describe('WhatsappTemplatesPage', () => {
             },
           ],
         },
+        {
+          id: 10,
+          name: 'auth_failed',
+          language: 'en_US',
+          revision: 1,
+          status: 'submission_failed',
+          meta_approval: 'submission_failed',
+          sendable: false,
+          submission_failure: {
+            kind: 'authentication',
+            message: 'Invalid OAuth access token',
+          },
+          preview: { body: 'Hello', media: {}, buttons: [], variables: [] },
+          revisions: [],
+        },
       ],
     });
     whatsappTemplatesAPI.create.mockResolvedValue({
@@ -223,5 +238,19 @@ describe('WhatsappTemplatesPage', () => {
     await wrapper.get('[data-testid="refresh-templates"]').trigger('click');
     await flushPromises();
     expect(whatsappTemplatesAPI.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('labels provider submission failures truthfully and offers a safe retry instead of status sync', async () => {
+    const wrapper = shallowMount(WhatsappTemplatesPage);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain(
+      'Submission failed (authentication): Invalid OAuth access token'
+    );
+    const retry = wrapper.get('[data-testid="submit-template-10"]');
+    await retry.trigger('click');
+    await flushPromises();
+
+    expect(whatsappTemplatesAPI.submit).toHaveBeenCalledWith(10);
   });
 });

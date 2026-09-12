@@ -32,7 +32,7 @@ class Whatsapp::OutboundEligibility
 
   def approved_template?
     template = @template.with_indifferent_access
-    Array(@channel.message_templates).any? do |item|
+    Whatsapp::TemplateCatalog.for_channel(@channel).any? do |item|
       item['name'] == template[:name] && item['language'] == template[:lang_code] && item['status'].to_s.casecmp?('approved')
     end
   end

@@ -25,6 +25,7 @@ class CreateWhatsappTemplateRevisions < ActiveRecord::Migration[7.0]
       t.integer :status, null: false, default: 0
       t.string :provider_template_id
       t.text :rejection_reason
+      t.jsonb :submission_failure, null: false, default: {}
       t.datetime :submitted_at
       t.datetime :status_synced_at
       t.string :submission_key, null: false

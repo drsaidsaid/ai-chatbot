@@ -1316,8 +1316,8 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(response).to have_http_status(:unauthorized)
       end
 
-      it 'returns the templates when the agent is assigned to the inbox' do
-        create(:inbox_member, user: agent, inbox: whatsapp_inbox)
+      it 'returns the templates when the agent has an assigned conversation in the inbox' do
+        create(:conversation, account: account, inbox: whatsapp_inbox, assignee: agent)
 
         get "/api/v1/accounts/#{account.id}/inboxes/#{whatsapp_inbox.id}/message_templates",
             headers: agent.create_new_auth_token,
@@ -1330,6 +1330,30 @@ RSpec.describe 'Inboxes API', type: :request do
     end
 
     context 'when it is an authenticated administrator' do
+      it 'returns current approved owned revisions and suppresses stale cached approvals' do
+        stale = WhatsappTemplate.create!(account: account, channel: whatsapp_channel, created_by: admin, name: 'shipping_update')
+        stale.revisions.create!(account: account, channel: whatsapp_channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+                                body: 'Old', status: :approved, provider_template_id: 'meta-stale', submitted_at: Time.current,
+                                submission_key: SecureRandom.uuid, content_digest: 'stale-approved')
+        stale.revisions.create!(account: account, channel: whatsapp_channel, revision_number: 2, language: 'en_US', category: 'UTILITY',
+                                body: 'New', status: :draft, submission_key: SecureRandom.uuid, content_digest: 'current-draft')
+        current = WhatsappTemplate.create!(account: account, channel: whatsapp_channel, created_by: admin, name: 'owned_current')
+        current.revisions.create!(account: account, channel: whatsapp_channel, revision_number: 1, language: 'en_US', category: 'MARKETING',
+                                  body: 'Hello', status: :approved, provider_template_id: 'meta-current', submitted_at: Time.current,
+                                  submission_key: SecureRandom.uuid, content_digest: 'current-approved')
+
+        get "/api/v1/accounts/#{account.id}/inboxes/#{whatsapp_inbox.id}/message_templates",
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body['payload']).to contain_exactly(
+          { 'name' => 'account_update', 'language' => 'en_US' },
+          include('id' => 'meta-current', 'name' => 'owned_current', 'language' => 'en_US', 'status' => 'APPROVED',
+                  'components' => [{ 'type' => 'BODY', 'text' => 'Hello' }])
+        )
+      end
+
       it 'filters templates by exact name' do
         get "/api/v1/accounts/#{account.id}/inboxes/#{whatsapp_inbox.id}/message_templates",
             headers: admin.create_new_auth_token,

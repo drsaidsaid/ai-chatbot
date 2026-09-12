@@ -7,7 +7,7 @@ class WhatsappTemplateRevision < ApplicationRecord
   belongs_to :submitted_by, class_name: 'User', optional: true
 
   enum :status, { draft: 0, submission_pending: 1, submitted: 2, approved: 3, rejected: 4, paused: 5, disabled: 6, unknown: 7,
-                  submitting: 8 }
+                  submitting: 8, submission_failed: 9 }
 
   validates :revision_number, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :whatsapp_template_id }
   validates :language, :category, :body, :submission_key, :content_digest, presence: true

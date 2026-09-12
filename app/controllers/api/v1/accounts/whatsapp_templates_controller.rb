@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseController
+  RECONCILABLE_STATUSES = %w[submitted approved rejected paused disabled unknown].freeze
+
   before_action :check_admin_authorization?
   before_action :template, only: %i[show update submit reconcile]
 
@@ -37,12 +39,13 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
     revision = @template.latest_revision
     accepted = revision&.with_lock do
       revision.reload
-      next false unless revision.draft?
+      next false unless revision.draft? || revision.submission_failed?
 
-      revision.update!(status: :submission_pending, submitted_at: Time.current, submitted_by: Current.user)
+      revision.update!(status: :submission_pending, submitted_at: Time.current, submitted_by: Current.user,
+                       rejection_reason: nil, submission_failure: {})
       true
     end
-    return render json: { error: 'Only a local draft can be submitted.' }, status: :conflict unless accepted
+    return render json: { error: 'Only a local draft or failed submission can be submitted.' }, status: :conflict unless accepted
 
     Whatsapp::TemplateSubmissionJob.perform_later(revision)
     render json: payload(@template), status: :accepted
@@ -50,7 +53,9 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
 
   def reconcile
     revision = @template.latest_revision
-    return render json: { error: 'Only a submitted template can be reconciled.' }, status: :conflict unless revision&.submitted_at?
+    unless revision&.submitted_at? && RECONCILABLE_STATUSES.include?(revision.status)
+      return render json: { error: 'Only a provider-submitted template can be reconciled.' }, status: :conflict
+    end
 
     Whatsapp::TemplateSubmissionJob.perform_later(revision, reconcile: true)
     render json: payload(@template), status: :accepted
@@ -92,7 +97,9 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
     {
       revision: revision.revision_number, language: revision.language, category: revision.category, status: revision.status,
       meta_approval: revision.meta_approval, provider_template_id: revision.provider_template_id,
-      rejection_reason: revision.rejection_reason, last_sync_at: revision.status_synced_at, preview: revision.preview,
+      rejection_reason: revision.rejected? ? revision.rejection_reason : nil,
+      submission_failure: revision.submission_failure.presence,
+      last_sync_at: revision.status_synced_at, preview: revision.preview,
       meta_charge_estimate: revision.meta_charge_estimate.presence,
       meta_charge_status: revision.meta_charge_estimate.present? ? 'available' : 'unknown',
       sendable: revision.sendable?, current: current
