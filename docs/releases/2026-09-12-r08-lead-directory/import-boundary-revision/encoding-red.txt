@@ -1,0 +1,43 @@
+Run options: include {full_description: /rejects\ invalid\ UTF\-8/}
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/contact.rb:74)
+/Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+F
+
+Failures:
+
+  1) Leads API POST /api/v1/accounts/{account.id}/leads/import rejects invalid UTF-8 without exposing parser internals
+     Failure/Error: expect(response).to have_http_status(:unprocessable_entity)
+       expected the response to have status code :unprocessable_entity (422) but it was :internal_server_error (500)
+     # ./spec/requests/api/v1/accounts/leads_spec.rb:164:in 'block (3 levels) in <top (required)>'
+
+Finished in 0.7109 seconds (files took 2.97 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/requests/api/v1/accounts/leads_spec.rb:154 # Leads API POST /api/v1/accounts/{account.id}/leads/import rejects invalid UTF-8 without exposing parser internals
+

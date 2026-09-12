@@ -1,0 +1,15 @@
+ab9e080834f7d98c7b73cb9a4fcd32d20f1bb2b10d14b70a1f0b83a323b7a34d  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/README.md
+a399dc4fcf0a0242f4d614c8042f5f23d8458511fd4b52c6b4c171dddee91c6f  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/changed-source-tree.txt
+efd69e30f620a9f6d711de4227e3f6fe8ff39673bbed26bf86a98c2eb61ddcdc  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/concurrency-green.txt
+385c780c064156ef6aaa2a87d0829124a6b5187ff48e2354510af0b6e7477826  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/contention-red.txt
+0de23052b5c9b8bc8828eafd9c97cf930d062736237d05ffcddd90a603f770d7  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/encoding-red.txt
+6c27aba9b3cc9c03150456ace0d13ce04bf17c92d768e43da63afa5f9395e69e  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/evidence-validation.txt
+c95c58a9739af14f5f16254e73d6159afb3785a5d2a040ec798befdb2c580817  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/final-green.txt
+6bee00f8d786c1816ed270904d71bf4dd3b22ad9ae1056a4fabae89c71a1a5a6  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/red-observation.md
+7eb6dfe1141150265b9ad8950f845ef708b94f2aadf04a4b3bda2ec75d1ffb77  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/rubocop-green.txt
+3356c2963de16f485623356ca6c86d94a196982611f048016807afc0b4cd8ad3  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/source-tree-app-javascript-dashboard.txt.gz.base64
+4e3bef551bdf189d5beac5fc20eef5990274c21aaf637f953edff5d8ae7aa6c6  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/source-tree-app-javascript-other.txt.gz.base64
+db26c9dcbd330d7ee6189cc278358524eb54063801b2d01da38449439bad4396  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/source-tree-app-other.txt.gz.base64
+9ba709021276430f6bf0065751028ce551d3abda998e3b54119066396179c425  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/source-tree-other.txt.gz.base64
+42f1911550956a656b0bb150afad95ad2d6b9e2c6ec09ee45c4385ebec35a8c8  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/source-tree-spec.txt.gz.base64
+15f4b13c14d9755a0528a6a0467080ad5a9da2bb26f4524f93b0725406fa48b1  docs/releases/2026-09-12-r08-lead-directory/import-boundary-revision/source.diff.gz.base64
