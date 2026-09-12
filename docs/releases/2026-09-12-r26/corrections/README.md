@@ -4,8 +4,10 @@ This additive package records the corrections made after review of the frozen
 R26 checkpoint. It does not alter or replace the original evidence package in
 the parent directory.
 
-- Corrected source commit: `8fc5ab2dcb759111229e441c3546ab66b5c3ea1d`
-- Corrected source tree: `64d5928364afab7d536c4010fc8d3c562a2cdfa5`
+- Corrected source commit: `97d8825c6f833ee18345f294d32dec9b973ad74a`
+- Corrected source tree: `2c285c57c767a04caf9834dc8ccf3ce0b20157e6`
+- Missing-provider and fail-closed catalog correction commit: `97d8825c6f833ee18345f294d32dec9b973ad74a`
+- Exact-identity and serialized-authority correction commit: `eaeb09f338275a70572aa7903827c27cc744c232`
 - Owned-authority and truthful-failure correction commit: `8fc5ab2dcb759111229e441c3546ab66b5c3ea1d`
 - Lifecycle correction commit: `75063ebb5c89bc6449aaae4470e7d72833a654b2`
 - Media-handle correction commit: `605ecc62b24481bf5d32b63019f2229d135e0794`
@@ -36,8 +38,20 @@ stores structured submission-failure details so the UI can distinguish
 authentication, throttling, validation, provider availability, and transport
 uncertainty from an actual template-review rejection.
 
+The post-review corrections persist the selected owned revision, content
+digest, and provider identity on the Message and recheck that exact tuple in
+the final channel-locked authorization transaction. Ordinary provider sync
+projects `PAUSED` and `DISABLED` onto the exact owned revision, while a cached
+`APPROVED` response cannot revive a local negative state. A successful empty
+or partial catalog now disables an approved owned revision missing at Meta and
+clears stale cache entries; a failed request preserves the last trusted cache.
+Template mutations share the channel-first lock order and provider HTTP remains
+outside the authority lock.
+
 `official-provider-contract.md` records the primary-source contract used.
 `focused-verification.md` records the red/green checks and production build.
 `browser-acceptance.md` records the isolated desktop and mobile acceptance
 path. `fake_meta_server.py` is the deterministic local provider boundary used
-for that path.
+for that path. `loopback_transport_exec.rb` is the fail-closed launcher used by
+the final replay; it refuses application commands unless the provider base URL
+resolves exclusively to loopback addresses.

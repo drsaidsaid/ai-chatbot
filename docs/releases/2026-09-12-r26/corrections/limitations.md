@@ -10,6 +10,9 @@
    evidence of a live provider approval.
 3. The evidence is focused on R26 and is not a whole-repository test or lint
    claim.
+4. An exploratory whole-file run of the existing inbox controller spec found
+   14 failures outside the R26 template-picker block. The exact picker block
+   passed and is included in the focused green count.
 
 The original parent evidence remains an immutable record of the earlier frozen
 candidate and its then-known limitations.

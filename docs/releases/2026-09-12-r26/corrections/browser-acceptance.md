@@ -92,3 +92,37 @@ the current `MARKETING` category and BODY/IMAGE/BUTTONS components. Refresh
 showed revision 2 as `submitted`, not sendable, with **Sync Meta status**. The
 structured failure field was cleared. A production database read confirmed
 `Message.count == 0` after both attempts.
+
+## Final fail-closed missing-template replay
+
+Source `97d8825c6f833ee18345f294d32dec9b973ad74a` was exercised against a fresh
+synthetic production database. Every Rails command ran through
+`loopback_transport_exec.rb` with
+`WHATSAPP_CLOUD_BASE_URL=http://127.0.0.1:55548`; the fake provider and Redis
+were bound to loopback. No Sidekiq process was needed.
+
+On desktop, the page first visibly rendered synthetic template
+`browser_missing_20260913 · en_US` as
+`Revision 1 · Meta status: approved · Sendable`, backed by an intentionally
+stale approved channel cache. A guarded ordinary provider sync then received a
+successful empty catalog from the loopback server. Its production read showed:
+
+```text
+revision_status: disabled
+message_templates: []
+Message.count: 0
+```
+
+After **Refresh templates**, the same open desktop page visibly changed to
+`Revision 1 · Meta status: disabled · Not sendable`. This demonstrates the
+successful-empty path is distinct from transport failure and the stale local
+approval no longer remains eligible.
+
+At an explicit 390 × 844 viewport, **WhatsApp templates** remained selected in
+the mobile Settings selector and the disabled/not-sendable template plus Edit,
+Sync, and Revision history controls remained accessible. `innerWidth`, document
+`clientWidth`, document `scrollWidth`, and body `scrollWidth` were each 390
+pixels. The browser console contained no errors and the viewport was reset.
+
+The temporary tab was closed, Rails, the fake provider, and Redis were stopped,
+and `ai_chatbot_r26_accept_55549` was dropped and confirmed absent.

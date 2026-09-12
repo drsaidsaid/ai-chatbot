@@ -136,3 +136,60 @@ No customer message, push, integration, deployment, or issue closure occurred.
 The browser addendum records one immediately rejected live Meta authentication
 request caused by an acceptance-harness environment omission; the corrected
 rerun used loopback only.
+
+## Superseding post-review verification
+
+The final source checkpoint is
+`97d8825c6f833ee18345f294d32dec9b973ad74a` with tree
+`2c285c57c767a04caf9834dc8ccf3ce0b20157e6`.
+
+Test-first failures reproduced two remaining unsafe cases: a successful empty
+provider catalog retained the prior cache, and a successful nonempty catalog
+could omit an approved owned template without blocking it. The correction now
+distinguishes request failure (`nil`, preserve trusted cache) from a successful
+empty result (`[]`, clear stale cache), and disables only approved current owned
+revisions absent from a complete successful provider catalog.
+
+Final focused results:
+
+```text
+98 focused model/service/API examples, 0 failures
+66 canonical WhatsApp outbound-delivery examples, 0 failures
+2 committed-transaction concurrency examples, 0 failures
+8 frontend component examples across 3 files, 0 failures
+```
+
+The canonical suite covers legacy-only behavior, exact revision/content/provider
+identity, ordinary `PAUSED` and `DISABLED` sync, successful empty and partial
+catalog omission, picker projection, processor and final dispatch rejection,
+and deterministic mutation-before/after-authorization interleavings. The
+provider suite also proves failed sync preserves the last trusted cache and
+cached `APPROVED` cannot revive a locally paused revision.
+
+An exploratory whole-file run of the pre-existing inbox controller spec
+reported 14 failures in unrelated agent authorization and inbox-create
+examples. Its exact `message_templates` block passed inside the 98-example
+group. No whole-repository green claim is made.
+
+Static and build results:
+
+```text
+Targeted RuboCop: no offenses
+Frontend ESLint: 0 errors; existing repository warning-class notices remain
+git diff --check: exit 0
+Production Vite build: 5080 modules transformed, exit 0, built in 1m 14s
+```
+
+Production manifest hashes from the final frontend-equivalent build:
+
+```text
+dbbcc08c12c8b5d2b9017001bb6241782ce67c587d1deb1c1d3e206fa394039d  public/vite/.vite/manifest.json
+44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a  public/vite/.vite/manifest-assets.json
+```
+
+Before either final browser replay, `loopback_transport_exec.rb` was syntax
+checked and exercised: missing provider URL exited 1, `http://192.0.2.1`
+exited 1, and `http://127.0.0.1:59999` executed a harmless command with exit 0.
+Every Rails setup, seed, server, sync, verification, and cleanup command then
+ran through the guard with `WHATSAPP_CLOUD_BASE_URL` fixed to
+`http://127.0.0.1:55548`. No Sidekiq process was needed for the read-only replay.
