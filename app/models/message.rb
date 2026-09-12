@@ -56,6 +56,9 @@ class Message < ApplicationRecord
           'category': { 'type': 'string' },
           'language': { 'type': 'string' },
           'namespace': { 'type': 'string' },
+          'owned_revision_id': { 'type': 'integer' },
+          'owned_content_digest': { 'type': 'string' },
+          'provider_template_id': { 'type': 'string' },
           'content_mode': { 'type': 'string', 'enum': %w[raw_template rendered] },
           'processed_params': { 'type': 'object' }
         },

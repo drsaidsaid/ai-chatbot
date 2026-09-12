@@ -22,11 +22,7 @@ class Whatsapp::TemplateProcessorService
   end
 
   def find_template
-    Whatsapp::TemplateCatalog.for_channel(channel).find do |t|
-      t['name'] == template_params['name'] &&
-        t['language']&.downcase == template_params['language']&.downcase &&
-        t['status']&.downcase == 'approved'
-    end
+    Whatsapp::TemplateCatalog.resolve(channel: channel, selection: template_params)
   end
 
   def processed_templates_params(template)

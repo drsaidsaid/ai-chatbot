@@ -434,6 +434,25 @@ describe Whatsapp::Providers::WhatsappCloudService do
         subject.sync_templates
         expect(whatsapp_channel.reload.message_templates_last_updated).not_to eq(timstamp)
       end
+
+      it 'does not promote a locally paused owned revision from the provider cache' do
+        template = WhatsappTemplate.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, created_by: operator, name: 'owned_template'
+        )
+        revision = template.revisions.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+          body: 'Hello', status: :paused, provider_template_id: 'meta-owned', submission_key: SecureRandom.uuid,
+          content_digest: 'paused-owned-digest', submitted_at: Time.current
+        )
+        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates').to_return(
+          status: 200, headers: response_headers,
+          body: { data: [{ id: 'meta-owned', name: 'owned_template', language: 'en_US', status: 'APPROVED' }] }.to_json
+        )
+
+        subject.sync_templates
+
+        expect(revision.reload).to be_paused
+      end
     end
   end
 

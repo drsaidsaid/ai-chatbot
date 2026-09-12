@@ -20,8 +20,8 @@ class Whatsapp::TemplateSubmissionService
     provider_id = response_payload(response)['id'].presence || edit_target_id
     return unknown! if provider_id.blank?
 
-    @revision.update!(provider_template_id: provider_id, status: :submitted, rejection_reason: nil, submission_failure: {},
-                      status_synced_at: Time.current)
+    update_revision!(provider_template_id: provider_id, status: :submitted, rejection_reason: nil, submission_failure: {},
+                     status_synced_at: Time.current)
   rescue *TRANSPORT_ERRORS
     unknown!(failure: failure_payload(kind: 'transport_unknown', message: 'Provider connection failed; reconcile before retrying.'))
   end
@@ -40,14 +40,14 @@ class Whatsapp::TemplateSubmissionService
 
     status = provider['status'].to_s.downcase
     mapped_status = { 'approved' => :approved, 'rejected' => :rejected, 'paused' => :paused, 'disabled' => :disabled }.fetch(status, :submitted)
-    @revision.update!(provider_template_id: provider['id'], status: mapped_status, rejection_reason: provider['rejected_reason'],
-                      submission_failure: {}, status_synced_at: Time.current)
+    update_revision!(provider_template_id: provider['id'], status: mapped_status, rejection_reason: provider['rejected_reason'],
+                     submission_failure: {}, status_synced_at: Time.current)
   rescue *TRANSPORT_ERRORS
     unknown!(failure: failure_payload(kind: 'reconciliation_unavailable', message: 'Provider status could not be read.'))
   end
 
   def unknown!(failure: nil)
-    @revision.update!(status: :unknown, rejection_reason: nil, submission_failure: failure || {}, status_synced_at: Time.current)
+    update_revision!(status: :unknown, rejection_reason: nil, submission_failure: failure || {}, status_synced_at: Time.current)
   end
 
   def handle_unsuccessful_submission!(response)
@@ -63,10 +63,10 @@ class Whatsapp::TemplateSubmissionService
            else 'request_rejected'
            end
     message = error['message'].presence || 'Provider did not accept the template submission.'
-    @revision.update!(status: :submission_failed, rejection_reason: nil,
-                      submission_failure: failure_payload(kind: kind, message: message, response: response,
-                                                          provider_code: error['code']),
-                      status_synced_at: Time.current)
+    update_revision!(status: :submission_failed, rejection_reason: nil,
+                     submission_failure: failure_payload(kind: kind, message: message, response: response,
+                                                         provider_code: error['code']),
+                     status_synced_at: Time.current)
   end
 
   def failure_payload(kind:, message:, response: nil, provider_code: nil)
@@ -75,12 +75,20 @@ class Whatsapp::TemplateSubmissionService
   end
 
   def claim_submission!
-    @revision.with_lock do
+    @revision.channel.with_lock do
+      @revision.lock!
       @revision.reload
       next false unless @revision.submission_pending?
 
       @revision.update!(status: :submitting)
       true
+    end
+  end
+
+  def update_revision!(attributes)
+    @revision.channel.with_lock do
+      @revision.lock!
+      @revision.update!(attributes)
     end
   end
 

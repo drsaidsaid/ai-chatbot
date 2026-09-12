@@ -18,7 +18,7 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
     channel = current_account.whatsapp_channels.find_by!(inbox: current_account.inboxes.find(template_params.fetch(:inbox_id)))
     raise ActiveRecord::RecordNotFound unless channel.provider == 'whatsapp_cloud'
 
-    record = ActiveRecord::Base.transaction do
+    record = channel.with_lock do
       created = current_account.whatsapp_templates.create!(channel: channel, created_by: Current.user, name: template_params.fetch(:name))
       create_revision!(created)
       created
@@ -29,15 +29,23 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
   end
 
   def update
-    create_revision!(@template)
+    @template.channel.with_lock do
+      @template.reload
+      create_revision!(@template)
+    end
     render json: payload(@template)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def submit
-    revision = @template.latest_revision
-    accepted = revision&.with_lock do
+    revision = nil
+    accepted = @template.channel.with_lock do
+      @template.reload
+      revision = @template.latest_revision
+      next false unless revision
+
+      revision.lock!
       revision.reload
       next false unless revision.draft? || revision.submission_failed?
 

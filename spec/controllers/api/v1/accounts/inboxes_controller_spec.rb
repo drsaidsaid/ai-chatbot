@@ -1350,6 +1350,8 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(response.parsed_body['payload']).to contain_exactly(
           { 'name' => 'account_update', 'language' => 'en_US' },
           include('id' => 'meta-current', 'name' => 'owned_current', 'language' => 'en_US', 'status' => 'APPROVED',
+                  'owned_revision_id' => current.latest_revision.id, 'owned_content_digest' => 'current-approved',
+                  'provider_template_id' => 'meta-current',
                   'components' => [{ 'type' => 'BODY', 'text' => 'Hello' }])
         )
       end

@@ -8,9 +8,13 @@ vi.mock('vue-i18n', () => ({
 }));
 
 const template = {
+  id: 'meta-template-7',
   name: 'token_values',
   category: 'UTILITY',
   language: 'en',
+  owned_revision_id: 42,
+  owned_content_digest: 'digest-42',
+  provider_template_id: 'meta-template-7',
   parameter_format: 'POSITIONAL',
   components: [
     {
@@ -51,6 +55,9 @@ describe('WhatsAppTemplateParser', () => {
       pendingMessageContent: '{{2}} / Bob',
       templateParams: {
         content_mode: 'raw_template',
+        owned_revision_id: 42,
+        owned_content_digest: 'digest-42',
+        provider_template_id: 'meta-template-7',
         processed_params: {
           body: {
             1: '{{2}}',

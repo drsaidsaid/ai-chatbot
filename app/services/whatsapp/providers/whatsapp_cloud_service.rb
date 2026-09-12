@@ -35,15 +35,16 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
   end
 
   def sync_templates
-    # ensuring that channels with wrong provider config wouldn't keep trying to sync templates
-    whatsapp_channel.mark_message_templates_updated
-    return if (templates = fetch_whatsapp_templates).blank?
-
-    # update_columns skips touch, so bump the cache key ourselves; only if templates changed
-    whatsapp_channel.account.update_cache_key('inbox') if templates != whatsapp_channel.message_templates
-    # rubocop:disable Rails/SkipsModelValidations
-    whatsapp_channel.update_columns(message_templates: templates, message_templates_last_updated: Time.current)
-    # rubocop:enable Rails/SkipsModelValidations
+    templates = fetch_whatsapp_templates
+    account = whatsapp_channel.account
+    whatsapp_channel.with_lock do
+      project_owned_negative_states!(templates)
+      # update_columns skips touch, so bump the cache key ourselves; only if templates changed
+      account.update_cache_key('inbox') if templates.present? && templates != whatsapp_channel.message_templates
+      attributes = { message_templates_last_updated: Time.current }
+      attributes[:message_templates] = templates if templates.present?
+      whatsapp_channel.update_columns(attributes) # rubocop:disable Rails/SkipsModelValidations
+    end
   end
 
   def fetch_whatsapp_templates(after: nil)
@@ -99,6 +100,24 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
   end
 
   private
+
+  def project_owned_negative_states!(templates)
+    Array(templates).each do |provider|
+      status = provider['status'].to_s.downcase
+      next unless status.in?(%w[paused disabled])
+
+      template = WhatsappTemplate.find_by(
+        account_id: whatsapp_channel.account_id,
+        channel_id: whatsapp_channel.id,
+        name: provider['name']
+      )
+      revision = template&.latest_revision
+      next unless revision&.provider_template_id.to_s == provider['id'].to_s && revision.language == provider['language']
+
+      revision.lock!
+      revision.update!(status: status, rejection_reason: nil, status_synced_at: Time.current)
+    end
+  end
 
   def provider_phone_matches?(number)
     return false unless number.is_a?(Hash)

@@ -149,7 +149,15 @@ const sendMessage = () => {
   v$.value.$touch();
   if (v$.value.$invalid) return;
 
-  const { name, category, language, namespace } = props.template;
+  const {
+    name,
+    category,
+    language,
+    namespace,
+    owned_revision_id,
+    owned_content_digest,
+    provider_template_id,
+  } = props.template;
 
   const payload = {
     message: props.sendRenderedContent
@@ -161,6 +169,11 @@ const sendMessage = () => {
       category,
       language,
       namespace,
+      ...(owned_revision_id && {
+        owned_revision_id,
+        owned_content_digest,
+        provider_template_id,
+      }),
       content_mode: props.sendRenderedContent ? 'rendered' : 'raw_template',
       processed_params: processedParams.value,
     },
