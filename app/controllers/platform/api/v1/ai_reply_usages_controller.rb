@@ -23,7 +23,9 @@ class Platform::Api::V1::AiReplyUsagesController < PlatformController
       reason: params[:reason].presence || 'manual_conservative_reconciliation',
       platform_app: @platform_app
     )
-    render json: usage.as_json(only: %i[id status allowance_source settled_at released_at reconciliation_reason])
+    render json: usage.as_json(
+      only: %i[id status allowance_source settled_at released_at reconciliation_reason reconciled_by_platform_app_id]
+    )
   rescue ArgumentError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -51,7 +53,7 @@ class Platform::Api::V1::AiReplyUsagesController < PlatformController
   def usage_payload(usage)
     usage.as_json(
       only: %i[id status allowance_source expected_delivery_parts deliveries_registered_at period_started_at period_ends_at
-               reserved_at reconciliation_reason],
+               reserved_at settled_at released_at reconciliation_reason reconciled_by_platform_app_id],
       methods: []
     ).merge(deliveries: usage.whatsapp_outbound_deliveries.map do |delivery|
       delivery.as_json(only: %i[id message_id state provider_message_id failure_code accepted_at])

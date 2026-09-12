@@ -187,7 +187,7 @@ _Avoid_: Status
 
 **AI Reply Credit**: One customer allowance unit for a completed logical AI reply settled after confirmed canonical send. Bubble count, model call count and static template fan-out do not multiply it.
 
-A terminal split reply with both confirmed-sent and failed parts is `partially_delivered`: it is not a billed completed reply and is not a reusable credit. It remains an explicit visible reconciliation hold so neither unsafe resend nor free repeated work can occur. A settled reply uses canonical receipt time, not provider HTTP acceptance time.
+A split reply with both confirmed-sent and failed parts is `partially_delivered` while reconciliation is pending: it is not billed, its credit remains held, and none of that logical reply's failed parts can be replayed. An authorised Platform Operator can close proven terminal partial failure as `partial_failure_closed`; this releases the unused customer credit exactly once without erasing sent/provider-cost evidence or making the closed reply retryable. A settled reply uses canonical receipt time, not provider HTTP acceptance time.
 
 **Subscription**: A Business Account’s paid monthly plan, renewal date and included allowance. Separate purchased top-ups carry forward while active.
 

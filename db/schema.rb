@@ -363,7 +363,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000300) do
     t.check_constraint "allowance_source::text = ANY (ARRAY['included'::character varying::text, 'top_up'::character varying::text])", name: "ai_reply_usages_source"
     t.check_constraint "expected_delivery_parts > 0", name: "ai_reply_usages_positive_parts"
     t.check_constraint "period_ends_at > period_started_at", name: "ai_reply_usages_forward_period"
-    t.check_constraint "status::text = ANY (ARRAY['reserved'::character varying, 'settled'::character varying, 'released'::character varying, 'partially_delivered'::character varying]::text[])", name: "ai_reply_usages_status"
+    t.check_constraint "status::text = ANY (ARRAY['reserved'::character varying, 'settled'::character varying, 'released'::character varying, 'partially_delivered'::character varying, 'partial_failure_closed'::character varying]::text[])", name: "ai_reply_usages_status"
   end
 
   create_table "ai_service_plans", force: :cascade do |t|

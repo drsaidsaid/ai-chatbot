@@ -10,7 +10,7 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
   belongs_to :reconciled_by_platform_app, class_name: 'PlatformApp', optional: true
   has_many :whatsapp_outbound_deliveries, class_name: 'Whatsapp::OutboundDelivery', dependent: :nullify
 
-  enum :status, %w[reserved settled released partially_delivered].index_with(&:itself)
+  enum :status, %w[reserved settled released partially_delivered partial_failure_closed].index_with(&:itself)
   enum :allowance_source, %w[included top_up].index_with(&:itself)
 
   scope :capacity_holding, -> { where(status: CAPACITY_HOLDING_STATUSES) }
@@ -18,9 +18,12 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
   validates :reserved_at, :period_started_at, :period_ends_at, presence: true
   validates :ai_orchestration_intent_id, uniqueness: true
   validates :expected_delivery_parts, numericality: { only_integer: true, greater_than: 0 }
+  validates :settled_at, presence: true, if: :settled?
+  validates :released_at, presence: true, if: -> { released? || partial_failure_closed? }
+  validates :reconciled_by_platform_app, presence: true, if: :partial_failure_closed?
+  validates :reconciliation_reason, presence: true, if: -> { partially_delivered? || partial_failure_closed? }
   validate :tenant_scope
   validate :valid_period
-  validate :terminal_timestamp
 
   def self.for_delivery(delivery)
     associated_usage = delivery.ai_reply_usage
@@ -33,6 +36,7 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
   def delivery_failure_code
     return 'customer_allowance_released' if released?
     return 'customer_allowance_reconciliation_required' if partially_delivered?
+    return 'customer_allowance_partial_failure_closed' if partial_failure_closed?
   end
 
   private
@@ -48,13 +52,5 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
     return if period_started_at.blank? || period_ends_at.blank? || period_ends_at > period_started_at
 
     errors.add(:period_ends_at, 'must be after the period start')
-  end
-
-  def terminal_timestamp
-    errors.add(:settled_at, 'is required for settled usage') if settled? && settled_at.blank?
-    errors.add(:released_at, 'is required for released usage') if released? && released_at.blank?
-    return unless partially_delivered? && reconciliation_reason.blank?
-
-    errors.add(:reconciliation_reason, 'is required for a partially delivered usage')
   end
 end

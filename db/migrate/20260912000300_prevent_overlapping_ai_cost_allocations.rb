@@ -6,7 +6,7 @@ class PreventOverlappingAiCostAllocations < ActiveRecord::Migration[7.1]
                             "status IN ('reserved', 'settled', 'released')",
                             name: 'ai_reply_usages_status'
     add_check_constraint :ai_reply_usages,
-                         "status IN ('reserved', 'settled', 'released', 'partially_delivered')",
+                         "status IN ('reserved', 'settled', 'released', 'partially_delivered', 'partial_failure_closed')",
                          name: 'ai_reply_usages_status'
     add_exclusion_constraint :ai_account_cost_allocations,
                              'account_id WITH =, category WITH =, currency WITH =, ' \

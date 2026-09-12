@@ -32,9 +32,10 @@ class AiLeadEmployee::ReplyUsageReconciler
 
     def reconcile!(usage:, outcome:, platform_app:, reason:)
       return manual_release!(usage, platform_app, reason) if outcome.to_s == 'confirmed_not_sent'
+      return manual_partial_close!(usage, platform_app, reason) if outcome.to_s == 'confirmed_partial_failure'
 
       usage.with_lock do
-        return usage if usage.settled? || usage.released?
+        return usage if usage.settled? || usage.released? || usage.partial_failure_closed?
 
         apply_manual_outcome!(usage, outcome, platform_app, reason)
         usage
@@ -128,8 +129,51 @@ class AiLeadEmployee::ReplyUsageReconciler
         settled_at = deliveries.filter_map { |delivery| provider_receipt_at(delivery) }.max || Time.current
         usage.update!(attributes.merge(status: :settled, settled_at: settled_at))
       else
-        raise ArgumentError, 'Outcome must be confirmed_sent or confirmed_not_sent'
+        raise ArgumentError, 'Outcome must be confirmed_sent, confirmed_not_sent, or confirmed_partial_failure'
       end
+    end
+
+    def manual_partial_close!(usage, platform_app, reason)
+      usage.ai_subscription.with_lock do
+        usage.lock!
+        operator = current_finance_operator!(platform_app)
+        return usage if terminal_usage?(usage)
+        raise ArgumentError, 'Only a pending partial delivery can be closed' unless usage.partially_delivered?
+
+        deliveries = usage.whatsapp_outbound_deliveries.reload
+        unless canonical_partial_failure?(usage, deliveries)
+          raise ArgumentError, 'Canonical sent and terminal failure evidence is required for partial closure'
+        end
+
+        usage.update!(
+          status: :partial_failure_closed, released_at: Time.current, reconciliation_reason: reason,
+          reconciled_by_platform_app: operator
+        )
+        usage.ai_subscription.resolve_alerts!(kind: :allowance_exhausted) if
+          AiLeadEmployee::ReplyAllowance.available_source(usage.ai_subscription)
+        usage
+      end
+    end
+
+    def current_finance_operator!(platform_app)
+      operator = PlatformApp.lock.find_by(id: platform_app&.id, finance_operations_enabled: true)
+      raise ArgumentError, 'Current finance authority is required' unless operator
+
+      operator
+    end
+
+    def terminal_usage?(usage)
+      usage.settled? || usage.released? || usage.partial_failure_closed?
+    end
+
+    def canonical_partial_failure?(usage, deliveries)
+      usage.deliveries_registered_at.present? && deliveries.size == usage.expected_delivery_parts &&
+        deliveries.any? { |delivery| terminal_failed?(delivery) } &&
+        deliveries.all? { |delivery| confirmed_sent?(delivery) || terminal_failed?(delivery) }
+    end
+
+    def terminal_failed?(delivery)
+      delivery.state.in?(%w[failed canceled]) || provider_status(delivery) == 'failed'
     end
 
     def canonical_deliveries_confirmed?(usage, deliveries)

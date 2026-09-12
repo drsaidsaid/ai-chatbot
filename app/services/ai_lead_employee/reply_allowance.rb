@@ -189,6 +189,8 @@ class AiLeadEmployee::ReplyAllowance
       return 'top_up' if top_up_used < subscription.top_up_ai_replies
     end
 
+    public :available_source
+
     def unavailable_summary
       {
         status: 'inactive', included_ai_replies: 0, used_ai_replies: 0, reserved_ai_replies: 0,

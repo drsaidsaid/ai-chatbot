@@ -24,6 +24,36 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     )
   end
 
+  def terminal_partial_reply(second_accepted: false)
+    intent = intent_for
+    usage = described_class.reserve!(intent: intent)
+    messages = reply_messages(intent, usage)
+    deliveries = messages.map { |message| delivery_for(message, usage) }
+    described_class.register_deliveries!(usage: usage, messages: messages)
+    project_provider_status(deliveries.first, messages.first, 'sent', 'wamid.partial.1')
+    if second_accepted
+      project_provider_status(deliveries.second, messages.second, 'failed', 'wamid.partial.2')
+    else
+      deliveries.second.update!(state: :failed, failure_code: 'provider_rejected')
+    end
+    [usage, messages, deliveries]
+  end
+
+  def reply_messages(intent, usage)
+    Array.new(2) do
+      create(:message, account: account, inbox: intent.conversation.inbox, conversation: intent.conversation,
+                       message_type: :outgoing,
+                       additional_attributes: { ai_lead_employee: { ai_reply_usage_id: usage.id } })
+    end
+  end
+
+  def project_provider_status(delivery, message, status, provider_message_id)
+    delivery.update!(state: :accepted, accepted_at: Time.current, provider_message_id: provider_message_id)
+    Whatsapp::MessageStatusProjector.new(
+      message: message.reload, status: { status: status, timestamp: Time.current.to_i.to_s }
+    ).perform
+  end
+
   it 'reserves one unit idempotently for one logical orchestration reply' do
     intent = intent_for
 
@@ -134,25 +164,9 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     expect(second_usage.reload).to be_released
   end
 
-  it 'marks a terminal partial reply for reconciliation without billing, releasing, or allowing resend' do
-    intent = intent_for
-    usage = described_class.reserve!(intent: intent, at: Time.zone.parse('2026-09-12 08:00:00 UTC'))
-    messages = Array.new(2) do
-      create(:message, account: account, inbox: intent.conversation.inbox, conversation: intent.conversation,
-                       message_type: :outgoing,
-                       additional_attributes: { ai_lead_employee: { ai_reply_usage_id: usage.id } })
-    end
-
-    first_delivery = delivery_for(messages.first, usage)
-    second_delivery = delivery_for(messages.second, usage)
-    described_class.register_deliveries!(usage: usage, messages: messages)
-    first_delivery.update!(
-      state: :accepted, accepted_at: Time.current, provider_message_id: 'wamid.part.1'
-    )
-    Whatsapp::MessageStatusProjector.new(
-      message: messages.first.reload, status: { status: 'sent', timestamp: Time.current.to_i.to_s }
-    ).perform
-    second_delivery.update!(state: :failed, failure_code: 'provider_rejected')
+  it 'closes a confirmed terminal partial failure without billing and releases its capacity exactly once' do
+    usage, _messages, deliveries = terminal_partial_reply
+    _first_delivery, second_delivery = deliveries
 
     expect(usage.reload).to have_attributes(
       status: 'partially_delivered', settled_at: nil, released_at: nil,
@@ -164,18 +178,134 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     )
     expect(second_delivery.retry_for?(create(:user, account: account, role: :administrator))).to be(false)
 
+    operator = create(:platform_app, finance_operations_enabled: true)
+    released_at = nil
+    expect do
+      described_class.reconcile!(usage: usage, outcome: 'confirmed_partial_failure', platform_app: operator,
+                                 reason: 'operator_confirmed_terminal_partial_failure')
+      released_at = usage.reload.released_at
+      described_class.reconcile!(usage: usage, outcome: 'confirmed_partial_failure', platform_app: operator,
+                                 reason: 'duplicate_operator_submission')
+    end.not_to(change { AiLeadEmployee::AiReplyUsage.where(account: account).count })
+
+    expect(usage.reload).to have_attributes(
+      status: 'partial_failure_closed', settled_at: nil, released_at: released_at,
+      reconciliation_reason: 'operator_confirmed_terminal_partial_failure', reconciled_by_platform_app_id: operator.id
+    )
+    expect(described_class.summary(account: account)).to include(
+      used_ai_replies: 0, reserved_ai_replies: 0, reconciliation_required_ai_replies: 0,
+      remaining_ai_replies: 1, automation_allowed: true
+    )
+    expect(AiLeadEmployee::AiReplyUsage.where(account: account).settled.count).to eq(0)
+  end
+
+  it 'preserves sent evidence and permanently blocks replay when partial failure is closed' do
+    usage, messages, deliveries = terminal_partial_reply
+    first_delivery, second_delivery = deliveries
+    sent_evidence = messages.first.reload.content_attributes.slice(
+      'whatsapp_provider_status', 'whatsapp_delivery_timestamp'
+    )
+
+    described_class.reconcile!(
+      usage: usage, outcome: 'confirmed_partial_failure',
+      platform_app: create(:platform_app, finance_operations_enabled: true), reason: 'terminal_provider_lookup'
+    )
+
+    expect(
+      messages.first.reload.content_attributes.slice('whatsapp_provider_status', 'whatsapp_delivery_timestamp')
+    ).to eq(sent_evidence)
+    expect(first_delivery.reload.provider_message_id).to eq('wamid.partial.1')
+    expect(second_delivery.reload).to have_attributes(state: 'failed', failure_code: 'provider_rejected')
+    expect(second_delivery.retry_for?(create(:user, account: account, role: :administrator))).to be(false)
+    expect(described_class.reserve!(intent: intent_for)).to be_reserved
+  end
+
+  it 'keeps a manually closed partial failure terminal when a contradictory late receipt arrives' do
+    usage, messages, deliveries = terminal_partial_reply(second_accepted: true)
+    described_class.reconcile!(
+      usage: usage, outcome: 'confirmed_partial_failure',
+      platform_app: create(:platform_app, finance_operations_enabled: true), reason: 'terminal_provider_lookup'
+    )
+
     Whatsapp::MessageStatusProjector.new(
-      message: messages.first.reload,
-      status: { status: 'failed', timestamp: 1.minute.from_now.to_i.to_s }
+      message: messages.second.reload, status: { status: 'sent', timestamp: 5.minutes.from_now.to_i.to_s }
     ).perform
-    expect(usage.reload).to be_partially_delivered
+
+    expect(usage.reload).to have_attributes(
+      status: 'partial_failure_closed', settled_at: nil, reconciliation_reason: 'terminal_provider_lookup'
+    )
+    expect(deliveries.second.retry_for?(create(:user, account: account, role: :administrator))).to be(false)
+    expect(described_class.summary(account: account)).to include(remaining_ai_replies: 1, used_ai_replies: 0)
+  end
+
+  it 'keeps settlement billable when the late final receipt wins before manual partial closure' do
+    usage, messages, deliveries = terminal_partial_reply(second_accepted: true)
+    Whatsapp::MessageStatusProjector.new(
+      message: messages.second.reload, status: { status: 'sent', timestamp: 5.minutes.from_now.to_i.to_s }
+    ).perform
+
+    described_class.reconcile!(
+      usage: usage, outcome: 'confirmed_partial_failure',
+      platform_app: create(:platform_app, finance_operations_enabled: true), reason: 'late_operator_submission'
+    )
+
+    expect(usage.reload).to be_settled
+    expect(usage.released_at).to be_nil
+    expect(deliveries.second.retry_for?(create(:user, account: account, role: :administrator))).to be(false)
+    expect(described_class.summary(account: account)).to include(remaining_ai_replies: 0, used_ai_replies: 1)
+  end
+
+  it 'serializes a late final receipt against manual partial closure without duplicating allowance' do
+    subscription.update!(included_ai_replies: 2)
+    usage, messages, deliveries = terminal_partial_reply(second_accepted: true)
+    operator = create(:platform_app, finance_operations_enabled: true)
+    gate = Queue.new
+    actions = [
+      lambda {
+        described_class.reconcile!(usage: usage, outcome: 'confirmed_partial_failure', platform_app: operator,
+                                   reason: 'terminal_provider_lookup')
+      },
+      lambda {
+        Whatsapp::MessageStatusProjector.new(
+          message: messages.second.reload, status: { status: 'sent', timestamp: 5.minutes.from_now.to_i.to_s }
+        ).perform
+      }
+    ].map do |action|
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          gate.pop
+          action.call
+        end
+      end
+    end
+    2.times { gate << true }
+    actions.each(&:value)
+
+    expect(usage.reload.status).to be_in(%w[settled partial_failure_closed])
+    expect(deliveries.second.retry_for?(create(:user, account: account, role: :administrator))).to be(false)
+    available = described_class.summary(account: account).fetch(:remaining_ai_replies)
+    successful = 3.times.count do
+      described_class.reserve!(intent: intent_for)
+      true
+    rescue described_class::Exhausted
+      false
+    end
+    expect(successful).to eq(available)
+    expect(AiLeadEmployee::AiReplyUsage.where(account: account).capacity_holding.count).to eq(2)
+  end
+
+  it 'rechecks current finance authority before closing a partial failure' do
+    usage = described_class.reserve!(intent: intent_for)
+    usage.update!(status: :partially_delivered, reconciliation_reason: 'partial_delivery_requires_reconciliation')
+    app = create(:platform_app, finance_operations_enabled: true)
+    app.update!(finance_operations_enabled: false)
 
     expect do
-      described_class.reconcile!(usage: usage, outcome: 'confirmed_not_sent', platform_app: create(:platform_app),
-                                 reason: 'operator_lookup_not_found')
-    end.to raise_error(ArgumentError, 'Confirmed sent evidence prevents allowance release')
+      described_class.reconcile!(usage: usage, outcome: 'confirmed_partial_failure', platform_app: app,
+                                 reason: 'not_authorized')
+    end.to raise_error(ArgumentError, 'Current finance authority is required')
+
     expect(usage.reload).to be_partially_delivered
-    expect(AiLeadEmployee::AiReplyUsage.where(account: account).settled.count).to eq(0)
   end
 
   it 'settles at the canonical receipt time rather than the earlier HTTP acceptance time' do

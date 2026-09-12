@@ -205,6 +205,43 @@ RSpec.describe 'AI subscription billing', type: :request do
     expect(usage.reload).to be_reserved
   end
 
+  it 'lets a finance operator close a proven terminal partial failure as nonbillable' do
+    create(:ai_subscription, account: account, included_ai_replies: 1)
+    intent = create(:ai_orchestration_intent, account: account)
+    usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: intent)
+    messages = Array.new(2) do
+      create(:message, account: account, inbox: intent.conversation.inbox, conversation: intent.conversation,
+                       message_type: :outgoing,
+                       additional_attributes: { ai_lead_employee: { ai_reply_usage_id: usage.id } })
+    end
+    deliveries = messages.map do |message|
+      Whatsapp::OutboundDelivery.create!(
+        account: account, conversation: message.conversation, message: message, ai_reply_usage: usage,
+        observed_control_version: message.conversation.control_version
+      )
+    end
+    AiLeadEmployee::ReplyAllowance.register_deliveries!(usage: usage, messages: messages)
+    deliveries.first.update!(state: :accepted, accepted_at: Time.current, provider_message_id: 'wamid.api.partial.1')
+    Whatsapp::MessageStatusProjector.new(
+      message: messages.first.reload, status: { status: 'sent', timestamp: Time.current.to_i.to_s }
+    ).perform
+    deliveries.second.update!(state: :failed, failure_code: 'provider_rejected')
+
+    patch "/platform/api/v1/accounts/#{account.id}/ai_reply_usages/#{usage.id}",
+          params: { outcome: 'confirmed_partial_failure', reason: 'provider_terminal_audit' },
+          headers: platform_headers, as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body).to include(
+      'status' => 'partial_failure_closed', 'settled_at' => nil,
+      'reconciliation_reason' => 'provider_terminal_audit', 'reconciled_by_platform_app_id' => platform_app.id
+    )
+    expect(AiLeadEmployee::ReplyAllowance.summary(account: account)).to include(
+      used_ai_replies: 0, remaining_ai_replies: 1, reconciliation_required_ai_replies: 0
+    )
+    expect(deliveries.second.retry_for?(admin)).to be(false)
+  end
+
   it 'tracks operating cost allocations and calculates complete USD contribution margin' do
     plan = create(:ai_service_plan, currency: 'USD', monthly_price: 100)
     request = AiLeadEmployee::Subscriptions::RequestService.new(
