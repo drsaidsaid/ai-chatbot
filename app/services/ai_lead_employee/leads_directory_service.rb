@@ -221,6 +221,7 @@ class AiLeadEmployee::LeadsDirectoryService
 
   def latest_export_bookings(contact_ids)
     access.related(Booking).where(contact_id: contact_ids)
+          .includes(:assignee)
           .reorder(Arel.sql('bookings.contact_id, bookings.starts_at DESC, bookings.id DESC'))
           .select('DISTINCT ON (bookings.contact_id) bookings.*')
           .index_by(&:contact_id)

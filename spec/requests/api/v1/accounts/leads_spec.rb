@@ -354,6 +354,7 @@ RSpec.describe 'Leads API', type: :request do
 
       expect(response).to have_http_status(:success)
       expect(response.media_type).to eq('text/csv')
+      expect(response.headers['Cache-Control']).to eq('private, no-store')
       expect(response.body).to include('id,name,phone_number,email,business_name,quality,score')
       expect(response.body).to include('Jane Nkosi')
     end

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'csv'
+require 'tempfile'
 
 class AiLeadEmployee::LeadExportCsv
   COLUMNS = %w[
@@ -14,27 +15,38 @@ class AiLeadEmployee::LeadExportCsv
     @params = params.to_h
   end
 
-  def each_line
-    return enum_for(__method__) unless block_given?
-
+  def build
+    membership = authorized_membership!
+    artifact = Tempfile.new(['lead-export-', '.csv'])
+    artifact.chmod(0o600)
     with_export_snapshot do
-      membership = AccountUser.includes(:account, :user).find_by!(account_id: account_id, user_id: user_id)
-      raise Pundit::NotAuthorizedError unless membership.administrator?
-
       directory = AiLeadEmployee::LeadsDirectoryService.new(
         account: membership.account,
         user: membership.user,
         params: params
       )
-
-      yield CSV.generate_line(COLUMNS)
-      directory.each_export_row { |row| yield CSV.generate_line(csv_row(row)) }
+      artifact.write(CSV.generate_line(COLUMNS))
+      directory.each_export_row { |row| artifact.write(CSV.generate_line(csv_row(row))) }
     end
+    authorized_membership!
+    artifact.flush
+    artifact.rewind
+    artifact
+  rescue StandardError
+    artifact&.close!
+    raise
   end
 
   private
 
   attr_reader :account_id, :user_id, :params
+
+  def authorized_membership!
+    membership = AccountUser.includes(:account, :user).find_by!(account_id: account_id, user_id: user_id)
+    raise Pundit::NotAuthorizedError unless membership.administrator?
+
+    membership
+  end
 
   def with_export_snapshot(&)
     connection = ActiveRecord::Base.connection

@@ -57,13 +57,18 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def export
-    response.headers['Content-Type'] = 'text/csv'
-    response.headers['Content-Disposition'] = %(attachment; filename="leads-#{Time.zone.today.iso8601}.csv")
-    self.response_body = AiLeadEmployee::LeadExportCsv.new(
+    artifact = AiLeadEmployee::LeadExportCsv.new(
       account_id: current_account.id,
       user_id: Current.user.id,
       params: lead_directory_params.to_h
-    ).each_line
+    ).build
+    request.env[Rack::RACK_TEMPFILES] ||= []
+    request.env[Rack::RACK_TEMPFILES] << artifact
+    response.headers['Cache-Control'] = 'private, no-store'
+    send_file artifact.path,
+              filename: "leads-#{Time.zone.today.iso8601}.csv",
+              type: 'text/csv',
+              disposition: 'attachment'
   end
 
   private

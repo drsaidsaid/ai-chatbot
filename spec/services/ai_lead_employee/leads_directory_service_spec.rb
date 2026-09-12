@@ -160,9 +160,17 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
 
   describe '#each_export_row' do
     it 'preserves the requested stable order while bounding rows and context caches per batch' do
-      contacts = Array.new(5) do
+      contacts = Array.new(5) do |index|
         contact = create(:contact, :with_phone_number, account: account, name: 'Same Name')
-        3.times { create(:conversation, account: account, inbox: inbox, contact: contact) }
+        conversations = Array.new(3) { create(:conversation, account: account, inbox: inbox, contact: contact) }
+        create(
+          :booking,
+          account: account,
+          contact: contact,
+          conversation: conversations.first,
+          assignee: operator,
+          starts_at: (index + 1).days.from_now
+        )
         contact
       end
       service = described_class.new(
@@ -171,16 +179,23 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
         params: { sort: 'name', direction: 'asc' }
       )
       batch_sizes = []
+      user_queries = []
       allow(service).to receive(:export_rows_for).and_wrap_original do |method, batch|
         batch_sizes << batch.size
         method.call(batch)
       end
 
+      subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _start, _finish, _id, payload|
+        user_queries << payload[:sql] if payload[:sql].include?('FROM "users"') && !payload[:cached]
+      end
       rows = service.each_export_row(batch_size: 2).to_a
 
       expect(rows.pluck(:id)).to eq(contacts.map(&:id).sort)
       expect(batch_sizes).to eq([2, 2, 1])
+      expect(user_queries.size).to be <= 3
       expect(service.send(:export_context_cache_sizes).values).to all(be <= 2)
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
     end
   end
 end
