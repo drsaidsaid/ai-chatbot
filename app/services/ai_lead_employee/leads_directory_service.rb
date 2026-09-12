@@ -4,6 +4,7 @@
 class AiLeadEmployee::LeadsDirectoryService
   DEFAULT_PER_PAGE = 25
   MAX_PER_PAGE = 100
+  EXPORT_BATCH_SIZE = 250
   QUALITY_KEYS = %w[all highly_qualified qualified low_qualified unqualified unknown].freeze
   SORT_COLUMNS = %w[name business quality score last_contact].freeze
   DEFAULT_NEXT_ACTION = { key: 'capture_missing_signals', due_at: nil, state: 'qualification' }.freeze
@@ -35,8 +36,24 @@ class AiLeadEmployee::LeadsDirectoryService
     }
   end
 
-  def export_rows
-    rows_for(filtered_scope.to_a)
+  def each_export_row(batch_size: EXPORT_BATCH_SIZE, &block)
+    return enum_for(__method__, batch_size: batch_size) unless block
+
+    offset = 0
+    loop do
+      ids = filtered_scope.limit(batch_size).offset(offset).pluck(:id)
+      break if ids.empty?
+
+      contacts_by_id = Contact.where(id: ids).index_by(&:id)
+      contacts = ids.filter_map { |id| contacts_by_id[id] }
+      export_rows_for(contacts).each(&block)
+      offset += ids.length
+    end
+  end
+
+  def export_context_cache_sizes
+    %i[qualification_by_contact conversation_by_contact bookings_by_contact follow_ups_by_contact]
+      .index_with { |name| instance_variable_get("@#{name}")&.size.to_i }
   end
 
   private
@@ -176,6 +193,44 @@ class AiLeadEmployee::LeadsDirectoryService
   def rows_for(contacts)
     preload_context_for(contacts)
     contacts.map { |contact| row_payload(contact, lead_context_for(contact)) }
+  end
+
+  def export_rows_for(contacts)
+    ids = contacts.map(&:id)
+    @qualification_by_contact = access.qualifications.where(contact_id: ids).index_by(&:contact_id)
+    @conversation_by_contact = latest_export_conversations(ids)
+    @bookings_by_contact = latest_export_bookings(ids)
+    @follow_ups_by_contact = next_export_follow_ups(ids)
+    contacts.map do |contact|
+      row_payload(contact, {
+                    qualification: @qualification_by_contact[contact.id],
+                    conversation: @conversation_by_contact[contact.id],
+                    booking: @bookings_by_contact[contact.id],
+                    follow_up: @follow_ups_by_contact[contact.id]
+                  })
+    end
+  end
+
+  def latest_export_conversations(contact_ids)
+    visible_conversations.where(contact_id: contact_ids)
+                         .includes(:assignee, :inbox)
+                         .reorder(Arel.sql('conversations.contact_id, conversations.last_activity_at DESC, conversations.id DESC'))
+                         .select('DISTINCT ON (conversations.contact_id) conversations.*')
+                         .index_by(&:contact_id)
+  end
+
+  def latest_export_bookings(contact_ids)
+    access.related(Booking).where(contact_id: contact_ids)
+          .reorder(Arel.sql('bookings.contact_id, bookings.starts_at DESC, bookings.id DESC'))
+          .select('DISTINCT ON (bookings.contact_id) bookings.*')
+          .index_by(&:contact_id)
+  end
+
+  def next_export_follow_ups(contact_ids)
+    access.related(LeadFollowUp).pending.where(contact_id: contact_ids)
+          .reorder(Arel.sql('lead_follow_ups.contact_id, lead_follow_ups.scheduled_at ASC, lead_follow_ups.id ASC'))
+          .select('DISTINCT ON (lead_follow_ups.contact_id) lead_follow_ups.*')
+          .index_by(&:contact_id)
   end
 
   def lead_payload(contact)

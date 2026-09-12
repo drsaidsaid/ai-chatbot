@@ -3,11 +3,6 @@
 require 'csv'
 
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
-  EXPORT_COLUMNS = %w[
-    id name phone_number email business_name quality score source assignee
-    last_contact_at next_action booking_status
-  ].freeze
-
   before_action -> { check_authorization(Contact) }
   before_action :set_contact, only: [:show, :update, :reconsent]
 
@@ -62,9 +57,13 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def export
-    send_data export_csv,
-              filename: "leads-#{Time.zone.today.iso8601}.csv",
-              type: 'text/csv'
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = %(attachment; filename="leads-#{Time.zone.today.iso8601}.csv")
+    self.response_body = AiLeadEmployee::LeadExportCsv.new(
+      account_id: current_account.id,
+      user_id: Current.user.id,
+      params: lead_directory_params.to_h
+    ).each_line
   end
 
   private
@@ -115,37 +114,5 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def administrator?
     current_account.account_users.find_by(user: Current.user)&.administrator?
-  end
-
-  def export_csv
-    CSV.generate(headers: true) do |csv|
-      csv << EXPORT_COLUMNS
-      export_rows.each { |row| csv << export_row(row) }
-    end
-  end
-
-  def export_rows
-    AiLeadEmployee::LeadsDirectoryService.new(
-      account: current_account,
-      user: Current.user,
-      params: lead_directory_params.merge(page: 1, per_page: 100)
-    ).export_rows
-  end
-
-  def export_row(row)
-    [
-      row[:id],
-      row[:name],
-      row[:phone_number],
-      row[:email],
-      row[:business_name],
-      row[:quality],
-      row[:score],
-      row.dig(:source, :name),
-      row.dig(:assignee, :name),
-      row[:last_contact_at],
-      row.dig(:next_action, :key),
-      row.dig(:booking, :status)
-    ]
   end
 end

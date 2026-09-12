@@ -157,4 +157,30 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
       expect(payload[:meta]).to include(page: 2, per_page: 25, total_count: 101, total_pages: 5)
     end
   end
+
+  describe '#each_export_row' do
+    it 'preserves the requested stable order while bounding rows and context caches per batch' do
+      contacts = Array.new(5) do
+        contact = create(:contact, :with_phone_number, account: account, name: 'Same Name')
+        3.times { create(:conversation, account: account, inbox: inbox, contact: contact) }
+        contact
+      end
+      service = described_class.new(
+        account: account,
+        user: admin,
+        params: { sort: 'name', direction: 'asc' }
+      )
+      batch_sizes = []
+      allow(service).to receive(:export_rows_for).and_wrap_original do |method, batch|
+        batch_sizes << batch.size
+        method.call(batch)
+      end
+
+      rows = service.each_export_row(batch_size: 2).to_a
+
+      expect(rows.pluck(:id)).to eq(contacts.map(&:id).sort)
+      expect(batch_sizes).to eq([2, 2, 1])
+      expect(service.send(:export_context_cache_sizes).values).to all(be <= 2)
+    end
+  end
 end

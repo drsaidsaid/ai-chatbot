@@ -347,6 +347,21 @@ RSpec.describe 'Leads API', type: :request do
       expect(response.body).not_to include('Excluded Lead')
     end
 
+    it 'refuses a Team Member export' do
+      create(:inbox_member, user: operator, inbox: inbox)
+      assigned = create(:contact, :with_phone_number, account: account, name: 'Assigned Export Lead')
+      hidden = create(:contact, :with_phone_number, account: account, name: 'Hidden Export Lead')
+      create(:conversation, account: account, inbox: inbox, contact: assigned, assignee: operator)
+      create(:conversation, account: account, inbox: hidden_inbox, contact: hidden)
+
+      post "/api/v1/accounts/#{account.id}/leads/export",
+           headers: operator.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(response.body).not_to include('Assigned Export Lead', 'Hidden Export Lead')
+    end
+
     it 'does not truncate a large filtered export at the directory page limit' do
       now = Time.current
       rows = Array.new(1001) do |index|
