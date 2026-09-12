@@ -1,0 +1,9 @@
+Fresh browser acceptance runtime released after evidence validation.
+
+- Rails server on 127.0.0.1:3000: stopped
+- Vite server on 127.0.0.1:3036: stopped
+- Isolated PostgreSQL on 127.0.0.1:55533: stopped
+- Isolated Redis on 127.0.0.1:6433: stopped
+- Browser database: ale_r08_browser remained isolated and was not used by any shared runtime
+
+The run created no production-code change, no push, integration, deployment, provider call, or ticket closure.

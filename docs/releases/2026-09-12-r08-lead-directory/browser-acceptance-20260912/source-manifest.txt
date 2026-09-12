@@ -1,0 +1,12 @@
+source_commit 2d898a3d6766f9b8846f91ba90ba1056675ac56a
+source_tree 2fd67a4bd519ea768b1155d62a5b586bb8ccb1a3
+complete_source_tree_manifest docs/releases/2026-09-12-r08-lead-directory/final-combined/source-tree-part-aa through source-tree-part-ae
+complete_baseline_tree_manifest docs/releases/2026-09-12-r08-lead-directory/final-combined/baseline-tree-part-aa through baseline-tree-part-ad
+prior_evidence_commit 4e58e07faa4e451032437e56f2c01f3c0a1ebae6
+prior_evidence_tree 9502949b02e038e5eed00381f771bd1fbbbde2d1
+runtime_source_paths
+100644 blob 1d4aebe4627e34389d89bf1a33fc65ff26e7cb66 app/controllers/api/v1/accounts/leads_controller.rb
+100644 blob 69d8ff9b86fe27a69b0634906d44d964ff03dfcf app/services/ai_lead_employee/lead_export_csv.rb
+100644 blob 29e6e89412bf96c25661843dd2ad3fc223197c50 app/services/ai_lead_employee/lead_import_service.rb
+100644 blob 5c5e3c0bc8ad484eeed17213595cc55819c71824 app/services/ai_lead_employee/lead_update_service.rb
+100644 blob 126f9ddd2ec9833829cffee95ca29aa96aca06b2 app/services/ai_lead_employee/leads_directory_service.rb
