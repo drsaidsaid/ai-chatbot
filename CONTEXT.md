@@ -35,7 +35,7 @@ The tenant whose offers, knowledge, leads, conversations, rules, team, and integ
 _Avoid_: Client account, workspace, company account
 
 **Offer**:
-A service that a Business Account presents to leads and qualifies them for.
+A product, service, programme or other proposition a Business Account presents to Leads, with optional qualification and an explicit next step.
 _Avoid_: Product, package, campaign
 
 **Lead**:
@@ -131,7 +131,7 @@ The ticket-004 boundary retrieves approved relevant Knowledge Items, verifies So
 _Avoid_: Inline reply, webhook response, model call
 
 **AI Provider Connection**:
-The Business Account-owned, server-side OpenAI-compatible model connection used by AI Orchestration and grounded answer work. It stores encrypted credentials outside `Account.settings`, exposes only redacted status to admins, and keeps provider-specific request details inside adapters.
+The platform-operated, server-side model connection used by AI Orchestration and grounded answer work. ADR 0016 supersedes customer credential/model controls; per-Business Account metering remains isolated. The deployed R10 account-owned connection is a migration baseline, not the new customer configuration contract. It stores encrypted credentials outside `Account.settings`, exposes only redacted status to admins, and keeps provider-specific request details inside adapters.
 R10's [provider control contract](docs/v1-completion-plan/2026-09-09/r10-provider-controls-preparation.md)
 separates configured credentials, observed readiness at the configured reply
 budget, and permission to automate within an explicit daily request allowance.
@@ -164,7 +164,7 @@ The server-side approval record that keeps live AI operation disabled until requ
 _Avoid_: Frontend toggle, feature flag
 
 **Booking**:
-A calendar reservation created for a Highly Qualified Lead with confirmed start and end times.
+A calendar reservation with confirmed start and end times, created under the selected Offer’s eligibility, Lead agreement and any applicable payment requirements.
 _Avoid_: Call request, appointment lead
 
 **Alert**:
@@ -179,3 +179,16 @@ _Avoid_: Lead-only inbox, dashboard qualification list
 **Inbox Conversation Status**:
 The owned inbox's operational state: pending, open, snoozed, or resolved. It must never be used as Lead Quality.
 _Avoid_: Status
+
+
+## Managed service terms (ADR 0016)
+
+**Platform Operator**: An authorised operator of this software service, distinct from a Business Account admin. Manages provider configuration, service plans and verified subscription payments across explicitly authorised accounts.
+
+**AI Reply Credit**: One customer allowance unit for a completed logical AI reply settled after confirmed canonical send. Bubble count, model call count and static template fan-out do not multiply it.
+
+**Subscription**: A Business Account’s paid monthly plan, renewal date and included allowance. Separate purchased top-ups carry forward while active.
+
+**Offer Price**: The authoritative published commercial amount/conditions/effective dates for an Offer, distinct from Lead budget and platform Subscription price.
+
+**Payment Confirmation**: An authorised recorded verification of a specific payment and its purpose. Platform subscriptions and the Business Account’s own paid Offers have different authority and entitlements.

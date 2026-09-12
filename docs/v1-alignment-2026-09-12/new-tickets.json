@@ -1,0 +1,208 @@
+[
+  {
+    "id": "R20",
+    "title": "Publish one authoritative Offer price and promotion",
+    "blockers": [
+      "R09",
+      "R11"
+    ],
+    "story": "A Business Account admin publishes a price once and a Lead receives only the applicable approved commercial facts.",
+    "criteria": [
+      "Create/edit/publish Offer amount and currency, quote-required mode, effective dates/timezone, conditions, promotional price and optional approved pricing/purchase link in a plain-language Offer view.",
+      "Document extraction creates proposals for approval; contradictory document prices flag review and cannot silently replace the authoritative Offer price. Lead budget and platform plan price remain separate.",
+      "Pricing response uses current selected Offer, published revision and applicable conditions. Missing, expired, future, conflicting or uncertain eligibility never produces a guessed quote or link.",
+      "Preview and inbound reply use the same resolution path; edits invalidate affected pending quotations at final send without changing historic evidence.",
+      "Demonstrate standard/promotion boundaries, timezone transitions, conflicting sources, quote-required mode, stale queued output, multi-account isolation and readable desktop/phone UI. No unconfirmed OPU price is seeded live."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/36",
+    "number": 36,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r20.md"
+  },
+  {
+    "id": "R21",
+    "title": "Operate AI centrally without exposing provider settings to clients",
+    "blockers": [
+      "R06",
+      "R10"
+    ],
+    "story": "The Platform Operator selects the tested AI service while a Business Account admin sees service readiness and usage without managing provider keys.",
+    "criteria": [
+      "Implement a platform-authorised provider/model control path, distinct from Business Account admin; clients cannot read, modify, health-check or infer provider credentials through UI or APIs.",
+      "Migrate account-owned R10 connections with an explicit reversible transition plan; retain encrypted storage, redaction, current account attribution, provider health, privacy settings and revision-sensitive delivery authority.",
+      "All client UI routes remove provider/model/key controls and instead explain managed AI service and account-specific readiness. Server policy protects direct and stale API access, not only hidden navigation.",
+      "Preserve per-account usage/cost isolation even with platform-managed credentials; one account cannot consume or inspect another account entitlement. Cost absent remains unknown.",
+      "Run account-admin/member/platform-operator tests, in-flight configuration-change checks, credential-leak checks and desktop/phone acceptance. Do not rotate live credentials or enable provider spending without concrete authorised release preparation."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/37",
+    "number": 37,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r21.md"
+  },
+  {
+    "id": "R22",
+    "title": "Compare model quality and cost before choosing the service default",
+    "blockers": [
+      "R09",
+      "R11",
+      "R21"
+    ],
+    "story": "The Platform Operator can select a cost-effective model using comparable saved evidence instead of provider marketing.",
+    "criteria": [
+      "Create a repeatable comparison using the same authorised synthetic/de-identified English and Swahili scenarios, source/config versions, model identifiers and generation settings; preserve raw outcomes and reviewer rubric.",
+      "Cover relevant questions, unsupported questions, business-specific and disabled qualification, corrections/negation, pricing, prompt injection, free-consulting boundaries, handoff, consent and human control.",
+      "Report per-scenario accuracy, critical failures, qualification errors, latency and actual full pipeline cost including internal calls/retries/cache where supplied. Unknown cost is explicitly missing, not zero; avoid aggregate accuracy that conceals silence.",
+      "Compare several candidate models chosen from current supported providers. No live Lead sends. Prepare dry-run fixtures first; execute paid comparisons only under an explicit total spend cap and approved provider connection.",
+      "Present one recommended service standard only after critical cases pass and cost/quality evidence supports it. Publish a reviewed model choice through the platform configuration path and invalidate stale launch evidence.",
+      "Test runner and report with deterministic fake responses, then record separately bounded provider-backed results. Package prices and allowances remain hypotheses until supported by measured costs."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/38",
+    "number": 38,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r22.md"
+  },
+  {
+    "id": "R23",
+    "title": "Activate a paid monthly plan and meter one logical AI reply",
+    "blockers": [
+      "R04",
+      "R06",
+      "R21"
+    ],
+    "story": "A client pays manually, the Platform Operator activates a monthly plan once, and the client can see an enforceable monthly usage allowance.",
+    "criteria": [
+      "Provide platform-managed draft/published plans with currency, monthly price and allowance; client sees selected plan, renewal date, used/remaining units and percentage. Do not publish illustrative tariffs as agreed prices.",
+      "Client requests subscription and sees approved payment instructions; an authorised Platform Operator confirms amount/currency/reference and activates once. Duplicate submissions cannot duplicate allowances; Business Account admins cannot self-confirm platform payments.",
+      "Customer usage ledger reserves before AI work and settles at most one logical reply at confirmed canonical send. Bubbles, internal calls, retries and duplicate callbacks do not multiply charges. Failed/uncertain/partial responses have explicit conservative reconciliation without unsafe resend.",
+      "Monthly allowance resets at renewal boundary, with deterministic timezone/calendar behavior, concurrent request protection and no artificial reset from model changes. At exhaustion pause AI, preserve inbound capture/human inbox, show top-up/upgrade action and alert the owner.",
+      "Show AI subscription/credits separately from Meta messaging billed directly and advertising spend. Track actual provider costs and owner revenue/cost completeness separately; templates with no AI work are not charged as AI replies.",
+      "Tests cover replay, rollback, crashes, competing messages, period rollover, insufficient entitlement, provider failure, multi-bubble partial send, authorisation, stale UI and phone usage meter. Existing provider reserve/canonical delivery controls remain intact."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/39",
+    "number": 39,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r23.md"
+  },
+  {
+    "id": "R24",
+    "title": "Confirm a top-up or upgrade without losing purchased usage",
+    "blockers": [
+      "R23"
+    ],
+    "story": "A client can buy extra usage or upgrade mid-month and see the exact resulting balance before paying.",
+    "criteria": [
+      "Preview configured top-up cost/units or plan-price difference with same-cycle renewal date, previous usage and resulting allowance. Reject ambiguous currency/plan transitions rather than guessing.",
+      "Manual platform payment confirmation activates the requested purchase exactly once, with immutable actor/reference/amount/currency/purpose. A later payment gateway can call the same verified entitlement boundary; no online provider integration is included now.",
+      "Use included allowance first. Purchased top-ups carry forward while subscription active and are not erased on renewal. Expired subscription stops AI use while preserving recorded extras; reactivation policy is explicit in UI and tests.",
+      "Upgrade charges higher plan price minus current plan price for the cycle, replaces total included allowance, preserves already consumed units and extras, and does not move renewal. Example 1000 to 3000 after 800 used leaves 2200 included units.",
+      "Configured top-ups are more expensive per unit than included usage in the applicable higher plan; show honest computed savings, never an unverified fixed 20% claim. No automatic charges/top-ups.",
+      "Test duplicate payment, concurrent usage/upgrade/renewal, failed confirmation rollback, multiple upgrades, carried balances and access isolation. Downgrades/refunds/disputes route to manual review. Phone and desktop flows remain plain language."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/40",
+    "number": 40,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r24.md"
+  },
+  {
+    "id": "R25",
+    "title": "Route current and future ads in an ad set to the right Offer",
+    "blockers": [
+      "R03",
+      "R09",
+      "R11"
+    ],
+    "story": "A Business Account admin links an ad set once and Leads from its current and newly added ads receive the intended Offer context.",
+    "criteria": [
+      "Connect authorised Meta ad metadata and configure ad-set-to-Offer mapping with optional individual-ad override. Prove required access/permissions and store account-owned provider IDs without exposing tokens.",
+      "All current/future member ads inherit the ad-set mapping without per-ad setup; resolve/cache/sync membership with defined freshness and disabled/deleted/revoked access behavior.",
+      "Specific ad override wins over ad-set rule. Record source, mapping revision and selection reason. Existing explicit Conversation Offer selection is never silently overwritten by a later referral; changing Offer is an explicit recorded action.",
+      "Missing/unresolved/foreign metadata uses a safe business default or one clarification, never fabricated ad membership or campaign eligibility. Shared knowledge plus selected Offer knowledge remains scoped.",
+      "Preview mapping and replay inbound fixtures including a newly added ad, account-crossing ID, stale sync, unrelated source and returning lead. Verify durable context/version with current R09 authority at final reply.",
+      "Use a permitted Meta test asset for real metadata verification before acceptance; no ad creation, spend changes or broadcast launch. This ticket manages inbound routing only."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/41",
+    "number": 41,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r25.md"
+  },
+  {
+    "id": "R26",
+    "title": "Create and approve WhatsApp templates inside the product",
+    "blockers": [
+      "R03",
+      "R06"
+    ],
+    "story": "An authorised Business Account admin drafts a template, submits it to Meta and sees whether it can be sent.",
+    "criteria": [
+      "Add Templates under Settings \u2192 WhatsApp using existing CE layout. Draft text/media/buttons/variables/language/category and provide a recipient-style preview and validation.",
+      "Submit through account-authorised Meta APIs; retain immutable submitted content/revision and provider ID, approval, rejection reason, paused/disabled status and last-sync time. Retry uncertain submission through reconciliation, not duplicate creation.",
+      "Only approved currently sendable provider revisions may be selected; edits/resubmissions do not mislabel an old version as newly approved. Never claim Meta approval from local validation.",
+      "Display estimated Meta charges with category/market/date/source and clearly identify direct Meta billing, separate from AI allowance. Missing pricing cannot be represented as zero.",
+      "Demonstrate tenant/role isolation, provider error/rejection/late status changes, phone preview and a real authorised template approval path. Drafting/submission does not authorise sending customer messages.",
+      "No WhatsApp Status/story publishing. Template authoring is manual in this slice; AI-assisted writing and its billing are not implied."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/42",
+    "number": 42,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r26.md"
+  },
+  {
+    "id": "R27",
+    "title": "Send a consented template broadcast with clear Meta costs",
+    "blockers": [
+      "R04",
+      "R05",
+      "R07",
+      "R23",
+      "R26"
+    ],
+    "story": "A Business Account admin previews a permitted audience and sends or schedules an approved template broadcast with honest delivery results.",
+    "criteria": [
+      "Add a focused Broadcasts destination under More using CE conventions, with list/create/detail and Templates shortcut; avoid a second template editor or a general marketing workflow builder.",
+      "Snapshot selected eligible recipients and template revision, deduplicate recipients, exclude missing/withdrawn promotional consent, and show exclusions, variables, schedule, estimated Meta charges and explicit final send action.",
+      "Recheck consent, human control, template availability, recipient eligibility and permitted channel rules at each send. Scheduling or preview does not bypass later opt-out/human takeover. Respect provider limits and bound jobs.",
+      "Use canonical durable outbound delivery and existing uncertain-outcome rules; never resend accepted/unknown work blindly. Cancellation prevents unsent items without claiming recall of already sent items.",
+      "Static template fan-out consumes no AI reply units merely per recipient; AI responses to resulting Lead messages follow ordinary metering. Record broadcast/Offer provenance without silently changing an already explicit Conversation Offer.",
+      "Show queued/sent/delivered/read/failed/unknown separately, reconcile duplicates and explain final costs versus estimates. Test replays/concurrency/control changes/timezone/scheduling/invalid variables, followed by authorised test-recipient-only proof. No real audience send is pre-authorised by implementation."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/43",
+    "number": 43,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r27.md"
+  },
+  {
+    "id": "R28",
+    "title": "Book an optional paid Offer after team-verified payment",
+    "blockers": [
+      "R06",
+      "R13",
+      "R20"
+    ],
+    "story": "A business selling consultations can propose its paid Offer and book only after its team verifies the Lead payment.",
+    "criteria": [
+      "Configure optional consultation Offer trigger/conditions, approved price, duration, payment instructions and calendar. Other businesses remain unaffected and can use free/direct-purchase paths.",
+      "For an applicable strategy request disclose approved price, obtain interest, send approved payment instructions and create an awaiting-payment record linked to Lead/Offer/revision. Do not promise an unreserved slot.",
+      "An authorised Business Account team member confirms payment using amount/currency/reference and audit; a Lead statement or screenshot alone cannot authorise booking. This is separate from platform Subscription payment authority.",
+      "After confirmation offer current available times and book the Lead-agreed slot through R13. Enforce one entitlement/booking per payment purpose; duplicate confirmations/events do not duplicate appointments.",
+      "If no slot, provider failure, currency mismatch or policy uncertainty occurs, preserve payment record and create reviewable human work; never imply a refund or completed Booking without evidence.",
+      "Test separate account/platform roles, unpaid blocking, partial/wrong payments, replay, double-booking race, appointment changes and non-consultation businesses. Demonstrate test payment confirmation and calendar fixture, then authorised calendar proof."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/44",
+    "number": 44,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r28.md"
+  },
+  {
+    "id": "R19",
+    "title": "Publish a plain-language business setup from documents",
+    "blockers": [
+      "R09",
+      "R11",
+      "R20",
+      "R21"
+    ],
+    "story": "An owner describes their business and publishes a readable, testable setup without writing code or being forced into a qualification funnel.",
+    "criteria": [
+      "One guided Business setup covers About, Products/services, Prices/promotions, optional fit requirements and next step. Accept prose/documents and show source-linked proposed facts/rules/unknowns for review.",
+      "Owner approves a plain-language preview and publishes a versioned configuration; no unapproved extraction executes. Preserve draft edits, errors, conflict resolution, permissions and source history.",
+      "Explicitly choose not-configured/disabled/enabled qualification and answer-only, purchase/enquiry link or eligible booking next steps. Missing configuration blocks only dependent actions, never restores global default questions.",
+      "Extracted prices use R20 authoritative entry; a single edit location prevents contradictory duplication. Link existing UI paths rather than introducing competing knowledge/rules editors.",
+      "Test this setup uses the same authorised runtime and source revision as inbound conversations with no live-send side effects. Explain missing rules/prices/actions in simple language.",
+      "Demonstrate Online Profits as editable sample data with unconfirmed prices withheld, a product business with no qualification/call, and another service with different fit rules. Show English/Swahili, corrections, human help, phone and desktop, stale response isolation and publish conflicts."
+    ],
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/45",
+    "number": 45,
+    "body_file": "/Users/ghalyasaid/Documents/projects/AI-Lead-V1-Integration/docs/v1-alignment-2026-09-12/r19.md"
+  }
+]

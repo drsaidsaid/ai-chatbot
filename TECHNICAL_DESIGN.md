@@ -1,3 +1,5 @@
+> Product extension: [ADR 0016](docs/adr/0016-managed-configurable-sales-service.md) and the [approved agreement](docs/v1-alignment-2026-09-12/PRODUCT_AGREEMENT.md) supersede fixed qualification and customer-owned provider settings. Existing implementations require explicit migration; documentation is not implementation proof.
+
 # AI Lead Employee Technical Design
 
 **Status:** Approved standalone V1 completion baseline (2026-09-09)
@@ -202,7 +204,7 @@ membership before any account selection or query.
 - Raw credentials are encrypted with Rails Active Record encryption, rejected
   when encryption is not configured, never stored in `Account.settings`, and
   never returned from API serializers.
-- Only admins can configure, rotate, disable, or health-check the connection.
+- Only authorised Platform Operators can configure, rotate, disable, or health-check the managed connection under ADR 0016; Business Account admin access from the R10 baseline must be migrated by R21.
   Team members receive the same authorization failure whether a connection
   exists or not.
 - Domain services use the provider-neutral AI Provider boundary. The
@@ -324,7 +326,7 @@ for the exact `324ee6df` source review, lock order and public verification cases
 
 - `business_account_id`, `lead_qualification_id`, signal key, normalized value JSON, confidence, source message, source type, recorded by, and superseded timestamp.
 - Source types: `lead_message`, `human_edit`, `import`, `system_rule`.
-- Highly Qualified decisions must reference current evidence for pain, budget, urgency, and decision authority.
+- Qualification decisions reference current evidence for the selected Offer’s approved requirements; no universal pain/budget/urgency/authority gate.
 
 #### `conversations`
 
@@ -601,3 +603,14 @@ A shared Settings layout surrounds supported native CE routes, including provide
 WhatsApp and team controls; AI & testing contains the admin-only Test Center.
 Legacy supported links redirect to their canonical destination with context intact.
 See `docs/releases/2026-09-09-r02/visual-reference.md` for the first responsive path.
+
+
+## Managed configurable service extension
+
+Use the existing Rails/Vue owned boundaries. Approved document interpretation produces draft versioned Offer configuration, not immediately executable instructions. Publish validated rules/prices/next steps atomically and preserve the current source revision used by decisions.
+
+Separate platform provider authorisation from Business Account administration. Preserve encrypted secrets, provider reservation/cost evidence and final canonical send authority. Add a customer allowance ledger with idempotent reservation/settlement independent of provider costs; zero allowance blocks new paid work but never incoming messages or the human inbox. Subscription and paid-Offer payment confirmations must have separate scopes and references.
+
+Ad-set routing resolves Meta source to permitted owned ad metadata, including future ads, and stores source provenance. Never infer ad membership from message text. Templates have provider-authoritative status and approved revision; broadcast audience snapshots remain subject to fresh consent/control checks. Static broadcasts do not consume AI replies per recipient. A provider estimate is not a final invoice.
+
+Per-ticket implementation must specify migration, rollback, partial-failure/concurrency behavior, tests and real UI acceptance before integration. R17 and R18 include every new slice, not only the original 18 tickets.

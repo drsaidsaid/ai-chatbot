@@ -1,0 +1,89 @@
+[
+  {
+    "id": "R07",
+    "number": 24,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/24",
+    "title": "[V1 R07] Understand and control a Conversation without misleading actions",
+    "additionalBlockers": []
+  },
+  {
+    "id": "R09",
+    "number": 26,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/26",
+    "title": "[V1 R09] Configure an Offer and qualify a Lead from supported evidence",
+    "additionalBlockers": []
+  },
+  {
+    "id": "R11",
+    "number": 28,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/28",
+    "title": "[V1 R11] Publish knowledge that answers only the relevant question and Offer",
+    "additionalBlockers": []
+  },
+  {
+    "id": "R12",
+    "number": 29,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/29",
+    "title": "[V1 R12] Resolve a Review Request and optionally propose knowledge",
+    "additionalBlockers": []
+  },
+  {
+    "id": "R13",
+    "number": 30,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/30",
+    "title": "[V1 R13] Book and manage one genuinely available call",
+    "additionalBlockers": []
+  },
+  {
+    "id": "R14",
+    "number": 31,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/31",
+    "title": "[V1 R14] Assign human work and deliver one useful Alert",
+    "additionalBlockers": []
+  },
+  {
+    "id": "R15",
+    "number": 32,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/32",
+    "title": "[V1 R15] Send a bounded follow-up sequence and stop when circumstances change",
+    "additionalBlockers": [
+      "R26"
+    ]
+  },
+  {
+    "id": "R16",
+    "number": 33,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/33",
+    "title": "[V1 R16] See trustworthy basic business results without another main menu",
+    "additionalBlockers": [
+      "R23",
+      "R24",
+      "R27"
+    ]
+  },
+  {
+    "id": "R17",
+    "number": 34,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/34",
+    "title": "[V1 R17] Approve launch only from current test and pilot evidence",
+    "additionalBlockers": [
+      "R20",
+      "R21",
+      "R22",
+      "R23",
+      "R24",
+      "R25",
+      "R26",
+      "R27",
+      "R28",
+      "R19"
+    ]
+  },
+  {
+    "id": "R18",
+    "number": 35,
+    "url": "https://github.com/drsaidsaid/ai-chatbot/issues/35",
+    "title": "[V1 R18] Deploy a recoverable release and complete a supervised V1 pilot",
+    "additionalBlockers": []
+  }
+]

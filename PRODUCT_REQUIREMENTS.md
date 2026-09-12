@@ -1,3 +1,5 @@
+> Current product authority: [12 September approved agreement](docs/v1-alignment-2026-09-12/PRODUCT_AGREEMENT.md) and ADR 0016 supersede earlier fixed sales assumptions. Working brand pending availability.
+
 # AI Lead Employee
 
 ## Product Requirements Document
@@ -55,7 +57,7 @@ The product succeeds when it:
 - Approved FAQ, offer, pricing, objection, and policy knowledge.
 - Configurable qualification questions and rules.
 - Lead extraction, scoring, and classification.
-- Automatic booking for highly qualified leads.
+- Offer-configured booking eligibility, with separate fit/readiness and optional verified payment requirements.
 - Google Calendar availability plus custom booking hours (R13).
 - WhatsApp alerts to configurable human recipients.
 - Shared dashboard inbox and lead list.
@@ -124,7 +126,7 @@ Online Profits identity, purchases, access and membership integration are separa
 
 - Facebook Messenger or Instagram Direct integration.
 - YouTube or TikTok message handling.
-- A self-service customer onboarding product.
+- Fully unattended onboarding; V1 guided setup is initially assisted.
 - Automatic understanding or transcription of voice notes.
 - Deep interpretation of images, documents, or other media.
 - Cross-channel identity matching.
@@ -132,7 +134,7 @@ Online Profits identity, purchases, access and membership integration are separa
 - Fully autonomous custom pricing, refunds, legal advice, or medical advice.
 - Guaranteed sales or revenue claims.
 - Chatwoot Enterprise features or code requiring a commercial license.
-- Online Profits integration, billing, CRM synchronization and broad marketing campaigns.
+- Online Profits membership/CRM integration, automated online subscription collection and broad autonomous marketing. Manual platform billing, inbound ad-set routing and bounded template broadcasts are included by ADR 0016.
 - Additional messaging channels or multiple WhatsApp connections per Business Account.
 
 ## 4. Users and Roles
@@ -203,69 +205,15 @@ Lead quality and operational follow-up must be separate fields. A lead can be qu
 
 ### Lead Quality
 
-- **Unknown:** Not enough information has been collected.
-- **Unqualified:** The person has no relevant business, is outside the target audience, has no realistic ability or intention to pay, only seeks free advice, or clearly does not need the service.
-- **Low Qualified:** The person generally fits the target audience but is missing at least one major buying signal: meaningful pain, budget, or urgency.
-- **Qualified:** The person fits the target audience and has a plausible need and ability to buy, but immediate readiness, authority, or urgency is incomplete.
-- **Highly Qualified:** The person has a relevant and urgent problem, sufficient budget, decision-making authority, and enough contact information for immediate action.
+Keep stable outcome labels: Unknown, Unqualified, Low Qualified, Qualified and Highly Qualified. Their business evidence comes from the selected Offer's published rules, never a universal business/revenue/budget checklist. Unknown is not rejection. When qualification is deliberately disabled, show Not required as configuration context without fabricating an outcome.
 
-### Follow-up State
-
-- No follow-up needed.
-- Needs nurture.
-- Needs human review.
-- Call booked.
-- Closed.
-
-These values are configurable by an admin in a future version. V1 should preserve these fixed system meanings so reports and automation remain dependable.
+Keep business fit, readiness to speak/buy, action eligibility, Follow-up State and Control State distinct. Reports retain the rules and evidence behind a decision.
 
 ## 7. Qualification Framework
 
-The system uses both hard rules and a configurable score.
+Qualification is explicitly not configured, disabled or enabled per Offer. With absent rules the agent may answer approved information, but cannot invent questions or qualification. An owner chooses the appropriate next step; purchase links and enquiries need not require calls.
 
-### Hard Rules
-
-- No business or relevant professional activity means unqualified.
-- A highly qualified lead must have all three of the following: urgent pain, sufficient budget, and decision-maker authority.
-- The agent must not book a sales call automatically unless the lead is highly qualified.
-- Name and WhatsApp number are required before a lead is considered ready for human handoff.
-- Business name and location are strongly preferred but may not block handoff when all major buying signals are strong.
-- Email is optional.
-
-### Scoring Signals
-
-The configurable score should consider:
-
-- Fit with the target customer profile.
-- Severity and relevance of the problem.
-- Inquiry or lead volume.
-- Urgency.
-- Budget range and confidence.
-- Decision-making authority.
-- Willingness to proceed.
-- Contactability.
-
-Hard rules always override the numerical score. The system must store both the score and a plain-language qualification explanation.
-
-### Default Qualification Questions
-
-The admin can add, remove, edit, and reorder questions by offer. Default questions are:
-
-1. What kind of business do you run?
-2. What problem are you trying to solve with your leads or messages?
-3. Roughly how many inquiries do you receive per day or month?
-4. How soon would you like this problem solved?
-5. To help me recommend the right setup, what monthly budget range have you set aside for improving this?
-6. Are you the person who decides on this, or is someone else involved?
-
-Default budget options:
-
-- Below TZS 200,000 per month.
-- TZS 200,000-500,000 per month.
-- TZS 500,000-1,000,000 per month.
-- Above TZS 1,000,000 per month.
-
-The agent should ask one question at a time. It may combine only questions that are naturally inseparable.
+Owners write requirements naturally or import documents. A readable preview identifies fields, types, required evidence, rules, unknowns and next steps; only publication activates them. Ask at most one useful question when appropriate, skip known information and accept corrections. No default lead-volume interview, business-existence rejection or universal budget bands. Strictness means explicit approved evidence and readiness requirements. Human feedback can propose changes, never silently publish them.
 
 ## 8. Conversation Behavior
 
@@ -276,35 +224,23 @@ The agent acts as a warm business advisor: friendly, brief, respectful, professi
 ### Conversation Rules
 
 - Answer relevant questions briefly using approved knowledge.
-- Ask one useful qualification question after answering.
+- Ask at most one relevant qualification question when needed and enabled; answering does not force another question.
 - Do not repeat questions already answered in the current conversation or remembered lead history.
 - Extract answers even when the lead provides several details in one message.
 - Continue from the point where an interrupted conversation stopped.
 - Do not interrogate the lead or expose internal scoring rules.
-- Do not claim that a human will call unless the lead is highly qualified and a handoff or booking is actually being created.
+- Do not promise a call unless the selected Offer action is permitted, the Lead agrees, and an actual handoff or Booking supports that promise.
 - Redirect immediately when a lead asks about topics outside the business or service.
 - Never invent an answer when approved knowledge is insufficient or conflicting.
 - Do not greet twice. A configured Channel Greeting may welcome the Lead, but
   the AI Employee's answer should respond to the actual Lead message and omit a
   second salutation.
 
-### Question Debt Rule
+### Buying Questions and Human Help
 
-The agent may answer up to two consecutive lead questions without receiving a qualification answer. It must then gently return to qualification before continuing with more detailed answers.
+There is no fixed two-answer limit. Answer approved buying questions; politely redirect personalised strategy toward configured resources, qualification or an applicable paid Offer. Relevant unknown questions receive truthful acknowledgment and an actual Review Request. Unrelated requests receive a boundary, not a needless team alert.
 
-Suggested wording:
-
-> Good question. I can explain that, but first I need to understand your business a little so I do not give you the wrong answer. What type of business do you run?
-
-### Requests for a Human
-
-If the lead asks for a human before qualifying, the agent explains that specialists prioritize businesses ready to use the service and offers to continue answering relevant questions while completing qualification.
-
-Suggested wording:
-
-> Our specialists prioritize businesses that are ready to set this up soon. I can still answer your questions here and help you understand whether it is a fit.
-
-The agent must not create a human handoff merely because an unqualified lead insists.
+Basic human assistance is available separately from a qualified sales appointment. Do not trap a person refusing further automated questions. Route help and sales work separately; human takeover pauses AI until explicit resume.
 
 ### Out-of-Scope and Sensitive Topics
 
@@ -315,7 +251,7 @@ The agent must escalate instead of improvising on:
 - Exact custom pricing.
 - Refund decisions.
 - Private company information.
-- Questions outside the business or offered services.
+- Relevant business questions lacking approved information. Unrelated questions are politely redirected.
 
 ### Voice Notes and Media
 
@@ -382,14 +318,10 @@ The system must never learn automatically from every human answer.
 
 The AI provider integration must be OpenAI-compatible and provider-neutral.
 OpenRouter is the initial provider, but the product must store encrypted
-server-side credentials, expose provider configuration only to admins, classify
+server-side credentials, expose provider configuration only to authorised Platform Operators, classify
 provider failures, and avoid fabricated fallback answers.
 
-Administrators can configure one Business Account-owned AI provider connection.
-The setup stores the provider, model, credential, status, and redacted health
-metadata on the server. Admins can rotate the credential, disable the
-connection, and run a health check. Team members cannot view or infer credential
-presence, and the browser never receives the raw API key.
+Under ADR 0016, only the Platform Operator configures encrypted provider credentials and models. Business Account admins see their managed service and account-isolated usage, not provider key/model controls. R21 migrates the existing R10 account-owned baseline with explicit authorisation and rollback.
 
 R10 must distinguish saved configuration from readiness to answer at the actual
 configured reply budget. A tiny successful probe cannot mask insufficient
@@ -412,7 +344,7 @@ the coordinator integrates them.
 
 ## 10. Booking
 
-Only highly qualified leads are automatically offered a call in v1.
+Offer-configured fit/readiness and Lead agreement determine sales-call eligibility. Basic human assistance is separate. Optional paid appointments additionally require verified Offer payment before booking.
 
 Booking availability is the intersection of:
 
@@ -430,7 +362,7 @@ After booking:
 - Mark the lead's follow-up state as Call booked.
 - Alert the assigned human immediately.
 
-The admin can configure weekdays, weekends, and time windows. The initial internal default should block mornings and permit calls from 12:00 to 17:00, subject to calendar availability.
+The admin can configure weekdays, weekends, and time windows. Do not assume Online Profits business hours for other accounts; owners review availability before activating booking.
 
 ## 11. Human Alerts
 
@@ -501,17 +433,9 @@ initiating operator, with one persisted notice per mutation identity.
 
 ## 13. Follow-Up
 
-The system follows up when a lead stops responding before qualification is complete.
+For unfinished permitted conversations, default to at most one contextual reminder and one friendly closing invitation, with configurable timing. Recheck current consent, control, action, Offer and channel permission at send. Stop sales chasing on refusal, opt-out, payment, booking, closure or human ownership. Necessary transactional updates are separately authorised. Hesitation is not refusal. The customer may return later.
 
-- Default first follow-up: 24 hours after the last unanswered agent question.
-- Timing is configurable to allow testing alternatives.
-- The message is based on where the conversation stopped.
-- Maximum one automated follow-up for incomplete qualification.
-- An optional second follow-up is allowed only for qualified leads.
-- No automatic follow-up is sent after opt-out. Human scheduling does not bypass
-  an active Automated Contact Consent withdrawal.
-- Closure or human takeover also stops automatic follow-up unless a Human
-  Operator explicitly schedules a permitted action under its own authority.
+Ordinary free-form permission is measured from the latest customer message, not a universal 72-hour allowance. Use an eligible approved template outside the permitted window or suppress the action. No automatic retry of uncertain sends.
 
 ## 14. Dashboard Requirements
 
@@ -589,7 +513,7 @@ V1 supports these source labels:
 - Referral.
 - Unknown.
 
-Campaign information should be stored whenever it is available. Campaign-specific reply behavior is deferred until after the core qualification flow is reliable.
+Campaign information should be stored whenever it is available. Ad-set and individual-ad mappings select approved Offer context under ADR 0016; missing source information uses explicit fallback rather than guessing.
 
 ## 16. Audit and Data Requirements
 
@@ -609,20 +533,11 @@ Conversation history is retained by default in v1. Configurable deletion and exp
 
 ## 17. Business Model
 
-The initial commercial model is a done-for-you package comprising:
+The platform sells a managed monthly AI service with an included logical-reply allowance and optional prepaid extras; clients do not buy LLM keys. Collect payments manually first. Only authorised payment confirmation activates a subscription, top-up or upgrade. Display usage percentage, remaining units and renewal date.
 
-- One-time setup and business configuration.
-- Ongoing monthly monitoring and optimization.
-- A monthly included conversation allowance.
-- Usage-based overage priced by conversation, not individual message.
+Included units reset on renewal; extras carry forward while subscribed, consumed after included units. Upgrade by charging the current cycle plan-price difference, increasing total allowance while preserving consumption, extras and renewal date. No surprise charges. At exhaustion pause AI but retain the human inbox and incoming messages. Provider costs remain distinct from customer charges.
 
-Initial internal pricing hypothesis:
-
-- Setup: TZS 500,000-1,000,000.
-- Monthly service: TZS 200,000-500,000.
-- Final price varies by inquiry volume, setup complexity, and supported channels.
-
-The agent may share a rough approved range but must explain that exact pricing depends on the business's volume and needs.
+Meta WhatsApp messaging and ad spend are separately billed by Meta and clearly disclosed. Static template fan-out does not charge an AI reply per recipient. Platform-only reports show revenue, costs, unknown-cost records and estimated contribution margin. Benchmark models before approving price/allowance combinations; earlier setup/monthly price hypotheses are not approved sellable tariffs.
 
 ## 18. Testing and Launch
 
@@ -684,10 +599,10 @@ These decisions do not block v1 planning but must be resolved before related imp
 
 - Final public product name.
 - First external niche after the internal pilot.
-- Exact scoring weights and minimum score thresholds.
-- Exact included conversation allowances and overage prices.
+- Each Business Account’s published fit/readiness requirements; no universal scoring defaults.
+- Exact included AI reply allowances, plan prices and prepaid top-up prices.
 - WhatsApp Business account and number used for the pilot.
-- Calendar provider used for the first integration.
+- Google Calendar is confirmed for the first integration.
 - Final data retention and deletion policy.
 - Languages supported at launch beyond the initial business requirements.
 
@@ -707,3 +622,8 @@ The detailed owned-product boundary, runtime services, status mappings, and draf
 ## 22. Product Principle
 
 The AI's purpose is not to maximize conversation length. Its purpose is to help the lead, determine fit, and move only genuinely ready buyers to the right human with enough context for that human to act immediately.
+
+
+## 12 September scope extension
+
+The approved agreement defines guided setup, authoritative Offer prices/promotions, managed AI provider ownership, manual subscriptions and usage, ad-set routing, templates/broadcasts, optional paid consultation, model benchmarking, and final acceptance across different business types. See ADR 0016 and the R19–R28 issue manifest. Example prices are not published tariffs.
