@@ -19,7 +19,7 @@ const form = ref({
   category: 'UTILITY',
   body: '',
   media_type: '',
-  media_url: '',
+  media_handle: '',
   button_type: '',
   button_text: '',
   button_url: '',
@@ -70,7 +70,7 @@ const resetForm = inboxId => {
     category: 'UTILITY',
     body: '',
     media_type: '',
-    media_url: '',
+    media_handle: '',
     button_type: '',
     button_text: '',
     button_url: '',
@@ -92,10 +92,10 @@ const draftPayload = () => {
     example: variableExamples.value[position]?.trim() || '',
   }));
   const media =
-    form.value.media_type && form.value.media_url
+    form.value.media_type && form.value.media_handle
       ? {
           format: form.value.media_type,
-          example: { header_handle: [form.value.media_url] },
+          example: { header_handle: [form.value.media_handle] },
         }
       : {};
   const button = form.value.button_type
@@ -194,7 +194,7 @@ const edit = record => {
     category: record.category,
     body: preview.body || '',
     media_type: media.format || '',
-    media_url: media.example?.header_handle?.[0] || '',
+    media_handle: media.example?.header_handle?.[0] || '',
     button_type: button.type || '',
     button_text: button.text || '',
     button_url: button.url || '',
@@ -300,12 +300,11 @@ onMounted(load);
             v-if="form.media_type"
             class="text-sm font-medium text-n-slate-12"
           >
-            Public sample media URL
+            Meta sample media handle
             <input
-              id="whatsapp-template-media-url"
-              v-model.trim="form.media_url"
+              id="whatsapp-template-media-handle"
+              v-model.trim="form.media_handle"
               required
-              type="url"
               class="mt-1 w-full rounded border border-n-weak p-2"
             />
           </label>
@@ -389,7 +388,7 @@ onMounted(load);
             {{
               `${form.media_type.charAt(0)}${form.media_type.slice(1).toLowerCase()} header`
             }}
-            <span v-if="form.media_url">· {{ form.media_url }}</span>
+            <span v-if="form.media_handle">· sample attached</span>
           </p>
           <p class="mt-2 whitespace-pre-wrap">
             {{ previewBody || 'Your template text will appear here.' }}

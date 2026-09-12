@@ -40,7 +40,7 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
       status: :submission_pending, submitted_at: Time.current, submitted_by: admin,
       body: 'Hello {{1}}',
       variables: [{ 'position' => 1, 'example' => 'Asha' }],
-      media: { 'format' => 'IMAGE', 'example' => { 'header_handle' => ['https://example.test/header.png'] } },
+      media: { 'format' => 'IMAGE', 'example' => { 'header_handle' => ['fake-meta-header-handle'] } },
       buttons: [
         { 'type' => 'QUICK_REPLY', 'text' => 'Thanks', 'url' => '' },
         { 'type' => 'URL', 'text' => 'View order', 'url' => 'https://example.test/orders/{{1}}' },
@@ -55,7 +55,7 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
         'components' => [
           { 'type' => 'BODY', 'text' => 'Hello {{1}}', 'example' => { 'body_text' => [['Asha']] } },
           { 'type' => 'HEADER', 'format' => 'IMAGE',
-            'example' => { 'header_handle' => ['https://example.test/header.png'] } },
+            'example' => { 'header_handle' => ['fake-meta-header-handle'] } },
           { 'type' => 'BUTTONS', 'buttons' => [
             { 'type' => 'QUICK_REPLY', 'text' => 'Thanks' },
             { 'type' => 'URL', 'text' => 'View order', 'url' => 'https://example.test/orders/{{1}}' },

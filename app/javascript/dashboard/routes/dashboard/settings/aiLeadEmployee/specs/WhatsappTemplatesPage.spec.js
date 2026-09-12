@@ -114,8 +114,8 @@ describe('WhatsappTemplatesPage', () => {
     await selects[2].setValue('IMAGE');
     await flushPromises();
     await wrapper
-      .find('#whatsapp-template-media-url')
-      .setValue('https://example.test/header.png');
+      .find('#whatsapp-template-media-handle')
+      .setValue('fake-meta-header-handle');
     await wrapper.findAll('select')[3].setValue('QUICK_REPLY');
     await flushPromises();
     await wrapper.find('#whatsapp-template-button-text').setValue('Thanks');
@@ -134,7 +134,7 @@ describe('WhatsappTemplatesPage', () => {
         variables: [{ position: 1, example: 'Asha' }],
         media: {
           format: 'IMAGE',
-          example: { header_handle: ['https://example.test/header.png'] },
+          example: { header_handle: ['fake-meta-header-handle'] },
         },
         buttons: [{ type: 'QUICK_REPLY', text: 'Thanks' }],
       })
