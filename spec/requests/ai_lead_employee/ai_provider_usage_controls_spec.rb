@@ -114,6 +114,48 @@ RSpec.describe 'AI provider usage controls', type: :request do
     workers&.each(&:join)
   end
 
+  it 'ignores mismatched legacy usage rows for runtime admission and pause state', :aggregate_failures do
+    account = create(:account)
+    connection = create(:ai_provider_connection, account: account, daily_request_limit: 1)
+    other_connection = create(:ai_provider_connection, account: create(:account), daily_request_limit: 1)
+    mismatched_usage = AiLeadEmployee::AiProviderUsage.create!(
+      account: other_connection.account,
+      ai_provider_connection: other_connection,
+      configuration_version: other_connection.configuration_version,
+      purpose: 'answer',
+      period_on: Time.current.utc.to_date,
+      status: 'completed',
+      requested_output_tokens: other_connection.reply_token_limit,
+      started_at: Time.current,
+      completed_at: Time.current,
+      cost_available: false
+    )
+    mismatched_usage.ai_provider_connection_id = connection.id
+    mismatched_usage.save!(validate: false)
+    provider_request = stub_request(:post, 'https://openrouter.ai/api/v1/chat/completions')
+                       .to_return(
+                         status: 200,
+                         body: {
+                           id: 'chatcmpl-account-isolation',
+                           choices: [{ message: { role: 'assistant', content: 'ok' }, finish_reason: 'stop' }]
+                         }.to_json
+                       )
+
+    expect(
+      AiLeadEmployee::AiProvider::RuntimeControl.failure_code(account: account)
+    ).to be_nil
+    expect(connection.reload.automation_paused_reason).to be_nil
+
+    response = AiLeadEmployee::AiProvider::ClientFactory.for(account: account).complete(
+      messages: [{ role: 'user', content: 'Use only this account allowance' }]
+    )
+
+    expect(response.id).to eq('chatcmpl-account-isolation')
+    expect(provider_request).to have_been_requested.once
+    expect(connection.usages.where(account_id: account.id).count).to eq(1)
+    expect(connection.reload.automation_paused_reason).to eq('usage_limit_exhausted')
+  end
+
   it 'rechecks provider permission when a previously created client starts a request', :aggregate_failures do
     account = create(:account)
     admin = create(:user, :administrator, account: account)

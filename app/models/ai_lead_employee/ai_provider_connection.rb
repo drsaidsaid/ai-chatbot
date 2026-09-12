@@ -156,7 +156,7 @@ class AiLeadEmployee::AiProviderConnection < ApplicationRecord
   def automation_paused_reason(requests_used: nil)
     return 'provider_disabled' unless configured?
 
-    requests_used ||= usages.for_utc_day(Time.current.utc.to_date).count
+    requests_used ||= usages.where(account_id: account_id).for_utc_day(Time.current.utc.to_date).count
     return 'usage_limit_exhausted' if daily_request_limit <= requests_used
 
     nil

@@ -12,7 +12,9 @@
 ## Automated verification
 
 - Rails provider control, usage, platform authorization, delivery and
-  end-to-end request coverage: 95 examples, 0 failures.
+  end-to-end request coverage: 96 examples, 0 failures. This includes a
+  focused post-review regression proving a mismatched legacy usage row cannot
+  consume another account's runtime allowance.
 - Vue managed-service page, navigation and settings layout coverage: 12 tests,
   0 failures.
 - Focused RuboCop: 16 files, no offenses.
@@ -41,7 +43,9 @@ production assets.
 - Browser logs contained no errors. One informational client-storage cleanup
   message was observed.
 
-The in-app browser surface exposes a fixed 1280 x 720 viewport and does not
-offer viewport emulation. The responsive implementation therefore remains
-covered by the component's single-column base layout and `sm:grid-cols-2`
-enhancement rather than a separately captured mobile-browser run.
+The in-app browser surface exposes a fixed 1280 x 720 viewport. Its capability
+inventory offers only page assets and WebMCP, creating a tab with width/height
+options remained 1280 x 720, and page-level `window.resizeTo` is unavailable.
+The responsive implementation therefore remains covered by the component's
+single-column base layout and `sm:grid-cols-2` enhancement rather than a
+separately captured phone-browser run.

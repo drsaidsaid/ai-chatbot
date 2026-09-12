@@ -101,7 +101,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
       raise AiLeadEmployee::AiProvider::ConfigurationChangedFailure, 'AI provider configuration changed'
     end
 
-    used = current.usages.for_utc_day(Time.current.utc.to_date).count
+    used = current.usages.where(account_id: current.account_id).for_utc_day(Time.current.utc.to_date).count
     raise AiLeadEmployee::AiProvider::UsageLimitFailure, 'Daily AI request allowance is exhausted' if current.daily_request_limit <= used
   end
 
