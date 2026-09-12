@@ -1,0 +1,12 @@
+{
+  "source_tree": "1ede019dfa15f62b6d2ac3da4ffb106f642ac42d",
+  "total_tree_blobs": 9633,
+  "non_release_paths": 8952,
+  "release_blobs": 681,
+  "previous_non_release_paths": 8951,
+  "added_non_release_paths": [
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb"
+  ],
+  "removed_non_release_paths": [],
+  "manifest_path_set_equals_git_tree_excluding_docs_releases": true
+}

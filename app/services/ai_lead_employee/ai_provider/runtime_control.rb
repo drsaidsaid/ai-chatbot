@@ -15,14 +15,20 @@ class AiLeadEmployee::AiProvider::RuntimeControl
     return 'provider_disabled' unless connection&.configured?
 
     connection.with_lock do
-      next 'provider_disabled' unless connection.configured?
-
-      authority_failure = provider_authority_failure(connection, configuration_version, usage_period_on)
-      next authority_failure if authority_failure
-
-      used = connection.usages.for_utc_day(Time.current.utc.to_date).count
-      'usage_limit_exhausted' if connection.daily_request_limit <= used
+      failure_code_locked(connection: connection, configuration_version: configuration_version, usage_period_on: usage_period_on)
     end
+  end
+
+  # Canonical dispatch owns this exact connection before its delivery suffix.
+  # Nil records absence at that prefix; never discover a new R under D/M/E.
+  def self.failure_code_locked(connection:, configuration_version: nil, usage_period_on: nil)
+    return 'provider_disabled' unless connection&.configured?
+
+    authority_failure = provider_authority_failure(connection, configuration_version, usage_period_on)
+    return authority_failure if authority_failure
+
+    used = connection.usages.for_utc_day(Time.current.utc.to_date).count
+    'usage_limit_exhausted' if connection.daily_request_limit <= used
   end
 
   def self.stop_pending_automation!(account:, reason:)

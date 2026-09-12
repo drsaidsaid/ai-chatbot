@@ -1,0 +1,57 @@
+# frozen_string_literal: true
+
+# Called only after matching a real outgoing question in this Conversation/revision.
+class AiLeadEmployee::OfferTypedAnswer
+  def initialize(question:, content:, currency:)
+    @question = question
+    @content = content.to_s.strip
+    @currency = currency
+  end
+
+  def observation
+    return if content.empty? || content.include?('?')
+    return { 'value' => content, 'polarity' => 'unknown' } if content.downcase.match?(AiLeadEmployee::QualificationEvidenceExtractor::UNKNOWN)
+
+    typed = typed_value
+    return if typed.nil?
+
+    { 'value' => content, 'typed_value' => typed, 'polarity' => typed == false ? 'negative' : 'positive' }.merge(money_attributes)
+  end
+
+  private
+
+  attr_reader :question, :content, :currency
+
+  def typed_value
+    case question['answer_type']
+    when 'number'
+      content.to_f if content.match?(/\A\d+(?:\.\d+)?\z/) && content.to_f.finite?
+    when 'money'
+      return unless complete_money_answer?
+
+      @money = AiLeadEmployee::QualificationAmountParser.parse(content.downcase)
+      @money['amount_minor'] if @money && @money['currency'] == currency
+    when 'boolean'
+      return true if content.match?(/\A(?:yes|ndiyo|ndio)[.!]*\z/i)
+      return false if content.match?(/\A(?:no|hapana)[.!]*\z/i)
+    when 'choice'
+      question.fetch('options').find { |option| option.casecmp?(content) }
+    when 'text'
+      content if content.split.size.between?(1, 30) && content.match?(/[[:alpha:]]/) &&
+                 !content.downcase.match?(AiLeadEmployee::QualificationEvidenceExtractor::ACKNOWLEDGEMENTS)
+    end
+  end
+
+  def complete_money_answer?
+    amount = content.downcase.gsub(AiLeadEmployee::QualificationAmountParser::CURRENCY_TOKEN, '').gsub(/\bshilingi\b/, '').strip
+    amount = amount.sub(/\s+(?:kwa mwezi|kwa mwaka|per month|monthly)\.?\z/, '').delete_suffix('.')
+    amount.match?(/\A(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?(?:\s*(?:k|thousand|million))?\z/) ||
+      amount.match?(AiLeadEmployee::QualificationAmountParser::SCALED_SEQUENCE)
+  end
+
+  def money_attributes
+    return {} unless question['answer_type'] == 'money'
+
+    @money.merge('period' => question['period'])
+  end
+end

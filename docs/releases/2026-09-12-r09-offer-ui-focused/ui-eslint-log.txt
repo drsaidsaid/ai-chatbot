@@ -1,0 +1,56 @@
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue
+  195:19  error  Unary operator '++' used  no-plusplus
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/AiLeadEmployeeSettingsShell.vue
+  184:59  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  189:29  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  190:47  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  195:66  warning  Expected 1 line break before closing bracket, but no line breaks found  vue/html-closing-bracket-newline
+  195:76  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  196:47  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  208:46  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  211:66  warning  Expected 1 line break before closing bracket, but no line breaks found  vue/html-closing-bracket-newline
+  211:76  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  212:47  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  217:66  warning  Expected 1 line break before closing bracket, but no line breaks found  vue/html-closing-bracket-newline
+  217:76  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  218:47  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  222:66  warning  Expected 1 line break before closing bracket, but no line breaks found  vue/html-closing-bracket-newline
+  222:76  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  223:47  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue
+   37:22  warning  '`AI_LEAD_EMPLOYEE.OFFERS.${key}`' dynamic key is used'                             @intlify/vue-i18n/no-dynamic-keys
+  238:55  error    Insert `⏎··········`                                                                prettier/prettier
+  240:20  error    Insert `⏎········`                                                                  prettier/prettier
+  251:46  error    Insert `⏎··············`                                                            prettier/prettier
+  258:46  error    Insert `⏎··············`                                                            prettier/prettier
+  297:24  warning  Expected a linebreak before this attribute                                          vue/first-attribute-linebreak
+  297:49  error    Replace `⏎` with `·`                                                                prettier/prettier
+  300:46  error    Insert `⏎··············`                                                            prettier/prettier
+  308:61  error    Insert `⏎················`                                                          prettier/prettier
+  310:26  error    Insert `⏎··············`                                                            prettier/prettier
+  311:61  error    Insert `⏎················`                                                          prettier/prettier
+  313:26  error    Insert `⏎··············`                                                            prettier/prettier
+  394:60  error    Insert `⏎··············`                                                            prettier/prettier
+  395:23  error    Replace `⏎v-model="range.label"·required⏎` with `·v-model="range.label"·required·`  prettier/prettier
+  396:23  error    'required' should be on a new line                                                  vue/max-attributes-per-line
+  425:59  error    Insert `⏎··············`                                                            prettier/prettier
+  427:24  error    Insert `⏎············`                                                              prettier/prettier
+  455:46  error    Insert `⏎··············`                                                            prettier/prettier
+  469:31  error    Insert `⏎············`                                                              prettier/prettier
+  470:46  error    Insert `⏎··············`                                                            prettier/prettier
+  484:31  error    Insert `⏎············`                                                              prettier/prettier
+  490:54  error    Insert `⏎················`                                                          prettier/prettier
+  537:46  error    Insert `⏎··············`                                                            prettier/prettier
+  548:31  error    Insert `⏎············`                                                              prettier/prettier
+  549:20  warning  Expected a linebreak before this attribute                                          vue/first-attribute-linebreak
+  549:53  error    Replace `⏎` with `·`                                                                prettier/prettier
+  560:46  error    Insert `⏎··············`                                                            prettier/prettier
+  568:59  error    Insert `⏎··············`                                                            prettier/prettier
+  570:24  error    Insert `⏎············`                                                              prettier/prettier
+
+✖ 46 problems (27 errors, 19 warnings)
+  26 errors and 18 warnings potentially fixable with the `--fix` option.
+

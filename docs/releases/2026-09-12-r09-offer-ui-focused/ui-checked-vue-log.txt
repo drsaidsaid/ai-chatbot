@@ -1,0 +1,116 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (13 tests) 268ms
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > edits one Offer while preserving exact human currency units and its revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > creates a separate Offer with ordered questions and a typed money rule
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > displays the saved question order even when the API array uses a different order
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > keeps question ordering unambiguous after removing and adding questions
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > retains a conflicted draft until the owner explicitly reloads the newer revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > uses the per-Offer API from the existing settings tab without fetching unrelated settings
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Failed to resolve component: RouterLink
+If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement. 
+  at <AiLeadEmployeeSettingsShell section="offers_qualification" ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > uses the per-Offer API from the existing settings tab without fetching unrelated settings
+[Vue warn]: Failed to resolve component: RouterLink
+If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement. 
+  at <AiLeadEmployeeSettingsShell section="offers_qualification" ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ ✓ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js (6 tests) 122ms
+ ✓ app/javascript/dashboard/routes/dashboard/conversation/specs/AIEmployeeControlPanel.spec.js (7 tests) 45ms
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js (5 tests) 48ms
+ ✓ app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js (8 tests) 3ms
+stderr | app/javascript/dashboard/components/qualification/specs/OfferQualificationSummary.spec.js > distinguishes stale, negative, unknown and superseded evidence with its source
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/components/qualification/specs/OfferQualificationSummary.spec.js (1 test) 19ms
+ ✓ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OwnedSettingsLayout.spec.js (1 test) 34ms
+stderr | app/javascript/dashboard/components/qualification/specs/ConversationOfferQualification.spec.js > changes the Conversation Offer and submits corrections to that explicit Offer and Conversation
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/components/qualification/specs/ConversationOfferQualification.spec.js (1 test) 35ms
+stderr | app/javascript/dashboard/components/qualification/specs/OfferQualificationReader.spec.js > never displays a late response for the previously selected Offer
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/components/qualification/specs/OfferQualificationReader.spec.js (1 test) 17ms
+
+ Test Files  9 passed (9)
+      Tests  43 passed (43)
+   Start at  04:04:59
+   Duration  6.23s (transform 1.40s, setup 800ms, collect 1.55s, tests 591ms, environment 2.32s, prepare 339ms)
+
+JSON report written to /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/ui-checked-vue-results.json

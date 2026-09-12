@@ -1,0 +1,9 @@
+app/javascript/dashboard/components/qualification/ConversationOfferQualification.vue 96ms
+app/javascript/dashboard/components/qualification/OfferQualificationReader.vue 9ms
+app/javascript/dashboard/components/qualification/OfferQualificationSummary.vue 25ms
+app/javascript/dashboard/components/qualification/specs/ConversationOfferQualification.spec.js 8ms (unchanged)
+app/javascript/dashboard/components/qualification/specs/OfferQualificationReader.spec.js 3ms (unchanged)
+app/javascript/dashboard/components/qualification/specs/OfferQualificationSummary.spec.js 4ms (unchanged)
+app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue 367ms
+app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js 10ms (unchanged)
+app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue 134ms (unchanged)

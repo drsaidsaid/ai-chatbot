@@ -1,0 +1,9 @@
+{
+  "before_tree": "a5253e37a45f46e99e6af3e92139c2282f18a722",
+  "source_tree": "b05b93a1209c4f3f505f8a749753fff21bfc6cd5",
+  "paths": [
+    "app/services/ai_lead_employee/follow_up_delivery_service.rb",
+    "app/services/ai_lead_employee/automation_cancellation.rb"
+  ],
+  "plan_path": "docs/issues/v1-completion-20260909/r09-production-cleanup-plan.md"
+}

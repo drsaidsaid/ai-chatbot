@@ -1,7 +1,14 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::QualificationEvidenceAudit
-  def self.record!(contact:, conversation:, user:, signal:, value:)
+  def initialize(contact:, conversation:, user:, offer_id: nil)
+    @contact = contact
+    @conversation = conversation
+    @user = user
+    @offer_id = offer_id
+  end
+
+  def record!(signal:, value:)
     Audited::Audit.create!(
       auditable: contact,
       associated: contact.account,
@@ -10,6 +17,7 @@ class AiLeadEmployee::QualificationEvidenceAudit
       audited_changes: {
         'ai_lead_employee_action' => 'qualification_evidence_corrected',
         'conversation_id' => conversation&.id,
+        'offer_id' => offer_id,
         'signal' => signal.to_s,
         'value' => value.to_s
       },
@@ -17,4 +25,8 @@ class AiLeadEmployee::QualificationEvidenceAudit
       created_at: Time.current
     )
   end
+
+  private
+
+  attr_reader :contact, :conversation, :user, :offer_id
 end

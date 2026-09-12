@@ -13,37 +13,34 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
   }
 
   def recover!
-    conversation.with_lock do
-      lock!
+    with_lifecycle(review: true) do |owner, reviews|
+      next false if cancel_inadmissible_recovery!(owner)
+
       if pending?
-        update!(updated_at: Time.current) # A queue outage must not starve later rows.
-        return true
+        update!(updated_at: Time.current)
+        next true
       end
-      return false if lease_expires_at&.future?
+      next false if lease_expires_at&.future?
 
       if dispatching?
-        record_unknown!
+        record_unknown_locked!(owner, reviews)
       elsif claimed?
-        return recover_claim!
+        next recover_claim!(owner)
       end
       false
     end
   end
 
   def record_unknown!
-    update!(state: :unknown, failure_code: 'acceptance_unknown')
-    publish!
-    HumanReviewRequest.find_or_create_by!(account: account, conversation: conversation, lead_message: message, reason: :delivery_unknown) do |review|
-      review.question = "Delivery outcome unknown for message #{message_id}. Check the provider outcome before contacting the Lead again."
-      review.assigned_user_id = conversation.assignee_id
-    end
+    with_lifecycle(review: true) { |owner, reviews| record_unknown_locked!(owner, reviews) if dispatching? }
   end
 
   def fail_preparation!(owner: nil)
-    with_lock do
-      return false unless owner ? claimed? && owner_token == owner : pending?
+    with_lifecycle do |lifecycle, _reviews|
+      next false unless owner ? claimed? && owner_token == owner : pending?
 
       update!(state: :failed, failure_code: 'preparation_failed')
+      lifecycle.outcome!(self)
       message.update!(status: :failed, external_error: 'This reply could not be prepared. Review its content or template before retrying.')
       publish!
       true
@@ -51,31 +48,59 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
   end
 
   def retry_for?(user)
-    conversation.with_lock do
-      lock!
-      return false unless operator_allowed?(user)
-      return false unless failed? && message.reload.source_id.blank?
+    ApplicationRecord.transaction do
+      Conversation.where(id: conversation_id).lock('FOR NO KEY UPDATE').load
+      conversation.reload
+      AiLeadEmployee::OfferDeliveryContext.new(conversation: conversation,
+                                               context: message.additional_attributes.dig('ai_lead_employee',
+                                                                                          'qualification_context')).lock_offers!
+      next false unless retry_authorized?(user)
 
-      update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
-      message.update!(status: :sent, external_error: nil)
-      publish!
-      true
+      with_lifecycle do |lifecycle, _reviews|
+        retry_locked!(lifecycle)
+      end
     end
   end
 
   def self.cancel_automation!(conversation:, reason:)
-    joins(:message).where(account_id: conversation.account_id, state: %w[pending claimed])
-                   .where('whatsapp_outbound_deliveries.conversation_id = :id OR ' \
-                          "messages.additional_attributes #>> '{ai_lead_employee,origin_conversation_id}' = :text_id",
-                          id: conversation.id, text_id: conversation.id.to_s)
-                   .where("messages.sender_type IS NULL OR messages.sender_type != 'User'").find_each do |delivery|
-      delivery.with_lock do
-        next unless delivery.pending? || delivery.claimed?
+    AiLeadEmployee::AutomationCancellation.call(conversation: conversation, reason: reason)
+  end
 
-        delivery.update!(state: :canceled, failure_code: reason)
-        delivery.publish!
+  def reconcile!
+    with_lifecycle do |owner, _reviews|
+      owner.outcome!(self)
+      publish!
+    end
+  end
+
+  # Unknown review absence is serialized by C; existing R is acquired before A/F.
+  # The suffix helper never discovers an earlier authority during publication.
+  def with_lifecycle(review: false)
+    ApplicationRecord.transaction do
+      reviews = []
+      if review
+        Conversation.where(account_id: account_id, id: conversation_id).order(:id).lock('FOR NO KEY UPDATE').load
+        conversation.reload
+        reviews = HumanReviewRequest.where(account_id: account_id, conversation_id: conversation_id,
+                                           lead_message_id: message_id, reason: :delivery_unknown).order(:id).lock.to_a
+      end
+      Whatsapp::DeliveryLifecycle.with(deliveries: self.class.where(id: id)) do |owner|
+        reload
+        yield owner, reviews
       end
     end
+  end
+
+  def record_unknown_locked!(owner, reviews)
+    update!(state: :unknown, failure_code: 'acceptance_unknown')
+    owner.outcome!(self)
+    if reviews.empty?
+      HumanReviewRequest.create!(account: account, conversation: conversation, lead_message: message, reason: :delivery_unknown,
+                                 question: "Delivery outcome unknown for message #{message_id}. " \
+                                           'Check the provider outcome before contacting the Lead again.',
+                                 assigned_user_id: conversation.assignee_id)
+    end
+    publish!
   end
 
   def publish!
@@ -89,9 +114,35 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
 
   private
 
-  def recover_claim!
+  def cancel_inadmissible_recovery!(owner)
+    return false unless pending? || claimed?
+
+    reason = owner.admission_failure(self)
+    return false unless reason
+
+    owner.cancel!(self, reason: reason)
+    true
+  end
+
+  def retry_authorized?(user)
+    membership = AccountUser.where(account_id: account_id, user_id: user&.id).lock.first
+    account.reload.active? && membership && (membership.administrator? || conversation.assignee_id == user.id)
+  end
+
+  def retry_locked!(lifecycle)
+    return false if lifecycle.artifact_for(self)
+    return false unless failed? && message.reload.source_id.blank?
+
+    update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
+    message.update!(status: :sent, external_error: nil)
+    publish!
+    true
+  end
+
+  def recover_claim!(owner)
     if attempts >= MAX_CLAIM_ATTEMPTS
       update!(state: :failed, failure_code: 'claim_recovery_exhausted')
+      owner.outcome!(self)
       message.update!(status: :failed, external_error: 'Delivery could not start. Review the connection before retrying.')
       publish!
       false
@@ -101,22 +152,10 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
     end
   end
 
-  def operator_allowed?(user)
-    membership = AccountUser.lock.find_by(account_id: account_id, user_id: user&.id)
-    account.reload.active? && membership && (membership.administrator? || conversation.assignee_id == user.id)
-  end
-
   def outbox_state
     return 'delivered' if accepted?
 
     state.in?(%w[failed canceled unknown]) ? state : 'pending'
-  end
-
-  def mark_follow_up_sent!(event)
-    return unless event.payload['follow_up_id']
-
-    follow_up = LeadFollowUp.find_by(account_id: account_id, id: event.payload['follow_up_id'])
-    follow_up.update!(status: :sent, sent_at: accepted_at) if follow_up&.pending?
   end
 
   def publish_outbox!
@@ -124,7 +163,6 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
     OutboxEvent.where(account_id: account_id, aggregate_type: 'Message', aggregate_id: message_id).find_each do |event|
       event.update!(state: event_state, attempts: attempts, delivered_at: accepted_at,
                     failure_class: failure_code, failed_at: failure_code ? Time.current : nil)
-      mark_follow_up_sent!(event) if accepted?
     end
   end
 end

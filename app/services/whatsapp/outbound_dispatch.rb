@@ -53,19 +53,20 @@ class Whatsapp::OutboundDispatch
   end
 
   def authorize
-    with_authority_locks do
-      @delivery.lock!
+    with_authority_locks do |owner|
+      @delivery.reload
       next false unless @delivery.claimed? && @delivery.owner_token == @owner && @delivery.lease_expires_at.future?
 
-      next false unless greeting_ready?
+      next false unless greeting_ready?(owner)
 
-      code = eligibility_failure
+      code = eligibility_failure || owner.admission_failure(@delivery)
       if code
-        @delivery.update!(state: :canceled, failure_code: code)
-        @delivery.publish!
+        owner.cancel!(@delivery, reason: code)
         next false
       end
-      @delivery.update!(state: :dispatching, dispatch_started_at: Time.current, lease_expires_at: 1.minute.from_now)
+      admitted_at = Time.current
+      owner.admit!(@delivery, at: admitted_at)
+      @delivery.update!(state: :dispatching, dispatch_started_at: admitted_at, lease_expires_at: 1.minute.from_now)
       @delivery.publish!
       true
     end
@@ -78,12 +79,15 @@ class Whatsapp::OutboundDispatch
   def eligibility_failure
     return 'connection_changed' unless @connection_snapshot == connection_snapshot
 
-    Whatsapp::OutboundEligibility.new(delivery: @delivery, channel: @channel, recipient: @recipient, template: @template).failure_code
+    Whatsapp::OutboundEligibility.new(delivery: @delivery, channel: @channel, recipient: @recipient, template: @template,
+                                      authority_records: @authority_records,
+                                      alert_authority: @outbound_alert_authority).failure_code
   end
 
-  def with_authority_locks
+  def with_authority_locks(&) # rubocop:disable Metrics/AbcSize
     @message.reload
-    origin_id = Whatsapp::OutboundAlertAuthority.new(@message).origin_id
+    @outbound_alert_authority = Whatsapp::OutboundAlertAuthority.new(@message)
+    origin_id = @outbound_alert_authority.origin_id
     Conversation.transaction do
       # Canonical ingress also locks Channel before Conversation.
       @channel.lock!
@@ -93,11 +97,21 @@ class Whatsapp::OutboundDispatch
       Conversation.where(account_id: @delivery.account_id, id: [@delivery.conversation_id, origin_id].compact)
                   .order(:id).lock('FOR NO KEY UPDATE').load
       @delivery.conversation.reload
-      yield
+      origin = Conversation.find_by(account_id: @delivery.account_id, id: origin_id) || @delivery.conversation
+      AiLeadEmployee::OfferDeliveryContext.new(
+        conversation: origin, context: @message.additional_attributes.dig('ai_lead_employee', 'qualification_context')
+      ).lock_offers!
+      # These authorities were formerly acquired by eligibility after Delivery.
+      # Prelock them at their rank; eligibility only reuses the owned rows.
+      provider_connection = AiLeadEmployee::AiProviderConnection.where(account_id: @delivery.account_id).lock.first
+      membership = AccountUser.where(account_id: @delivery.account_id, user_id: @message.sender_id).lock.first if @message.sender_type == 'User'
+      @authority_records = { provider_connection: provider_connection, membership: membership }.freeze
+      @outbound_alert_authority.lock_record!
+      Whatsapp::DeliveryLifecycle.with(deliveries: Whatsapp::OutboundDelivery.where(id: @delivery.id), &)
     end
   end
 
-  def greeting_ready?
+  def greeting_ready?(owner) # rubocop:disable Metrics/CyclomaticComplexity
     return true if @message.sender_type == 'User'
 
     predecessor = earlier_greeting
@@ -107,6 +121,7 @@ class Whatsapp::OutboundDispatch
     state = predecessor.state.in?(%w[pending claimed dispatching]) ? 'pending' : 'canceled'
     @delivery.update!(state: state, owner_token: nil, lease_expires_at: nil, attempts: @delivery.attempts - 1,
                       failure_code: state == 'canceled' ? 'greeting_not_accepted' : nil)
+    owner.cancel_artifact!(owner.artifact_for(@delivery), reason: 'greeting_not_accepted') if state == 'canceled' && owner.artifact_for(@delivery)
     @delivery.publish!
     false
   end
@@ -120,13 +135,13 @@ class Whatsapp::OutboundDispatch
   end
 
   def accept(provider_id)
-    @delivery.with_lock do
-      return unless @delivery.owner_token == @owner
+    @delivery.with_lifecycle(review: true) do |owner, reviews|
+      next unless @delivery.owner_token == @owner && @delivery.state.in?(%w[dispatching unknown])
 
-      @message.update!(source_id: provider_id, external_error: nil)
+      @message.reload.update!(source_id: provider_id, external_error: nil)
       @delivery.update!(state: :accepted, provider_message_id: provider_id, accepted_at: Time.current, failure_code: nil)
-      HumanReviewRequest.open.where(account_id: @delivery.account_id, lead_message_id: @message.id,
-                                    reason: :delivery_unknown).lock.find_each do |review|
+      owner.outcome!(@delivery)
+      reviews.select(&:open?).each do |review|
         review.update!(status: :resolved, resolved_at: Time.current, resolution_kind: 'provider_accepted')
       end
       @delivery.publish!
@@ -136,20 +151,20 @@ class Whatsapp::OutboundDispatch
   def unknown!
     return unless @delivery
 
-    @delivery.conversation.with_lock do
-      @delivery.lock!
-      return unless @delivery.owner_token == @owner && @delivery.dispatching?
+    @delivery.with_lifecycle(review: true) do |owner, reviews|
+      next unless @delivery.owner_token == @owner && @delivery.dispatching?
 
-      @delivery.record_unknown!
+      @delivery.record_unknown_locked!(owner, reviews)
     end
   end
 
   def fail!
-    @delivery.with_lock do
-      return unless @delivery.owner_token == @owner && @delivery.dispatching?
+    @delivery.with_lifecycle do |owner, _reviews|
+      next unless @delivery.owner_token == @owner && @delivery.dispatching?
 
       @delivery.update!(state: :failed, failure_code: 'provider_rejected')
-      @message.update!(status: :failed, external_error: Whatsapp::MessageStatusProjector::SAFE_DELIVERY_ERROR)
+      owner.outcome!(@delivery)
+      @message.reload.update!(status: :failed, external_error: Whatsapp::MessageStatusProjector::SAFE_DELIVERY_ERROR)
       @delivery.publish!
     end
   end

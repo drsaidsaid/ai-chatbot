@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import LeadQualificationsAPI from 'dashboard/api/leadQualifications';
+import ConversationOfferQualification from 'dashboard/components/qualification/ConversationOfferQualification.vue';
 
 const props = defineProps({
   currentChat: {
@@ -327,6 +328,11 @@ const saveEvidenceCorrection = async () => {
       </span>
     </div>
 
+    <ConversationOfferQualification
+      v-if="leadQualification?.offers?.length"
+      :key="currentChat.id"
+      :current-chat="currentChat"
+    />
     <div
       v-if="leadQualification"
       class="flex flex-col gap-2 border-t border-n-weak pt-3 text-xs"
@@ -350,7 +356,10 @@ const saveEvidenceCorrection = async () => {
           {{ leadQualification.score }}
         </span>
       </div>
-      <div v-if="leadQualification.next_question" class="flex flex-col gap-1">
+      <div
+        v-if="leadQualification.next_question && !leadQualification.stale_at"
+        class="flex flex-col gap-1"
+      >
         <span class="text-n-slate-11">
           {{
             $t('CONVERSATION_SIDEBAR.AI_EMPLOYEE.QUALIFICATION.NEXT_QUESTION')
@@ -361,7 +370,10 @@ const saveEvidenceCorrection = async () => {
         </span>
       </div>
       <div
-        v-if="Object.keys(qualificationEvidence).length"
+        v-if="
+          Object.keys(qualificationEvidence).length &&
+          !leadQualification.offers?.length
+        "
         class="flex flex-col gap-1"
       >
         <span class="text-n-slate-11">
@@ -377,7 +389,10 @@ const saveEvidenceCorrection = async () => {
         </span>
       </div>
       <div
-        v-if="qualificationEvidenceRecords.length"
+        v-if="
+          qualificationEvidenceRecords.length &&
+          !leadQualification.offers?.length
+        "
         class="flex flex-col gap-1"
       >
         <span class="text-n-slate-11">
@@ -396,6 +411,7 @@ const saveEvidenceCorrection = async () => {
         </span>
       </div>
       <form
+        v-if="!leadQualification.offers?.length"
         class="flex flex-col gap-2"
         @submit.prevent="saveEvidenceCorrection"
       >

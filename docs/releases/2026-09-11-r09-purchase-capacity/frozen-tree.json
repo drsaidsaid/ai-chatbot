@@ -1,0 +1,13 @@
+{
+  "tree": "4360f6b4011e0171eb07825d92d753a03e2972f7",
+  "ref": "refs/r09/capacity-20260911",
+  "base": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "source_count": 28,
+  "green_runs": [
+    14,
+    6,
+    16
+  ],
+  "failures": 0,
+  "note": "External metadata recorded after freeze, not inside the tree. Intermediate uncommitted R09 slice."
+}

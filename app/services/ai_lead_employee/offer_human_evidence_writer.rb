@@ -1,0 +1,66 @@
+# frozen_string_literal: true
+
+class AiLeadEmployee::OfferHumanEvidenceWriter
+  def initialize(conversation:, offer:, user:, field_key:, value:)
+    @conversation = conversation
+    @offer = offer
+    @user = user
+    @field_key = field_key.to_s
+    @value = value
+  end
+
+  def perform
+    conversation.with_lock('FOR NO KEY UPDATE') do
+      authorize_current_context!
+      offer.with_lock('FOR NO KEY UPDATE') do
+        conversation.contact.with_lock { record! }
+      end
+    end
+  end
+
+  private
+
+  attr_reader :conversation, :offer, :user, :field_key, :value
+
+  def authorize_current_context!
+    permitted = ActiveRecord::Base.uncached do
+      AiLeadEmployee::AccessScope.new(account: conversation.account, user: user).conversations.exists?(id: conversation.id)
+    end
+    raise Pundit::NotAuthorizedError unless permitted
+    raise ArgumentError, 'Select this Offer in the Conversation before editing its evidence' unless conversation.offer_id == offer.id &&
+                                                                                                    offer.account_id == conversation.account_id
+  end
+
+  def record!
+    question = offer.configuration.fetch('questions').find { |candidate| candidate['key'] == field_key }
+    builtin = QualificationQuestion::SIGNALS.key?(field_key.to_sym)
+    raise ArgumentError, 'Unknown Offer field' unless question || builtin
+
+    normalized = normalized_answer(question, builtin)
+    evidence = create_evidence!(normalized, builtin)
+    AiLeadEmployee::QualificationEvidenceAudit.new(contact: conversation.contact, conversation: conversation, user: user, offer_id: offer.id)
+                                              .record!(signal: field_key, value: value)
+    AiLeadEmployee::OfferQualificationService.new(conversation: conversation).perform
+    evidence
+  end
+
+  def normalized_answer(question, builtin)
+    normalized = if builtin
+                   AiLeadEmployee::QualificationEvidenceExtractor.normalize(signal: field_key, value: value)
+                 else
+                   AiLeadEmployee::OfferTypedAnswer.new(question: question, content: value, currency: offer.currency).observation
+                 end
+    raise ArgumentError, 'Enter an explicit typed answer or unknown' unless normalized
+
+    normalized['field_definition'] = AiLeadEmployee::OfferConfigurationWriter.field_definition(question, offer.currency) if question
+    normalized
+  end
+
+  def create_evidence!(normalized, builtin)
+    scope = QualificationEvidence.where(account: conversation.account, contact: conversation.contact, offer: offer, field_key: field_key)
+    evidence = scope.create!(conversation: conversation, user: user, source: :human, signal: builtin ? field_key : nil,
+                             value: normalized, observed_at: Time.current)
+    scope.current.where.not(id: evidence.id).find_each { |previous| previous.update!(superseded_at: Time.current, superseded_by: evidence) }
+    evidence
+  end
+end

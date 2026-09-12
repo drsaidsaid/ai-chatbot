@@ -1,0 +1,10 @@
+{
+  "before_tree": "1aa6d2c352d0842630e1e8071b1b7d2635e342be",
+  "paths": [
+    "app/models/whatsapp/outbound_delivery.rb",
+    "app/services/ai_lead_employee/automated_contact_consent.rb",
+    "app/services/ai_lead_employee/highly_qualified_handoff_service.rb",
+    "app/services/ai_lead_employee/offer_delivery_context.rb",
+    "app/services/ai_lead_employee/handoff_alert_recipients.rb"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "before_tree": "cc45f2b77b8e9dee9b7db7accde85171be2f6190",
+  "paths": [
+    "db/migrate/20260911001400_add_offer_scoped_qualification.rb",
+    "db/migrate/20260911001500_add_qualification_evidence_field_keys.rb",
+    "db/migrate/20260911001700_add_follow_up_attempt_lineage.rb"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "before_tree": "d737cb4bf116c1b62a97764165fd67646f12b53c",
+  "paths": [
+    "app/services/ai_lead_employee/offer_qualification_service.rb",
+    "app/services/ai_lead_employee/offer_human_evidence_writer.rb",
+    "app/services/ai_lead_employee/qualification_evidence_audit.rb",
+    "app/services/ai_lead_employee/qualification_service.rb",
+    "app/services/ai_lead_employee/offer_evidence_recorder.rb"
+  ]
+}

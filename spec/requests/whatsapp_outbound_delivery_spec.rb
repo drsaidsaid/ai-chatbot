@@ -418,7 +418,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
                                   headers: { 'Content-Type' => 'application/json' })
     authorization_read = Queue.new
     release_authorization = Queue.new
-    allow(AiLeadEmployee::AiProvider::RuntimeControl).to receive(:failure_code).and_wrap_original do |original, **args|
+    allow(AiLeadEmployee::AiProvider::RuntimeControl).to receive(:failure_code_locked).and_wrap_original do |original, **args|
       result = original.call(**args)
       authorization_read << true
       release_authorization.pop

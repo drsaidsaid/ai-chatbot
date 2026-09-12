@@ -1,0 +1,31 @@
+# frozen_string_literal: true
+
+# Budget modifiers stay attached; an explicit later assertion is a new candidate.
+class AiLeadEmployee::QualificationBudgetClauses
+  def self.for(content)
+    statements = content.split(/(?<=[.!?])\s+|[;\n]+/).map(&:strip).reject(&:empty?)
+    joined = statements.each_with_object([]) do |statement, result|
+      if result.any? && statement.match?(/\A(?:but|lakini)\b/)
+        result[-1] = "#{result.last} #{statement}"
+      else
+        result << statement
+      end
+    end
+    joined.flat_map { |statement| independent_candidates(statement) }
+  end
+
+  def self.independent_candidates(statement)
+    parts = statement.split(/(\b(?:but|lakini)\b)/)
+    candidates = [parts.shift.to_s.strip]
+    parts.each_slice(2) do |connector, part|
+      part = part.to_s.strip
+      if AiLeadEmployee::QualificationBudgetEvidenceExtractor.dependent_continuation?(part)
+        candidates[-1] = "#{candidates.last} #{connector} #{part}"
+      else
+        candidates << part
+      end
+    end
+    candidates.reject(&:empty?)
+  end
+
+end

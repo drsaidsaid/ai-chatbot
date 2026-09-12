@@ -7,17 +7,17 @@ class Whatsapp::DeliveryStatusProjector
   def perform
     return :ignored unless @status && Whatsapp::MessageStatusProjector::STATUSES.include?(@status['status'])
 
-    messages = @event.inbox.messages.where(account_id: @event.account_id, source_id: @event.provider_message_id).reorder(:id).lock.to_a
+    messages = @event.inbox.messages.where(account_id: @event.account_id, source_id: @event.provider_message_id).reorder(:id).to_a
     return :awaiting_message if messages.empty?
 
-    messages.each { |message| project(message) }
+    messages.each { |message| sync_recipient_identifiers(message) }
+    @event.inbox.messages.where(account_id: @event.account_id, id: messages.map(&:id)).reorder(:id).lock.each { |message| project(message) }
     :processed
   end
 
   private
 
   def project(message)
-    sync_recipient_identifiers(message)
     Whatsapp::MessageStatusProjector.new(message: message, status: @status, provider_created_at: @event.provider_created_at).perform
   end
 

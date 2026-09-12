@@ -1,0 +1,61 @@
+require 'active_support/all'
+require 'bigdecimal'
+require 'uri'
+require 'json'
+require 'parser/current'
+module AiLeadEmployee; end
+require_relative '../../app/services/ai_lead_employee/qualification_amount_parser'
+require_relative '../../app/services/ai_lead_employee/qualification_budget_evidence_extractor'
+require_relative '../../app/services/ai_lead_employee/qualification_evidence_extractor'
+NAMES = %w[QualificationBudgetClauses QualificationBudgetEvidenceExtractor QualificationEvidenceExtractor].freeze
+NAMES.each do |name|
+  file = name.underscore
+  path = "tmp/r09/spoken-helpers-before/app/services/ai_lead_employee/#{file}.rb"
+  source = File.read(path).lines.reject { |line| line.start_with?('require_relative ') }.join
+  NAMES.each { |original| source = source.gsub("AiLeadEmployee::#{original}", "AiLeadEmployee::Baseline#{original}") }
+  eval(source, TOPLEVEL_BINDING, path)
+end
+patterns = JSON.parse(File.read('tmp/r09/spoken-helpers-regex-sources.json'))
+regexes = { 'financial' => AiLeadEmployee::QualificationBudgetTail::FINANCIAL,
+            'replacement' => AiLeadEmployee::QualificationBudgetClauses::REPLACEMENT }
+patterns.fetch('anchors').each { |key, _value| regexes[key] = AiLeadEmployee::QualificationBudgetTail.const_get(key.upcase) }
+regexes.each do |key, pattern|
+  expected = patterns['anchors'].fetch(key) { patterns.fetch(key) }
+  raise "Changed regex #{key}" unless pattern.source == expected && pattern.options.zero?
+end
+strings = []
+def literals(node, strings)
+  return unless node.is_a?(Parser::AST::Node)
+  strings << node.children.first if node.type == :str && node.children.first.match?(/[[:alpha:]]/) && node.children.first.include?(' ')
+  node.children.each { |child| literals(child, strings) }
+end
+paths = Dir.glob('spec/requests/ai_lead_employee/offer_*spec.rb') + Dir.glob('spec/services/ai_lead_employee/*capacity*_spec.rb') +
+        ['spec/services/ai_lead_employee/qualification_service_spec.rb']
+paths.each { |path| literals(Parser::CurrentRuby.parse(File.read(path)), strings) }
+claims = ['I can spend $2500', 'I have allocated $2500', 'My budget is TZS 600000', 'Ninaweza kutumia TZS 600000',
+          'Nimetenga TZS 600000', 'My salary is $2500', 'I cannot spend $2500', 'Our revenue is $2500']
+tails = ['I need approval', 'only if my loan is approved', 'I am not the decision maker', 'I own the agency',
+         'we receive 20 leads per day', 'I want to start today', 'my sales are slow', 'I need more leads',
+         'my email is asha@example.com', 'my phone is +255712345678', 'I am not sure who decides',
+         'actually my budget is $500', 'sina mamlaka', 'nahitaji wateja', 'we can spend $3000',
+         'my loan has not been approved', 'my budget is not set', 'who decides?']
+claims.product([' but ', '. But ', ', lakini ', '; lakini '], tails).each { |claim, connector, tail| strings << claim + connector + tail }
+strings += ['', 'yes', 'no', '12', 'TZS 600000', 'asha@example.com', '+255712345678', 'tomorrow', 'not urgent', 'I do not need approval.']
+strings.uniq!
+def outcome(klass, text, signal)
+  instance = klass.new(text, answered_signal: signal)
+  [instance.evidence, instance.observations]
+rescue StandardError => error
+  [:raised, error.class.name, error.message]
+end
+comparisons = 0
+strings.product([nil, 'budget', 'decision_authority', 'urgency', 'lead_volume', 'contact_details', 'business_type', 'problem']).each do |text, signal|
+  original = outcome(AiLeadEmployee::BaselineQualificationEvidenceExtractor, text, signal)
+  current = outcome(AiLeadEmployee::QualificationEvidenceExtractor, text, signal)
+  raise "Interpretation changed: #{[text, signal, original, current].inspect}" unless original == current
+  comparisons += 1
+end
+report = { input_strings: strings.length, contexts: 8, comparisons: comparisons, mismatches: [],
+           regex_sources_and_options_equal: regexes.keys, literal_source_paths: paths }
+File.write('tmp/r09/spoken-helpers-equivalence-results.json', JSON.pretty_generate(report) + "\n")
+puts JSON.generate(report.except(:literal_source_paths))

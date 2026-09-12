@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Legacy Lead edits when Offers are configured', type: :request do
+  include_context 'with Offer qualification requests'
+
+  it 'rejects legacy evidence atomically with an explicit-context error instead of reporting an ignored correction as saved' do
+    offer = r09_create_offer(r09_configuration)
+    conversation = r09_conversation(offer: offer)
+    r09_receive(conversation, 'My budget is TZS 600000.')
+    original_name = r09_lead.name
+    original_snapshot = r09_qualification(offer).evidence_snapshot
+
+    expect do
+      patch(
+        "/api/v1/accounts/#{account.id}/leads/#{r09_lead.id}",
+        headers: r09_headers,
+        params: { lead: { name: 'Must not partially save', evidence: { budget: 'TZS 250000' } } },
+        as: :json
+      )
+    end.not_to(change { QualificationEvidence.where(account: account).count })
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body.fetch('error')).to match(/Offer.*Conversation/i)
+    expect(r09_lead.reload.name).to eq(original_name)
+    expect(r09_qualification(offer).evidence_snapshot).to eq(original_snapshot)
+    expect(QualificationEvidence.where(account: account, offer_id: nil)).to be_empty
+  end
+
+  it 'continues to save identity-only edits without selecting an evidence Offer' do
+    offer = r09_create_offer(r09_configuration)
+    r09_conversation(offer: offer)
+
+    expect do
+      patch "/api/v1/accounts/#{account.id}/leads/#{r09_lead.id}", headers: r09_headers,
+                                                                   params: { lead: { name: 'Asha Mushi' } }, as: :json
+    end.not_to(change { QualificationEvidence.where(account: account).count })
+
+    expect(response).to have_http_status(:success)
+    expect(r09_lead.reload.name).to eq('Asha Mushi')
+  end
+end

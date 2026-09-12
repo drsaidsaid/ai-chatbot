@@ -1,0 +1,31 @@
+{
+  "source_tree": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+  "rails": {
+    "duration": 233.139414,
+    "example_count": 457,
+    "failure_count": 0,
+    "pending_count": 0,
+    "errors_outside_of_examples_count": 0
+  },
+  "rails_spec_files": 47,
+  "vue": {
+    "numTotalTests": 52,
+    "numPassedTests": 52,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTotalTestSuites": 13
+  },
+  "rubocop": {
+    "offense_count": 0,
+    "target_file_count": 98,
+    "inspected_file_count": 98
+  },
+  "eslint": {
+    "errors": 0,
+    "warnings": 3
+  },
+  "production_build": "passed",
+  "all_invocations_whole_source_equal": true,
+  "browser_acceptance": "pending: root reported Mac lock and request-header policy failure",
+  "normal_hook_commit": "pending root review/checks and browser acceptance"
+}

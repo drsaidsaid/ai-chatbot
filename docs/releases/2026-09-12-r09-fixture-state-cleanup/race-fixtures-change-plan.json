@@ -1,0 +1,43 @@
+{
+  "before_tree": "181c65fa323920c2e9a6056d7810e973f343bff1",
+  "files": {
+    "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb": {
+      "ivar_occurrences": 29,
+      "expect_calls": 15,
+      "scenario_declarations": [
+        "it \"sends zero times when #{change} commits before the waiting final authorization\" do",
+        "it 'holds Offer authority through dispatching commit while a later edit waits, then sends once' do",
+        "it 'allows an admitted request to complete after an edit during HTTP without holding authority locks' do",
+        "it \"does not assign a handoff after a #{change} writer wins the origin authority lock\" do"
+      ]
+    },
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb": {
+      "ivar_occurrences": 99,
+      "expect_calls": 59,
+      "scenario_declarations": [
+        "it \"preserves one lineage when #{winner} wins against the original owner's receipt\" do",
+        "it \"preserves the admission boundary when #{winner} wins against control cancellation\" do",
+        "it \"retains the original Message when #{winner} wins an expired-claim race\" do",
+        "it \"does not recycle a failed attempt when #{winner} wins the preparation race\" do",
+        "it \"keeps old event repair on its original artifact when #{winner} wins\" do",
+        "it \"serializes missing-review creation and late acceptance when #{winner} wins\" do",
+        "it 'allows competing schedulers only one successor for the same independently eligible decision' do",
+        "it \"does not hold Delivery while #{operation} waits for Attempt ownership\" do",
+        "it 'locks every affected Attempt before any Delivery during a multi-Conversation opt-out' do",
+        "it 'locks the full current and stale-context Offer union once for opposite stale schedulers' do",
+        "it \"does not discover a newly inserted #{authority} authority after entering the delivery suffix\" do",
+        "it \"preserves the human review rejection when #{winner} commits first\" do",
+        "it 'locks existing budget Attempts by database ID even when history has the opposite attempt-number order' do",
+        "it 'refreshes conversation-wide cancellation targets after a replacement commits ahead of its Conversation lock' do",
+        "it \"cancels a concurrent replacement through the #{state} qualification callback without canceling another Offer\" do"
+      ]
+    },
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb": {
+      "ivar_occurrences": 23,
+      "expect_calls": 12,
+      "scenario_declarations": [
+        "it \"does not grant replacement after #{authority} is withdrawn and restored\" do"
+      ]
+    }
+  }
+}

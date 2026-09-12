@@ -10,6 +10,12 @@ class LeadQualificationsAPI extends ApiClient {
   evidence(contactId, payload) {
     return axios.post(`${this.url}/${contactId}/evidence`, payload);
   }
+
+  forOffer(contactId, offerId) {
+    return axios.get(`${this.url}/${contactId}`, {
+      params: { offer_id: offerId || undefined },
+    });
+  }
 }
 
 export default new LeadQualificationsAPI();

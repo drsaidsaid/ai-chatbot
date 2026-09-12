@@ -1,0 +1,828 @@
+{
+  "scoped": {
+    "accounts": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        }
+      ]
+    },
+    "ai_lead_employee_offers": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "account_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "name",
+          "character varying",
+          true,
+          null,
+          null
+        ],
+        [
+          "currency",
+          "character varying",
+          false,
+          "TZS",
+          null
+        ],
+        [
+          "configuration",
+          "jsonb",
+          false,
+          "{}",
+          null
+        ],
+        [
+          "configuration_version",
+          "integer",
+          false,
+          "1",
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 77,
+          "account_id": 1,
+          "name": "Historical Offer",
+          "currency": "TZS",
+          "configuration": "{}",
+          "configuration_version": 1
+        }
+      ]
+    },
+    "contacts": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        }
+      ]
+    },
+    "conversations": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "offer_id",
+          "bigint",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "index_conversations_on_offer_id",
+          [
+            "offer_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [
+        [
+          "ai_lead_employee_offers",
+          {
+            "column": "offer_id",
+            "name": "fk_rails_aa5f70e6f7",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ]
+      ],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "offer_id": null
+        }
+      ]
+    },
+    "lead_qualification_decisions": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "offer_id",
+          "bigint",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "index_lead_qualification_decisions_on_offer_id",
+          [
+            "offer_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [
+        [
+          "ai_lead_employee_offers",
+          {
+            "column": "offer_id",
+            "name": "fk_rails_fd618d5537",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ]
+      ],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "offer_id": null
+        }
+      ]
+    },
+    "lead_qualifications": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "account_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "contact_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "offer_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "stale_at",
+          "timestamp(6) without time zone",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "idx_lead_qualifications_per_offer",
+          [
+            "account_id",
+            "contact_id",
+            "offer_id"
+          ],
+          true,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "idx_legacy_lead_qualification",
+          [
+            "account_id",
+            "contact_id"
+          ],
+          true,
+          "(offer_id IS NULL)",
+          "btree",
+          {}
+        ],
+        [
+          "index_lead_qualifications_on_offer_id",
+          [
+            "offer_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [
+        [
+          "ai_lead_employee_offers",
+          {
+            "column": "offer_id",
+            "name": "fk_rails_fea146a879",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ]
+      ],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "account_id": 1,
+          "contact_id": 1,
+          "offer_id": null,
+          "stale_at": null
+        }
+      ]
+    },
+    "offer_configuration_revisions": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          "nextval('offer_configuration_revisions_id_seq'::regclass)"
+        ],
+        [
+          "account_id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "offer_id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "version",
+          "integer",
+          false,
+          null,
+          null
+        ],
+        [
+          "snapshot",
+          "jsonb",
+          false,
+          null,
+          null
+        ],
+        [
+          "created_at",
+          "timestamp(6) without time zone",
+          false,
+          null,
+          null
+        ],
+        [
+          "updated_at",
+          "timestamp(6) without time zone",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "index_offer_configuration_revisions_on_account_id",
+          [
+            "account_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "index_offer_configuration_revisions_on_offer_id",
+          [
+            "offer_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "index_offer_configuration_revisions_on_offer_id_and_version",
+          [
+            "offer_id",
+            "version"
+          ],
+          true,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [
+        [
+          "accounts",
+          {
+            "column": "account_id",
+            "name": "fk_rails_8edb20e6eb",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ],
+        [
+          "ai_lead_employee_offers",
+          {
+            "column": "offer_id",
+            "name": "fk_rails_92965c34ae",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ]
+      ],
+      "checks": [],
+      "rows": []
+    },
+    "qualification_evidences": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "account_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "contact_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "signal",
+          "integer",
+          false,
+          null,
+          null
+        ],
+        [
+          "superseded_at",
+          "timestamp without time zone",
+          true,
+          null,
+          null
+        ],
+        [
+          "offer_id",
+          "bigint",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "idx_qualification_evidence_offer_current",
+          [
+            "account_id",
+            "contact_id",
+            "offer_id",
+            "signal",
+            "superseded_at"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "index_qualification_evidences_on_offer_id",
+          [
+            "offer_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [
+        [
+          "ai_lead_employee_offers",
+          {
+            "column": "offer_id",
+            "name": "fk_rails_11a98cb461",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ]
+      ],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 0,
+          "superseded_at": null,
+          "offer_id": null
+        },
+        {
+          "id": 2,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 1,
+          "superseded_at": null,
+          "offer_id": null
+        },
+        {
+          "id": 3,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 2,
+          "superseded_at": null,
+          "offer_id": null
+        },
+        {
+          "id": 4,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 3,
+          "superseded_at": null,
+          "offer_id": null
+        },
+        {
+          "id": 5,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 4,
+          "superseded_at": null,
+          "offer_id": null
+        },
+        {
+          "id": 6,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 5,
+          "superseded_at": null,
+          "offer_id": null
+        },
+        {
+          "id": 7,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 6,
+          "superseded_at": null,
+          "offer_id": null
+        },
+        {
+          "id": 8,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 7,
+          "superseded_at": null,
+          "offer_id": null
+        }
+      ]
+    }
+  },
+  "reversed": {
+    "accounts": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        }
+      ]
+    },
+    "ai_lead_employee_offers": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "account_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "name",
+          "character varying",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 77,
+          "account_id": 1,
+          "name": "Historical Offer"
+        }
+      ]
+    },
+    "contacts": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        }
+      ]
+    },
+    "conversations": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        }
+      ]
+    },
+    "lead_qualification_decisions": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        }
+      ]
+    },
+    "lead_qualifications": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "account_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "contact_id",
+          "bigint",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "index_lead_qualifications_on_account_id_and_contact_id",
+          [
+            "account_id",
+            "contact_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "account_id": 1,
+          "contact_id": 1
+        }
+      ]
+    },
+    "qualification_evidences": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "account_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "contact_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "signal",
+          "integer",
+          false,
+          null,
+          null
+        ],
+        [
+          "superseded_at",
+          "timestamp without time zone",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 0,
+          "superseded_at": null
+        },
+        {
+          "id": 2,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 1,
+          "superseded_at": null
+        },
+        {
+          "id": 3,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 2,
+          "superseded_at": null
+        },
+        {
+          "id": 4,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 3,
+          "superseded_at": null
+        },
+        {
+          "id": 5,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 4,
+          "superseded_at": null
+        },
+        {
+          "id": 6,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 5,
+          "superseded_at": null
+        },
+        {
+          "id": 7,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 6,
+          "superseded_at": null
+        },
+        {
+          "id": 8,
+          "account_id": 1,
+          "contact_id": 1,
+          "signal": 7,
+          "superseded_at": null
+        }
+      ]
+    }
+  }
+}

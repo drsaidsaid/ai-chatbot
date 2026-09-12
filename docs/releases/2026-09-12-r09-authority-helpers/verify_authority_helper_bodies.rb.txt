@@ -1,0 +1,68 @@
+require 'parser/current'
+require 'json'
+require 'digest'
+
+def definitions(node, result = {})
+  return result unless node.is_a?(Parser::AST::Node)
+  result[node.children[0]] = node if node.type == :def
+  node.children.each { |child| definitions(child, result) }
+  result
+end
+
+def plain(node)
+  return plain(node.children.first) if node.is_a?(Parser::AST::Node) && node.type == :begin && node.children.one?
+  node.is_a?(Parser::AST::Node) ? [node.type, *node.children.map { |child| plain(child) }] : node
+end
+
+def methods(path)
+  definitions(Parser::CurrentRuby.parse(File.read(path)))
+end
+
+def body(method)
+  method.children[2].loc.expression.source
+end
+
+def parse_body(source)
+  plain(Parser::CurrentRuby.parse("def comparison_method\n#{source}\nend").children[2])
+end
+
+root = 'app/services/ai_lead_employee/'
+results = []
+%w[automated_contact_consent highly_qualified_handoff_service].each do |name|
+  path = "#{root}#{name}.rb"
+  original = methods("tmp/r09/authority-helpers-before/#{path}")
+  candidate = methods(path)
+  target = name == 'automated_contact_consent' ? :grant! : :perform
+  restored = body(candidate.fetch(target))
+  if target == :grant!
+    restored = restored.sub('validate_withdrawal!(active_stop, expected_event_id)', body(candidate.fetch(:validate_withdrawal!)))
+  else
+    normal = body(candidate.fetch(:perform_handoff_locked)).sub('create_handoff_result(authority)', body(candidate.fetch(:create_handoff_result)))
+    restored = restored.sub('perform_handoff_locked', normal.gsub('return Result.new', 'next Result.new'))
+    restored = restored.sub('recover_existing_handoff_locked', body(candidate.fetch(:recover_existing_handoff_locked)).gsub('return Result.new', 'next Result.new'))
+  end
+  expected = parse_body(body(original.fetch(target)))
+  actual = parse_body(restored)
+  results << { path: path, method: target, expanded_ast_equal: expected == actual }
+end
+path = 'app/models/whatsapp/outbound_delivery.rb'
+original = methods("tmp/r09/authority-helpers-before/#{path}")
+candidate = methods(path)
+auth = body(candidate.fetch(:retry_authorized?)).split("\n", 2)
+restored = body(candidate.fetch(:retry_for?)).sub('next false unless retry_authorized?(user)', auth.first + "\nnext false unless " + auth.last.strip)
+restored = restored.sub('retry_locked!(lifecycle)', body(candidate.fetch(:retry_locked!)).gsub('return false', 'next false'))
+results << { path: path, method: :retry_for?, expanded_ast_equal: parse_body(body(original.fetch(:retry_for?))) == parse_body(restored) }
+
+path = "#{root}highly_qualified_handoff_service.rb"
+original = methods("tmp/r09/authority-helpers-before/#{path}")
+candidate = methods("#{root}handoff_alert_recipients.rb")
+{alert_recipients: :for, alert_routes: :alert_routes, recipient_for: :recipient_for, normalized_recipient: :normalized_recipient, whatsapp_alert_phone_for: :whatsapp_alert_phone_for}.each do |old, current|
+  expected = body(original.fetch(old))
+  actual = body(candidate.fetch(current))
+  actual = actual.sub('alert_type', 'ALERT_TYPE') if old == :alert_routes
+  results << { path: path, method: old, moved_ast_equal: parse_body(expected) == parse_body(actual) }
+end
+report = { comparisons: results, mismatches: results.reject { |r| r[:expanded_ast_equal] || r[:moved_ast_equal] }, scope: 'Parsed-body comparisons cover consent ordered validations, complete handoff transaction/rescue body, complete retry body, and five recipient methods. Helper-local return is mapped to the original block next only during inlining. Recovery guard and context predicate transformations are documented separately.' }
+File.write('tmp/r09/authority-helpers-expanded-ast-proof.json', JSON.pretty_generate(report) + "\n")
+puts JSON.generate(report)
+raise 'Extraction body differs' unless report[:mismatches].empty?

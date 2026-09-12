@@ -1,0 +1,7 @@
+app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue 158ms
+app/javascript/dashboard/components/qualification/ConversationOfferQualification.vue 20ms
+app/javascript/dashboard/components/qualification/OfferQualificationReader.vue 7ms (unchanged)
+app/javascript/dashboard/components/qualification/OfferQualificationSummary.vue 18ms
+app/javascript/dashboard/components/qualification/specs/ConversationOfferQualification.spec.js 5ms (unchanged)
+app/javascript/dashboard/components/qualification/specs/OfferQualificationReader.spec.js 4ms (unchanged)
+app/javascript/dashboard/components/qualification/specs/OfferQualificationSummary.spec.js 3ms (unchanged)

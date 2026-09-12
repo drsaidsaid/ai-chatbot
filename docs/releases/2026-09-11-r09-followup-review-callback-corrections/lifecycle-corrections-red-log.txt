@@ -1,0 +1,198 @@
+Run options: include {locations: {"./spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb" => [303], "./spec/requests/whatsapp_alert_authority_spec.rb" => [102]}}
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {unknown: 0, unqualified: 1, low_qualified: 2, qualified: 3, highly_qualified: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/lead_qualification.rb:42)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {no_follow_up: 0, nurture: 1, human_review: 2, call_booked: 3, closed: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/lead_qualification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, pending: 2, snoozed: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/conversation.rb:88)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :priority, {low: 0, medium: 1, high: 2, urgent: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/conversation.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :control_state, {ai_active: 0, handoff_requested: 1, human_active: 2, ai_paused: 3, closed: 4}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/conversation.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_type, {ongoing: 0, one_off: 1}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/campaign.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_status, {active: 0, completed: 1, processing: 2}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/campaign.rb:52)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {active: 0, inactive: 1}
+ (called from <class:AgentBotInbox> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/agent_bot_inbox.rb:22)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {disabled: 0, enabled: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/integrations/hook.rb:38)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :hook_type, {account: 0, inbox: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/integrations/hook.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :message_type, {incoming: 0, outgoing: 1, activity: 2, template: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/message.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :content_type, {text: 0, input_text: 1, input_textarea: 2, input_email: 3, input_select: 4, cards: 5, form: 6, article: 7, incoming_email: 8, input_csat: 9, integrations: 10, sticker: 11, voice_call: 12}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/message.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {sent: 0, delivered: 1, read: 2, failed: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/message.rb:105)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :bot_type, {webhook: 0}
+ (called from <class:AgentBot> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/agent_bot.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source, {extracted: 0, human: 1}
+ (called from <class:QualificationEvidence> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/qualification_evidence.rb:51)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {"unknown" => 0, "unqualified" => 1, "low_qualified" => 2, "qualified" => 3, "highly_qualified" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/lead_qualification_decision.rb:40)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {"no_follow_up" => 0, "nurture" => 1, "human_review" => 2, "call_booked" => 3, "closed" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/lead_qualification_decision.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {pending: 0, sent: 1, cancelled: 2, failed: 3}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/lead_follow_up.rb:66)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :stage, {incomplete_qualification: 0, qualified_nurture: 1}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/lead_follow_up.rb:72)
+FFDEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :file_type, {image: 0, audio: 1, video: 2, file: 3, location: 4, fallback: 5, share: 6, story_mention: 7, contact: 8, ig_reel: 9, ig_post: 10, ig_story: 11, embed: 12}
+ (called from <class:Attachment> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/attachment.rb:47)
+FFDEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reason, {no_approved_knowledge: 0, conflicting_knowledge: 1, sensitive_question: 2, qualification_blocker: 3, angry_question: 4, unsupported_media: 5, source_unverified: 6, provider_failed: 7, stale_knowledge: 8, delivery_unknown: 9}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/human_review_request.rb:55)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, rejected: 2}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/human_review_request.rb:67)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source_kind, {faq: 0, offer: 1, pricing: 2, supporting_document: 3, objection: 4, policy: 5, refund: 6, guarantee: 7, eligibility: 8}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/knowledge_item.rb:33)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, approved: 1, rejected: 2, inactive: 3}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/knowledge_item.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {confirmed: 0, canceled: 1, completed: 2}
+ (called from <class:Booking> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/review-corrections-red-source/app/models/booking.rb:58)
+F
+
+Failures:
+
+  1) Stronger invalidation of a context-canceled follow-up does not grant replacement after control is withdrawn and restored
+     Failure/Error: expect(schedule).to be_empty
+       expected `[#<LeadFollowUp id: 664, account_id: 1173, contact_id: 1817, conversation_id: 1512, lead_qualificatio...aces_follow_up_id: 663, replaced_by_follow_up_id: nil, superseded_at: nil, replacement_reason: nil>].empty?` to be truthy, got false
+     # ./spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:26:in 'block (3 levels) in <top (required)>'
+
+  2) Stronger invalidation of a context-canceled follow-up does not grant replacement after provider is withdrawn and restored
+     Failure/Error: expect(schedule).to be_empty
+       expected `[#<LeadFollowUp id: 666, account_id: 1174, contact_id: 1818, conversation_id: 1513, lead_qualificatio...aces_follow_up_id: 665, replaced_by_follow_up_id: nil, superseded_at: nil, replacement_reason: nil>].empty?` to be truthy, got false
+     # ./spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:26:in 'block (3 levels) in <top (required)>'
+
+  3) Stronger invalidation of a context-canceled follow-up does not grant replacement after opt_out is withdrawn and restored
+     Failure/Error: expect(schedule).to be_empty
+       expected `[#<LeadFollowUp id: 668, account_id: 1175, contact_id: 1819, conversation_id: 1514, lead_qualificatio...aces_follow_up_id: 667, replaced_by_follow_up_id: nil, superseded_at: nil, replacement_reason: nil>].empty?` to be truthy, got false
+     # ./spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:26:in 'block (3 levels) in <top (required)>'
+
+  4) Offer follow-up committed lifecycle interleavings refreshes conversation-wide cancellation targets after a replacement commits ahead of its Conversation lock
+     Failure/Error: expect(@attempt.current_follow_up).to be_cancelled
+       expected `#<LeadFollowUp id: 670, account_id: 1176, contact_id: 1820, conversation_id: 1515, lead_qualification...laces_follow_up_id: 669, replaced_by_follow_up_id: nil, superseded_at: nil, replacement_reason: nil>.cancelled?` to be truthy, got false
+     # ./spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:324:in 'block (2 levels) in <main>'
+
+  5) WhatsApp alert authorization and review rejection does not discover a newly committed origin review after the authority prefix recorded absence
+     Failure/Error: expect(@alert.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'alert_authority_unavailable')
+
+       expected #<Whatsapp::OutboundDelivery id: 976, account_id: 1177, conversation_id: 1517, message_id: 2158, obse...reated_at: "2026-09-11 15:58:07.998254000 +0000", updated_at: "2026-09-11 15:58:08.718398000 +0000"> to have attributes {:failure_code => "alert_authority_unavailable", :state => "canceled"} but had attributes {:failure_code => nil, :state => "accepted"}
+       Diff:
+       @@ -1,3 +1,3 @@
+       -:failure_code => "alert_authority_unavailable",
+       -:state => "canceled",
+       +:failure_code => nil,
+       +:state => "accepted",
+     # ./spec/requests/whatsapp_alert_authority_spec.rb:134:in 'block (2 levels) in <main>'
+
+Finished in 17.01 seconds (files took 31.48 seconds to load)
+5 examples, 5 failures
+
+Failed examples:
+
+rspec './spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb[1:1]' # Stronger invalidation of a context-canceled follow-up does not grant replacement after control is withdrawn and restored
+rspec './spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb[1:2]' # Stronger invalidation of a context-canceled follow-up does not grant replacement after provider is withdrawn and restored
+rspec './spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb[1:3]' # Stronger invalidation of a context-canceled follow-up does not grant replacement after opt_out is withdrawn and restored
+rspec ./spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:303 # Offer follow-up committed lifecycle interleavings refreshes conversation-wide cancellation targets after a replacement commits ahead of its Conversation lock
+rspec ./spec/requests/whatsapp_alert_authority_spec.rb:102 # WhatsApp alert authorization and review rejection does not discover a newly committed origin review after the authority prefix recorded absence
+

@@ -1,0 +1,15 @@
+{
+  "base": "1ede019dfa15f62b6d2ac3da4ffb106f642ac42d",
+  "source": "e82a6c0c200e0dc9d2dc8c8de0e58a7a9b199648",
+  "r07_candidate_inspected_read_only": "f65cf3852c652ffd37fa705191ce85305c67cc93",
+  "control_panel_script_identical_except_additive_qualification_import": true,
+  "template_changes": "qualification slot, stale-next-question guard, legacy evidence display/correction guards only",
+  "shared_files_for_integration_review": [
+    "app/javascript/dashboard/routes/dashboard/conversation/AIEmployeeControlPanel.vue",
+    "app/javascript/dashboard/i18n/locale/en/aiLeadEmployee.json",
+    "app/views/api/v1/conversations/partials/_conversation.json.jbuilder",
+    "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/AiLeadEmployeeSettingsShell.vue",
+    "app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue",
+    "app/javascript/dashboard/routes/dashboard/owned/LeadDetail.vue"
+  ]
+}

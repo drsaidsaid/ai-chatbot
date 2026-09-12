@@ -1,0 +1,39 @@
+# frozen_string_literal: true
+
+class AiLeadEmployee::Offer < ApplicationRecord
+  self.table_name = 'ai_lead_employee_offers'
+
+  belongs_to :account
+  has_many :configuration_revisions, class_name: 'AiLeadEmployee::OfferConfigurationRevision', dependent: :restrict_with_exception
+  has_many :lead_qualifications, dependent: :restrict_with_exception
+
+  validates :name, presence: true, uniqueness: { scope: :account_id }
+  validates :currency, inclusion: { in: AiLeadEmployee::OfferMoney::PRECISION.keys }
+  validates :configuration_version, numericality: { only_integer: true, greater_than: 0 }
+
+  scope :enabled_in_order, -> { where(enabled: true).order(:position, :id) }
+
+  def questions
+    configuration.fetch('questions', []).select { |question| question['enabled'] }.sort_by { |question| question['position'] }
+  end
+
+  def budget_ranges
+    configuration.fetch('budget_ranges', []).select { |range| range['enabled'] }
+  end
+
+  def payload
+    configuration.merge('id' => id, 'name' => name, 'currency' => currency, 'enabled' => enabled,
+                        'version' => configuration_version, 'budget_ranges' => public_budget_ranges)
+  end
+
+  private
+
+  def public_budget_ranges
+    configuration.fetch('budget_ranges', []).map do |range|
+      range.except('minimum_minor', 'maximum_minor').merge(
+        'minimum' => AiLeadEmployee::OfferMoney.format(range['minimum_minor'], currency),
+        'maximum' => AiLeadEmployee::OfferMoney.format(range['maximum_minor'], currency)
+      )
+    end
+  end
+end

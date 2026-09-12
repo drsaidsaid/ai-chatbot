@@ -1,0 +1,17 @@
+require 'ripper'
+require 'json'
+require 'digest'
+def normalize(value)
+  return value unless value.is_a?(Array)
+  if value.first.is_a?(Symbol) && value.first.to_s.start_with?('@')
+    value[0, 2].map { |item| normalize(item) }
+  else
+    value.map { |item| normalize(item) }
+  end
+end
+result = ARGV.to_h do |path|
+  parsed = Ripper.sexp(File.read(path))
+  abort "Unable to parse #{path}" unless parsed
+  [path, Digest::SHA256.hexdigest(JSON.generate(normalize(parsed)))]
+end
+puts JSON.generate(result)

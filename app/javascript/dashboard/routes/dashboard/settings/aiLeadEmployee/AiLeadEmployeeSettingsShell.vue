@@ -9,6 +9,7 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
 import BookingConfigurationAPI from 'dashboard/api/bookingConfiguration';
 import QualificationConfigurationAPI from 'dashboard/api/qualificationConfiguration';
+import OfferConfigurationPanel from './OfferConfigurationPanel.vue';
 
 const props = defineProps({ section: { type: String, required: true } });
 const { accountScopedRoute } = useAccount();
@@ -75,8 +76,8 @@ const activeSection = computed(
   () =>
     sections.value.find(item => item.key === props.section) || sections.value[1]
 );
-const isQualification = computed(() =>
-  ['offers_qualification', 'follow_ups'].includes(activeSection.value.key)
+const isQualification = computed(
+  () => activeSection.value.key === 'follow_ups'
 );
 const isBooking = computed(
   () => activeSection.value.key === 'booking_business_hours'
@@ -94,6 +95,10 @@ const nativeDestination = computed(
 );
 
 const load = async () => {
+  if (activeSection.value.key === 'offers_qualification') {
+    loading.value = false;
+    return;
+  }
   loading.value = true;
   try {
     const [qualificationResponse, bookingResponse] = await Promise.all([
@@ -168,60 +173,32 @@ onMounted(load);
         Loading settings...
       </div>
       <article v-else class="max-w-4xl p-4 md:p-6">
-        <template v-if="activeSection.key === 'offers_qualification'">
-          <h2 class="text-base font-semibold text-n-slate-12">
-            Qualification questions
-          </h2>
-          <div class="mt-3 grid gap-3">
-            <label
-              v-for="question in qualification.questions"
-              :key="question.id || question.signal"
-              class="grid gap-1"
-              ><span class="text-sm font-medium capitalize text-n-slate-12">{{
-                question.signal.replaceAll('_', ' ')
-              }}</span
-              ><input
-                v-model="question.prompt"
-                class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm"
-                :disabled="!question.enabled"
-            /></label>
-          </div>
-          <h2 class="mt-8 text-base font-semibold text-n-slate-12">
-            Budget ranges
-          </h2>
-          <div class="mt-3 grid gap-3 sm:grid-cols-2">
-            <label
-              v-for="range in qualification.budget_ranges"
-              :key="range.id"
-              class="grid gap-1"
-              ><span class="text-sm text-n-slate-11">{{ range.label }}</span
-              ><input
-                v-model.number="range.min_cents"
-                type="number"
-                min="0"
-                class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm"
-            /></label>
-          </div>
-        </template>
+        <OfferConfigurationPanel
+          v-if="activeSection.key === 'offers_qualification'"
+        />
         <template v-else-if="activeSection.key === 'follow_ups'">
           <h2 class="text-base font-semibold text-n-slate-12">
             Incomplete-lead follow-ups
           </h2>
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
-            <label class="flex items-center gap-2 text-sm"
-              ><input
+            <label class="flex items-center gap-2 text-sm">
+              <input
                 v-model="qualification.follow_up.enabled"
                 type="checkbox"
               />
-              Enabled</label
-            ><label class="grid gap-1 text-sm"
-              >Delay (minutes)<input
+              <span>Enabled</span>
+            </label>
+            <label class="grid gap-1 text-sm">
+              <span>Delay (minutes)</span>
+              <input
                 v-model.number="qualification.follow_up.delay_minutes"
                 type="number"
                 min="1"
-                class="h-10 rounded-lg border border-n-weak px-3" /></label
-            ><label class="grid gap-1 text-sm"
-              >Maximum attempts<input
+                class="h-10 rounded-lg border border-n-weak px-3"
+            /></label>
+            <label class="grid gap-1 text-sm">
+              <span>Maximum attempts</span>
+              <input
                 v-model.number="qualification.follow_up.max_attempts"
                 type="number"
                 min="0"
@@ -232,23 +209,30 @@ onMounted(load);
         <template v-else-if="isBooking">
           <h2 class="text-base font-semibold text-n-slate-12">Availability</h2>
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm"
-              >Timezone<input
+            <label class="grid gap-1 text-sm">
+              <span>Timezone</span>
+              <input
                 v-model="booking.timezone"
-                class="h-10 rounded-lg border border-n-weak px-3" /></label
-            ><label class="grid gap-1 text-sm"
-              >Meeting duration (minutes)<input
+                class="h-10 rounded-lg border border-n-weak px-3"
+            /></label>
+            <label class="grid gap-1 text-sm">
+              <span>Meeting duration (minutes)</span>
+              <input
                 v-model.number="booking.duration_minutes"
                 type="number"
                 min="15"
-                class="h-10 rounded-lg border border-n-weak px-3" /></label
-            ><label class="grid gap-1 text-sm"
-              >Start time<input
+                class="h-10 rounded-lg border border-n-weak px-3"
+            /></label>
+            <label class="grid gap-1 text-sm">
+              <span>Start time</span>
+              <input
                 v-model="booking.allowed_hours.start"
                 type="time"
-                class="h-10 rounded-lg border border-n-weak px-3" /></label
-            ><label class="grid gap-1 text-sm"
-              >End time<input
+                class="h-10 rounded-lg border border-n-weak px-3"
+            /></label>
+            <label class="grid gap-1 text-sm">
+              <span>End time</span>
+              <input
                 v-model="booking.allowed_hours.end"
                 type="time"
                 class="h-10 rounded-lg border border-n-weak px-3"

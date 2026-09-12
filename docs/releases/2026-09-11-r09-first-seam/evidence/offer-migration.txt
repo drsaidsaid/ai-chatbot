@@ -1,0 +1,30 @@
+== 20260911001400 AddOfferScopedQualification: migrating ======================
+-- add_column(:ai_lead_employee_offers, :currency, :string, {null: false, default: "TZS"})
+   -> 0.0122s
+-- add_column(:ai_lead_employee_offers, :configuration, :jsonb, {null: false, default: {}})
+   -> 0.0013s
+-- add_column(:ai_lead_employee_offers, :configuration_version, :integer, {null: false, default: 1})
+   -> 0.0006s
+-- create_table(:offer_configuration_revisions)
+   -> 0.0139s
+-- add_reference(:conversations, :offer, {foreign_key: {to_table: :ai_lead_employee_offers}})
+   -> 0.0109s
+-- add_reference(:qualification_evidences, :offer, {foreign_key: {to_table: :ai_lead_employee_offers}})
+   -> 0.0054s
+-- add_reference(:lead_qualifications, :offer, {foreign_key: {to_table: :ai_lead_employee_offers}})
+   -> 0.0036s
+-- add_reference(:lead_qualification_decisions, :offer, {foreign_key: {to_table: :ai_lead_employee_offers}})
+   -> 0.0029s
+-- add_column(:lead_qualifications, :stale_at, :datetime)
+   -> 0.0003s
+-- remove_index(:lead_qualifications, [:account_id, :contact_id])
+   -> 0.0073s
+-- add_index(:lead_qualifications, [:account_id, :contact_id, :offer_id], {unique: true, name: "idx_lead_qualifications_per_offer"})
+   -> 0.0010s
+-- add_index(:lead_qualifications, [:account_id, :contact_id], {unique: true, where: "offer_id IS NULL", name: "idx_legacy_lead_qualification"})
+   -> 0.0038s
+-- add_index(:qualification_evidences, [:account_id, :contact_id, :offer_id, :signal, :superseded_at], {name: "idx_qualification_evidence_offer_current"})
+   -> 0.0008s
+== 20260911001400 AddOfferScopedQualification: migrated (0.0649s) =============
+
+Loading Installation config

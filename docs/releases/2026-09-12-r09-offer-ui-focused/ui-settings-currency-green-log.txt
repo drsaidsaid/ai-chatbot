@@ -1,0 +1,22 @@
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > edits one Offer while preserving exact human currency units and its revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js (1 test) 157ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  03:36:56
+   Duration  1.32s (transform 130ms, setup 121ms, collect 129ms, tests 157ms, environment 390ms, prepare 56ms)
+

@@ -240,6 +240,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     AiLeadEmployee::HighlyQualifiedHandoffService.new(
       conversation: conversation,
       qualification: qualification_result.qualification,
+      qualification_context: qualification_result.qualification_context,
       defer_alert_delivery: true
     ).perform
   end
@@ -330,7 +331,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
           delivery_boundary: AiLeadEmployee::Orchestration::DecisionPlaceholder::DELIVERY_BOUNDARY,
           outbound_intent_status: status,
           source_references: source_references,
-          qualification: qualification_result_payload(qualification_result)
+          qualification: qualification_result_payload(qualification_result),
+          qualification_context: qualification_result.qualification_context
         }.merge(provider_delivery_authority(provider_response))
       }
     )
@@ -356,7 +358,9 @@ class AiLeadEmployee::Orchestration::IntentProcessor
         conversation_id: conversation.id,
         triggering_message_id: triggering_message.id,
         orchestration_intent_id: intent.id,
-        channel: 'whatsapp'
+        channel: 'whatsapp',
+        qualification: outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification'),
+        qualification_context: outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification_context')
       }
     )
     @outbox_event_id = outbox_event.id
@@ -436,11 +440,13 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
     {
       'quality' => qualification_result.qualification.quality,
+      'offer_id' => qualification_result.qualification.offer_id,
       'score' => qualification_result.qualification.score,
       'missing_signals' => qualification_result.qualification.missing_signals,
       'next_question' => qualification_result.next_question,
+      'next_question_key' => qualification_result.next_question_key,
       'configuration_version' => qualification_result.qualification.configuration_version
-    }
+    }.merge(qualification_result.qualification_context || {})
   end
 
   def record_ai_employee_decision!(status:, qualification_result:, source_references: [])

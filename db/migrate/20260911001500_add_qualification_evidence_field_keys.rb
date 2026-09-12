@@ -1,0 +1,21 @@
+# frozen_string_literal: true
+
+class AddQualificationEvidenceFieldKeys < ActiveRecord::Migration[7.1]
+  def up
+    add_column :qualification_evidences, :field_key, :string
+    execute <<~SQL.squish
+      UPDATE qualification_evidences SET field_key = CASE signal
+        WHEN 0 THEN 'business_type' WHEN 1 THEN 'problem' WHEN 2 THEN 'lead_volume'
+        WHEN 3 THEN 'urgency' WHEN 4 THEN 'budget' WHEN 5 THEN 'decision_authority'
+        WHEN 6 THEN 'contact_details' WHEN 7 THEN 'name' END
+    SQL
+    change_column_null :qualification_evidences, :field_key, false
+    change_column_null :qualification_evidences, :signal, true
+    add_index :qualification_evidences, [:account_id, :contact_id, :offer_id, :field_key, :superseded_at],
+              name: 'idx_qualification_evidence_offer_field'
+  end
+
+  def down
+    raise ActiveRecord::IrreversibleMigration, 'Custom field evidence cannot be mapped into legacy signals'
+  end
+end

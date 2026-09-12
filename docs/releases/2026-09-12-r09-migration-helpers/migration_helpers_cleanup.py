@@ -1,0 +1,10 @@
+import pathlib,json,subprocess,os
+root=pathlib.Path.cwd();tmp=root/'tmp/r09';paths=['db/migrate/20260911001400_add_offer_scoped_qualification.rb','db/migrate/20260911001500_add_qualification_evidence_field_keys.rb','db/migrate/20260911001700_add_follow_up_attempt_lineage.rb'];e=os.environ.copy();e['GIT_INDEX_FILE']=str(tmp/'migration-helpers-before.index')
+def git(*a):return subprocess.check_output(['git',*a],env=e).decode().strip()
+git('read-tree','HEAD');git('add','-A','--','.');before=git('write-tree');git('update-ref','refs/r09/migration-helpers-before-source-20260912',before,'0'*40)
+for path in paths:
+ p=tmp/'migration-helpers-before'/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes((root/path).read_bytes())
+p=root/paths[0];s=p.read_text();start=s.index('    create_table :offer_configuration_revisions');stop=s.index('\n    [:conversations',start);body=s[start:stop].rstrip();s=s[:start]+'    create_configuration_revisions\n'+s[stop:];pos=s.rfind('\nend');s=s[:pos]+'\n\n  private\n\n  def create_configuration_revisions\n'+body+'\n  end'+s[pos:];p.write_text(s)
+p=root/paths[1];p.write_text(p.read_text().replace('execute <<~SQL','execute <<~SQL.squish'))
+p=root/paths[2];s=p.read_text();start=s.index('    create_table :lead_follow_up_attempts');end=s.index('\n  end',start);body=s[start:end];starts=[0,body.index('    add_index :lead_follow_up_attempts'),body.index('    add_reference :lead_follow_ups'),body.index('    # Only the recorded'),body.index('    change_column_null :lead_follow_ups')];names=['create_attempt_table','add_attempt_constraints','add_artifact_lineage','backfill_attempt_history','finalize_attempt_ownership'];parts=[body[a:b].rstrip() for a,b in zip(starts,starts[1:]+[len(body)])];s=s[:start]+'\n'.join('    '+name for name in names)+s[end:];pos=s.rfind('\nend');s=s[:pos]+'\n\n  private\n\n'+'\n\n'.join('  def '+name+'\n'+part.replace('execute <<~SQL','execute <<~SQL.squish')+'\n  end' for name,part in zip(names,parts))+s[pos:];p.write_text(s)
+report={'before_tree':before,'paths':paths};(tmp/'migration-helpers-plan.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))

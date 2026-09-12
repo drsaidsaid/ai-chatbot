@@ -1,0 +1,14 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/requests/ai_lead_employee/offer_shared_readers_spec.rb",
+  "--example",
+  "keeps authorized source-link query count bounded",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/ui-review-red-rails-results.json"
+]

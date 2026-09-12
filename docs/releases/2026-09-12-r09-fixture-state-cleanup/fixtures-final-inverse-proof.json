@@ -1,0 +1,21 @@
+{
+  "source_tree": "0772958eed424906e1b6112a2fbc8dec79ef09c3",
+  "files": {
+    "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb": {
+      "inverse_ast_equal": true,
+      "normalized_original_ast_sha256": "9c5a919ecffdf82543c4fececd1c00dac69a7febc9d1b14f452e6e0a0299c26a"
+    },
+    "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb": {
+      "inverse_ast_equal": true,
+      "normalized_original_ast_sha256": "d9595b9ddbab1aa1d1087e2eead2de559f8543f2b66a722f91add41dce88fec3"
+    },
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb": {
+      "inverse_ast_equal": true,
+      "normalized_original_ast_sha256": "1e825f46132432efbb2f77b98b581be3481f2321f79702049564619114987b94"
+    },
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb": {
+      "inverse_ast_equal": true,
+      "normalized_original_ast_sha256": "33dc6e9e3a0dac7031b80ea67cd1730000921ea3ef6cc6606adb4a66076a6834"
+    }
+  }
+}

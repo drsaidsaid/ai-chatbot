@@ -1,0 +1,99 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > edits one Offer while preserving exact human currency units and its revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > creates a separate Offer with ordered questions and a typed money rule
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > retains a conflicted draft until the owner explicitly reloads the newer revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > uses the per-Offer API from the existing settings tab without fetching unrelated settings
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Failed to resolve component: RouterLink
+If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement. 
+  at <AiLeadEmployeeSettingsShell section="offers_qualification" ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > uses the per-Offer API from the existing settings tab without fetching unrelated settings
+[Vue warn]: Failed to resolve component: RouterLink
+If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement. 
+  at <AiLeadEmployeeSettingsShell section="offers_qualification" ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js (4 tests | 2 failed) 99ms
+   ✓ edits one Offer while preserving exact human currency units and its revision
+   ✓ creates a separate Offer with ordered questions and a typed money rule
+   × retains a conflicted draft until the owner explicitly reloads the newer revision 12ms
+     → expected undefined to be defined
+   × uses the per-Offer API from the existing settings tab without fetching unrelated settings 5ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > retains a conflicted draft until the owner explicitly reloads the newer revision
+AssertionError: expected undefined to be defined
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js:97:71
+     95|   expect(wrapper.get('[role="alert"]').text()).toContain('reload');
+     96|   expect(wrapper.get('[data-testid="offer-name"]').element.value).toBe…
+     97|   expect(wrapper.get('button[type="submit"]').attributes('disabled')).…
+       |                                                                       ^
+     98|   axios.get.mockResolvedValue({ data: { ...offer(), name: 'Changed by …
+     99|   await wrapper.get('[data-testid="reload-offer"]').trigger('click');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > uses the per-Offer API from the existing settings tab without fetching unrelated settings
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js:111:67
+    109|   });
+    110|   await flushPromises();
+    111|   expect(wrapper.findComponent(OfferConfigurationPanel).exists()).toBe…
+       |                                                                   ^
+    112|   expect(axios.get.mock.calls.map(([url]) => url)).toEqual([expect.str…
+    113| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  03:41:31
+   Duration  894ms (transform 134ms, setup 103ms, collect 135ms, tests 99ms, environment 381ms, prepare 50ms)
+

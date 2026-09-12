@@ -1,0 +1,11 @@
+{
+  "financial": "\\b(?:budget|bajeti|money|funds?|loan|bank|financ\\w*|spend|pay|afford|pesa|mkopo|benki|kutumia|kulipa)\\b",
+  "anchors": {
+    "authority": "\\A(?:(?:i|we) (?:am|are|do not|don't|cannot|can't|can|own|decide)\\b|mimi (?:ni|ndiye)\\b|ninaamua\\b|sifanyi\\b)",
+    "volume": "\\A(?:(?:i|we) (?:handle|receive|get|manage)|ninapokea|tunapokea|nahudumia) \\d+\\s*(?:leads|inquiries|messages|calls|maulizo|ujumbe|wateja)(?: (?:a|per) (?:day|week|month))?[.!]*\\z",
+    "urgency": "\\A(?:(?:i|we) (?:want|need|would like) to (?:start|begin) (?:now|today|tomorrow|this week|this month)|(?:nataka|nahitaji|tunataka) kuanza (?:leo|kesho|wiki hii|mwezi huu))[.!]*\\z",
+    "problem": "\\A(?:(?:my|our) (?:problem|inquiries|leads|sales|responses|customers|replies)\\b|(?:i|we) (?:need|want) (?:more (?:leads|inquiries|customers)\\b|help (?:answering|responding to) (?:customer )?(?:messages|inquiries)\\b)|(?:i am|we are) not sure (?:what|which) problem\\b|(?:nahitaji|nataka) (?:wateja|maulizo|mauzo)\\b)",
+    "contact": "\\A(?:(?:my|our) (?:phone|email|mobile|whatsapp)|(?:phone|email|simu|namba))\\b"
+  },
+  "replacement": "\\A(?:(?:actually|correction)[:,]?\\s+)?(?:(?:my|our)\\s+budget\\b|(?:budget|bajeti)\\b|(?:i|we) can spend\\b|(?:ninaweza|naweza|tunaweza) kutumia\\b|(?:ninaweza|naweza) kutenga\\b|nimetenga\\b|ninatenga\\b|nitatenga\\b|(?:i|we) (?:have )?(?:set aside|allocated)\\b)"
+}

@@ -1,0 +1,47 @@
+Inspecting 1 file
+C
+
+Offenses:
+
+app/services/ai_lead_employee/offer_qualification_read_context.rb:63:3: C: Metrics/CyclomaticComplexity: Cyclomatic complexity for next_question is too high. [10/7]
+  def next_question(qualification) ...
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/services/ai_lead_employee/offer_qualification_read_context.rb:63:3: C: Metrics/PerceivedComplexity: Perceived complexity for next_question is too high. [10/8]
+  def next_question(qualification) ...
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/services/ai_lead_employee/offer_qualification_read_context.rb:68:151: C: [Correctable] Layout/LineLength: Line is too long. [151/150]
+      return offer.questions.find { |question| !snapshot.key?(question['key']) || snapshot.dig(question['key'], 'asserted') == false }&.fetch('prompt')
+                                                                                                                                                      ^
+app/services/ai_lead_employee/offer_qualification_read_context.rb:69:5: C: [Correctable] Layout/EmptyLineAfterGuardClause: Add empty line after guard clause.
+    end
+    ^^^
+
+1 file inspected, 4 offenses detected, 2 offenses autocorrectable
+Inspecting 1 file
+C
+
+Offenses:
+
+app/controllers/api/v1/accounts/lead_qualifications_controller.rb:8:151: C: [Correctable] Layout/LineLength: Line is too long. [151/150]
+    qualification = read_context.qualification(contact) || LeadQualification.new(account: current_account, contact: contact, offer: read_context.offer)
+                                                                                                                                                      ^
+app/controllers/api/v1/accounts/lead_qualifications_controller.rb:14:3: C: Metrics/AbcSize: Assignment Branch Condition size for evidence is too high. [<1, 30, 3> 30.17/26]
+  def evidence ...
+  ^^^^^^^^^^^^
+app/controllers/api/v1/accounts/lead_qualifications_controller.rb:34:3: C: Metrics/AbcSize: Assignment Branch Condition size for record_offer_evidence is too high. [<5, 35, 3> 35.48/26]
+  def record_offer_evidence ...
+  ^^^^^^^^^^^^^^^^^^^^^^^^^
+app/controllers/api/v1/accounts/lead_qualifications_controller.rb:68:3: C: Metrics/AbcSize: Assignment Branch Condition size for qualification_payload is too high. [<1, 36, 2> 36.07/26]
+  def qualification_payload(qualification) ...
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/controllers/api/v1/accounts/lead_qualifications_controller.rb:92:11: C: [Correctable] Layout/MultilineMethodCallIndentation: Align .order with .evidence on line 91.
+          .order(observed_at: :desc, id: :desc)
+          ^^^^^^
+app/controllers/api/v1/accounts/lead_qualifications_controller.rb:93:11: C: [Correctable] Layout/MultilineMethodCallIndentation: Align .limit with .evidence on line 91.
+          .limit(20)
+          ^^^^^^
+app/controllers/api/v1/accounts/lead_qualifications_controller.rb:94:11: C: [Correctable] Layout/MultilineMethodCallIndentation: Align .map with .evidence on line 91.
+          .map { |evidence| evidence_payload(evidence) }
+          ^^^^
+
+1 file inspected, 7 offenses detected, 4 offenses autocorrectable

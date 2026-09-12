@@ -49,10 +49,12 @@ class AiLeadEmployee::AccessScope
     scoped.where(contact_id: complete_contact_ids)
   end
 
-  def qualification(contact)
+  def qualification(contact, offer_id: nil)
     return unless contact
 
-    qualifications.find_by(contact_id: contact.id)
+    return if offer_id.nil? && @account.qualification_offers.exists?
+
+    qualifications.find_by(contact_id: contact.id, offer_id: offer_id)
   end
 
   def related(scope)

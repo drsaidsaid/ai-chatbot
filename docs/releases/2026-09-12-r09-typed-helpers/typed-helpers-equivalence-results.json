@@ -1,0 +1,10 @@
+{
+  "comparisons": {
+    "typed_observation": 576,
+    "normalize": 900,
+    "effect": 720,
+    "rule_outcome": 180
+  },
+  "total": 2376,
+  "mismatches": []
+}

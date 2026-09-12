@@ -1,0 +1,26 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (11 tests) 307ms
+stderr | app/javascript/dashboard/components/qualification/specs/OfferQualificationReader.spec.js > never displays a late response for the previously selected Offer
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/components/qualification/specs/OfferQualificationReader.spec.js (1 test) 17ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  03:52:39
+   Duration  2.99s (transform 1.35s, setup 190ms, collect 1.42s, tests 323ms, environment 744ms, prepare 107ms)
+

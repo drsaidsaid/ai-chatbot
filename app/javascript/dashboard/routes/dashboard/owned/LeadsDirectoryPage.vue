@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import Icon from 'next/icon/Icon.vue';
@@ -12,9 +12,10 @@ const route = useRoute();
 const router = useRouter();
 
 const leads = ref([]);
+const offers = ref([]);
 const selectedLead = ref(null);
 const counts = ref({});
-const meta = ref({
+const initialMeta = () => ({
   page: 1,
   per_page: 25,
   total_count: 0,
@@ -22,13 +23,15 @@ const meta = ref({
   sort: 'last_contact',
   direction: 'desc',
 });
-const filterOptions = ref({
+const initialFilterOptions = () => ({
   qualities: [],
   follow_up_states: [],
   booking_statuses: [],
   assignees: [],
   sources: [],
 });
+const meta = ref(initialMeta());
+const filterOptions = ref(initialFilterOptions());
 const isAdmin = computed(() => meta.value.visibility === 'admin');
 const isLoading = ref(false);
 const isExporting = ref(false);
@@ -57,6 +60,7 @@ const editForm = reactive({
   },
 });
 const uiFilters = reactive({
+  offer_id: '',
   q: '',
   quality: 'all',
   follow_up_state: '',
@@ -70,6 +74,15 @@ const uiFilters = reactive({
   lead_id: '',
 });
 let searchTimer;
+let requestVersion = 0;
+let exportOperation = 0;
+let reconsentOperation = 0;
+let loadedOfferId = null;
+let loadedAccountId = null;
+onBeforeUnmount(() => {
+  requestVersion += 1;
+  window.clearTimeout(searchTimer);
+});
 
 const qualityChips = computed(() => [
   {
@@ -134,6 +147,7 @@ const cleanQuery = query =>
   );
 
 const hydrateFromRoute = () => {
+  uiFilters.offer_id = route.query.offer_id?.toString() || '';
   uiFilters.q = route.query.q?.toString() || '';
   uiFilters.quality = route.query.quality?.toString() || 'all';
   uiFilters.follow_up_state = route.query.follow_up_state?.toString() || '';
@@ -149,6 +163,7 @@ const hydrateFromRoute = () => {
 
 const requestParams = () =>
   cleanQuery({
+    offer_id: uiFilters.offer_id,
     q: uiFilters.q,
     quality: uiFilters.quality === 'all' ? '' : uiFilters.quality,
     follow_up_state: uiFilters.follow_up_state,
@@ -183,11 +198,70 @@ const isMobileViewport = () =>
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(max-width: 1023px)').matches;
 
+const resetOperationState = () => {
+  exportOperation += 1;
+  reconsentOperation += 1;
+  isExporting.value = false;
+  isRecordingReconsent.value = false;
+};
+
+const resetTenantState = () => {
+  resetOperationState();
+  window.clearTimeout(searchTimer);
+  leads.value = [];
+  offers.value = [];
+  selectedLead.value = null;
+  counts.value = {};
+  meta.value = initialMeta();
+  filterOptions.value = initialFilterOptions();
+  selectedLeadIds.value = new Set();
+  showEditModal.value = false;
+  showMobileDetail.value = false;
+  showMoreFilters.value = false;
+  editErrors.value = [];
+  errorMessage.value = '';
+  statusMessage.value = '';
+  Object.keys(editForm).forEach(key => {
+    if (key === 'evidence') {
+      Object.keys(editForm.evidence).forEach(signal => {
+        editForm.evidence[signal] = '';
+      });
+    } else {
+      editForm[key] = '';
+    }
+  });
+};
+
+const currentContext = () => ({
+  version: requestVersion,
+  accountId: route.params.accountId,
+  offerId: uiFilters.offer_id,
+});
+const isCurrentContext = context =>
+  context.version === requestVersion &&
+  context.accountId === route.params.accountId &&
+  context.offerId === uiFilters.offer_id;
+
 const loadLeads = async () => {
+  requestVersion += 1;
+  const context = currentContext();
+  if (loadedAccountId !== context.accountId) {
+    resetTenantState();
+    loadedAccountId = context.accountId;
+  }
+  if (loadedOfferId !== uiFilters.offer_id) {
+    resetOperationState();
+    leads.value = [];
+    selectedLead.value = null;
+    counts.value = {};
+    loadedOfferId = uiFilters.offer_id;
+  }
   isLoading.value = true;
   errorMessage.value = '';
   try {
     const { data } = await LeadsAPI.get(requestParams());
+    if (!isCurrentContext(context)) return;
+    offers.value = data.offers || [];
     leads.value = data.leads || [];
     selectedLead.value = data.selected_lead || leads.value[0] || null;
     showMobileDetail.value = Boolean(uiFilters.lead_id && isMobileViewport());
@@ -195,10 +269,11 @@ const loadLeads = async () => {
     meta.value = { ...meta.value, ...(data.meta || {}) };
     filterOptions.value = data.filter_options || filterOptions.value;
   } catch (error) {
+    if (!isCurrentContext(context)) return;
     errorMessage.value =
       error.response?.data?.error || t('AI_LEAD_EMPLOYEE.LEADS.LOAD_ERROR');
   } finally {
-    isLoading.value = false;
+    if (isCurrentContext(context)) isLoading.value = false;
   }
 };
 
@@ -351,8 +426,10 @@ const importLeads = async event => {
 
   statusMessage.value = '';
   errorMessage.value = '';
+  const context = currentContext();
   try {
     const { data } = await LeadsAPI.importLeads(file);
+    if (!isCurrentContext(context)) return;
     const result = data.import || {};
     statusMessage.value = t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_RESULT', {
       status: importStatusLabel(result.status),
@@ -361,6 +438,7 @@ const importLeads = async event => {
     });
     await loadLeads();
   } catch (error) {
+    if (!isCurrentContext(context)) return;
     errorMessage.value =
       error.response?.data?.error ||
       (error.response?.data?.error_key
@@ -375,8 +453,12 @@ const exportLeads = async () => {
   isExporting.value = true;
   statusMessage.value = '';
   errorMessage.value = '';
+  const context = currentContext();
+  exportOperation += 1;
+  const operation = exportOperation;
   try {
     const { data } = await LeadsAPI.exportLeads(requestParams());
+    if (!isCurrentContext(context)) return;
     const url = window.URL.createObjectURL(data);
     const link = document.createElement('a');
     link.href = url;
@@ -385,10 +467,11 @@ const exportLeads = async () => {
     window.URL.revokeObjectURL(url);
     statusMessage.value = t('AI_LEAD_EMPLOYEE.LEADS.EXPORT_STARTED');
   } catch (error) {
+    if (!isCurrentContext(context)) return;
     errorMessage.value =
       error.response?.data?.error || t('AI_LEAD_EMPLOYEE.LEADS.EXPORT_ERROR');
   } finally {
-    isExporting.value = false;
+    if (operation === exportOperation) isExporting.value = false;
   }
 };
 
@@ -432,8 +515,10 @@ const saveLead = async () => {
   if (!selectedLead.value || !validateEditForm()) return;
 
   errorMessage.value = '';
+  const context = currentContext();
   try {
     const { data } = await LeadsAPI.update(selectedLead.value.id, {
+      ...(uiFilters.offer_id ? { offer_id: uiFilters.offer_id } : {}),
       lead: {
         name: editForm.name,
         phone_number: editForm.phone_number,
@@ -442,14 +527,16 @@ const saveLead = async () => {
         city: editForm.city,
         country: editForm.country,
         ...(isAdmin.value ? { assignee_id: editForm.assignee_id } : {}),
-        evidence: editForm.evidence,
+        ...(offers.value.length ? {} : { evidence: editForm.evidence }),
       },
     });
+    if (!isCurrentContext(context)) return;
     selectedLead.value = data;
     statusMessage.value = t('AI_LEAD_EMPLOYEE.LEADS.EDIT.SAVED');
     showEditModal.value = false;
     await loadLeads();
   } catch (error) {
+    if (!isCurrentContext(context)) return;
     editErrors.value = [
       error.response?.data?.error || t('AI_LEAD_EMPLOYEE.LEADS.EDIT.ERROR'),
     ];
@@ -460,33 +547,39 @@ const recordReconsent = async candidate => {
   if (!selectedLead.value || !candidate || isRecordingReconsent.value) return;
 
   errorMessage.value = '';
+  const context = currentContext();
+  reconsentOperation += 1;
+  const operation = reconsentOperation;
   isRecordingReconsent.value = true;
   try {
     const { data } = await LeadsAPI.reconsent(selectedLead.value.id, {
       source_message_id: candidate.source_message_id,
       expected_event_id: candidate.expected_event_id,
     });
+    if (!isCurrentContext(context)) return;
     selectedLead.value = data;
     statusMessage.value = t(
       'AI_LEAD_EMPLOYEE.LEADS.CONSENT.RECONSENT_RECORDED'
     );
+    isRecordingReconsent.value = false;
     await loadLeads();
   } catch (error) {
+    if (!isCurrentContext(context)) return;
     errorMessage.value =
       error.response?.data?.error ||
       t('AI_LEAD_EMPLOYEE.LEADS.CONSENT.RECONSENT_ERROR');
   } finally {
-    isRecordingReconsent.value = false;
+    if (operation === reconsentOperation) isRecordingReconsent.value = false;
   }
 };
 
 watch(
-  () => route.query,
+  [() => route.params.accountId, () => route.query],
   async () => {
     hydrateFromRoute();
     await loadLeads();
   },
-  { immediate: true }
+  { immediate: true, flush: 'sync' }
 );
 
 watch(
@@ -582,6 +675,39 @@ watch(showEditModal, async value => {
           v-if="!showMobileDetail"
           class="shrink-0 border-b border-n-weak bg-n-background px-4 py-3 lg:px-5"
         >
+          <label
+            v-if="offers.length"
+            class="mb-3 grid max-w-sm gap-1 text-sm text-n-slate-12"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.OFFERS.SELECT') }}
+            <select
+              v-model="uiFilters.offer_id"
+              class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3"
+              data-testid="lead-offer-select"
+              @change="
+                applyFilter({ offer_id: uiFilters.offer_id, lead_id: '' })
+              "
+            >
+              <option value="">
+                {{ t('AI_LEAD_EMPLOYEE.OFFERS.CHOOSE') }}
+              </option>
+              <option
+                v-for="offer in offers"
+                :key="offer.id"
+                :value="String(offer.id)"
+              >
+                {{ offer.name
+                }}{{
+                  offer.enabled
+                    ? ''
+                    : ` (${t('AI_LEAD_EMPLOYEE.OFFERS.DISABLED')})`
+                }}
+              </option>
+            </select>
+            <span v-if="!uiFilters.offer_id" class="text-xs text-n-slate-11">{{
+              t('AI_LEAD_EMPLOYEE.OFFERS.SELECT_HELP')
+            }}</span>
+          </label>
           <div class="relative md:hidden">
             <Icon
               icon="i-lucide-search"
@@ -1325,7 +1451,7 @@ watch(showEditModal, async value => {
           </label>
         </div>
 
-        <div class="mt-5 grid gap-3 md:grid-cols-2">
+        <div v-if="!offers.length" class="mt-5 grid gap-3 md:grid-cols-2">
           <label
             v-for="signal in [
               'problem',

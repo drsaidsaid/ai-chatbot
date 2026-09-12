@@ -1,0 +1,15 @@
+warning: parser/current is loading parser/ruby34, which recognizes 3.4.0-dev-compliant syntax, but you are running 3.4.4.
+Please see https://github.com/whitequark/parser#compatibility-with-ruby-mri.
+(string):24:3: error: unexpected token kRESCUE
+(string):24:   rescue ActiveRecord::RecordNotUnique
+(string):24:   ^~~~~~                              
+/Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/parser-3.3.8.0/lib/parser/diagnostic/engine.rb:72:in 'Parser::Diagnostic::Engine#process': unexpected token kRESCUE (Parser::SyntaxError)
+	from /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/parser-3.3.8.0/lib/parser/base.rb:289:in 'Parser::Base#on_error'
+	from /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/racc-1.8.1/lib/racc/parser.rb:263:in 'Racc::Parser#_racc_do_parse_c'
+	from /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/racc-1.8.1/lib/racc/parser.rb:263:in 'Racc::Parser#do_parse'
+	from /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/parser-3.3.8.0/lib/parser/base.rb:193:in 'Parser::Base#parse'
+	from /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/parser-3.3.8.0/lib/parser/base.rb:36:in 'Parser::Base.parse'
+	from tmp/r09/verify_authority_helper_bodies.rb:26:in 'Object#parse_body'
+	from tmp/r09/verify_authority_helper_bodies.rb:44:in 'block in <main>'
+	from tmp/r09/verify_authority_helper_bodies.rb:31:in 'Array#each'
+	from tmp/r09/verify_authority_helper_bodies.rb:31:in '<main>'

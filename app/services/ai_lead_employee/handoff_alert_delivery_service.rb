@@ -57,6 +57,7 @@ class AiLeadEmployee::HandoffAlertDeliveryService
       ai_lead_employee: {
         delivery_boundary: 'outbox',
         handoff_id: handoff.id,
+        qualification_context: handoff.qualification_snapshot['qualification_context'],
         origin_conversation_id: handoff.conversation.id,
         origin_control_version: handoff.conversation.control_version,
         alert_type: AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE,

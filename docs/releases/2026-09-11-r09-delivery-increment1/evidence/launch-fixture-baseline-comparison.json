@@ -1,0 +1,20 @@
+[
+  {
+    "path": "app/services/ai_lead_employee/evaluation/report_builder.rb",
+    "accepted_base_blob": "d6a28f8d453c5089854de0b8b2f9df5750e2e633",
+    "failed_162_source_blob": "d6a28f8d453c5089854de0b8b2f9df5750e2e633",
+    "equal": true
+  },
+  {
+    "path": "spec/factories/ai_lead_employee_evaluation_runs.rb",
+    "accepted_base_blob": "8cff930c5ed76a94736f07322da107f74fac14d4",
+    "failed_162_source_blob": "8cff930c5ed76a94736f07322da107f74fac14d4",
+    "equal": true
+  },
+  {
+    "path": "spec/requests/whatsapp_alert_authority_spec.rb",
+    "accepted_base_blob": "f991bf8edd7f9a224ce3618cffcf57aee7d96eb7",
+    "failed_162_source_blob": "f991bf8edd7f9a224ce3618cffcf57aee7d96eb7",
+    "equal": true
+  }
+]

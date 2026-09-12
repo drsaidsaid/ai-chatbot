@@ -1,0 +1,191 @@
+[
+  {
+    "path": "spec/factories/lead_follow_ups.rb",
+    "original_path": "spec/factories/lead_follow_ups.rb",
+    "assertion_count": 0,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/policies/conversation_policy_offer_selection_spec.rb",
+    "original_path": "spec/policies/offer_selection_policy_spec.rb",
+    "assertion_count": 2,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_builtin_typed_rules_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_builtin_typed_rules_spec.rb",
+    "assertion_count": 3,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_capacity_continuations_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_capacity_continuations_spec.rb",
+    "assertion_count": 12,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+    "assertion_count": 15,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_delivery_revision_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_delivery_revision_spec.rb",
+    "assertion_count": 27,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_dependent_fact_tails_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_dependent_fact_tails_spec.rb",
+    "assertion_count": 14,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_directory_filter_boundaries_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_directory_filter_boundaries_spec.rb",
+    "assertion_count": 20,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_evidence_edit_boundaries_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_evidence_edit_boundaries_spec.rb",
+    "assertion_count": 17,
+    "assertions_equal": false,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_evidence_lifecycle_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_evidence_lifecycle_spec.rb",
+    "assertion_count": 33,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+    "assertion_count": 59,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_follow_up_lineage_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_follow_up_lineage_spec.rb",
+    "assertion_count": 31,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+    "assertion_count": 42,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+    "assertion_count": 12,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_independent_builtin_tails_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_independent_builtin_tails_spec.rb",
+    "assertion_count": 4,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_legacy_lead_edit_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_legacy_lead_edit_spec.rb",
+    "assertion_count": 9,
+    "assertions_equal": false,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_reply_context_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_reply_context_spec.rb",
+    "assertion_count": 38,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_selection_authority_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_selection_authority_spec.rb",
+    "assertion_count": 14,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_shared_readers_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_shared_readers_spec.rb",
+    "assertion_count": 55,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_typed_answer_boundaries_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_typed_answer_boundaries_spec.rb",
+    "assertion_count": 10,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/requests/ai_lead_employee/offer_typed_field_rules_spec.rb",
+    "original_path": "spec/requests/ai_lead_employee/offer_typed_field_rules_spec.rb",
+    "assertion_count": 34,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/services/ai_lead_employee/add_follow_up_attempt_lineage_spec.rb",
+    "original_path": "spec/services/ai_lead_employee/follow_up_migration_spec.rb",
+    "assertion_count": 6,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/services/ai_lead_employee/follow_up_scheduler_spec.rb",
+    "original_path": "spec/services/ai_lead_employee/follow_up_scheduler_spec.rb",
+    "assertion_count": 26,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/services/ai_lead_employee/offer_configuration_writer_concurrency_spec.rb",
+    "original_path": "spec/services/ai_lead_employee/offer_configuration_concurrency_spec.rb",
+    "assertion_count": 10,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/services/ai_lead_employee/qualification_evidence_extractor_purchase_budget_capacity_spec.rb",
+    "original_path": "spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb",
+    "assertion_count": 7,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/services/ai_lead_employee/qualification_evidence_extractor_purchase_capacity_continuations_spec.rb",
+    "original_path": "spec/services/ai_lead_employee/purchase_capacity_continuations_spec.rb",
+    "assertion_count": 7,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  },
+  {
+    "path": "spec/support/offer_qualification_requests.rb",
+    "original_path": "spec/support/offer_qualification_requests.rb",
+    "assertion_count": 3,
+    "assertions_equal": true,
+    "scenario_declarations_equal": true
+  }
+]

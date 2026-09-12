@@ -1,0 +1,197 @@
+diff --git a/app/services/ai_lead_employee/offer_rules.rb b/app/services/ai_lead_employee/offer_rules.rb
+index 086ccd4..ed2f753 100644
+--- a/app/services/ai_lead_employee/offer_rules.rb
++++ b/app/services/ai_lead_employee/offer_rules.rb
+@@ -30,8 +30,7 @@ class AiLeadEmployee::OfferRules
+ 
+     case rule['kind']
+     when 'score_rule'
+-      raise ArgumentError, 'Score delta must be a nonnegative integer' unless rule['score_delta'].is_a?(Integer) && rule['score_delta'] >= 0
+-      raise ArgumentError, 'Score rules cannot force a quality' if rule['forced_outcome'].present?
++      validate_score_effect!(rule)
+     when 'hard_rule'
+       raise ArgumentError, 'Hard rules can only force unqualified' unless rule['forced_outcome'] == 'unqualified'
+     else
+@@ -44,41 +43,72 @@ class AiLeadEmployee::OfferRules
+     return nil if POLARITY_OPERATORS.include?(operator)
+ 
+     type = field.fetch('answer_type')
++    validate_operator!(operator, type)
++    normalize_comparison_value(type, rule['value'], field, currency, operator)
++  end
++
++  def self.validate_score_effect!(rule)
++    raise ArgumentError, 'Score delta must be a nonnegative integer' unless rule['score_delta'].is_a?(Integer) && rule['score_delta'] >= 0
++    raise ArgumentError, 'Score rules cannot force a quality' if rule['forced_outcome'].present?
++  end
++
++  def self.validate_operator!(operator, type)
+     allowed = ['eq']
+     allowed += ORDERED_OPERATORS if %w[number money].include?(type)
+     allowed << 'in' if type == 'choice'
+     raise ArgumentError, 'Operator is incompatible with field type' unless allowed.include?(operator)
++  end
+ 
+-    value = rule['value']
++  def self.normalize_comparison_value(type, value, field, currency, operator)
+     case type
+-    when 'money'
+-      raise ArgumentError, 'Rule money must use the field currency' unless value.is_a?(Hash) && value['currency'] == currency
++    when 'money' then normalize_money_value(value, currency)
++    when 'number' then normalize_number_value(value)
++    when 'boolean' then normalize_boolean_value(value)
++    when 'choice' then normalize_choice_value(value, field, operator)
++    else normalize_text_value(value)
++    end
++  end
+ 
+-      minor = AiLeadEmployee::OfferMoney.parse(value['amount'], currency)
+-      raise ArgumentError, 'A money comparison needs an amount' unless minor
++  def self.normalize_money_value(value, currency)
++    raise ArgumentError, 'Rule money must use the field currency' unless value.is_a?(Hash) && value['currency'] == currency
+ 
+-      { 'amount' => AiLeadEmployee::OfferMoney.format(minor, currency), 'currency' => currency }
+-    when 'number'
+-      raise ArgumentError, 'A numeric comparison needs a finite number' unless value.is_a?(Numeric) && value.finite?
++    minor = AiLeadEmployee::OfferMoney.parse(value['amount'], currency)
++    raise ArgumentError, 'A money comparison needs an amount' unless minor
+ 
+-      value
+-    when 'boolean'
+-      raise ArgumentError, 'A boolean comparison needs true or false' unless [true, false].include?(value)
++    { 'amount' => AiLeadEmployee::OfferMoney.format(minor, currency), 'currency' => currency }
++  end
+ 
+-      value
+-    when 'choice'
+-      values = operator == 'in' ? value : [value]
+-      raise ArgumentError,
+-            'Comparison must use configured choices' unless values.is_a?(Array) && values.any? && (values - field.fetch('options')).empty?
++  def self.normalize_number_value(value)
++    raise ArgumentError, 'A numeric comparison needs a finite number' unless value.is_a?(Numeric) && value.finite?
+ 
+-      value
+-    else
+-      raise ArgumentError, 'A text comparison needs text' unless value.is_a?(String) && value.present?
++    value
++  end
++
++  def self.normalize_boolean_value(value)
++    raise ArgumentError, 'A boolean comparison needs true or false' unless [true, false].include?(value)
++
++    value
++  end
+ 
+-      value
++  def self.normalize_choice_value(value, field, operator)
++    values = operator == 'in' ? value : [value]
++    unless values.is_a?(Array) && values.any? && (values - field.fetch('options')).empty?
++      raise ArgumentError, 'Comparison must use configured choices'
+     end
++
++    value
++  end
++
++  def self.normalize_text_value(value)
++    raise ArgumentError, 'A text comparison needs text' unless value.is_a?(String) && value.present?
++
++    value
+   end
+ 
++  private_class_method :validate_score_effect!, :validate_operator!, :normalize_comparison_value,
++                       :normalize_money_value, :normalize_number_value, :normalize_boolean_value,
++                       :normalize_choice_value, :normalize_text_value
++
+   def initialize(offer:, snapshot:)
+     @offer = offer
+     @snapshot = snapshot
+@@ -115,13 +145,25 @@ class AiLeadEmployee::OfferRules
+     actual, expected = comparison_values(rule, fact)
+     return false if actual.nil?
+ 
+-    case rule['operator']
++    compare_values(rule['operator'], actual, expected)
++  end
++
++  def compare_values(operator, actual, expected)
++    case operator
+     when 'eq' then actual == expected
+     when 'in' then expected.include?(actual)
+-    when 'lt' then actual.is_a?(Numeric) && actual < expected
+-    when 'lte' then actual.is_a?(Numeric) && actual <= expected
+-    when 'gt' then actual.is_a?(Numeric) && actual > expected
+-    when 'gte' then actual.is_a?(Numeric) && actual >= expected
++    when *ORDERED_OPERATORS then ordered_match?(operator, actual, expected)
++    end
++  end
++
++  def ordered_match?(operator, actual, expected)
++    return false unless actual.is_a?(Numeric)
++
++    case operator
++    when 'lt' then actual < expected
++    when 'lte' then actual <= expected
++    when 'gt' then actual > expected
++    when 'gte' then actual >= expected
+     end
+   end
+ 
+diff --git a/app/services/ai_lead_employee/offer_typed_answer.rb b/app/services/ai_lead_employee/offer_typed_answer.rb
+index 25e5c83..d60b090 100644
+--- a/app/services/ai_lead_employee/offer_typed_answer.rb
++++ b/app/services/ai_lead_employee/offer_typed_answer.rb
+@@ -25,26 +25,37 @@ class AiLeadEmployee::OfferTypedAnswer
+ 
+   def typed_value
+     case question['answer_type']
+-    when 'number'
+-      content.to_f if content.match?(/\A\d+(?:\.\d+)?\z/) && content.to_f.finite?
+-    when 'money'
+-      return unless complete_money_answer?
+-
+-      @money = AiLeadEmployee::QualificationAmountParser.parse(content.downcase)
+-      @money['amount_minor'] if @money && @money['currency'] == currency
+-    when 'boolean'
+-      return provided_value if [true, false].include?(provided_value)
+-
+-      return true if content.match?(/\A(?:yes|ndiyo|ndio)[.!]*\z/i)
+-      return false if content.match?(/\A(?:no|hapana)[.!]*\z/i)
+-    when 'choice'
+-      question.fetch('options').find { |option| option.casecmp?(content) }
+-    when 'text'
+-      content if content.split.size.between?(1, 30) && content.match?(/[[:alpha:]]/) &&
+-                 !content.downcase.match?(AiLeadEmployee::QualificationEvidenceExtractor::ACKNOWLEDGEMENTS)
++    when 'number' then number_value
++    when 'money' then money_value
++    when 'boolean' then boolean_value
++    when 'choice' then question.fetch('options').find { |option| option.casecmp?(content) }
++    when 'text' then text_value
+     end
+   end
+ 
++  def number_value
++    content.to_f if content.match?(/\A\d+(?:\.\d+)?\z/) && content.to_f.finite?
++  end
++
++  def money_value
++    return unless complete_money_answer?
++
++    @money = AiLeadEmployee::QualificationAmountParser.parse(content.downcase)
++    @money['amount_minor'] if @money && @money['currency'] == currency
++  end
++
++  def boolean_value
++    return provided_value if [true, false].include?(provided_value)
++
++    return true if content.match?(/\A(?:yes|ndiyo|ndio)[.!]*\z/i)
++    return false if content.match?(/\A(?:no|hapana)[.!]*\z/i)
++  end
++
++  def text_value
++    content if content.split.size.between?(1, 30) && content.match?(/[[:alpha:]]/) &&
++               !content.downcase.match?(AiLeadEmployee::QualificationEvidenceExtractor::ACKNOWLEDGEMENTS)
++  end
++
+   def complete_money_answer?
+     amount = content.downcase.gsub(AiLeadEmployee::QualificationAmountParser::CURRENCY_TOKEN, '').gsub(/\bshilingi\b/, '').strip
+     amount = amount.sub(/\s+(?:kwa mwezi|kwa mwaka|per month|monthly)\.?\z/, '').delete_suffix('.')

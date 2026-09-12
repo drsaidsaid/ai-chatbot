@@ -1,0 +1,276 @@
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, pending: 2, snoozed: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/conversation.rb:88)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :priority, {low: 0, medium: 1, high: 2, urgent: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/conversation.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :control_state, {ai_active: 0, handoff_requested: 1, human_active: 2, ai_paused: 3, closed: 4}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/conversation.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reply_time, {in_a_few_minutes: 0, in_a_few_hours: 1, in_a_day: 2}
+ (called from <class:WebWidget> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/channel/web_widget.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_type, {ongoing: 0, one_off: 1}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/campaign.rb:50)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :campaign_status, {active: 0, completed: 1, processing: 2}
+ (called from <class:Campaign> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/campaign.rb:52)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {active: 0, inactive: 1}
+ (called from <class:AgentBotInbox> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/agent_bot_inbox.rb:22)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {disabled: 0, enabled: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/integrations/hook.rb:38)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :hook_type, {account: 0, inbox: 1}
+ (called from <class:Hook> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/integrations/hook.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :message_type, {incoming: 0, outgoing: 1, activity: 2, template: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/message.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :content_type, {text: 0, input_text: 1, input_textarea: 2, input_email: 3, input_select: 4, cards: 5, form: 6, article: 7, incoming_email: 8, input_csat: 9, integrations: 10, sticker: 11, voice_call: 12}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/message.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {sent: 0, delivered: 1, read: 2, failed: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/message.rb:105)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :bot_type, {webhook: 0}
+ (called from <class:AgentBot> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/agent_bot.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source, {extracted: 0, human: 1}
+ (called from <class:QualificationEvidence> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/qualification_evidence.rb:51)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/notification.rb:49)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {unknown: 0, unqualified: 1, low_qualified: 2, qualified: 3, highly_qualified: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/lead_qualification.rb:42)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {no_follow_up: 0, nurture: 1, human_review: 2, call_booked: 3, closed: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/lead_qualification.rb:49)
+FDEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, completed: 1, canceled: 2}
+ (called from <class:LeadHandoff> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/lead_handoff.rb:46)
+F.....DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {pending: 0, sent: 1, cancelled: 2, failed: 3}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/lead_follow_up.rb:66)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :stage, {incomplete_qualification: 0, qualified_nurture: 1}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/lead_follow_up.rb:72)
+.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :file_type, {image: 0, audio: 1, video: 2, file: 3, location: 4, fallback: 5, share: 6, story_mention: 7, contact: 8, ig_reel: 9, ig_post: 10, ig_story: 11, embed: 12}
+ (called from <class:Attachment> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/attachment.rb:47)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :source_kind, {faq: 0, offer: 1, pricing: 2, supporting_document: 3, objection: 4, policy: 5, refund: 6, guarantee: 7, eligibility: 8}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/knowledge_item.rb:33)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, approved: 1, rejected: 2, inactive: 3}
+ (called from <class:KnowledgeItem> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/knowledge_item.rb:44)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {"unknown" => 0, "unqualified" => 1, "low_qualified" => 2, "qualified" => 3, "highly_qualified" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/lead_qualification_decision.rb:40)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {"no_follow_up" => 0, "nurture" => 1, "human_review" => 2, "call_booked" => 3, "closed" => 4}
+ (called from <class:LeadQualificationDecision> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/lead_qualification_decision.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :reason, {no_approved_knowledge: 0, conflicting_knowledge: 1, sensitive_question: 2, qualification_blocker: 3, angry_question: 4, unsupported_media: 5, source_unverified: 6, provider_failed: 7, stale_knowledge: 8, delivery_unknown: 9}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/human_review_request.rb:55)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, rejected: 2}
+ (called from <class:HumanReviewRequest> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/human_review_request.rb:67)
+.............DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, published: 1, archived: 2, import_failed: 3}
+ (called from <class:KnowledgeDocument> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/knowledge_document.rb:40)
+.......FF.F..F...F...............DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {confirmed: 0, canceled: 1, completed: 2}
+ (called from <class:Booking> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/booking.rb:58)
+.../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+..................................................................../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+...../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+............/Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+................................................................../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+................................................../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+.........../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+../Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-rails-7.0.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+..DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {draft: 0, published: 1, archived: 2}
+ (called from <class:Article> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/article.rb:73)
+....DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :filter_type, {conversation: 0, contact: 1, report: 2}
+ (called from <class:CustomFilter> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/custom_filter.rb:23)
+................................................................-- execute("INSERT INTO whatsapp_outbound_deliveries (account_id, conversation_id, message_id, observed_control_version, state, provider_message_id, failure_code, created_at, updated_at) SELECT m.account_id, m.conversation_id, m.id, c.control_version, CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'unknown' ELSE 'accepted' END, NULLIF(m.source_id, ''), CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'legacy_acceptance_unknown' END, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM messages m JOIN conversations c ON c.id = m.conversation_id AND c.account_id = m.account_id JOIN inboxes i ON i.id = m.inbox_id AND i.id = c.inbox_id AND i.account_id = m.account_id WHERE i.channel_type = 'Channel::Whatsapp' AND m.message_type IN (1, 3) AND m.private = FALSE AND COALESCE(m.content_attributes->>'external_echo', '') NOT IN ('true', '1') ON CONFLICT (message_id) DO NOTHING")
+   -> 0.0012s
+-- execute("UPDATE messages m SET content_attributes = COALESCE(m.content_attributes::jsonb, '{}'::jsonb) || jsonb_build_object('whatsapp_delivery', jsonb_build_object('state', d.state, 'failure_code', d.failure_code)) FROM whatsapp_outbound_deliveries d WHERE m.id = d.message_id")
+   -> 0.0009s
+-- execute("INSERT INTO human_review_requests (account_id, conversation_id, lead_message_id, reason, status, question, created_at, updated_at) SELECT account_id, conversation_id, message_id, 9, 0, 'Legacy delivery outcome unknown. Check provider history before contacting the Lead again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM whatsapp_outbound_deliveries WHERE failure_code = 'legacy_acceptance_unknown' ON CONFLICT (account_id, conversation_id, lead_message_id, reason) DO NOTHING")
+   -> 0.0014s
+-- execute("UPDATE outbox_events e SET state = 4, failure_class = 'legacy_acceptance_unknown', failed_at = CURRENT_TIMESTAMP, delivered_at = NULL FROM whatsapp_outbound_deliveries d WHERE e.aggregate_type = 'Message' AND e.aggregate_id = d.message_id AND e.account_id = d.account_id AND d.failure_code = 'legacy_acceptance_unknown'")
+   -> 0.0007s
+-- execute("INSERT INTO whatsapp_outbound_deliveries (account_id, conversation_id, message_id, observed_control_version, state, provider_message_id, failure_code, created_at, updated_at) SELECT m.account_id, m.conversation_id, m.id, c.control_version, CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'unknown' ELSE 'accepted' END, NULLIF(m.source_id, ''), CASE WHEN NULLIF(m.source_id, '') IS NULL THEN 'legacy_acceptance_unknown' END, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM messages m JOIN conversations c ON c.id = m.conversation_id AND c.account_id = m.account_id JOIN inboxes i ON i.id = m.inbox_id AND i.id = c.inbox_id AND i.account_id = m.account_id WHERE i.channel_type = 'Channel::Whatsapp' AND m.message_type IN (1, 3) AND m.private = FALSE AND COALESCE(m.content_attributes->>'external_echo', '') NOT IN ('true', '1') ON CONFLICT (message_id) DO NOTHING")
+   -> 0.0007s
+-- execute("UPDATE messages m SET content_attributes = COALESCE(m.content_attributes::jsonb, '{}'::jsonb) || jsonb_build_object('whatsapp_delivery', jsonb_build_object('state', d.state, 'failure_code', d.failure_code)) FROM whatsapp_outbound_deliveries d WHERE m.id = d.message_id")
+   -> 0.0004s
+-- execute("INSERT INTO human_review_requests (account_id, conversation_id, lead_message_id, reason, status, question, created_at, updated_at) SELECT account_id, conversation_id, message_id, 9, 0, 'Legacy delivery outcome unknown. Check provider history before contacting the Lead again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM whatsapp_outbound_deliveries WHERE failure_code = 'legacy_acceptance_unknown' ON CONFLICT (account_id, conversation_id, lead_message_id, reason) DO NOTHING")
+   -> 0.0003s
+-- execute("UPDATE outbox_events e SET state = 4, failure_class = 'legacy_acceptance_unknown', failed_at = CURRENT_TIMESTAMP, delivered_at = NULL FROM whatsapp_outbound_deliveries d WHERE e.aggregate_type = 'Message' AND e.aggregate_id = d.message_id AND e.account_id = d.account_id AND d.failure_code = 'legacy_acceptance_unknown'")
+   -> 0.0003s
+................................................................................................
+
+Failures:
+
+  1) Lead Qualifications API lets an authorized Human Operator correct evidence and re-evaluates the Lead
+     Failure/Error: expect(response).to have_http_status(:success)
+       expected the response to have a success status code (2xx) but it was 404
+     # ./spec/controllers/api/v1/accounts/lead_qualifications_controller_spec.rb:18:in 'block (2 levels) in <top (required)>'
+
+  2) Lead Qualifications API shows an existing decision without re-evaluating it
+     Failure/Error: expect(response).to have_http_status(:success)
+       expected the response to have a success status code (2xx) but it was 404
+     # ./spec/controllers/api/v1/accounts/lead_qualifications_controller_spec.rb:50:in 'block (2 levels) in <top (required)>'
+
+  3) AiLeadEmployee::OutboxDispatchJob marks a follow-up sent only after provider acceptance
+     Failure/Error: raise ApprovalBlocked, blocking_reasons.join('; ') unless approval_ready?
+
+     AiLeadEmployee::Evaluation::LaunchGateEvaluator::ApprovalBlocked:
+       Missing passing reviews for approved_answer, safe_swahili_language_question, unknown_safe_question, controlled_claim_requires_review, sensitive_question, angry_lead, unsupported_media, duplicate_event, stale_ai_job, human_takeover, coexistence_echo, opt_out, booking_conflict, tenant_isolation; Reviewed qualification accuracy is below 85%
+     # ./app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb:31:in 'AiLeadEmployee::Evaluation::LaunchGateEvaluator#approve!'
+     # ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:26:in 'RSpec::ExampleGroups::AiLeadEmployeeOutboxDispatchJob#prepare_follow_up'
+     # ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:47:in 'block (2 levels) in <main>'
+
+  4) AiLeadEmployee::OutboxDispatchJob keeps the follow-up unsent and the outbox unknown after timeout without automatic retry
+     Failure/Error: raise ApprovalBlocked, blocking_reasons.join('; ') unless approval_ready?
+
+     AiLeadEmployee::Evaluation::LaunchGateEvaluator::ApprovalBlocked:
+       Missing passing reviews for approved_answer, safe_swahili_language_question, unknown_safe_question, controlled_claim_requires_review, sensitive_question, angry_lead, unsupported_media, duplicate_event, stale_ai_job, human_takeover, coexistence_echo, opt_out, booking_conflict, tenant_isolation; Reviewed qualification accuracy is below 85%
+     # ./app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb:31:in 'AiLeadEmployee::Evaluation::LaunchGateEvaluator#approve!'
+     # ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:26:in 'RSpec::ExampleGroups::AiLeadEmployeeOutboxDispatchJob#prepare_follow_up'
+     # ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:56:in 'block (2 levels) in <main>'
+
+  5) AiLeadEmployee::OutboxDispatchJob does not dispatch a follow-up canceled after message creation
+     Failure/Error: raise ApprovalBlocked, blocking_reasons.join('; ') unless approval_ready?
+
+     AiLeadEmployee::Evaluation::LaunchGateEvaluator::ApprovalBlocked:
+       Missing passing reviews for approved_answer, safe_swahili_language_question, unknown_safe_question, controlled_claim_requires_review, sensitive_question, angry_lead, unsupported_media, duplicate_event, stale_ai_job, human_takeover, coexistence_echo, opt_out, booking_conflict, tenant_isolation; Reviewed qualification accuracy is below 85%
+     # ./app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb:31:in 'AiLeadEmployee::Evaluation::LaunchGateEvaluator#approve!'
+     # ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:26:in 'RSpec::ExampleGroups::AiLeadEmployeeOutboxDispatchJob#prepare_follow_up'
+     # ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:74:in 'block (2 levels) in <main>'
+
+  6) LeadQualificationPolicy show? and evidence? allows a team member to use a Lead Qualification inside the resolved Business Account
+     Failure/Error: expect(policy).to permit(team_member_context, qualification)
+       Expected LeadQualificationPolicy to grant show? and evidence? on #<LeadQualification:0x0000000134499258> but show? and evidence? were not granted
+     # ./spec/policies/lead_qualification_policy_spec.rb:23:in 'block (3 levels) in <main>'
+
+  7) LeadQualificationPolicy LeadQualificationPolicy::Scope returns only Lead Qualifications inside the team members resolved Business Account
+     Failure/Error: expect(resolved).to contain_exactly(qualification)
+
+       expected collection contained:  [#<LeadQualification id: 1162, account_id: 1404, contact_id: 2095, quality: "unknown", follow_up_stat....456634000 +0000", updated_at: "2026-09-12 01:30:31.456634000 +0000", offer_id: nil, stale_at: nil>]
+       actual collection contained:    []
+       the missing elements were:      [#<LeadQualification id: 1162, account_id: 1404, contact_id: 2095, quality: "unknown", follow_up_stat....456634000 +0000", updated_at: "2026-09-12 01:30:31.456634000 +0000", offer_id: nil, stale_at: nil>]
+     # ./spec/policies/lead_qualification_policy_spec.rb:51:in 'block (3 levels) in <main>'
+
+Finished in 4 minutes 38.5 seconds (files took 14.86 seconds to load)
+447 examples, 7 failures
+
+Failed examples:
+
+rspec ./spec/controllers/api/v1/accounts/lead_qualifications_controller_spec.rb:10 # Lead Qualifications API lets an authorized Human Operator correct evidence and re-evaluates the Lead
+rspec ./spec/controllers/api/v1/accounts/lead_qualifications_controller_spec.rb:24 # Lead Qualifications API shows an existing decision without re-evaluating it
+rspec ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:46 # AiLeadEmployee::OutboxDispatchJob marks a follow-up sent only after provider acceptance
+rspec ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:55 # AiLeadEmployee::OutboxDispatchJob keeps the follow-up unsent and the outbox unknown after timeout without automatic retry
+rspec ./spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb:73 # AiLeadEmployee::OutboxDispatchJob does not dispatch a follow-up canceled after message creation
+rspec ./spec/policies/lead_qualification_policy_spec.rb:22 # LeadQualificationPolicy show? and evidence? allows a team member to use a Lead Qualification inside the resolved Business Account
+rspec ./spec/policies/lead_qualification_policy_spec.rb:45 # LeadQualificationPolicy LeadQualificationPolicy::Scope returns only Lead Qualifications inside the team members resolved Business Account
+

@@ -17,9 +17,11 @@ RSpec.describe AiLeadEmployee::OutboxDispatchJob do
   end
 
   def prepare_follow_up
+    connection = create(:ai_provider_connection, account: account)
     conversation.update!(assignee: nil, control_state: :ai_active)
     AiLeadEmployee::Evaluation::ScenarioCatalog.required_keys.each do |key|
-      create(:ai_lead_employee_evaluation_run, :reviewed_pass, account: account, user: operator, scenario_key: key)
+      create(:ai_lead_employee_evaluation_run, :reviewed_pass, account: account, user: operator, scenario_key: key,
+                                                               provider_snapshot: { 'configuration_version' => connection.configuration_version })
     end
     evaluator = AiLeadEmployee::Evaluation::LaunchGateEvaluator.new(account: account)
     evaluator.update!(team_roleplay_completed: true, pilot_conversations_reviewed_count: 3)

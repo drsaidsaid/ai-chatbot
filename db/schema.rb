@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_11_001700) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -234,6 +234,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "currency", default: "TZS", null: false
+    t.jsonb "configuration", default: {}, null: false
+    t.integer "configuration_version", default: 1, null: false
     t.index ["account_id", "enabled", "position"], name: "idx_ai_lead_offers_on_account_enabled_position"
     t.index ["account_id", "name"], name: "index_ai_lead_employee_offers_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_ai_lead_employee_offers_on_account_id"
@@ -1063,6 +1066,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.datetime "status_changed_at"
     t.integer "control_state", default: 0, null: false
     t.integer "control_version", default: 0, null: false
+    t.bigint "offer_id"
+    t.bigint "offer_selection_version", default: 0, null: false
     t.index ["account_id", "display_id"], name: "index_conversations_on_account_id_and_display_id", unique: true
     t.index ["account_id", "id"], name: "index_conversations_on_id_and_account_id"
     t.index ["account_id", "inbox_id", "status", "assignee_id"], name: "conv_acid_inbid_stat_asgnid_idx"
@@ -1076,12 +1081,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.index ["first_reply_created_at"], name: "index_conversations_on_first_reply_created_at"
     t.index ["identifier", "account_id"], name: "index_conversations_on_identifier_and_account_id"
     t.index ["inbox_id"], name: "index_conversations_on_inbox_id"
+    t.index ["offer_id"], name: "index_conversations_on_offer_id"
     t.index ["priority"], name: "index_conversations_on_priority"
     t.index ["status", "account_id"], name: "index_conversations_on_status_and_account_id"
     t.index ["status", "priority"], name: "index_conversations_on_status_and_priority"
     t.index ["team_id"], name: "index_conversations_on_team_id"
     t.index ["uuid"], name: "index_conversations_on_uuid", unique: true
     t.index ["waiting_since"], name: "index_conversations_on_waiting_since"
+    t.check_constraint "offer_selection_version >= 0", name: "conversations_offer_selection_version_nonnegative"
   end
 
   create_table "copilot_messages", force: :cascade do |t|
@@ -1467,6 +1474,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.check_constraint "purpose::text = 'automated_contact'::text", name: "lead_consent_events_purpose"
   end
 
+  create_table "lead_follow_up_attempts", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "offer_id"
+    t.integer "stage", null: false
+    t.integer "attempt_number", null: false
+    t.bigint "current_follow_up_id"
+    t.string "admission_state", default: "unadmitted", null: false
+    t.datetime "admitted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "contact_id", "offer_id", "stage", "attempt_number"], name: "idx_follow_up_attempt_offer_budget", unique: true, where: "(offer_id IS NOT NULL)"
+    t.index ["account_id", "contact_id", "stage", "attempt_number"], name: "idx_follow_up_attempt_legacy_budget", unique: true, where: "(offer_id IS NULL)"
+    t.index ["account_id"], name: "index_lead_follow_up_attempts_on_account_id"
+    t.index ["contact_id"], name: "index_lead_follow_up_attempts_on_contact_id"
+    t.index ["offer_id"], name: "index_lead_follow_up_attempts_on_offer_id"
+    t.check_constraint "admission_state::text = ANY (ARRAY['unadmitted'::character varying, 'admitted'::character varying, 'accepted'::character varying, 'unknown'::character varying, 'failed'::character varying, 'blocked'::character varying]::text[])", name: "follow_up_attempt_admission_state"
+    t.check_constraint "attempt_number > 0 AND (stage = ANY (ARRAY[0, 1]))", name: "follow_up_attempt_positive_budget"
+  end
+
   create_table "lead_follow_up_opt_outs", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "contact_id", null: false
@@ -1506,14 +1533,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.datetime "failed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id", "contact_id", "stage", "attempt_number"], name: "idx_lead_follow_ups_on_logical_attempt", unique: true
+    t.bigint "follow_up_attempt_id", null: false
+    t.jsonb "qualification_context", default: {}, null: false
+    t.string "question_key"
+    t.bigint "replaces_follow_up_id"
+    t.bigint "replaced_by_follow_up_id"
+    t.datetime "superseded_at"
+    t.string "replacement_reason"
     t.index ["account_id", "conversation_id", "status"], name: "idx_on_account_id_conversation_id_status_0550f295fb"
     t.index ["account_id"], name: "index_lead_follow_ups_on_account_id"
     t.index ["contact_id"], name: "index_lead_follow_ups_on_contact_id"
     t.index ["conversation_id"], name: "index_lead_follow_ups_on_conversation_id"
+    t.index ["follow_up_attempt_id"], name: "idx_follow_up_attempt_current_artifact", unique: true, where: "(superseded_at IS NULL)"
+    t.index ["follow_up_attempt_id"], name: "index_lead_follow_ups_on_follow_up_attempt_id"
     t.index ["lead_qualification_id"], name: "index_lead_follow_ups_on_lead_qualification_id"
     t.index ["message_id"], name: "index_lead_follow_ups_on_message_id"
     t.index ["qualification_question_id"], name: "index_lead_follow_ups_on_qualification_question_id"
+    t.index ["replaced_by_follow_up_id"], name: "index_lead_follow_ups_on_replaced_by_follow_up_id"
+    t.index ["replaces_follow_up_id"], name: "index_lead_follow_ups_on_replaces_follow_up_id", unique: true
     t.index ["status", "scheduled_at"], name: "index_lead_follow_ups_on_status_and_scheduled_at"
   end
 
@@ -1553,10 +1590,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.datetime "decided_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "offer_id"
     t.index ["account_id", "contact_id", "decided_at"], name: "idx_lead_qualification_decisions_on_lead"
     t.index ["account_id"], name: "index_lead_qualification_decisions_on_account_id"
     t.index ["contact_id"], name: "index_lead_qualification_decisions_on_contact_id"
     t.index ["lead_qualification_id"], name: "index_lead_qualification_decisions_on_lead_qualification_id"
+    t.index ["offer_id"], name: "index_lead_qualification_decisions_on_offer_id"
   end
 
   create_table "lead_qualifications", force: :cascade do |t|
@@ -1572,10 +1611,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.datetime "last_evaluated_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id", "contact_id"], name: "index_lead_qualifications_on_account_id_and_contact_id", unique: true
+    t.bigint "offer_id"
+    t.datetime "stale_at"
+    t.index ["account_id", "contact_id", "offer_id"], name: "idx_lead_qualifications_per_offer", unique: true
+    t.index ["account_id", "contact_id"], name: "idx_legacy_lead_qualification", unique: true, where: "(offer_id IS NULL)"
     t.index ["account_id", "quality"], name: "index_lead_qualifications_on_account_id_and_quality"
     t.index ["account_id"], name: "index_lead_qualifications_on_account_id"
     t.index ["contact_id"], name: "index_lead_qualifications_on_contact_id"
+    t.index ["offer_id"], name: "index_lead_qualifications_on_offer_id"
   end
 
   create_table "leaves", force: :cascade do |t|
@@ -1729,6 +1772,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
+  create_table "offer_configuration_revisions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "offer_id", null: false
+    t.integer "version", null: false
+    t.jsonb "snapshot", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_offer_configuration_revisions_on_account_id"
+    t.index ["offer_id", "version"], name: "index_offer_configuration_revisions_on_offer_id_and_version", unique: true
+    t.index ["offer_id"], name: "index_offer_configuration_revisions_on_offer_id"
+  end
+
   create_table "outbox_events", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "aggregate_type", null: false
@@ -1822,18 +1877,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
     t.bigint "message_id"
     t.bigint "user_id"
     t.bigint "superseded_by_id"
-    t.integer "signal", null: false
+    t.integer "signal"
     t.jsonb "value", default: {}, null: false
     t.integer "source", null: false
     t.datetime "observed_at", null: false
     t.datetime "superseded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "offer_id"
+    t.string "field_key", null: false
+    t.index ["account_id", "contact_id", "offer_id", "field_key", "superseded_at"], name: "idx_qualification_evidence_offer_field"
+    t.index ["account_id", "contact_id", "offer_id", "signal", "superseded_at"], name: "idx_qualification_evidence_offer_current"
     t.index ["account_id", "contact_id", "signal", "superseded_at"], name: "idx_qualification_evidence_current_lookup"
     t.index ["account_id"], name: "index_qualification_evidences_on_account_id"
     t.index ["contact_id"], name: "index_qualification_evidences_on_contact_id"
     t.index ["conversation_id"], name: "index_qualification_evidences_on_conversation_id"
     t.index ["message_id"], name: "index_qualification_evidences_on_message_id"
+    t.index ["offer_id"], name: "index_qualification_evidences_on_offer_id"
     t.index ["superseded_by_id"], name: "index_qualification_evidences_on_superseded_by_id"
     t.index ["user_id"], name: "index_qualification_evidences_on_user_id"
   end
@@ -2185,6 +2245,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
+  add_foreign_key "conversations", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "human_review_requests", "accounts"
   add_foreign_key "human_review_requests", "conversations"
   add_foreign_key "human_review_requests", "knowledge_items"
@@ -2200,6 +2261,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
   add_foreign_key "lead_consent_events", "conversations"
   add_foreign_key "lead_consent_events", "messages"
   add_foreign_key "lead_consent_events", "whatsapp_webhook_events"
+  add_foreign_key "lead_follow_up_attempts", "accounts"
+  add_foreign_key "lead_follow_up_attempts", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "lead_follow_up_attempts", "contacts"
+  add_foreign_key "lead_follow_up_attempts", "lead_follow_ups", column: "current_follow_up_id"
   add_foreign_key "lead_follow_up_opt_outs", "accounts"
   add_foreign_key "lead_follow_up_opt_outs", "contacts"
   add_foreign_key "lead_follow_up_opt_outs", "conversations"
@@ -2208,6 +2273,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
   add_foreign_key "lead_follow_ups", "accounts"
   add_foreign_key "lead_follow_ups", "contacts"
   add_foreign_key "lead_follow_ups", "conversations"
+  add_foreign_key "lead_follow_ups", "lead_follow_up_attempts", column: "follow_up_attempt_id"
+  add_foreign_key "lead_follow_ups", "lead_follow_ups", column: "replaced_by_follow_up_id"
+  add_foreign_key "lead_follow_ups", "lead_follow_ups", column: "replaces_follow_up_id"
   add_foreign_key "lead_follow_ups", "lead_qualifications"
   add_foreign_key "lead_follow_ups", "messages"
   add_foreign_key "lead_follow_ups", "qualification_questions"
@@ -2217,17 +2285,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_10_000500) do
   add_foreign_key "lead_handoffs", "lead_qualifications"
   add_foreign_key "lead_handoffs", "users", column: "assignee_id"
   add_foreign_key "lead_qualification_decisions", "accounts"
+  add_foreign_key "lead_qualification_decisions", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "lead_qualification_decisions", "contacts"
   add_foreign_key "lead_qualification_decisions", "lead_qualifications"
   add_foreign_key "lead_qualifications", "accounts"
+  add_foreign_key "lead_qualifications", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "lead_qualifications", "contacts"
   add_foreign_key "meta_whatsapp_webhook_events", "accounts"
   add_foreign_key "meta_whatsapp_webhook_events", "channel_whatsapp"
   add_foreign_key "meta_whatsapp_webhook_events", "conversations"
   add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
+  add_foreign_key "offer_configuration_revisions", "accounts"
+  add_foreign_key "offer_configuration_revisions", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "outbox_events", "accounts"
   add_foreign_key "qualification_budget_ranges", "accounts"
   add_foreign_key "qualification_evidences", "accounts"
+  add_foreign_key "qualification_evidences", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "qualification_evidences", "contacts"
   add_foreign_key "qualification_evidences", "conversations"
   add_foreign_key "qualification_evidences", "messages"

@@ -1,0 +1,8 @@
+{
+  "reviewed_source": "eb5966e31f37866d4c6f4de249a17196c048b0ec",
+  "corrected_source": "e1344a6c5976cfc8e76e896da253faa268dead74",
+  "non_release_delta": [
+    "spec/requests/whatsapp_alert_authority_spec.rb"
+  ],
+  "production_and_other_test_blobs_unchanged": true
+}

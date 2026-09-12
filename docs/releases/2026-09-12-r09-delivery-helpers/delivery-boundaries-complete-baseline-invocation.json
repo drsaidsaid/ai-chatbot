@@ -1,0 +1,12 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/services/ai_lead_employee/follow_up_delivery_service_transactions_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/delivery-boundaries-complete-baseline-results.json"
+]

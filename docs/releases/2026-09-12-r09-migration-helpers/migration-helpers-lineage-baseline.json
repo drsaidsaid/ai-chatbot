@@ -1,0 +1,4485 @@
+{
+  "historical_rows": 72,
+  "migrated": {
+    "accounts": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        }
+      ]
+    },
+    "ai_lead_employee_offers": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 77
+        }
+      ]
+    },
+    "contacts": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 6
+        },
+        {
+          "id": 7
+        },
+        {
+          "id": 8
+        },
+        {
+          "id": 9
+        },
+        {
+          "id": 10
+        },
+        {
+          "id": 11
+        },
+        {
+          "id": 12
+        },
+        {
+          "id": 13
+        },
+        {
+          "id": 14
+        },
+        {
+          "id": 15
+        },
+        {
+          "id": 16
+        },
+        {
+          "id": 17
+        },
+        {
+          "id": 18
+        },
+        {
+          "id": 19
+        },
+        {
+          "id": 20
+        },
+        {
+          "id": 21
+        },
+        {
+          "id": 22
+        },
+        {
+          "id": 23
+        },
+        {
+          "id": 24
+        },
+        {
+          "id": 25
+        },
+        {
+          "id": 26
+        },
+        {
+          "id": 27
+        },
+        {
+          "id": 28
+        },
+        {
+          "id": 29
+        },
+        {
+          "id": 30
+        },
+        {
+          "id": 31
+        },
+        {
+          "id": 32
+        },
+        {
+          "id": 33
+        },
+        {
+          "id": 34
+        },
+        {
+          "id": 35
+        },
+        {
+          "id": 36
+        },
+        {
+          "id": 37
+        },
+        {
+          "id": 38
+        },
+        {
+          "id": 39
+        },
+        {
+          "id": 40
+        },
+        {
+          "id": 41
+        },
+        {
+          "id": 42
+        },
+        {
+          "id": 43
+        },
+        {
+          "id": 44
+        },
+        {
+          "id": 45
+        },
+        {
+          "id": 46
+        },
+        {
+          "id": 47
+        },
+        {
+          "id": 48
+        },
+        {
+          "id": 49
+        },
+        {
+          "id": 50
+        },
+        {
+          "id": 51
+        },
+        {
+          "id": 52
+        },
+        {
+          "id": 53
+        },
+        {
+          "id": 54
+        },
+        {
+          "id": 55
+        },
+        {
+          "id": 56
+        },
+        {
+          "id": 57
+        },
+        {
+          "id": 58
+        },
+        {
+          "id": 59
+        },
+        {
+          "id": 60
+        },
+        {
+          "id": 61
+        },
+        {
+          "id": 62
+        },
+        {
+          "id": 63
+        },
+        {
+          "id": 64
+        },
+        {
+          "id": 65
+        },
+        {
+          "id": 66
+        },
+        {
+          "id": 67
+        },
+        {
+          "id": 68
+        },
+        {
+          "id": 69
+        },
+        {
+          "id": 70
+        },
+        {
+          "id": 71
+        },
+        {
+          "id": 72
+        }
+      ]
+    },
+    "lead_follow_up_attempts": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          "nextval('lead_follow_up_attempts_id_seq'::regclass)"
+        ],
+        [
+          "account_id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "contact_id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "offer_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "stage",
+          "integer",
+          false,
+          null,
+          null
+        ],
+        [
+          "attempt_number",
+          "integer",
+          false,
+          null,
+          null
+        ],
+        [
+          "current_follow_up_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "admission_state",
+          "character varying",
+          false,
+          "unadmitted",
+          null
+        ],
+        [
+          "admitted_at",
+          "timestamp(6) without time zone",
+          true,
+          null,
+          null
+        ],
+        [
+          "created_at",
+          "timestamp(6) without time zone",
+          false,
+          null,
+          null
+        ],
+        [
+          "updated_at",
+          "timestamp(6) without time zone",
+          false,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "idx_follow_up_attempt_legacy_budget",
+          [
+            "account_id",
+            "contact_id",
+            "stage",
+            "attempt_number"
+          ],
+          true,
+          "(offer_id IS NULL)",
+          "btree",
+          {}
+        ],
+        [
+          "idx_follow_up_attempt_offer_budget",
+          [
+            "account_id",
+            "contact_id",
+            "offer_id",
+            "stage",
+            "attempt_number"
+          ],
+          true,
+          "(offer_id IS NOT NULL)",
+          "btree",
+          {}
+        ],
+        [
+          "index_lead_follow_up_attempts_on_account_id",
+          [
+            "account_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "index_lead_follow_up_attempts_on_contact_id",
+          [
+            "contact_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "index_lead_follow_up_attempts_on_offer_id",
+          [
+            "offer_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [
+        [
+          "accounts",
+          {
+            "column": "account_id",
+            "name": "fk_rails_fc0386c474",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ],
+        [
+          "ai_lead_employee_offers",
+          {
+            "column": "offer_id",
+            "name": "fk_rails_bf3264ee13",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ],
+        [
+          "contacts",
+          {
+            "column": "contact_id",
+            "name": "fk_rails_c879199f52",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ],
+        [
+          "lead_follow_ups",
+          {
+            "column": "current_follow_up_id",
+            "name": "fk_rails_a8343dcb76",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ]
+      ],
+      "checks": [
+        [
+          "follow_up_attempt_admission_state",
+          "admission_state::text = ANY (ARRAY['unadmitted'::character varying, 'admitted'::character varying, 'accepted'::character varying, 'unknown'::character varying, 'failed'::character varying, 'blocked'::character varying]::text[])",
+          {
+            "name": "follow_up_attempt_admission_state",
+            "validate": true
+          }
+        ],
+        [
+          "follow_up_attempt_positive_budget",
+          "attempt_number > 0 AND (stage = ANY (ARRAY[0, 1]))",
+          {
+            "name": "follow_up_attempt_positive_budget",
+            "validate": true
+          }
+        ]
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "account_id": 1,
+          "contact_id": 1,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 1,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 2,
+          "account_id": 1,
+          "contact_id": 2,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 2,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 3,
+          "account_id": 1,
+          "contact_id": 3,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 3,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 4,
+          "account_id": 1,
+          "contact_id": 4,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 4,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 5,
+          "account_id": 1,
+          "contact_id": 5,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 5,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 6,
+          "account_id": 1,
+          "contact_id": 6,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 6,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 7,
+          "account_id": 1,
+          "contact_id": 7,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 7,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 8,
+          "account_id": 1,
+          "contact_id": 8,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 8,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 9,
+          "account_id": 1,
+          "contact_id": 9,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 9,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 10,
+          "account_id": 1,
+          "contact_id": 10,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 10,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 11,
+          "account_id": 1,
+          "contact_id": 11,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 11,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 12,
+          "account_id": 1,
+          "contact_id": 12,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 12,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 13,
+          "account_id": 1,
+          "contact_id": 13,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 13,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 14,
+          "account_id": 1,
+          "contact_id": 14,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 14,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 15,
+          "account_id": 1,
+          "contact_id": 15,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 15,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 16,
+          "account_id": 1,
+          "contact_id": 16,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 16,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 17,
+          "account_id": 1,
+          "contact_id": 17,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 17,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 18,
+          "account_id": 1,
+          "contact_id": 18,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 18,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 19,
+          "account_id": 1,
+          "contact_id": 19,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 19,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 20,
+          "account_id": 1,
+          "contact_id": 20,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 20,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 21,
+          "account_id": 1,
+          "contact_id": 21,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 21,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 22,
+          "account_id": 1,
+          "contact_id": 22,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 22,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 23,
+          "account_id": 1,
+          "contact_id": 23,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 23,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 24,
+          "account_id": 1,
+          "contact_id": 24,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 24,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 25,
+          "account_id": 1,
+          "contact_id": 25,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 25,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 26,
+          "account_id": 1,
+          "contact_id": 26,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 26,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 27,
+          "account_id": 1,
+          "contact_id": 27,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 27,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 28,
+          "account_id": 1,
+          "contact_id": 28,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 28,
+          "admission_state": "admitted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 29,
+          "account_id": 1,
+          "contact_id": 29,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 29,
+          "admission_state": "admitted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 30,
+          "account_id": 1,
+          "contact_id": 30,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 30,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 31,
+          "account_id": 1,
+          "contact_id": 31,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 31,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 32,
+          "account_id": 1,
+          "contact_id": 32,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 32,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 33,
+          "account_id": 1,
+          "contact_id": 33,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 33,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 34,
+          "account_id": 1,
+          "contact_id": 34,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 34,
+          "admission_state": "admitted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 35,
+          "account_id": 1,
+          "contact_id": 35,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 35,
+          "admission_state": "admitted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 36,
+          "account_id": 1,
+          "contact_id": 36,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 36,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 37,
+          "account_id": 1,
+          "contact_id": 37,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 37,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 38,
+          "account_id": 1,
+          "contact_id": 38,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 38,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 39,
+          "account_id": 1,
+          "contact_id": 39,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 39,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 40,
+          "account_id": 1,
+          "contact_id": 40,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 40,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 41,
+          "account_id": 1,
+          "contact_id": 41,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 41,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 42,
+          "account_id": 1,
+          "contact_id": 42,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 42,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 43,
+          "account_id": 1,
+          "contact_id": 43,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 43,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 44,
+          "account_id": 1,
+          "contact_id": 44,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 44,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 45,
+          "account_id": 1,
+          "contact_id": 45,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 45,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 46,
+          "account_id": 1,
+          "contact_id": 46,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 46,
+          "admission_state": "unknown",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 47,
+          "account_id": 1,
+          "contact_id": 47,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 47,
+          "admission_state": "unknown",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 48,
+          "account_id": 1,
+          "contact_id": 48,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 48,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 49,
+          "account_id": 1,
+          "contact_id": 49,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 49,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 50,
+          "account_id": 1,
+          "contact_id": 50,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 50,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 51,
+          "account_id": 1,
+          "contact_id": 51,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 51,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 52,
+          "account_id": 1,
+          "contact_id": 52,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 52,
+          "admission_state": "unknown",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 53,
+          "account_id": 1,
+          "contact_id": 53,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 53,
+          "admission_state": "unknown",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 54,
+          "account_id": 1,
+          "contact_id": 54,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 54,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:00:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 55,
+          "account_id": 1,
+          "contact_id": 55,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 55,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 56,
+          "account_id": 1,
+          "contact_id": 56,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 56,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 57,
+          "account_id": 1,
+          "contact_id": 57,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 57,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 58,
+          "account_id": 1,
+          "contact_id": 58,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 58,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 59,
+          "account_id": 1,
+          "contact_id": 59,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 59,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 60,
+          "account_id": 1,
+          "contact_id": 60,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 60,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 61,
+          "account_id": 1,
+          "contact_id": 61,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 61,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 62,
+          "account_id": 1,
+          "contact_id": 62,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 62,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 63,
+          "account_id": 1,
+          "contact_id": 63,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 63,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 64,
+          "account_id": 1,
+          "contact_id": 64,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 64,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 65,
+          "account_id": 1,
+          "contact_id": 65,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 65,
+          "admission_state": "blocked",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 66,
+          "account_id": 1,
+          "contact_id": 66,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 66,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 67,
+          "account_id": 1,
+          "contact_id": 67,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 67,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 68,
+          "account_id": 1,
+          "contact_id": 68,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 68,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 69,
+          "account_id": 1,
+          "contact_id": 69,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 69,
+          "admission_state": "accepted",
+          "admitted_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 70,
+          "account_id": 1,
+          "contact_id": 70,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 70,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 71,
+          "account_id": 1,
+          "contact_id": 71,
+          "offer_id": 77,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 71,
+          "admission_state": "failed",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        },
+        {
+          "id": 72,
+          "account_id": 1,
+          "contact_id": 72,
+          "offer_id": null,
+          "stage": 0,
+          "attempt_number": 1,
+          "current_follow_up_id": 72,
+          "admission_state": "accepted",
+          "admitted_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC"
+        }
+      ]
+    },
+    "lead_follow_ups": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "account_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "contact_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "conversation_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "lead_qualification_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "message_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "stage",
+          "integer",
+          true,
+          null,
+          null
+        ],
+        [
+          "attempt_number",
+          "integer",
+          true,
+          null,
+          null
+        ],
+        [
+          "status",
+          "integer",
+          true,
+          null,
+          null
+        ],
+        [
+          "cancellation_reason",
+          "character varying",
+          true,
+          null,
+          null
+        ],
+        [
+          "content",
+          "text",
+          true,
+          null,
+          null
+        ],
+        [
+          "sent_at",
+          "timestamp without time zone",
+          true,
+          null,
+          null
+        ],
+        [
+          "created_at",
+          "timestamp without time zone",
+          true,
+          null,
+          null
+        ],
+        [
+          "updated_at",
+          "timestamp without time zone",
+          true,
+          null,
+          null
+        ],
+        [
+          "follow_up_attempt_id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "qualification_context",
+          "jsonb",
+          false,
+          "{}",
+          null
+        ],
+        [
+          "question_key",
+          "character varying",
+          true,
+          null,
+          null
+        ],
+        [
+          "replaces_follow_up_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "replaced_by_follow_up_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "superseded_at",
+          "timestamp(6) without time zone",
+          true,
+          null,
+          null
+        ],
+        [
+          "replacement_reason",
+          "character varying",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [
+        [
+          "idx_follow_up_attempt_current_artifact",
+          [
+            "follow_up_attempt_id"
+          ],
+          true,
+          "(superseded_at IS NULL)",
+          "btree",
+          {}
+        ],
+        [
+          "index_lead_follow_ups_on_follow_up_attempt_id",
+          [
+            "follow_up_attempt_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "index_lead_follow_ups_on_replaced_by_follow_up_id",
+          [
+            "replaced_by_follow_up_id"
+          ],
+          false,
+          null,
+          "btree",
+          {}
+        ],
+        [
+          "index_lead_follow_ups_on_replaces_follow_up_id",
+          [
+            "replaces_follow_up_id"
+          ],
+          true,
+          null,
+          "btree",
+          {}
+        ]
+      ],
+      "foreign_keys": [
+        [
+          "lead_follow_up_attempts",
+          {
+            "column": "follow_up_attempt_id",
+            "name": "fk_rails_b030afbbb0",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ],
+        [
+          "lead_follow_ups",
+          {
+            "column": "replaced_by_follow_up_id",
+            "name": "fk_rails_6b6dc37c3d",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ],
+        [
+          "lead_follow_ups",
+          {
+            "column": "replaces_follow_up_id",
+            "name": "fk_rails_34668f97f5",
+            "primary_key": "id",
+            "on_delete": null,
+            "on_update": null,
+            "deferrable": false,
+            "validate": true
+          }
+        ]
+      ],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "account_id": 1,
+          "contact_id": 1,
+          "conversation_id": 101,
+          "lead_qualification_id": 1,
+          "message_id": 1,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 1",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 1,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 2,
+          "account_id": 1,
+          "contact_id": 2,
+          "conversation_id": 102,
+          "lead_qualification_id": 2,
+          "message_id": 2,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 2",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 2,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 3,
+          "account_id": 1,
+          "contact_id": 3,
+          "conversation_id": 103,
+          "lead_qualification_id": 3,
+          "message_id": 3,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 3",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 3,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 4,
+          "account_id": 1,
+          "contact_id": 4,
+          "conversation_id": 104,
+          "lead_qualification_id": 4,
+          "message_id": 4,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 4",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 4,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 5,
+          "account_id": 1,
+          "contact_id": 5,
+          "conversation_id": 105,
+          "lead_qualification_id": 5,
+          "message_id": 5,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 5",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 5,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 6,
+          "account_id": 1,
+          "contact_id": 6,
+          "conversation_id": 106,
+          "lead_qualification_id": 6,
+          "message_id": 6,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 6",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 6,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 7,
+          "account_id": 1,
+          "contact_id": 7,
+          "conversation_id": 107,
+          "lead_qualification_id": 7,
+          "message_id": 7,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 7",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 7,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 8,
+          "account_id": 1,
+          "contact_id": 8,
+          "conversation_id": 108,
+          "lead_qualification_id": 8,
+          "message_id": 8,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 8",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 8,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 9,
+          "account_id": 1,
+          "contact_id": 9,
+          "conversation_id": 109,
+          "lead_qualification_id": 9,
+          "message_id": 9,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 9",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 9,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 10,
+          "account_id": 1,
+          "contact_id": 10,
+          "conversation_id": 110,
+          "lead_qualification_id": 10,
+          "message_id": 10,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 10",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 10,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 11,
+          "account_id": 1,
+          "contact_id": 11,
+          "conversation_id": 111,
+          "lead_qualification_id": 11,
+          "message_id": 11,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 11",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 11,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 12,
+          "account_id": 1,
+          "contact_id": 12,
+          "conversation_id": 112,
+          "lead_qualification_id": 12,
+          "message_id": 12,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 12",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 12,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 13,
+          "account_id": 1,
+          "contact_id": 13,
+          "conversation_id": 113,
+          "lead_qualification_id": 13,
+          "message_id": 13,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 13",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 13,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 14,
+          "account_id": 1,
+          "contact_id": 14,
+          "conversation_id": 114,
+          "lead_qualification_id": 14,
+          "message_id": 14,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 14",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 14,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 15,
+          "account_id": 1,
+          "contact_id": 15,
+          "conversation_id": 115,
+          "lead_qualification_id": 15,
+          "message_id": 15,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 15",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 15,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 16,
+          "account_id": 1,
+          "contact_id": 16,
+          "conversation_id": 116,
+          "lead_qualification_id": 16,
+          "message_id": 16,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 16",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 16,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 17,
+          "account_id": 1,
+          "contact_id": 17,
+          "conversation_id": 117,
+          "lead_qualification_id": 17,
+          "message_id": 17,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 17",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 17,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 18,
+          "account_id": 1,
+          "contact_id": 18,
+          "conversation_id": 118,
+          "lead_qualification_id": 18,
+          "message_id": 18,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 18",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 18,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 19,
+          "account_id": 1,
+          "contact_id": 19,
+          "conversation_id": 119,
+          "lead_qualification_id": 19,
+          "message_id": 19,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 19",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 19,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 20,
+          "account_id": 1,
+          "contact_id": 20,
+          "conversation_id": 120,
+          "lead_qualification_id": 20,
+          "message_id": 20,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 20",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 20,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 21,
+          "account_id": 1,
+          "contact_id": 21,
+          "conversation_id": 121,
+          "lead_qualification_id": 21,
+          "message_id": 21,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 21",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 21,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 22,
+          "account_id": 1,
+          "contact_id": 22,
+          "conversation_id": 122,
+          "lead_qualification_id": 22,
+          "message_id": 22,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 22",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 22,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 23,
+          "account_id": 1,
+          "contact_id": 23,
+          "conversation_id": 123,
+          "lead_qualification_id": 23,
+          "message_id": 23,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 23",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 23,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 24,
+          "account_id": 1,
+          "contact_id": 24,
+          "conversation_id": 124,
+          "lead_qualification_id": 24,
+          "message_id": 24,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 24",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 24,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 25,
+          "account_id": 1,
+          "contact_id": 25,
+          "conversation_id": 125,
+          "lead_qualification_id": 25,
+          "message_id": 25,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 25",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 25,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 26,
+          "account_id": 1,
+          "contact_id": 26,
+          "conversation_id": 126,
+          "lead_qualification_id": 26,
+          "message_id": 26,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 26",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 26,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 27,
+          "account_id": 1,
+          "contact_id": 27,
+          "conversation_id": 127,
+          "lead_qualification_id": 27,
+          "message_id": 27,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 27",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 27,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 28,
+          "account_id": 1,
+          "contact_id": 28,
+          "conversation_id": 128,
+          "lead_qualification_id": 28,
+          "message_id": 28,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 28",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 28,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 29,
+          "account_id": 1,
+          "contact_id": 29,
+          "conversation_id": 129,
+          "lead_qualification_id": 29,
+          "message_id": 29,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 29",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 29,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 30,
+          "account_id": 1,
+          "contact_id": 30,
+          "conversation_id": 130,
+          "lead_qualification_id": 30,
+          "message_id": 30,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 30",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 30,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 31,
+          "account_id": 1,
+          "contact_id": 31,
+          "conversation_id": 131,
+          "lead_qualification_id": 31,
+          "message_id": 31,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 31",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 31,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 32,
+          "account_id": 1,
+          "contact_id": 32,
+          "conversation_id": 132,
+          "lead_qualification_id": 32,
+          "message_id": 32,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 32",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 32,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 33,
+          "account_id": 1,
+          "contact_id": 33,
+          "conversation_id": 133,
+          "lead_qualification_id": 33,
+          "message_id": 33,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 33",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 33,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 34,
+          "account_id": 1,
+          "contact_id": 34,
+          "conversation_id": 134,
+          "lead_qualification_id": 34,
+          "message_id": 34,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 34",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 34,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 35,
+          "account_id": 1,
+          "contact_id": 35,
+          "conversation_id": 135,
+          "lead_qualification_id": 35,
+          "message_id": 35,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 35",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 35,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 36,
+          "account_id": 1,
+          "contact_id": 36,
+          "conversation_id": 136,
+          "lead_qualification_id": 36,
+          "message_id": 36,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 36",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 36,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 37,
+          "account_id": 1,
+          "contact_id": 37,
+          "conversation_id": 137,
+          "lead_qualification_id": 37,
+          "message_id": 37,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 37",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 37,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 38,
+          "account_id": 1,
+          "contact_id": 38,
+          "conversation_id": 138,
+          "lead_qualification_id": 38,
+          "message_id": 38,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 38",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 38,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 39,
+          "account_id": 1,
+          "contact_id": 39,
+          "conversation_id": 139,
+          "lead_qualification_id": 39,
+          "message_id": 39,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 39",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 39,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 40,
+          "account_id": 1,
+          "contact_id": 40,
+          "conversation_id": 140,
+          "lead_qualification_id": 40,
+          "message_id": 40,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 40",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 40,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 41,
+          "account_id": 1,
+          "contact_id": 41,
+          "conversation_id": 141,
+          "lead_qualification_id": 41,
+          "message_id": 41,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 41",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 41,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 42,
+          "account_id": 1,
+          "contact_id": 42,
+          "conversation_id": 142,
+          "lead_qualification_id": 42,
+          "message_id": 42,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 42",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 42,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 43,
+          "account_id": 1,
+          "contact_id": 43,
+          "conversation_id": 143,
+          "lead_qualification_id": 43,
+          "message_id": 43,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 43",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 43,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 44,
+          "account_id": 1,
+          "contact_id": 44,
+          "conversation_id": 144,
+          "lead_qualification_id": 44,
+          "message_id": 44,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 44",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 44,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 45,
+          "account_id": 1,
+          "contact_id": 45,
+          "conversation_id": 145,
+          "lead_qualification_id": 45,
+          "message_id": 45,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 45",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 45,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 46,
+          "account_id": 1,
+          "contact_id": 46,
+          "conversation_id": 146,
+          "lead_qualification_id": 46,
+          "message_id": 46,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 46",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 46,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 47,
+          "account_id": 1,
+          "contact_id": 47,
+          "conversation_id": 147,
+          "lead_qualification_id": 47,
+          "message_id": 47,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 47",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 47,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 48,
+          "account_id": 1,
+          "contact_id": 48,
+          "conversation_id": 148,
+          "lead_qualification_id": 48,
+          "message_id": 48,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 48",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 48,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 49,
+          "account_id": 1,
+          "contact_id": 49,
+          "conversation_id": 149,
+          "lead_qualification_id": 49,
+          "message_id": 49,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 49",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 49,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 50,
+          "account_id": 1,
+          "contact_id": 50,
+          "conversation_id": 150,
+          "lead_qualification_id": 50,
+          "message_id": 50,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 50",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 50,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 51,
+          "account_id": 1,
+          "contact_id": 51,
+          "conversation_id": 151,
+          "lead_qualification_id": 51,
+          "message_id": 51,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 51",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 51,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 52,
+          "account_id": 1,
+          "contact_id": 52,
+          "conversation_id": 152,
+          "lead_qualification_id": 52,
+          "message_id": 52,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 52",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 52,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 53,
+          "account_id": 1,
+          "contact_id": 53,
+          "conversation_id": 153,
+          "lead_qualification_id": 53,
+          "message_id": 53,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 53",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 53,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 54,
+          "account_id": 1,
+          "contact_id": 54,
+          "conversation_id": 154,
+          "lead_qualification_id": 54,
+          "message_id": 54,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 54",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 54,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 55,
+          "account_id": 1,
+          "contact_id": 55,
+          "conversation_id": 155,
+          "lead_qualification_id": 55,
+          "message_id": 55,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 55",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 55,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 56,
+          "account_id": 1,
+          "contact_id": 56,
+          "conversation_id": 156,
+          "lead_qualification_id": 56,
+          "message_id": 56,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 56",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 56,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 57,
+          "account_id": 1,
+          "contact_id": 57,
+          "conversation_id": 157,
+          "lead_qualification_id": 57,
+          "message_id": 57,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 57",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 57,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 58,
+          "account_id": 1,
+          "contact_id": 58,
+          "conversation_id": 158,
+          "lead_qualification_id": 58,
+          "message_id": 58,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 58",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 58,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 59,
+          "account_id": 1,
+          "contact_id": 59,
+          "conversation_id": 159,
+          "lead_qualification_id": 59,
+          "message_id": 59,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 59",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 59,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 60,
+          "account_id": 1,
+          "contact_id": 60,
+          "conversation_id": 160,
+          "lead_qualification_id": 60,
+          "message_id": 60,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 60",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 60,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 61,
+          "account_id": 1,
+          "contact_id": 61,
+          "conversation_id": 161,
+          "lead_qualification_id": 61,
+          "message_id": 61,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 61",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 61,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 62,
+          "account_id": 1,
+          "contact_id": 62,
+          "conversation_id": 162,
+          "lead_qualification_id": 62,
+          "message_id": 62,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 62",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 62,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 63,
+          "account_id": 1,
+          "contact_id": 63,
+          "conversation_id": 163,
+          "lead_qualification_id": 63,
+          "message_id": 63,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 63",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 63,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 64,
+          "account_id": 1,
+          "contact_id": 64,
+          "conversation_id": 164,
+          "lead_qualification_id": 64,
+          "message_id": 64,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 64",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 64,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 65,
+          "account_id": 1,
+          "contact_id": 65,
+          "conversation_id": 165,
+          "lead_qualification_id": 65,
+          "message_id": 65,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 65",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 65,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 66,
+          "account_id": 1,
+          "contact_id": 66,
+          "conversation_id": 166,
+          "lead_qualification_id": 66,
+          "message_id": 66,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 0,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 66",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 66,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 67,
+          "account_id": 1,
+          "contact_id": 67,
+          "conversation_id": 167,
+          "lead_qualification_id": 67,
+          "message_id": 67,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 67",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 67,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 68,
+          "account_id": 1,
+          "contact_id": 68,
+          "conversation_id": 168,
+          "lead_qualification_id": 68,
+          "message_id": 68,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 68",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 68,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 69,
+          "account_id": 1,
+          "contact_id": 69,
+          "conversation_id": 169,
+          "lead_qualification_id": 69,
+          "message_id": 69,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 1,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 69",
+          "sent_at": "2026-09-01 10:10:00 UTC",
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 69,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 70,
+          "account_id": 1,
+          "contact_id": 70,
+          "conversation_id": 170,
+          "lead_qualification_id": 70,
+          "message_id": 70,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 70",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 70,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 71,
+          "account_id": 1,
+          "contact_id": 71,
+          "conversation_id": 171,
+          "lead_qualification_id": 71,
+          "message_id": 71,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 71",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 71,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        },
+        {
+          "id": 72,
+          "account_id": 1,
+          "contact_id": 72,
+          "conversation_id": 172,
+          "lead_qualification_id": 72,
+          "message_id": 72,
+          "stage": 0,
+          "attempt_number": 1,
+          "status": 3,
+          "cancellation_reason": "offer_configuration_changed",
+          "content": "Historical content 72",
+          "sent_at": null,
+          "created_at": "2026-09-01 08:00:00 UTC",
+          "updated_at": "2026-09-01 09:00:00 UTC",
+          "follow_up_attempt_id": 72,
+          "qualification_context": "{}",
+          "question_key": null,
+          "replaces_follow_up_id": null,
+          "replaced_by_follow_up_id": null,
+          "superseded_at": null,
+          "replacement_reason": null
+        }
+      ]
+    },
+    "lead_qualifications": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "offer_id",
+          "bigint",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "offer_id": 77
+        },
+        {
+          "id": 2,
+          "offer_id": null
+        },
+        {
+          "id": 3,
+          "offer_id": 77
+        },
+        {
+          "id": 4,
+          "offer_id": null
+        },
+        {
+          "id": 5,
+          "offer_id": 77
+        },
+        {
+          "id": 6,
+          "offer_id": null
+        },
+        {
+          "id": 7,
+          "offer_id": 77
+        },
+        {
+          "id": 8,
+          "offer_id": null
+        },
+        {
+          "id": 9,
+          "offer_id": 77
+        },
+        {
+          "id": 10,
+          "offer_id": null
+        },
+        {
+          "id": 11,
+          "offer_id": 77
+        },
+        {
+          "id": 12,
+          "offer_id": null
+        },
+        {
+          "id": 13,
+          "offer_id": 77
+        },
+        {
+          "id": 14,
+          "offer_id": null
+        },
+        {
+          "id": 15,
+          "offer_id": 77
+        },
+        {
+          "id": 16,
+          "offer_id": null
+        },
+        {
+          "id": 17,
+          "offer_id": 77
+        },
+        {
+          "id": 18,
+          "offer_id": null
+        },
+        {
+          "id": 19,
+          "offer_id": 77
+        },
+        {
+          "id": 20,
+          "offer_id": null
+        },
+        {
+          "id": 21,
+          "offer_id": 77
+        },
+        {
+          "id": 22,
+          "offer_id": null
+        },
+        {
+          "id": 23,
+          "offer_id": 77
+        },
+        {
+          "id": 24,
+          "offer_id": null
+        },
+        {
+          "id": 25,
+          "offer_id": 77
+        },
+        {
+          "id": 26,
+          "offer_id": null
+        },
+        {
+          "id": 27,
+          "offer_id": 77
+        },
+        {
+          "id": 28,
+          "offer_id": null
+        },
+        {
+          "id": 29,
+          "offer_id": 77
+        },
+        {
+          "id": 30,
+          "offer_id": null
+        },
+        {
+          "id": 31,
+          "offer_id": 77
+        },
+        {
+          "id": 32,
+          "offer_id": null
+        },
+        {
+          "id": 33,
+          "offer_id": 77
+        },
+        {
+          "id": 34,
+          "offer_id": null
+        },
+        {
+          "id": 35,
+          "offer_id": 77
+        },
+        {
+          "id": 36,
+          "offer_id": null
+        },
+        {
+          "id": 37,
+          "offer_id": 77
+        },
+        {
+          "id": 38,
+          "offer_id": null
+        },
+        {
+          "id": 39,
+          "offer_id": 77
+        },
+        {
+          "id": 40,
+          "offer_id": null
+        },
+        {
+          "id": 41,
+          "offer_id": 77
+        },
+        {
+          "id": 42,
+          "offer_id": null
+        },
+        {
+          "id": 43,
+          "offer_id": 77
+        },
+        {
+          "id": 44,
+          "offer_id": null
+        },
+        {
+          "id": 45,
+          "offer_id": 77
+        },
+        {
+          "id": 46,
+          "offer_id": null
+        },
+        {
+          "id": 47,
+          "offer_id": 77
+        },
+        {
+          "id": 48,
+          "offer_id": null
+        },
+        {
+          "id": 49,
+          "offer_id": 77
+        },
+        {
+          "id": 50,
+          "offer_id": null
+        },
+        {
+          "id": 51,
+          "offer_id": 77
+        },
+        {
+          "id": 52,
+          "offer_id": null
+        },
+        {
+          "id": 53,
+          "offer_id": 77
+        },
+        {
+          "id": 54,
+          "offer_id": null
+        },
+        {
+          "id": 55,
+          "offer_id": 77
+        },
+        {
+          "id": 56,
+          "offer_id": null
+        },
+        {
+          "id": 57,
+          "offer_id": 77
+        },
+        {
+          "id": 58,
+          "offer_id": null
+        },
+        {
+          "id": 59,
+          "offer_id": 77
+        },
+        {
+          "id": 60,
+          "offer_id": null
+        },
+        {
+          "id": 61,
+          "offer_id": 77
+        },
+        {
+          "id": 62,
+          "offer_id": null
+        },
+        {
+          "id": 63,
+          "offer_id": 77
+        },
+        {
+          "id": 64,
+          "offer_id": null
+        },
+        {
+          "id": 65,
+          "offer_id": 77
+        },
+        {
+          "id": 66,
+          "offer_id": null
+        },
+        {
+          "id": 67,
+          "offer_id": 77
+        },
+        {
+          "id": 68,
+          "offer_id": null
+        },
+        {
+          "id": 69,
+          "offer_id": 77
+        },
+        {
+          "id": 70,
+          "offer_id": null
+        },
+        {
+          "id": 71,
+          "offer_id": 77
+        },
+        {
+          "id": 72,
+          "offer_id": null
+        }
+      ]
+    },
+    "messages": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "source_id",
+          "character varying",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "source_id": null
+        },
+        {
+          "id": 2,
+          "source_id": ""
+        },
+        {
+          "id": 3,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 4,
+          "source_id": null
+        },
+        {
+          "id": 5,
+          "source_id": ""
+        },
+        {
+          "id": 6,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 7,
+          "source_id": null
+        },
+        {
+          "id": 8,
+          "source_id": ""
+        },
+        {
+          "id": 9,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 10,
+          "source_id": null
+        },
+        {
+          "id": 11,
+          "source_id": ""
+        },
+        {
+          "id": 12,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 13,
+          "source_id": null
+        },
+        {
+          "id": 14,
+          "source_id": ""
+        },
+        {
+          "id": 15,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 16,
+          "source_id": null
+        },
+        {
+          "id": 17,
+          "source_id": ""
+        },
+        {
+          "id": 18,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 19,
+          "source_id": null
+        },
+        {
+          "id": 20,
+          "source_id": ""
+        },
+        {
+          "id": 21,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 22,
+          "source_id": null
+        },
+        {
+          "id": 23,
+          "source_id": ""
+        },
+        {
+          "id": 24,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 25,
+          "source_id": null
+        },
+        {
+          "id": 26,
+          "source_id": ""
+        },
+        {
+          "id": 27,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 28,
+          "source_id": null
+        },
+        {
+          "id": 29,
+          "source_id": ""
+        },
+        {
+          "id": 30,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 31,
+          "source_id": null
+        },
+        {
+          "id": 32,
+          "source_id": ""
+        },
+        {
+          "id": 33,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 34,
+          "source_id": null
+        },
+        {
+          "id": 35,
+          "source_id": ""
+        },
+        {
+          "id": 36,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 37,
+          "source_id": null
+        },
+        {
+          "id": 38,
+          "source_id": ""
+        },
+        {
+          "id": 39,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 40,
+          "source_id": null
+        },
+        {
+          "id": 41,
+          "source_id": ""
+        },
+        {
+          "id": 42,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 43,
+          "source_id": null
+        },
+        {
+          "id": 44,
+          "source_id": ""
+        },
+        {
+          "id": 45,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 46,
+          "source_id": null
+        },
+        {
+          "id": 47,
+          "source_id": ""
+        },
+        {
+          "id": 48,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 49,
+          "source_id": null
+        },
+        {
+          "id": 50,
+          "source_id": ""
+        },
+        {
+          "id": 51,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 52,
+          "source_id": null
+        },
+        {
+          "id": 53,
+          "source_id": ""
+        },
+        {
+          "id": 54,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 55,
+          "source_id": null
+        },
+        {
+          "id": 56,
+          "source_id": ""
+        },
+        {
+          "id": 57,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 58,
+          "source_id": null
+        },
+        {
+          "id": 59,
+          "source_id": ""
+        },
+        {
+          "id": 60,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 61,
+          "source_id": null
+        },
+        {
+          "id": 62,
+          "source_id": ""
+        },
+        {
+          "id": 63,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 64,
+          "source_id": null
+        },
+        {
+          "id": 65,
+          "source_id": ""
+        },
+        {
+          "id": 66,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 67,
+          "source_id": null
+        },
+        {
+          "id": 68,
+          "source_id": ""
+        },
+        {
+          "id": 69,
+          "source_id": "wamid.HISTORICAL"
+        },
+        {
+          "id": 70,
+          "source_id": null
+        },
+        {
+          "id": 71,
+          "source_id": ""
+        },
+        {
+          "id": 72,
+          "source_id": "wamid.HISTORICAL"
+        }
+      ]
+    },
+    "whatsapp_outbound_deliveries": {
+      "columns": [
+        [
+          "id",
+          "bigint",
+          false,
+          null,
+          null
+        ],
+        [
+          "message_id",
+          "bigint",
+          true,
+          null,
+          null
+        ],
+        [
+          "state",
+          "character varying",
+          true,
+          null,
+          null
+        ],
+        [
+          "dispatch_started_at",
+          "timestamp without time zone",
+          true,
+          null,
+          null
+        ],
+        [
+          "accepted_at",
+          "timestamp without time zone",
+          true,
+          null,
+          null
+        ]
+      ],
+      "indexes": [],
+      "foreign_keys": [],
+      "checks": [],
+      "rows": [
+        {
+          "id": 1,
+          "message_id": 1,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 2,
+          "message_id": 2,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 3,
+          "message_id": 3,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 4,
+          "message_id": 4,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 5,
+          "message_id": 5,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 6,
+          "message_id": 6,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 7,
+          "message_id": 7,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 8,
+          "message_id": 8,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 9,
+          "message_id": 9,
+          "state": null,
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 10,
+          "message_id": 10,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 11,
+          "message_id": 11,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 12,
+          "message_id": 12,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 13,
+          "message_id": 13,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 14,
+          "message_id": 14,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 15,
+          "message_id": 15,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 16,
+          "message_id": 16,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 17,
+          "message_id": 17,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 18,
+          "message_id": 18,
+          "state": "pending",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 19,
+          "message_id": 19,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 20,
+          "message_id": 20,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 21,
+          "message_id": 21,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 22,
+          "message_id": 22,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 23,
+          "message_id": 23,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 24,
+          "message_id": 24,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 25,
+          "message_id": 25,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 26,
+          "message_id": 26,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 27,
+          "message_id": 27,
+          "state": "claimed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 28,
+          "message_id": 28,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 29,
+          "message_id": 29,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 30,
+          "message_id": 30,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 31,
+          "message_id": 31,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 32,
+          "message_id": 32,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 33,
+          "message_id": 33,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 34,
+          "message_id": 34,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 35,
+          "message_id": 35,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 36,
+          "message_id": 36,
+          "state": "dispatching",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 37,
+          "message_id": 37,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 38,
+          "message_id": 38,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 39,
+          "message_id": 39,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 40,
+          "message_id": 40,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 41,
+          "message_id": 41,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 42,
+          "message_id": 42,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 43,
+          "message_id": 43,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 44,
+          "message_id": 44,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 45,
+          "message_id": 45,
+          "state": "accepted",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": "2026-09-01 10:05:00 UTC"
+        },
+        {
+          "id": 46,
+          "message_id": 46,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 47,
+          "message_id": 47,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 48,
+          "message_id": 48,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 49,
+          "message_id": 49,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 50,
+          "message_id": 50,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 51,
+          "message_id": 51,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 52,
+          "message_id": 52,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 53,
+          "message_id": 53,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 54,
+          "message_id": 54,
+          "state": "unknown",
+          "dispatch_started_at": "2026-09-01 10:00:00 UTC",
+          "accepted_at": null
+        },
+        {
+          "id": 55,
+          "message_id": 55,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 56,
+          "message_id": 56,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 57,
+          "message_id": 57,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 58,
+          "message_id": 58,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 59,
+          "message_id": 59,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 60,
+          "message_id": 60,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 61,
+          "message_id": 61,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 62,
+          "message_id": 62,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 63,
+          "message_id": 63,
+          "state": "failed",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 64,
+          "message_id": 64,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 65,
+          "message_id": 65,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 66,
+          "message_id": 66,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 67,
+          "message_id": 67,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 68,
+          "message_id": 68,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 69,
+          "message_id": 69,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 70,
+          "message_id": 70,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 71,
+          "message_id": 71,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        },
+        {
+          "id": 72,
+          "message_id": 72,
+          "state": "canceled",
+          "dispatch_started_at": null,
+          "accepted_at": null
+        }
+      ]
+    }
+  },
+  "down": [
+    "ActiveRecord::IrreversibleMigration",
+    "\n\nAttempt lineage cannot collapse into the old Lead-only key without losing history; see ADR0015\n\n"
+  ]
+}

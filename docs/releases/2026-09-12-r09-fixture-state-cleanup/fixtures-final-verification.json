@@ -1,0 +1,14 @@
+{
+  "source_tree": "0772958eed424906e1b6112a2fbc8dec79ef09c3",
+  "runs": [
+    {
+      "name": "rubocop",
+      "started_at": "2026-09-12T03:11:27.883230+00:00",
+      "finished_at": "2026-09-12T03:11:39.653513+00:00",
+      "before": "0772958eed424906e1b6112a2fbc8dec79ef09c3",
+      "after": "0772958eed424906e1b6112a2fbc8dec79ef09c3",
+      "whole_tree_equal": true,
+      "exit_code": 1
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+diff --git a/db/migrate/20260911001400_add_offer_scoped_qualification.rb b/db/migrate/20260911001400_add_offer_scoped_qualification.rb
+index f8ee31d..bcc74fd 100644
+--- a/db/migrate/20260911001400_add_offer_scoped_qualification.rb
++++ b/db/migrate/20260911001400_add_offer_scoped_qualification.rb
+@@ -6,14 +6,7 @@ class AddOfferScopedQualification < ActiveRecord::Migration[7.2]
+     add_column :ai_lead_employee_offers, :configuration, :jsonb, null: false, default: {}
+     add_column :ai_lead_employee_offers, :configuration_version, :integer, null: false, default: 1
+ 
+-    create_table :offer_configuration_revisions do |t|
+-      t.references :account, null: false, foreign_key: true
+-      t.references :offer, null: false, foreign_key: { to_table: :ai_lead_employee_offers }
+-      t.integer :version, null: false
+-      t.jsonb :snapshot, null: false
+-      t.timestamps
+-      t.index [:offer_id, :version], unique: true
+-    end
++    create_configuration_revisions
+ 
+     [:conversations, :qualification_evidences, :lead_qualifications, :lead_qualification_decisions].each do |table|
+       add_reference table, :offer, foreign_key: { to_table: :ai_lead_employee_offers }
+@@ -25,4 +18,17 @@ class AddOfferScopedQualification < ActiveRecord::Migration[7.2]
+     add_index :qualification_evidences, [:account_id, :contact_id, :offer_id, :signal, :superseded_at],
+               name: 'idx_qualification_evidence_offer_current'
+   end
++
++  private
++
++  def create_configuration_revisions
++    create_table :offer_configuration_revisions do |t|
++      t.references :account, null: false, foreign_key: true
++      t.references :offer, null: false, foreign_key: { to_table: :ai_lead_employee_offers }
++      t.integer :version, null: false
++      t.jsonb :snapshot, null: false
++      t.timestamps
++      t.index [:offer_id, :version], unique: true
++    end
++  end
+ end
+diff --git a/db/migrate/20260911001500_add_qualification_evidence_field_keys.rb b/db/migrate/20260911001500_add_qualification_evidence_field_keys.rb
+index 73493ed..a11b253 100644
+--- a/db/migrate/20260911001500_add_qualification_evidence_field_keys.rb
++++ b/db/migrate/20260911001500_add_qualification_evidence_field_keys.rb
+@@ -3,7 +3,7 @@
+ class AddQualificationEvidenceFieldKeys < ActiveRecord::Migration[7.1]
+   def up
+     add_column :qualification_evidences, :field_key, :string
+-    execute <<~SQL
++    execute <<~SQL.squish
+       UPDATE qualification_evidences SET field_key = CASE signal
+         WHEN 0 THEN 'business_type' WHEN 1 THEN 'problem' WHEN 2 THEN 'lead_volume'
+         WHEN 3 THEN 'urgency' WHEN 4 THEN 'budget' WHEN 5 THEN 'decision_authority'
+diff --git a/db/migrate/20260911001700_add_follow_up_attempt_lineage.rb b/db/migrate/20260911001700_add_follow_up_attempt_lineage.rb
+index 7e85d98..88b0c4b 100644
+--- a/db/migrate/20260911001700_add_follow_up_attempt_lineage.rb
++++ b/db/migrate/20260911001700_add_follow_up_attempt_lineage.rb
+@@ -2,6 +2,20 @@
+ 
+ class AddFollowUpAttemptLineage < ActiveRecord::Migration[7.2]
+   def up
++    create_attempt_table
++    add_attempt_constraints
++    add_artifact_lineage
++    backfill_attempt_history
++    finalize_attempt_ownership
++  end
++
++  def down
++    raise ActiveRecord::IrreversibleMigration, 'Attempt lineage cannot collapse into the old Lead-only key without losing history; see ADR0015'
++  end
++
++  private
++
++  def create_attempt_table
+     create_table :lead_follow_up_attempts do |t|
+       t.references :account, null: false, foreign_key: true
+       t.references :contact, null: false, foreign_key: true
+@@ -13,6 +27,9 @@ class AddFollowUpAttemptLineage < ActiveRecord::Migration[7.2]
+       t.datetime :admitted_at
+       t.timestamps
+     end
++  end
++
++  def add_attempt_constraints
+     add_index :lead_follow_up_attempts, [:account_id, :contact_id, :offer_id, :stage, :attempt_number],
+               unique: true, where: 'offer_id IS NOT NULL', name: 'idx_follow_up_attempt_offer_budget'
+     add_index :lead_follow_up_attempts, [:account_id, :contact_id, :stage, :attempt_number],
+@@ -20,6 +37,9 @@ class AddFollowUpAttemptLineage < ActiveRecord::Migration[7.2]
+     add_check_constraint :lead_follow_up_attempts, "admission_state IN ('unadmitted','admitted','accepted','unknown','failed','blocked')",
+                          name: 'follow_up_attempt_admission_state'
+     add_check_constraint :lead_follow_up_attempts, 'attempt_number > 0 AND stage IN (0,1)', name: 'follow_up_attempt_positive_budget'
++  end
++
++  def add_artifact_lineage
+     add_reference :lead_follow_ups, :follow_up_attempt, foreign_key: { to_table: :lead_follow_up_attempts }
+     add_column :lead_follow_ups, :qualification_context, :jsonb, null: false, default: {}
+     add_column :lead_follow_ups, :question_key, :string
+@@ -27,10 +47,12 @@ class AddFollowUpAttemptLineage < ActiveRecord::Migration[7.2]
+     add_reference :lead_follow_ups, :replaced_by_follow_up, foreign_key: { to_table: :lead_follow_ups }
+     add_column :lead_follow_ups, :superseded_at, :datetime
+     add_column :lead_follow_ups, :replacement_reason, :string
++  end
+ 
++  def backfill_attempt_history
+     # Only the recorded Qualification supplies Offer scope. Historical pending
+     # rows have no frozen decision/selection proof and gain no replacement right.
+-    execute <<~SQL
++    execute <<~SQL.squish
+       INSERT INTO lead_follow_up_attempts
+         (account_id, contact_id, offer_id, stage, attempt_number, current_follow_up_id,
+          admission_state, admitted_at, created_at, updated_at)
+@@ -49,14 +71,13 @@ class AddFollowUpAttemptLineage < ActiveRecord::Migration[7.2]
+       UPDATE lead_follow_ups f SET follow_up_attempt_id = a.id
+       FROM lead_follow_up_attempts a WHERE a.current_follow_up_id = f.id;
+     SQL
++  end
++
++  def finalize_attempt_ownership
+     change_column_null :lead_follow_ups, :follow_up_attempt_id, false
+     add_foreign_key :lead_follow_up_attempts, :lead_follow_ups, column: :current_follow_up_id
+     add_index :lead_follow_ups, :follow_up_attempt_id, unique: true, where: 'superseded_at IS NULL',
+                                                        name: 'idx_follow_up_attempt_current_artifact'
+     remove_index :lead_follow_ups, name: 'idx_lead_follow_ups_on_logical_attempt'
+   end
+-
+-  def down
+-    raise ActiveRecord::IrreversibleMigration, 'Attempt lineage cannot collapse into the old Lead-only key without losing history; see ADR0015'
+-  end
+ end

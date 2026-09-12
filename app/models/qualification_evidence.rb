@@ -41,6 +41,7 @@
 class QualificationEvidence < ApplicationRecord
   belongs_to :account
   belongs_to :contact
+  belongs_to :offer, class_name: 'AiLeadEmployee::Offer', optional: true
   belongs_to :conversation, optional: true
   belongs_to :message, optional: true
   belongs_to :user, optional: true
@@ -49,16 +50,27 @@ class QualificationEvidence < ApplicationRecord
   enum :signal, QualificationQuestion::SIGNALS, prefix: true
   enum source: { extracted: 0, human: 1 }
 
-  validates :signal, :source, :observed_at, presence: true
+  before_validation :assign_legacy_field_key
+
+  validates :field_key, :source, :observed_at, presence: true
   validate :validate_account_scope
 
   scope :current, -> { where(superseded_at: nil) }
 
   private
 
+  def assign_legacy_field_key
+    self.field_key ||= signal
+  end
+
   def validate_account_scope
-    errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id
+    validate_offer_and_contact_scope
     errors.add(:conversation, 'must belong to the same account') if conversation.present? && conversation.account_id != account_id
     errors.add(:message, 'must belong to the same account') if message.present? && message.account_id != account_id
+  end
+
+  def validate_offer_and_contact_scope
+    errors.add(:offer, 'must belong to the same account') if offer.present? && offer.account_id != account_id
+    errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id
   end
 end

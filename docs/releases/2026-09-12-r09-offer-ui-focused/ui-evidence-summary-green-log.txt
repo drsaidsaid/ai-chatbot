@@ -1,0 +1,22 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+stderr | app/javascript/dashboard/components/qualification/specs/OfferQualificationSummary.spec.js > distinguishes stale, negative, unknown and superseded evidence with its source
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/components/qualification/specs/OfferQualificationSummary.spec.js (1 test) 28ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  03:49:02
+   Duration  809ms (transform 77ms, setup 132ms, collect 59ms, tests 28ms, environment 405ms, prepare 56ms)
+

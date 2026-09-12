@@ -1,0 +1,11 @@
+{
+  "tree": "bd6e54aae5a7e6d2b3405d29528e63488879380d",
+  "ref": "refs/r09/shared-readers-20260911",
+  "base": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "source_count": 54,
+  "final_green_runs": [
+    49
+  ],
+  "failures": 0,
+  "note": "External metadata after freeze. Delivery spec and ADR remain source-only."
+}

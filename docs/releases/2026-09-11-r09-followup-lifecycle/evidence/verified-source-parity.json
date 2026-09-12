@@ -1,0 +1,8 @@
+{
+  "compared_to_source": "a74b10aafcb8413bd4828e65ea28f6a52df03646",
+  "only_non_release_changed_paths": [
+    "spec/requests/whatsapp_outbound_delivery_spec.rb"
+  ],
+  "production_changed_paths": [],
+  "test_diff": "diff --git a/spec/requests/whatsapp_outbound_delivery_spec.rb b/spec/requests/whatsapp_outbound_delivery_spec.rb\nindex 1f997bf..6baca2c 100644\n--- a/spec/requests/whatsapp_outbound_delivery_spec.rb\n+++ b/spec/requests/whatsapp_outbound_delivery_spec.rb\n@@ -418,7 +418,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do\n                                   headers: { 'Content-Type' => 'application/json' })\n     authorization_read = Queue.new\n     release_authorization = Queue.new\n-    allow(AiLeadEmployee::AiProvider::RuntimeControl).to receive(:failure_code).and_wrap_original do |original, **args|\n+    allow(AiLeadEmployee::AiProvider::RuntimeControl).to receive(:failure_code_locked).and_wrap_original do |original, **args|\n       result = original.call(**args)\n       authorization_read << true\n       release_authorization.pop"
+}

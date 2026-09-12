@@ -42,14 +42,22 @@ class LeadFollowUpOptOut < ApplicationRecord
   validate :contact_account_is_consistent
   validate :conversation_account_is_consistent
   validate :consent_event_is_consistent
-  after_create :cancel_pending_automation
+  # Canonical consent/legacy service callers pass their already-owned batch.
+  # Direct creation still acquires the same prefix before inserting the stop R.
+  attr_accessor :automation_cancellation_owner
+
+  around_create :own_pending_automation
 
   private
 
-  def cancel_pending_automation
-    account.conversations.where(contact_id: contact_id).find_each do |item|
-      item.with_lock { Conversations::ControlService.invalidate_pending_ai!(conversation: item, reason: 'opted_out') }
-    end
+  def own_pending_automation
+    return yield if automation_cancellation_owner
+
+    conversations = account.conversations.where(contact_id: contact_id).order(:id).lock('FOR NO KEY UPDATE').to_a
+    owner = AiLeadEmployee::AutomationCancellation.new(conversations: conversations)
+    owner.lock_offers!
+    yield
+    owner.cancel!(reason: 'opted_out')
   end
 
   def contact_account_is_consistent

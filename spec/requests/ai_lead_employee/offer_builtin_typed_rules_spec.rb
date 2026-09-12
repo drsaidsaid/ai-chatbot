@@ -1,0 +1,49 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Typed rules for built-in Offer fields', type: :request do
+  include_context 'with Offer qualification requests'
+
+  [
+    ['lead_volume', 'number', 'How many inquiries do you handle?', 'We receive 50 inquiries.', 'gte', 40, 50, 'positive'],
+    ['decision_authority', 'boolean', 'Do you decide this purchase?', 'I am the owner.', 'eq', true, true, 'positive'],
+    ['decision_authority', 'boolean', 'Do you decide this purchase?', 'I am not the decision maker.', 'eq', false, false, 'negative']
+  ].each do |scenario|
+    key, type, prompt, statement, operator, comparison, typed_value, polarity = scenario
+
+    it "applies a typed #{operator} rule to built-in #{key} #{polarity} evidence" do
+      question = r09_question(key, answer_type: type, prompt: prompt)
+      rule = { kind: 'score_rule', field: key, operator: operator, value: comparison, score_delta: 15, priority: 0, enabled: true }
+      offer = r09_create_offer(r09_configuration(questions: [question], rules: [rule], score_weights: { key => 0 }))
+      conversation = r09_conversation(offer: offer)
+
+      incoming, = r09_receive(conversation, statement)
+
+      expect(r09_qualification(offer).score).to eq(15)
+      expect(r09_qualification(offer).evidence_snapshot.fetch(key)).to include(
+        'typed_value' => typed_value, 'polarity' => polarity, 'message_id' => incoming.id
+      )
+    end
+  end
+
+  [
+    ['I am not the decision maker.', 'unqualified', 200],
+    ['I am the owner.', 'low_qualified', 100],
+    ['I am not sure who decides.', 'unknown', 0]
+  ].each do |statement, quality, score|
+    it "applies an authority false hard exclusion only to supported false evidence: #{statement}" do
+      question = r09_question('decision_authority', answer_type: 'boolean', prompt: 'Do you decide this purchase?')
+      rules = [{ kind: 'hard_rule', field: 'decision_authority', operator: 'eq', value: false,
+                 forced_outcome: 'unqualified', priority: 0, enabled: true },
+               { kind: 'score_rule', field: 'decision_authority', operator: 'eq', value: false,
+                 score_delta: 200, priority: 1, enabled: true }]
+      offer = r09_create_offer(r09_configuration(questions: [question], rules: rules, score_weights: { decision_authority: 100 }))
+      conversation = r09_conversation(offer: offer)
+
+      r09_receive(conversation, statement)
+
+      expect(r09_qualification(offer)).to have_attributes(quality: quality, score: score)
+    end
+  end
+end

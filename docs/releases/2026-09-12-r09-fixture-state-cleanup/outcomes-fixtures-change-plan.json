@@ -1,0 +1,24 @@
+{
+  "before_tree": "bf8a11c29e4af347d613baf6dc74d442b2555785",
+  "path": "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+  "storage_replacements": {
+    "attempt": 19,
+    "conversation": 12,
+    "delivery": 19,
+    "follow_up": 12,
+    "message": 9,
+    "offer": 5
+  },
+  "added_lazy_helper": "delivery_records: empty per-example Hash only; no fixture construction moved",
+  "scenario_names_before": [
+    "records admission atomically before HTTP and projects provider acceptance onto the original attempt",
+    "keeps unknown acceptance consumed across retries and Offer revisions",
+    "consumes a definite provider rejection and denies the operator retry endpoint for that attempt",
+    "consumes preparation failure before admission without granting replacement entitlement",
+    "makes publication projection-only and repairs accepted domain state through its ordered owner",
+    "consumes exhausted abandoned claims without an admission timestamp or replacement",
+    "recovers an expired dispatch as unknown without returning its attempt to pending",
+    "does not recover or send the predecessor after replacing a claimed never-admitted artifact"
+  ],
+  "expect_count_before": 42
+}

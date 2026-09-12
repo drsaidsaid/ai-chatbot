@@ -1,0 +1,121 @@
+{
+  "source_tree": "8d1278937943e2b28317652d6f035f0be950d9e1",
+  "summary": {
+    "offense_count": 63,
+    "target_file_count": 90,
+    "inspected_file_count": 90
+  },
+  "areas": {
+    "Shared class/projection length and accepted-baseline accounting": {
+      "count": 5,
+      "files": {
+        "app/models/account.rb": {
+          "Metrics/ClassLength": 1
+        },
+        "app/services/ai_lead_employee/qualification_service.rb": {
+          "Metrics/ClassLength": 1
+        },
+        "app/views/api/v1/conversations/partials/_conversation.json.jbuilder": {
+          "Lint/UselessAssignment": 1,
+          "Metrics/BlockLength": 1,
+          "Style/IfUnlessModifier": 1
+        }
+      }
+    },
+    "Delivery authority, outcome and handoff/consent": {
+      "count": 16,
+      "files": {
+        "app/models/whatsapp/outbound_delivery.rb": {
+          "Metrics/CyclomaticComplexity": 2,
+          "Metrics/PerceivedComplexity": 2,
+          "Style/SoleNestedConditional": 1,
+          "Metrics/AbcSize": 1,
+          "Layout/LineLength": 1
+        },
+        "app/services/ai_lead_employee/automated_contact_consent.rb": {
+          "Metrics/AbcSize": 1
+        },
+        "app/services/ai_lead_employee/highly_qualified_handoff_service.rb": {
+          "Metrics/ClassLength": 1,
+          "Metrics/AbcSize": 1,
+          "Metrics/CyclomaticComplexity": 1,
+          "Metrics/MethodLength": 1,
+          "Metrics/PerceivedComplexity": 1
+        },
+        "app/services/ai_lead_employee/offer_delivery_context.rb": {
+          "Metrics/AbcSize": 1,
+          "Metrics/CyclomaticComplexity": 1,
+          "Metrics/PerceivedComplexity": 1
+        }
+      }
+    },
+    "Leads directory preload and projection": {
+      "count": 2,
+      "files": {
+        "app/services/ai_lead_employee/leads_directory_service.rb": {
+          "Metrics/AbcSize": 1,
+          "Layout/LineLength": 1
+        }
+      }
+    },
+    "Offer evidence recording and qualification decisions": {
+      "count": 21,
+      "files": {
+        "app/services/ai_lead_employee/offer_human_evidence_writer.rb": {
+          "Metrics/AbcSize": 1,
+          "Metrics/CyclomaticComplexity": 1,
+          "Metrics/PerceivedComplexity": 1
+        },
+        "app/services/ai_lead_employee/offer_qualification_service.rb": {
+          "Metrics/AbcSize": 4,
+          "Metrics/CyclomaticComplexity": 4,
+          "Metrics/MethodLength": 1,
+          "Metrics/PerceivedComplexity": 4,
+          "Rails/WhereExists": 1,
+          "Layout/LineLength": 1,
+          "Style/BlockDelimiters": 1,
+          "Rails/Pluck": 1
+        },
+        "app/services/ai_lead_employee/qualification_evidence_audit.rb": {
+          "Metrics/ParameterLists": 1
+        }
+      }
+    },
+    "Spoken evidence and budget clause interpretation": {
+      "count": 14,
+      "files": {
+        "app/services/ai_lead_employee/qualification_budget_clauses.rb": {
+          "Layout/LineLength": 1
+        },
+        "app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb": {
+          "Metrics/CyclomaticComplexity": 1,
+          "Metrics/PerceivedComplexity": 1
+        },
+        "app/services/ai_lead_employee/qualification_evidence_extractor.rb": {
+          "Metrics/ClassLength": 1,
+          "Metrics/CyclomaticComplexity": 3,
+          "Metrics/PerceivedComplexity": 3,
+          "Style/IfUnlessModifier": 1,
+          "Layout/LineLength": 3
+        }
+      }
+    },
+    "Historical schema migrations": {
+      "count": 5,
+      "files": {
+        "db/migrate/20260911001400_add_offer_scoped_qualification.rb": {
+          "Metrics/MethodLength": 1
+        },
+        "db/migrate/20260911001500_add_qualification_evidence_field_keys.rb": {
+          "Rails/SquishedSQLHeredocs": 1
+        },
+        "db/migrate/20260911001700_add_follow_up_attempt_lineage.rb": {
+          "Metrics/AbcSize": 1,
+          "Metrics/MethodLength": 1,
+          "Rails/SquishedSQLHeredocs": 1
+        }
+      }
+    }
+  },
+  "baseline_note": "Accepted 9a expanded baseline had six findings: Account ClassLength plus five Jbuilder findings. Two Jbuilder indentation findings were removed earlier. Four remaining baseline categories are tracked separately; Account class grew from177 to178 lines and is not unchanged-magnitude debt. QualificationService class length is R09-created. See UI review evidence for exact accepted/reviewed source lint."
+}

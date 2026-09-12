@@ -1,0 +1,21 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/requests/whatsapp_outbound_delivery_spec.rb",
+  "spec/requests/ai_lead_employee/automated_contact_consent_spec.rb",
+  "spec/services/ai_lead_employee/automated_contact_consent_concurrency_spec.rb",
+  "spec/services/ai_lead_employee/highly_qualified_handoff_service_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+  "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+  "spec/requests/ai_lead_employee/offer_delivery_revision_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+  "spec/requests/ai_lead_employee/offer_reply_context_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/authority-helpers-green-results.json"
+]

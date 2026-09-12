@@ -1,0 +1,240 @@
+{
+  "app/models/account.rb": [
+    {
+      "cop": "Metrics/ClassLength",
+      "line": 26,
+      "message": "Class has too many lines. [178/175]"
+    }
+  ],
+  "app/models/whatsapp/outbound_delivery.rb": [
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 15,
+      "message": "Cyclomatic complexity for `recover!` is too high. [9/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 15,
+      "message": "Perceived complexity for `recover!` is too high. [10/8]"
+    },
+    {
+      "cop": "Style/SoleNestedConditional",
+      "line": 18,
+      "message": "Consider merging nested conditions into outer `if` conditions."
+    },
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 54,
+      "message": "Assignment Branch Condition size for retry_for? is too high. [<2, 36, 9> 37.16/26]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 54,
+      "message": "Cyclomatic complexity for `retry_for?` is too high. [9/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 54,
+      "message": "Perceived complexity for `retry_for?` is too high. [9/8]"
+    },
+    {
+      "cop": "Layout/LineLength",
+      "line": 110,
+      "message": "Line is too long. [158/150]"
+    }
+  ],
+  "app/services/ai_lead_employee/automated_contact_consent.rb": [
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 92,
+      "message": "Assignment Branch Condition size for grant! is too high. [<5, 26, 5> 26.94/26]"
+    }
+  ],
+  "app/services/ai_lead_employee/highly_qualified_handoff_service.rb": [
+    {
+      "cop": "Metrics/ClassLength",
+      "line": 3,
+      "message": "Class has too many lines. [184/175]"
+    },
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 18,
+      "message": "Assignment Branch Condition size for perform is too high. [<9, 55, 14> 57.46/26]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 18,
+      "message": "Cyclomatic complexity for `perform` is too high. [15/7]"
+    },
+    {
+      "cop": "Metrics/MethodLength",
+      "line": 18,
+      "message": "Method has too many lines. [32/19]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 18,
+      "message": "Perceived complexity for `perform` is too high. [15/8]"
+    }
+  ],
+  "app/services/ai_lead_employee/leads_directory_service.rb": [
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 490,
+      "message": "Assignment Branch Condition size for preload_context_for is too high. [<12, 25, 3> 27.89/26]"
+    },
+    {
+      "cop": "Layout/LineLength",
+      "line": 493,
+      "message": "Line is too long. [158/150]"
+    }
+  ],
+  "app/services/ai_lead_employee/offer_delivery_context.rb": [
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 30,
+      "message": "Assignment Branch Condition size for failure_code is too high. [<3, 48, 23> 53.31/26]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 30,
+      "message": "Cyclomatic complexity for `failure_code` is too high. [16/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 30,
+      "message": "Perceived complexity for `failure_code` is too high. [16/8]"
+    }
+  ],
+  "app/services/ai_lead_employee/qualification_budget_clauses.rb": [
+    {
+      "cop": "Layout/LineLength",
+      "line": 6,
+      "message": "Line is too long. [272/150]"
+    }
+  ],
+  "app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb": [
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 25,
+      "message": "Cyclomatic complexity for `value` is too high. [9/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 25,
+      "message": "Perceived complexity for `value` is too high. [9/8]"
+    }
+  ],
+  "app/services/ai_lead_employee/qualification_evidence_extractor.rb": [
+    {
+      "cop": "Metrics/ClassLength",
+      "line": 5,
+      "message": "Class has too many lines. [212/175]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 31,
+      "message": "Cyclomatic complexity for `evidence` is too high. [10/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 31,
+      "message": "Perceived complexity for `evidence` is too high. [10/8]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 51,
+      "message": "Cyclomatic complexity for `observations` is too high. [12/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 51,
+      "message": "Perceived complexity for `observations` is too high. [12/8]"
+    },
+    {
+      "cop": "Style/IfUnlessModifier",
+      "line": 56,
+      "message": "Favor modifier `if` usage when having a single-line body. Another good alternative is the usage of control flow `&&`/`||`."
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 74,
+      "message": "Cyclomatic complexity for `independent_budget_tail?` is too high. [12/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 74,
+      "message": "Perceived complexity for `independent_budget_tail?` is too high. [12/8]"
+    },
+    {
+      "cop": "Layout/LineLength",
+      "line": 81,
+      "message": "Line is too long. [200/150]"
+    },
+    {
+      "cop": "Layout/LineLength",
+      "line": 84,
+      "message": "Line is too long. [201/150]"
+    },
+    {
+      "cop": "Layout/LineLength",
+      "line": 87,
+      "message": "Line is too long. [336/150]"
+    }
+  ],
+  "app/views/api/v1/conversations/partials/_conversation.json.jbuilder": [
+    {
+      "cop": "Lint/UselessAssignment",
+      "line": 4,
+      "message": "Useless assignment to variable - `include_cockpit`."
+    },
+    {
+      "cop": "Metrics/BlockLength",
+      "line": 69,
+      "message": "Block has too many lines. [44/30]"
+    },
+    {
+      "cop": "Style/IfUnlessModifier",
+      "line": 141,
+      "message": "Favor modifier `if` usage when having a single-line body. Another good alternative is the usage of control flow `&&`/`||`."
+    }
+  ],
+  "db/migrate/20260911001400_add_offer_scoped_qualification.rb": [
+    {
+      "cop": "Metrics/MethodLength",
+      "line": 4,
+      "message": "Method has too many lines. [20/19]"
+    }
+  ],
+  "db/migrate/20260911001500_add_qualification_evidence_field_keys.rb": [
+    {
+      "cop": "Rails/SquishedSQLHeredocs",
+      "line": 6,
+      "message": "Use `<<~SQL.squish` instead of `<<~SQL`."
+    }
+  ],
+  "db/migrate/20260911001700_add_follow_up_attempt_lineage.rb": [
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 4,
+      "message": "Assignment Branch Condition size for up is too high. [<1, 26, 0> 26.02/26]"
+    },
+    {
+      "cop": "Metrics/MethodLength",
+      "line": 4,
+      "message": "Method has too many lines. [48/19]"
+    },
+    {
+      "cop": "Rails/SquishedSQLHeredocs",
+      "line": 33,
+      "message": "Use `<<~SQL.squish` instead of `<<~SQL`."
+    }
+  ],
+  "app/services/ai_lead_employee/offer_evidence_recorder.rb": [
+    {
+      "cop": "Style/IfUnlessModifier",
+      "line": 33,
+      "message": "Favor modifier `if` usage when having a single-line body. Another good alternative is the usage of control flow `&&`/`||`."
+    }
+  ]
+}

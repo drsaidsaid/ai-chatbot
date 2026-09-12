@@ -1,0 +1,28 @@
+require 'parser/current'
+require 'json'
+def row_body(node, name)
+  return unless node.is_a?(Parser::AST::Node)
+  return node.children[2] if node.type == :block && node.children[0].type == :send && node.children[0].children[1] == name
+  node.children.each do |child|
+    found = row_body(child, name)
+    return found if found
+  end
+  nil
+end
+def normalize_locals(node)
+  return node unless node.is_a?(Parser::AST::Node)
+  if node.type == :send && node.children.length == 2 && node.children[0].nil? &&
+     [:evidence, :qualification_context, :follow_up].include?(node.children[1])
+    return Parser::AST::Node.new(:lvar, [node.children[1]])
+  end
+  node.updated(nil, node.children.map { |child| normalize_locals(child) })
+end
+original = Parser::CurrentRuby.parse(File.read('tmp/r09/projection-helpers-before/app/views/api/v1/conversations/partials/_conversation.json.jbuilder'))
+rows = { evidence_records: '_qualification_evidence', follow_ups: '_qualification_follow_up' }.map do |name, partial|
+  body = Parser::CurrentRuby.parse(File.read("app/views/api/v1/conversations/partials/#{partial}.json.jbuilder"))
+  equal = normalize_locals(row_body(original, name)) == normalize_locals(body)
+  raise "Changed row fields #{name}" unless equal
+  { row: name, field_write_ast_equal: equal }
+end
+File.write('tmp/r09/projection-helpers-row-ast-proof.json', JSON.pretty_generate(rows) + "\n")
+puts JSON.generate(rows)

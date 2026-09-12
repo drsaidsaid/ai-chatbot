@@ -1,0 +1,36 @@
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js [ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js ]
+Error: Failed to resolve import "../OfferConfigurationPanel.vue" from "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js:5:38
+  3  |  import { createI18n } from 'vue-i18n';
+  4  |  import messages from 'dashboard/i18n/locale/en/aiLeadEmployee.json';
+  5  |  import OfferConfigurationPanel from '../OfferConfigurationPanel.vue';
+     |                                       ^
+  6  |  
+  7  |  const offer = () => ({
+ ❯ TransformPluginContext._formatLog node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:42553:41
+ ❯ TransformPluginContext.error node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:42550:16
+ ❯ normalizeUrl node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:40529:23
+ ❯ node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:40648:37
+ ❯ TransformPluginContext.transform node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:40575:7
+ ❯ EnvironmentPluginContainer.transform node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:42348:18
+ ❯ loadAndTransform node_modules/.pnpm/vite@6.4.2_@types+node@26.3.0_jiti@1.21.6_lightningcss@1.32.0_sass@1.79.3_terser@5.33.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js:35740:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  03:35:53
+   Duration  953ms (transform 25ms, setup 122ms, collect 0ms, tests 0ms, environment 413ms, prepare 47ms)
+

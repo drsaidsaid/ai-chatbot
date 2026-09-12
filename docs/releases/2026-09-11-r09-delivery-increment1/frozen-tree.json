@@ -1,0 +1,22 @@
+{
+  "tree": "6c8b281770ed2615b1abf254199df7e87cdda283",
+  "ref": "refs/r09/delivery-increment1-20260911",
+  "source_tree": "e1344a6c5976cfc8e76e896da253faa268dead74",
+  "source_ref": "refs/r09/delivery-increment1-verified-source-20260911",
+  "reviewed_runtime_tree": "eb5966e31f37866d4c6f4de249a17196c048b0ec",
+  "source_count": 8941,
+  "runtime_test_changed_count": 62,
+  "whole_tree_equal_before_after": true,
+  "compatibility_run": {
+    "examples": 162,
+    "failures": 9,
+    "passed": 153,
+    "failures_setup_only": true
+  },
+  "corrected_alert_approval_run": {
+    "examples": 14,
+    "failures": 0
+  },
+  "distinct_passing_checks": 167,
+  "follow_up_increment_complete": false
+}

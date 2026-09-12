@@ -1,0 +1,45 @@
+# frozen_string_literal: true
+
+class LeadFollowUpAttempt < ApplicationRecord
+  belongs_to :account
+  belongs_to :contact
+  belongs_to :offer, class_name: 'AiLeadEmployee::Offer', optional: true
+  belongs_to :current_follow_up, class_name: 'LeadFollowUp', optional: true
+  has_many :lead_follow_ups, foreign_key: :follow_up_attempt_id, inverse_of: :follow_up_attempt, dependent: :restrict_with_exception
+
+  enum :admission_state, %w[unadmitted admitted accepted unknown failed blocked].index_with(&:itself)
+  enum :stage, { incomplete_qualification: 0, qualified_nurture: 1 }
+
+  validates :attempt_number, numericality: { only_integer: true, greater_than: 0 }
+  validate :preserve_admission
+  validate :validate_scope
+
+  def replaceable?
+    unadmitted? && admitted_at.nil?
+  end
+
+  private
+
+  def preserve_admission
+    return unless persisted?
+
+    validate_admission_progress
+    errors.add(:admitted_at, 'cannot change recorded admission') if admitted_at_in_database.present? && will_save_change_to_admitted_at?
+    %w[account_id contact_id offer_id stage attempt_number].each do |attribute|
+      errors.add(attribute, 'is immutable') if will_save_change_to_attribute?(attribute)
+    end
+  end
+
+  def validate_admission_progress
+    errors.add(:admission_state, 'cannot return to unadmitted') if unadmitted? && admission_state_in_database != 'unadmitted'
+    errors.add(:admission_state, 'cannot lower accepted delivery') if admission_state_in_database == 'accepted' && !accepted?
+  end
+
+  def validate_scope
+    errors.add(:contact, 'must belong to account') if contact && contact.account_id != account_id
+    errors.add(:offer, 'must belong to account') if offer && offer.account_id != account_id
+    return unless current_follow_up
+
+    errors.add(:current_follow_up, 'must belong to this attempt') unless current_follow_up.follow_up_attempt_id == id
+  end
+end

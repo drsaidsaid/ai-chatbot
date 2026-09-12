@@ -1,0 +1,23 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+ ✓ app/javascript/dashboard/routes/dashboard/conversation/specs/AIEmployeeControlPanel.spec.js (7 tests) 61ms
+stderr | app/javascript/dashboard/components/qualification/specs/ConversationOfferQualification.spec.js > changes the Conversation Offer and submits corrections to that explicit Offer and Conversation
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ✓ app/javascript/dashboard/components/qualification/specs/ConversationOfferQualification.spec.js (1 test) 38ms
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  03:50:56
+   Duration  1.55s (transform 161ms, setup 229ms, collect 178ms, tests 99ms, environment 730ms, prepare 97ms)
+

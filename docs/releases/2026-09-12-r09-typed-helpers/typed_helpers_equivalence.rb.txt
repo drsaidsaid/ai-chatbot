@@ -1,0 +1,58 @@
+require 'active_support/all'
+require 'bigdecimal'
+require 'json'
+module AiLeadEmployee; end
+require_relative '../../app/services/ai_lead_employee/qualification_amount_parser'
+require_relative '../../app/services/ai_lead_employee/offer_money'
+require_relative '../../app/services/ai_lead_employee/qualification_evidence_extractor'
+%w[offer_rules offer_typed_answer].each do |file|
+  name = file.camelize
+  original = File.read("tmp/r09/typed-helpers-before/app/services/ai_lead_employee/#{file}.rb")
+  eval(original.sub("class AiLeadEmployee::#{name}", "class AiLeadEmployee::Baseline#{name}"), TOPLEVEL_BINDING, "baseline_#{file}.rb")
+  load "app/services/ai_lead_employee/#{file}.rb"
+end
+counts = Hash.new(0)
+def result
+  [:returned, yield]
+rescue StandardError => error
+  [:raised, error.class.name, error.message]
+end
+def same!(category, input, old, current, counts)
+  raise "Mismatch #{category}: #{input.inspect}: #{old.inspect} / #{current.inspect}" unless old == current
+  counts[category] += 1
+end
+contents = [nil, '', true, false, 0, 12, '0', '12', '12.5', '-1', 'NaN', 'Infinity', 'yes', 'No!', 'ndiyo', 'hapana',
+            'not sure', 'hello', 'Remote onboarding', 'REMOTE', 'remote', '?', '12?', 'TZS 600000', 'USD 2500',
+            '$2500.25', '$2500.256', 'TZS 2 million', 'TZS 600000 per month', 'I can spend $2500', '2500', '0.00']
+%w[number money boolean choice text unsupported].product(contents, %w[TZS USD KES]).each do |type, content, currency|
+  args = { question: { 'answer_type' => type, 'options' => %w[Remote Office], 'period' => 'month' }, content: content, currency: currency }
+  same!(:typed_observation, args, result { AiLeadEmployee::BaselineOfferTypedAnswer.new(**args).observation },
+        result { AiLeadEmployee::OfferTypedAnswer.new(**args).observation }, counts)
+end
+values = [nil, '', false, true, 0, -1, 12.5, Float::INFINITY, Float::NAN, 'Remote', 'Other', ['Remote'], [],
+          { 'amount' => '2500.25', 'currency' => 'USD' }, { 'amount' => '', 'currency' => 'USD' },
+          { 'amount' => '-1', 'currency' => 'USD' }, { 'amount' => '2500.255', 'currency' => 'USD' },
+          { 'amount' => '600000', 'currency' => 'TZS' }]
+%w[number money boolean choice text].product(%w[eq in lt lte gt gte positive negative known unsupported], values).each do |type, operator, value|
+  question = { 'key' => 'custom', 'answer_type' => type, 'options' => %w[Remote Office] }
+  rule = { 'kind' => 'score_rule', 'field' => 'custom', 'operator' => operator, 'value' => value, 'score_delta' => 15, 'priority' => 0, 'enabled' => true }
+  args = { questions: [question], currency: 'USD' }
+  same!(:normalize, [type, operator, value], result { AiLeadEmployee::BaselineOfferRules.normalize([rule], **args) },
+        result { AiLeadEmployee::OfferRules.normalize([rule], **args) }, counts)
+end
+%w[score_rule hard_rule unsupported].product([nil, -1, 0, 15, '15'], [nil, false, true, 'true'], [nil, -1, 0], [nil, '', 'unqualified', 'qualified']).each do |kind, score, enabled, priority, forced|
+  rule = { 'kind' => kind, 'score_delta' => score, 'enabled' => enabled, 'priority' => priority, 'forced_outcome' => forced }
+  same!(:effect, rule, result { AiLeadEmployee::BaselineOfferRules.validate_effect!(rule) },
+        result { AiLeadEmployee::OfferRules.validate_effect!(rule) }, counts)
+end
+offer_class = Struct.new(:configuration)
+%w[eq in lt lte gt gte positive negative known unsupported].product(%w[positive negative unknown], [nil, false, true, 0, 12, 'Remote']).each do |operator, polarity, actual|
+  expected = operator == 'in' ? [actual] : actual
+  rule = { 'kind' => 'score_rule', 'field' => 'custom', 'operator' => operator, 'value' => expected, 'score_delta' => 15, 'priority' => 0, 'enabled' => true }
+  args = { offer: offer_class.new({ 'rules' => [rule] }), snapshot: { 'custom' => { 'typed_value' => actual, 'polarity' => polarity, 'evidence_id' => 7 } } }
+  same!(:rule_outcome, [operator, polarity, actual], result { evaluator = AiLeadEmployee::BaselineOfferRules.new(**args); [evaluator.matches, evaluator.score_delta, evaluator.excluded?, evaluator.reasons] },
+        result { evaluator = AiLeadEmployee::OfferRules.new(**args); [evaluator.matches, evaluator.score_delta, evaluator.excluded?, evaluator.reasons] }, counts)
+end
+report = { comparisons: counts, total: counts.values.sum, mismatches: [] }
+File.write('tmp/r09/typed-helpers-equivalence-results.json', JSON.pretty_generate(report) + "\n")
+puts JSON.generate(report)

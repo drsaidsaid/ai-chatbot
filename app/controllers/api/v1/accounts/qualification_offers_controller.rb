@@ -1,0 +1,59 @@
+# frozen_string_literal: true
+
+class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::BaseController
+  before_action :check_admin_authorization?
+
+  def index
+    render json: current_account.qualification_offers.order(:position, :id).map(&:payload)
+  end
+
+  def show
+    render json: offer.payload
+  end
+
+  def create
+    save_offer(current_account.qualification_offers.new, :created)
+  end
+
+  def update
+    save_offer(offer, :ok)
+  end
+
+  private
+
+  def offer
+    @offer ||= current_account.qualification_offers.find(params[:id])
+  end
+
+  def save_offer(record, status)
+    saved = AiLeadEmployee::OfferConfigurationWriter.new(offer: record, attributes: offer_params.to_h).perform
+    render json: saved.payload, status: status
+  rescue AiLeadEmployee::OfferConfigurationWriter::Conflict => e
+    render json: { error: e.message }, status: :conflict
+  rescue ArgumentError, KeyError, ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def offer_params
+    permitted = params.require(:offer).permit(:name, :currency, :enabled, :version,
+                                              questions: [
+                                                :key, :meaning, :answer_type, :prompt, :position, :enabled, :required, :period, { options: [] }
+                                              ],
+                                              budget_ranges: [:label, :minimum, :maximum, :position, :enabled],
+                                              score_weights: {}, score_thresholds: [:qualified, :highly_qualified]).to_h
+    permitted.merge('rules' => rule_params)
+  end
+
+  def rule_params
+    rules = params.require(:offer).fetch(:rules, [])
+    return rules unless rules.is_a?(Array)
+
+    rules.map do |rule|
+      next rule unless rule.is_a?(ActionController::Parameters)
+
+      value = rule[:value]
+      value = value.permit(:amount, :currency).to_h if value.is_a?(ActionController::Parameters)
+      rule.permit(:kind, :field, :operator, :score_delta, :forced_outcome, :priority, :enabled).to_h.merge('value' => value)
+    end
+  end
+end

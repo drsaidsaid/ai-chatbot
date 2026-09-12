@@ -1,0 +1,348 @@
+diff --git a/app/models/whatsapp/outbound_delivery.rb b/app/models/whatsapp/outbound_delivery.rb
+index 5296840..4edde56 100644
+--- a/app/models/whatsapp/outbound_delivery.rb
++++ b/app/models/whatsapp/outbound_delivery.rb
+@@ -14,12 +14,8 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
+ 
+   def recover!
+     with_lifecycle(review: true) do |owner, reviews|
+-      if pending? || claimed?
+-        if (reason = owner.admission_failure(self))
+-          owner.cancel!(self, reason: reason)
+-          next false
+-        end
+-      end
++      next false if cancel_inadmissible_recovery!(owner)
++
+       if pending?
+         update!(updated_at: Time.current)
+         next true
+@@ -58,17 +54,10 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
+       AiLeadEmployee::OfferDeliveryContext.new(conversation: conversation,
+                                                context: message.additional_attributes.dig('ai_lead_employee',
+                                                                                           'qualification_context')).lock_offers!
+-      membership = AccountUser.where(account_id: account_id, user_id: user&.id).lock.first
+-      next false unless account.reload.active? && membership && (membership.administrator? || conversation.assignee_id == user.id)
++      next false unless retry_authorized?(user)
+ 
+       with_lifecycle do |lifecycle, _reviews|
+-        next false if lifecycle.artifact_for(self)
+-        next false unless failed? && message.reload.source_id.blank?
+-
+-        update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
+-        message.update!(status: :sent, external_error: nil)
+-        publish!
+-        true
++        retry_locked!(lifecycle)
+       end
+     end
+   end
+@@ -107,7 +96,8 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
+     owner.outcome!(self)
+     if reviews.empty?
+       HumanReviewRequest.create!(account: account, conversation: conversation, lead_message: message, reason: :delivery_unknown,
+-                                 question: "Delivery outcome unknown for message #{message_id}. Check the provider outcome before contacting the Lead again.",
++                                 question: "Delivery outcome unknown for message #{message_id}. " \
++                                           'Check the provider outcome before contacting the Lead again.',
+                                  assigned_user_id: conversation.assignee_id)
+     end
+     publish!
+@@ -124,6 +114,31 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
+ 
+   private
+ 
++  def cancel_inadmissible_recovery!(owner)
++    return false unless pending? || claimed?
++
++    reason = owner.admission_failure(self)
++    return false unless reason
++
++    owner.cancel!(self, reason: reason)
++    true
++  end
++
++  def retry_authorized?(user)
++    membership = AccountUser.where(account_id: account_id, user_id: user&.id).lock.first
++    account.reload.active? && membership && (membership.administrator? || conversation.assignee_id == user.id)
++  end
++
++  def retry_locked!(lifecycle)
++    return false if lifecycle.artifact_for(self)
++    return false unless failed? && message.reload.source_id.blank?
++
++    update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
++    message.update!(status: :sent, external_error: nil)
++    publish!
++    true
++  end
++
+   def recover_claim!(owner)
+     if attempts >= MAX_CLAIM_ATTEMPTS
+       update!(state: :failed, failure_code: 'claim_recovery_exhausted')
+diff --git a/app/services/ai_lead_employee/automated_contact_consent.rb b/app/services/ai_lead_employee/automated_contact_consent.rb
+index 8822aa7..e709127 100644
+--- a/app/services/ai_lead_employee/automated_contact_consent.rb
++++ b/app/services/ai_lead_employee/automated_contact_consent.rb
+@@ -100,10 +100,7 @@ class AiLeadEmployee::AutomatedContactConsent
+       cancellation = AiLeadEmployee::AutomationCancellation.new(conversations: conversations)
+       cancellation.lock_offers!
+       active_stop = LeadFollowUpOptOut.lock.find_by(account: account, contact: contact)
+-      raise ActiveRecord::RecordNotFound, 'No active automated-contact withdrawal' if active_stop.blank?
+-
+-      raise ArgumentError, 'The active withdrawal changed; reload and try again' unless expected_withdrawal_matches?(active_stop, expected_event_id)
+-      raise ArgumentError, 'Re-consent evidence must be newer than the withdrawal' unless newer_than?(active_stop)
++      validate_withdrawal!(active_stop, expected_event_id)
+ 
+       event = record_grant_event!(contact: contact, actor: actor)
+       active_stop.destroy!
+@@ -114,6 +111,13 @@ class AiLeadEmployee::AutomatedContactConsent
+ 
+   private
+ 
++  def validate_withdrawal!(active_stop, expected_event_id)
++    raise ActiveRecord::RecordNotFound, 'No active automated-contact withdrawal' if active_stop.blank?
++
++    raise ArgumentError, 'The active withdrawal changed; reload and try again' unless expected_withdrawal_matches?(active_stop, expected_event_id)
++    raise ArgumentError, 'Re-consent evidence must be newer than the withdrawal' unless newer_than?(active_stop)
++  end
++
+   attr_reader :message, :webhook_event
+ 
+   def trusted_source?
+diff --git a/app/services/ai_lead_employee/handoff_alert_recipients.rb b/app/services/ai_lead_employee/handoff_alert_recipients.rb
+new file mode 100644
+index 0000000..55c0000
+--- /dev/null
++++ b/app/services/ai_lead_employee/handoff_alert_recipients.rb
+@@ -0,0 +1,41 @@
++# frozen_string_literal: true
++
++class AiLeadEmployee::HandoffAlertRecipients
++  def initialize(account:, alert_type:)
++    @account = account
++    @alert_type = alert_type
++  end
++
++  def for(assignee)
++    alert_routes.filter_map { |route| recipient_for(route, assignee) }.flatten.filter_map { |recipient| normalized_recipient(recipient) }.uniq
++  end
++
++  private
++
++  attr_reader :account, :alert_type
++
++  def alert_routes
++    Array(account.settings&.dig('ai_lead_employee', 'alert_routes', alert_type))
++  end
++
++  def recipient_for(route, assignee)
++    case route.to_h['type']
++    when 'assignee'
++      whatsapp_alert_phone_for(assignee)
++    when 'admin'
++      account.administrators.map { |admin| whatsapp_alert_phone_for(admin) }
++    else
++      route.to_h['recipient']
++    end
++  end
++
++  def normalized_recipient(recipient)
++    Whatsapp::RecipientIdentifier.normalize(recipient)
++  end
++
++  def whatsapp_alert_phone_for(user)
++    return if user.blank?
++
++    user.custom_attributes&.dig('whatsapp_alert_phone').presence
++  end
++end
+diff --git a/app/services/ai_lead_employee/highly_qualified_handoff_service.rb b/app/services/ai_lead_employee/highly_qualified_handoff_service.rb
+index 78aaabe..76b013c 100644
+--- a/app/services/ai_lead_employee/highly_qualified_handoff_service.rb
++++ b/app/services/ai_lead_employee/highly_qualified_handoff_service.rb
+@@ -17,39 +17,12 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
+ 
+   def perform
+     result = conversation.reload.with_lock('FOR NO KEY UPDATE') do
+-      existing_handoff = existing_handoff_record
+-      context = existing_handoff ? existing_handoff.qualification_snapshot['qualification_context'] : qualification_context
+-      authority = AiLeadEmployee::OfferDeliveryContext.new(
+-        conversation: conversation, context: context, required: qualification&.offer_id.present?
+-      )
+-      authority.lock_offers!
+-      if existing_handoff
+-        next Result.new if authority.failure_code || !existing_handoff_retry_allowed?(existing_handoff)
+-
+-        next Result.new(handoff: existing_handoff, created: false, assignee: existing_handoff.assignee)
+-      end
+-      next Result.new unless context_matches_qualification?
+-      next Result.new if authority.failure_code
+-
+-      qualification&.reload
+-      next Result.new unless automatic_handoff_allowed?
+-
+-      handoff, created = find_or_create_handoff!
+-      assign_operator!(handoff) if created
+-      Result.new(handoff: handoff, created: created, assignee: handoff.assignee)
++      perform_handoff_locked
+     end
+     deliver_result_alerts(result)
+   rescue ActiveRecord::RecordNotUnique
+     result = conversation.reload.with_lock('FOR NO KEY UPDATE') do
+-      handoff = account.lead_handoffs.find_by!(conversation: conversation, lead_qualification: qualification, alert_type: ALERT_TYPE)
+-      authority = AiLeadEmployee::OfferDeliveryContext.new(
+-        conversation: conversation, context: handoff.qualification_snapshot['qualification_context'],
+-        required: qualification&.offer_id.present?
+-      )
+-      authority.lock_offers!
+-      next Result.new if authority.failure_code || !existing_handoff_retry_allowed?(handoff)
+-
+-      Result.new(handoff: handoff, created: false, assignee: handoff.assignee)
++      recover_existing_handoff_locked
+     end
+     deliver_result_alerts(result)
+   end
+@@ -61,6 +34,45 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
+ 
+   private
+ 
++  def perform_handoff_locked
++    existing_handoff = existing_handoff_record
++    context = existing_handoff ? existing_handoff.qualification_snapshot['qualification_context'] : qualification_context
++    authority = AiLeadEmployee::OfferDeliveryContext.new(
++      conversation: conversation, context: context, required: qualification&.offer_id.present?
++    )
++    authority.lock_offers!
++    if existing_handoff
++      return Result.new if authority.failure_code || !existing_handoff_retry_allowed?(existing_handoff)
++
++      return Result.new(handoff: existing_handoff, created: false, assignee: existing_handoff.assignee)
++    end
++    create_handoff_result(authority)
++  end
++
++  def create_handoff_result(authority)
++    return Result.new unless context_matches_qualification?
++    return Result.new if authority.failure_code
++
++    qualification&.reload
++    return Result.new unless automatic_handoff_allowed?
++
++    handoff, created = find_or_create_handoff!
++    assign_operator!(handoff) if created
++    Result.new(handoff: handoff, created: created, assignee: handoff.assignee)
++  end
++
++  def recover_existing_handoff_locked
++    handoff = account.lead_handoffs.find_by!(conversation: conversation, lead_qualification: qualification, alert_type: ALERT_TYPE)
++    authority = AiLeadEmployee::OfferDeliveryContext.new(
++      conversation: conversation, context: handoff.qualification_snapshot['qualification_context'],
++      required: qualification&.offer_id.present?
++    )
++    authority.lock_offers!
++    return Result.new if authority.failure_code || !existing_handoff_retry_allowed?(handoff)
++
++    Result.new(handoff: handoff, created: false, assignee: handoff.assignee)
++  end
++
+   attr_reader :account, :conversation, :qualification, :qualification_context, :defer_alert_delivery
+ 
+   def deliver_result_alerts(result)
+@@ -158,11 +170,7 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
+   end
+ 
+   def alert_recipients(assignee)
+-    alert_routes.filter_map { |route| recipient_for(route, assignee) }.flatten.filter_map { |recipient| normalized_recipient(recipient) }.uniq
+-  end
+-
+-  def alert_routes
+-    Array(account.settings&.dig('ai_lead_employee', 'alert_routes', ALERT_TYPE))
++    AiLeadEmployee::HandoffAlertRecipients.new(account: account, alert_type: ALERT_TYPE).for(assignee)
+   end
+ 
+   def alert_template_params
+@@ -174,27 +182,6 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
+     ).to_h
+   end
+ 
+-  def recipient_for(route, assignee)
+-    case route.to_h['type']
+-    when 'assignee'
+-      whatsapp_alert_phone_for(assignee)
+-    when 'admin'
+-      account.administrators.map { |admin| whatsapp_alert_phone_for(admin) }
+-    else
+-      route.to_h['recipient']
+-    end
+-  end
+-
+-  def normalized_recipient(recipient)
+-    Whatsapp::RecipientIdentifier.normalize(recipient)
+-  end
+-
+-  def whatsapp_alert_phone_for(user)
+-    return if user.blank?
+-
+-    user.custom_attributes&.dig('whatsapp_alert_phone').presence
+-  end
+-
+   def configured_operator
+     operator_id = account.settings&.dig('ai_lead_employee', 'human_operator_id')
+     account.users.find_by(id: operator_id) || account.administrators.first
+diff --git a/app/services/ai_lead_employee/offer_delivery_context.rb b/app/services/ai_lead_employee/offer_delivery_context.rb
+index 6cfed45..ad54f9e 100644
+--- a/app/services/ai_lead_employee/offer_delivery_context.rb
++++ b/app/services/ai_lead_employee/offer_delivery_context.rb
+@@ -30,27 +30,43 @@ class AiLeadEmployee::OfferDeliveryContext
+   def failure_code
+     return missing_context_failure if context.empty?
+     return 'qualification_context_invalid' unless valid_identity?
+-    return 'offer_selection_changed' unless conversation.offer_id == context['offer_id'] &&
+-                                            conversation.offer_selection_version == context['selection_version']
++    return 'offer_selection_changed' unless current_selection?
+ 
+     offer = AiLeadEmployee::Offer.find_by(account_id: conversation.account_id, id: context['offer_id'])
+-    return 'offer_configuration_changed' unless offer&.enabled? && offer.configuration_version == context['configuration_version']
++    return 'offer_configuration_changed' unless current_configuration?(offer)
+ 
+     qualification = LeadQualification.find_by(id: context['qualification_id'], account_id: conversation.account_id,
+                                               contact_id: conversation.contact_id, offer_id: offer.id)
+-    return 'qualification_decision_changed' unless qualification && qualification.stale_at.nil? &&
+-                                                   qualification.configuration_version == context['configuration_version']
++    return 'qualification_decision_changed' unless current_qualification?(qualification)
+ 
+-    decision = qualification.lead_qualification_decisions.order(id: :desc).first
+-    return 'qualification_decision_changed' unless decision && decision.id == context['decision_id'] &&
+-                                                   decision.offer_id == offer.id && decision.account_id == conversation.account_id &&
+-                                                   decision.contact_id == conversation.contact_id
++    return 'qualification_decision_changed' unless current_decision?(qualification, offer)
+ 
+     nil
+   end
+ 
+   private
+ 
++  def current_selection?
++    conversation.offer_id == context['offer_id'] &&
++      conversation.offer_selection_version == context['selection_version']
++  end
++
++  def current_configuration?(offer)
++    offer&.enabled? && offer.configuration_version == context['configuration_version']
++  end
++
++  def current_qualification?(qualification)
++    qualification && qualification.stale_at.nil? &&
++      qualification.configuration_version == context['configuration_version']
++  end
++
++  def current_decision?(qualification, offer)
++    decision = qualification.lead_qualification_decisions.order(id: :desc).first
++    decision && decision.id == context['decision_id'] &&
++      decision.offer_id == offer.id && decision.account_id == conversation.account_id &&
++      decision.contact_id == conversation.contact_id
++  end
++
+   attr_reader :conversation, :context
+ 
+   def missing_context_failure

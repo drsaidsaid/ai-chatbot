@@ -1,0 +1,9 @@
+{
+  "tree": "b666fcf1f94066b2708335602cfc04dd6043bdc4",
+  "ref": "refs/r09/shared-readers-reproduced-20260911",
+  "source_tree": "becb6fc4d243204ee6a872dd4d71b493f07b0580",
+  "source_ref": "refs/r09/shared-readers-complete-source-20260911",
+  "examples": 49,
+  "failures": 0,
+  "whole_tree_equal_before_after": true
+}

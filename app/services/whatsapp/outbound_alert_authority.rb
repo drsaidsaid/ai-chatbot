@@ -16,13 +16,17 @@ class Whatsapp::OutboundAlertAuthority
     @attributes['origin_conversation_id'] if alert?
   end
 
+  def lock_record!
+    return unless @message.present? && @message.persisted? && record
+
+    record.lock!
+  end
+
   def failure_code
     return 'alert_authority_unavailable' unless record
 
-    # The dispatch transaction already owns Conversation and delivery locks.
-    # Serialize all authority updates, including the review rejection API, until
-    # dispatching commits. Provider HTTP begins only after these locks are released.
-    record.lock!
+    # Canonical dispatch already owns this record before Delivery. Do not acquire
+    # a new earlier-rank domain lock from this eligibility check.
     return 'alert_authority_unavailable' unless origin_id == record.conversation_id
 
     origin = record.conversation.reload
@@ -47,14 +51,16 @@ class Whatsapp::OutboundAlertAuthority
   private
 
   def record
-    @record ||= case @attributes['alert_type']
-                when 'human_review_request'
-                  HumanReviewRequest.find_by(account_id: @message.account_id, id: @attributes['review_request_id'])
-                when AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE
-                  LeadHandoff.find_by(account_id: @message.account_id, id: @attributes['handoff_id'])
-                when AiLeadEmployee::BookingService::PREPARATION_ALERT_TYPE
-                  Booking.find_by(account_id: @message.account_id, id: @attributes['booking_id'])
-                end
+    return @record if instance_variable_defined?(:@record)
+
+    @record = case @attributes['alert_type']
+              when 'human_review_request'
+                HumanReviewRequest.find_by(account_id: @message.account_id, id: @attributes['review_request_id'])
+              when AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE
+                LeadHandoff.find_by(account_id: @message.account_id, id: @attributes['handoff_id'])
+              when AiLeadEmployee::BookingService::PREPARATION_ALERT_TYPE
+                Booking.find_by(account_id: @message.account_id, id: @attributes['booking_id'])
+              end
   end
 
   def record_current?

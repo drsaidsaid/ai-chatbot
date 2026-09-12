@@ -1,0 +1,12 @@
+{
+  "before_tree": "b12a77c0f2c5867e85ca4173455f98612a4679f9",
+  "source_tree": "8d1278937943e2b28317652d6f035f0be950d9e1",
+  "paths": [
+    "app/models/lead_follow_up.rb",
+    "app/models/lead_follow_up_attempt.rb",
+    "app/models/qualification_evidence.rb",
+    "app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb",
+    "app/controllers/api/v1/accounts/qualification_offers_controller.rb"
+  ],
+  "plan_path": "docs/issues/v1-completion-20260909/r09-production-cleanup-plan.md"
+}

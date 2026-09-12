@@ -1,0 +1,76 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Stronger invalidation of a context-canceled follow-up', type: :request do
+  include_context 'Offer qualification requests'
+
+  before do
+    @offer = r09_create_offer
+    @conversation = r09_conversation(offer: @offer)
+    @follow_up = schedule.first
+    @follow_up.update!(scheduled_at: 1.minute.ago)
+    r09_update_offer(@offer, name: 'Changed before follow-up materialization')
+    expect(response).to have_http_status(:success)
+    AiLeadEmployee::FollowUpDeliveryService.new(follow_up: @follow_up).perform
+    expect(@follow_up.reload).to have_attributes(status: 'cancelled', cancellation_reason: 'offer_configuration_changed')
+    expect(@follow_up.follow_up_attempt).to be_unadmitted
+  end
+
+  %w[control provider opt_out].each do |authority|
+    it "does not grant replacement after #{authority} is withdrawn and restored" do
+      withdraw(authority)
+      state_after_withdrawal = @follow_up.follow_up_attempt.reload.admission_state
+      restore(authority)
+
+      expect(schedule).to be_empty
+      expect(state_after_withdrawal).to eq('blocked')
+      expect(@follow_up.follow_up_attempt.reload).to be_blocked
+      expect(@follow_up.reload).to have_attributes(status: 'cancelled', cancellation_reason: 'offer_configuration_changed',
+                                                   replaced_by_follow_up_id: nil)
+      expect(LeadFollowUp.where(follow_up_attempt_id: @follow_up.follow_up_attempt_id).count).to eq(1)
+      expect(WebMock).not_to have_requested(:post, %r{https://graph.facebook.com/})
+    end
+  end
+
+  def schedule
+    result = AiLeadEmployee::QualificationService.new(conversation: @conversation).perform
+    AiLeadEmployee::FollowUpScheduler.new(conversation: @conversation, qualification_result: result).perform
+  end
+
+  def withdraw(authority)
+    case authority
+    when 'control'
+      Conversations::ControlService.new(conversation: @conversation).pause_ai!
+    when 'provider'
+      delete "/api/v1/accounts/#{account.id}/ai_provider_connection", headers: r09_headers, as: :json
+      expect(response).to have_http_status(:success)
+    when 'opt_out'
+      @stop = LeadFollowUpOptOut.create!(account: account, contact: r09_lead, conversation: @conversation,
+                                         reason: 'lead_requested_stop', opted_out_at: 1.minute.ago)
+    end
+  end
+
+  def restore(authority)
+    case authority
+    when 'control'
+      Conversations::ControlService.new(conversation: @conversation).resume_ai!
+    when 'provider'
+      patch "/api/v1/accounts/#{account.id}/ai_provider_connection", headers: r09_headers,
+                                                                     params: { api_key: 'synthetic-r09-restored-provider-key' }, as: :json
+      expect(response).to have_http_status(:success)
+    when 'opt_out'
+      message = create(:message, account: account, inbox: @conversation.inbox, conversation: @conversation,
+                                 sender: r09_lead, message_type: :incoming, content: 'Please resume messaging me again',
+                                 source_id: 'wamid.R09.EXPLICIT.RECONSENT', provider_created_at: Time.current)
+      receipt = Whatsapp::WebhookReceipt.create!(raw_body: '{"synthetic":"r09-reconsent"}', body_digest: SecureRandom.hex(32),
+                                                 verified_routes: [r09_channel.id], expanded_at: Time.current)
+      Whatsapp::WebhookEvent.create!(receipt: receipt, account: account, inbox: @conversation.inbox, channel: r09_channel,
+                                     event_key: SecureRandom.hex(16), kind: 'messages', state: :processed,
+                                     provider_message_id: message.source_id, payload: { 'synthetic' => 'verified reconsent fixture' })
+      AiLeadEmployee::AutomatedContactConsent.grant!(contact: r09_lead, source_message: message,
+                                                     expected_event_id: AiLeadEmployee::AutomatedContactConsent.withdrawal_token(@stop), actor: r09_admin)
+      expect(LeadFollowUpOptOut.exists?(account: account, contact: r09_lead)).to be(false)
+    end
+  end
+end

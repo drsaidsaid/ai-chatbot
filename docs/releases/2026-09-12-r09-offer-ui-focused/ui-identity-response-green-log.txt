@@ -1,0 +1,16 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (13 tests) 290ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  03:54:12
+   Duration  2.43s (transform 1.37s, setup 109ms, collect 1.42s, tests 290ms, environment 416ms, prepare 54ms)
+

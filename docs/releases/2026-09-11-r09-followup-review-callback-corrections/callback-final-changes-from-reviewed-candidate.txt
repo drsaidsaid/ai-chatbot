@@ -1,0 +1,4 @@
+M	app/models/lead_qualification.rb
+M	app/services/ai_lead_employee/follow_up_cancellation.rb
+M	app/services/ai_lead_employee/follow_up_scheduler.rb
+M	spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb

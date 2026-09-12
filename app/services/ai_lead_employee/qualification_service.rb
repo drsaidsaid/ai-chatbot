@@ -23,7 +23,8 @@ class AiLeadEmployee::QualificationService
     ['contact_details', 'What is the best email or phone number for follow-up?']
   ].freeze
 
-  Result = Struct.new(:qualification, :next_question, :new_evidence, :review_request_reason, keyword_init: true)
+  Result = Struct.new(:qualification, :qualification_context, :next_question, :next_question_key, :new_evidence, :review_request_reason,
+                      keyword_init: true)
 
   def initialize(conversation:, incoming_message: nil)
     @conversation = conversation
@@ -33,6 +34,10 @@ class AiLeadEmployee::QualificationService
   end
 
   def perform
+    if conversation.offer_id.present? || account.qualification_offers.exists?
+      return AiLeadEmployee::OfferQualificationService.new(conversation: conversation, incoming_message: incoming_message).perform
+    end
+
     capture_name!
     new_evidence = extract_evidence!
     qualification = evaluate!
@@ -51,13 +56,9 @@ class AiLeadEmployee::QualificationService
     ActiveRecord::Base.transaction do
       evidence = create_human_evidence!(contact: contact, conversation: conversation, user: user, signal: signal, value: value)
       supersede_current_evidence!(contact: contact, signal: signal, replacement: evidence)
-      AiLeadEmployee::QualificationEvidenceAudit.record!(
-        contact: contact,
-        conversation: conversation,
-        user: user,
-        signal: signal,
-        value: value
-      )
+      AiLeadEmployee::QualificationEvidenceAudit.new(
+        contact: contact, conversation: conversation, user: user
+      ).record!(signal: signal, value: value)
     end
 
     evidence

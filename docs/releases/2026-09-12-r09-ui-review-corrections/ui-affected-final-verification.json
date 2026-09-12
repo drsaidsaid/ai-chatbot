@@ -1,0 +1,12 @@
+{
+  "source_tree": "be40e2c6f63a23420fcce99cb9f605c89ce703aa",
+  "runs": [
+    {
+      "name": "rails",
+      "before": "be40e2c6f63a23420fcce99cb9f605c89ce703aa",
+      "after": "be40e2c6f63a23420fcce99cb9f605c89ce703aa",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    }
+  ]
+}

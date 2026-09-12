@@ -1,0 +1,84 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > edits one Offer while preserving exact human currency units and its revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > creates a separate Offer with ordered questions and a typed money rule
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js (2 tests | 1 failed) 39ms
+   ✓ edits one Offer while preserving exact human currency units and its revision
+   × creates a separate Offer with ordered questions and a typed money rule 10ms
+     → Unable to get [data-testid="new-offer"] within: <section class="grid gap-5">
+  <!--v-if-->
+  <!--v-if-->
+  <!--v-if-->
+  <form class="grid gap-5">
+    <p class="text-sm text-n-slate-11">Revision 3</p><label class="grid gap-1 text-sm">Offer name <input required="" class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="offer-name"></label><label class="grid gap-1 text-sm">Currency <select class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="offer-currency">
+        <option value="TZS">TZS</option>
+        <option value="USD">USD</option>
+        <option value="KES">KES</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+      </select></label>
+    <fieldset class="grid gap-3">
+      <legend class="mb-3 text-base font-semibold">Budget ranges</legend>
+      <div class="grid gap-2 rounded-lg border border-n-weak p-4 sm:grid-cols-2"><label class="grid gap-1 text-sm">Minimum (TZS) <input inputmode="decimal" class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="budget-minimum-0"></label><label class="grid gap-1 text-sm">Maximum (TZS, optional) <input inputmode="decimal" class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="budget-maximum-0"></label></div>
+    </fieldset><button type="submit" class="min-h-10 justify-self-start rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50">Save Offer</button>
+  </form>
+</section>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > creates a separate Offer with ordered questions and a typed money rule
+Error: Unable to get [data-testid="new-offer"] within: <section class="grid gap-5">
+  <!--v-if-->
+  <!--v-if-->
+  <!--v-if-->
+  <form class="grid gap-5">
+    <p class="text-sm text-n-slate-11">Revision 3</p><label class="grid gap-1 text-sm">Offer name <input required="" class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="offer-name"></label><label class="grid gap-1 text-sm">Currency <select class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="offer-currency">
+        <option value="TZS">TZS</option>
+        <option value="USD">USD</option>
+        <option value="KES">KES</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+      </select></label>
+    <fieldset class="grid gap-3">
+      <legend class="mb-3 text-base font-semibold">Budget ranges</legend>
+      <div class="grid gap-2 rounded-lg border border-n-weak p-4 sm:grid-cols-2"><label class="grid gap-1 text-sm">Minimum (TZS) <input inputmode="decimal" class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="budget-minimum-0"></label><label class="grid gap-1 text-sm">Maximum (TZS, optional) <input inputmode="decimal" class="h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12" data-testid="budget-maximum-0"></label></div>
+    </fieldset><button type="submit" class="min-h-10 justify-self-start rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50">Save Offer</button>
+  </form>
+</section>
+ ❯ VueWrapper.BaseWrapper.get node_modules/.pnpm/@vue+test-utils@2.4.6/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:7279:15
+    7277|             return result;
+    7278|         }
+    7279|         throw new Error("Unable to get ".concat(selector, " within: ")…
+       |               ^
+    7280|     };
+    7281|     BaseWrapper.prototype.getComponent = function (selector) {
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js:54:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  03:37:56
+   Duration  806ms (transform 70ms, setup 122ms, collect 57ms, tests 39ms, environment 400ms, prepare 53ms)
+

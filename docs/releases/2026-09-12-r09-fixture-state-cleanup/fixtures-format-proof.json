@@ -1,0 +1,51 @@
+{
+  "before_tree": "6f6c661963a3e29618b1f18b2117c65d22b4fdf8",
+  "after_tree": "0772958eed424906e1b6112a2fbc8dec79ef09c3",
+  "allowed_cops": [
+    "Layout/ArrayAlignment",
+    "Layout/AssignmentIndentation",
+    "Layout/BlockEndNewline",
+    "Layout/LineLength"
+  ],
+  "selected_paths": [
+    "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb"
+  ],
+  "changed_paths": [
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb"
+  ],
+  "before_ast_sha256": {
+    "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb": "309ac96e3173e6633217dfc4ceaf8768652183a72e81b89b54fd814861281a6c",
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb": "f25666da6410c450a7cf3a2427012de92a7b312918417dc2bbc7c6b63648ed7d",
+    "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb": "b132186dc11a64500c2a0aea87b245b507585d9bbaabb54133eab910b4b70290",
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb": "6eef86a9d50a7e22302cd7ae3dd5f40756a1b2f34b43519f1c1acdce5bd5a0c1"
+  },
+  "after_ast_sha256": {
+    "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb": "309ac96e3173e6633217dfc4ceaf8768652183a72e81b89b54fd814861281a6c",
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb": "f25666da6410c450a7cf3a2427012de92a7b312918417dc2bbc7c6b63648ed7d",
+    "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb": "b132186dc11a64500c2a0aea87b245b507585d9bbaabb54133eab910b4b70290",
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb": "6eef86a9d50a7e22302cd7ae3dd5f40756a1b2f34b43519f1c1acdce5bd5a0c1"
+  },
+  "ast_mismatches": [],
+  "autocorrect_exit_code": 1,
+  "invocation": [
+    "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+    "exec",
+    "rubocop",
+    "--force-exclusion",
+    "--only",
+    "Layout/ArrayAlignment,Layout/AssignmentIndentation,Layout/BlockEndNewline,Layout/LineLength",
+    "-a",
+    "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+    "--format",
+    "json",
+    "--out",
+    "/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/fixtures-format-autocorrect-results.json"
+  ]
+}

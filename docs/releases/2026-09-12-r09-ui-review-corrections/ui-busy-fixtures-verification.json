@@ -1,0 +1,19 @@
+{
+  "source_tree": "4b712e5e8dc953cc16bc5ac9ec55cce0d5e7ee04",
+  "runs": [
+    {
+      "name": "vue",
+      "before": "4b712e5e8dc953cc16bc5ac9ec55cce0d5e7ee04",
+      "after": "4b712e5e8dc953cc16bc5ac9ec55cce0d5e7ee04",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    },
+    {
+      "name": "rails",
+      "before": "4b712e5e8dc953cc16bc5ac9ec55cce0d5e7ee04",
+      "after": "4b712e5e8dc953cc16bc5ac9ec55cce0d5e7ee04",
+      "whole_tree_equal": true,
+      "exit_code": 1
+    }
+  ]
+}

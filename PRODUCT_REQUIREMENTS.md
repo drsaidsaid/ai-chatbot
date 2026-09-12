@@ -223,10 +223,30 @@ These values are configurable by an admin in a future version. V1 should preserv
 
 The system uses both hard rules and a configurable score.
 
+R09 implements this framework per Offer, as recorded in
+[ADR 0014](docs/adr/0014-offer-scoped-qualification.md). The administrator manages
+each Offer, its typed questions, budget currency/ranges, bounded rules and score
+thresholds in the same settings path. Question wording and order do not change a
+field's meaning. Revenue is a money field distinct from inquiry count and buying
+budget. Disabled questions, including an intentionally empty question list, do
+not cause default questions to return.
+
+A Conversation selects its Offer explicitly; a sole enabled Offer is the only
+automatic fallback. With multiple enabled Offers and no selection, clarify the
+Offer before applying qualification rules. Shared Lead identity does not copy
+buying evidence or an evaluation between Offers. Both Lead and Conversation views
+identify the Offer, show current reasons, missing evidence and source references,
+and distinguish stale evaluations after configuration changes. Money is displayed
+and edited in labeled human currency units without a hundredfold conversion.
+
 ### Hard Rules
 
 - No business or relevant professional activity means unqualified.
 - A highly qualified lead must have all three of the following: urgent pain, sufficient budget, and decision-maker authority.
+- Explicit capacity to spend on this purchase is positive budget evidence; it
+  need not prove payment or formally earmarked funds. Offer rules determine
+  sufficiency. Income/revenue alone, unrelated spending, negation, contingent
+  funding or unknown currency do not establish sufficient purchase budget.
 - The agent must not book a sales call automatically unless the lead is highly qualified.
 - Name and WhatsApp number are required before a lead is considered ready for human handoff.
 - Business name and location are strongly preferred but may not block handoff when all major buying signals are strong.
@@ -707,3 +727,19 @@ The detailed owned-product boundary, runtime services, status mappings, and draf
 ## 22. Product Principle
 
 The AI's purpose is not to maximize conversation length. Its purpose is to help the lead, determine fit, and move only genuinely ready buyers to the right human with enough context for that human to act immediately.
+
+### Offer context at delivery
+
+A queued qualification reply or handoff cannot use an obsolete Offer selection,
+configuration or qualification decision. Switching A → B → A does not revive old
+work. Human corrections invalidate old output even without a configuration edit.
+An edit before dispatch admission prevents sending; an already admitted request
+may finish once. Unknown outcomes cannot retry automatically through a revision.
+ADR0015 defines the accepted authority and follow-up attempt rules.
+
+Follow-up revisions preserve the same bounded account/Lead/Offer/stage attempt.
+A never-admitted context mismatch can create a linked successor without rewriting
+its predecessor. Admission, uncertainty, failure, consent/control cancellation
+and operator cancellation never grant another attempt. Legacy unscoped content
+is also immutable: unchanged work and timing-only rescheduling remain supported;
+a changed legacy question is canceled without inventing Offer replacement rights.

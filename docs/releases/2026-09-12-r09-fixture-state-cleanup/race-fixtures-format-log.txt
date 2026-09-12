@@ -1,0 +1,115 @@
+Inspecting 3 files
+CCC
+
+Offenses:
+
+spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb:24:60: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                           body: '{"messages":[{"id":"wamid.R09.ADMITTED"}]}', headers: { 'Content-Type' => 'application/json' })
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb:24:60: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                           body: '{"messages":[{"id":"wamid.R09.ADMITTED"}]}', headers: { 'Content-Type' => 'application/json' })
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb:24:96: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                                                               body: '{"messages":[{"id":"wamid.R09.ADMITTED"}]}', headers: { 'Content-Type' => 'application/json' })
+                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb:24:96: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                                                               body: '{"messages":[{"id":"wamid.R09.ADMITTED"}]}', headers: { 'Content-Type' => 'application/json' })
+                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb:24:151: C: Layout/LineLength: Line is too long. [179/150]
+                                                                             body: '{"messages":[{"id":"wamid.R09.ADMITTED"}]}', headers: { 'Content-Type' => 'application/json' })
+                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb:144:151: C: Layout/LineLength: Line is too long. [160/150]
+                                                 offer: AiLeadEmployee::Offer.find(delivery_records[:offer_payload].fetch('id')), user: User.find(r09_admin.id),
+                                                                                                                                                      ^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:22:35: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+    delivery_records[:follow_up] = 
+                                  ^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:22:151: C: [Corrected] Layout/LineLength: Line is too long. [163/150]
+    delivery_records[:follow_up] = AiLeadEmployee::FollowUpScheduler.new(conversation: delivery_records[:conversation], qualification_result: result).perform.first
+                                                                                                                                                      ^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:58:151: C: [Corrected] Layout/LineLength: Line is too long. [163/150]
+      cancel = -> { Whatsapp::OutboundDelivery.cancel_automation!(conversation: Conversation.find(delivery_records[:conversation].id), reason: 'control_changed') }
+                                                                                                                                                      ^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:144:151: C: [Corrected] Layout/LineLength: Line is too long. [153/150]
+        'acceptance' => -> { accept }, 'preparation_failure' => -> { Whatsapp::OutboundDelivery.find(delivery_records[:delivery].id).fail_preparation! },
+                                                                                                                                                      ^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:317:151: C: [Corrected] Layout/LineLength: Line is too long. [158/150]
+      AiLeadEmployee::FollowUpScheduler.cancel_pending_for!(conversation: Conversation.find(delivery_records[:conversation].id), reason: 'operator_cancelled')
+                                                                                                                                                      ^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:320:129: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+      AiLeadEmployee::FollowUpScheduler.cancel_pending_for!(conversation: Conversation.find(delivery_records[:conversation].id), 
+                                                                                                                                ^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:321:1: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+reason: 'operator_cancelled')
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:321:1: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+reason: 'operator_cancelled')
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:321:121: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                                                                                        reason: 'operator_cancelled')
+                                                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:321:121: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                                                                                        reason: 'operator_cancelled')
+                                                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:377:151: C: [Corrected] Layout/LineLength: Line is too long. [173/150]
+    AiLeadEmployee::FollowUpScheduler.new(conversation: Conversation.find(delivery_records[:conversation].id), qualification_result: delivery_records[:fresh_result]).perform
+                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:381:111: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+    AiLeadEmployee::FollowUpScheduler.new(conversation: Conversation.find(delivery_records[:conversation].id), 
+                                                                                                              ^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:382:1: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+qualification_result: delivery_records[:fresh_result]).perform
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:382:1: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+qualification_result: delivery_records[:fresh_result]).perform
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:382:85: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                                                    qualification_result: delivery_records[:fresh_result]).perform
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:382:85: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                                                    qualification_result: delivery_records[:fresh_result]).perform
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:384:48: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                               recipient: delivery_records[:conversation].contact_inbox.source_id)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:384:48: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                               recipient: delivery_records[:conversation].contact_inbox.source_id)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:389:84: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                                                   recipient: delivery_records[:conversation].contact_inbox.source_id)
+                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:389:84: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                                                   recipient: delivery_records[:conversation].contact_inbox.source_id)
+                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:440:151: C: Layout/LineLength: Line is too long. [157/150]
+    raise 'Dedicated Rails test database required' unless Rails.env.test? && ActiveRecord::Base.connection.current_database == 'ale_r09_offers_20260911_spec'
+                                                                                                                                                      ^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:32:52: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                   replaced_by_follow_up_id: nil)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:32:52: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                   replaced_by_follow_up_id: nil)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:32:88: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                                                       replaced_by_follow_up_id: nil)
+                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:32:88: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                                                       replaced_by_follow_up_id: nil)
+                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:52:42: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                         reason: 'lead_requested_stop', opted_out_at: 1.minute.ago)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:52:42: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                         reason: 'lead_requested_stop', opted_out_at: 1.minute.ago)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:52:78: C: [Corrected] Layout/ArgumentAlignment: Align the arguments of a method call if they span more than one line.
+                                                                             reason: 'lead_requested_stop', opted_out_at: 1.minute.ago)
+                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:52:78: C: [Corrected] Layout/HashAlignment: Align the keys of a hash literal if they span more than one line.
+                                                                             reason: 'lead_requested_stop', opted_out_at: 1.minute.ago)
+                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb:74:151: C: Layout/LineLength: Line is too long. [172/150]
+                                                     expected_event_id: AiLeadEmployee::AutomatedContactConsent.withdrawal_token(delivery_records[:stop]), actor: r09_admin)
+                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^
+
+3 files inspected, 36 offenses detected, 32 offenses corrected

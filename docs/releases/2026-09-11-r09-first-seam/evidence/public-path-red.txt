@@ -1,0 +1,69 @@
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/models/notification.rb:49)
+FFFFF
+
+Failures:
+
+  1) Offer qualification through the public API round-trips two independent Offer configurations in human currency units
+     Failure/Error: expect(response).to have_http_status(:created)
+       expected the response to have status code :created (201) but it was :not_found (404)
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:90:in 'RSpec::ExampleGroups::OfferQualificationThroughThePublicAPI#create_offer'
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:12:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  2) Offer qualification through the public API keeps an explicitly empty question list empty after saving and reloading
+     Failure/Error: expect(response).to have_http_status(:created)
+       expected the response to have status code :created (201) but it was :not_found (404)
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:90:in 'RSpec::ExampleGroups::OfferQualificationThroughThePublicAPI#create_offer'
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:25:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  3) Offer qualification through the public API rejects stale configuration edits without overwriting a newer threshold
+     Failure/Error: expect(response).to have_http_status(:created)
+       expected the response to have status code :created (201) but it was :not_found (404)
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:90:in 'RSpec::ExampleGroups::OfferQualificationThroughThePublicAPI#create_offer'
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:35:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  4) Offer qualification through the public API requires current administrator membership for configuration writes
+     Failure/Error: expect(response).to have_http_status(:unauthorized)
+       expected the response to have status code :unauthorized (401) but it was :not_found (404)
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:51:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  5) Offer qualification through the public API qualifies the selected Offer from incoming evidence without borrowing another Offer budget
+     Failure/Error: expect(response).to have_http_status(:created)
+       expected the response to have status code :created (201) but it was :not_found (404)
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:90:in 'RSpec::ExampleGroups::OfferQualificationThroughThePublicAPI#create_offer'
+     # ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:59:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+Finished in 5.17 seconds (files took 4.71 seconds to load)
+5 examples, 5 failures
+
+Failed examples:
+
+rspec ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:11 # Offer qualification through the public API round-trips two independent Offer configurations in human currency units
+rspec ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:24 # Offer qualification through the public API keeps an explicitly empty question list empty after saving and reloading
+rspec ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:34 # Offer qualification through the public API rejects stale configuration edits without overwriting a newer threshold
+rspec ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:48 # Offer qualification through the public API requires current administrator membership for configuration writes
+rspec ./spec/requests/ai_lead_employee/offer_qualification_spec.rb:58 # Offer qualification through the public API qualifies the selected Offer from incoming evidence without borrowing another Offer budget
+

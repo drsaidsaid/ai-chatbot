@@ -1,0 +1,33 @@
+# frozen_string_literal: true
+
+# Unknown adversative tails stay attached. Only supported independent assertions
+# can be separated from a spending claim without discarding possible conditions.
+class AiLeadEmployee::QualificationBudgetClauses
+  REPLACEMENT = /\A(?:(?:actually|correction)[:,]?\s+)?(?:(?:my|our)\s+budget\b|(?:budget|bajeti)\b|(?:i|we) can spend\b|(?:ninaweza|naweza|tunaweza) kutumia\b|(?:ninaweza|naweza) kutenga\b|nimetenga\b|ninatenga\b|nitatenga\b|(?:i|we) (?:have )?(?:set aside|allocated)\b)/
+
+  def self.for(content, independent_statement:)
+    statements = content.split(/(?<=[.!?])\s+|[;\n]+/).map(&:strip).reject(&:empty?)
+    joined = statements.each_with_object([]) do |statement, result|
+      if result.any? && statement.match?(/\A(?:but|lakini)\b/)
+        result[-1] = "#{result.last} #{statement}"
+      else
+        result << statement
+      end
+    end
+    joined.flat_map { |statement| independent_candidates(statement, independent_statement) }
+  end
+
+  def self.independent_candidates(statement, independent_statement)
+    parts = statement.split(/(\b(?:but|lakini)\b)/)
+    candidates = [parts.shift.to_s.strip]
+    parts.each_slice(2) do |connector, part|
+      part = part.to_s.sub(/\A[\s,:—-]+/, '').strip
+      if part.match?(REPLACEMENT) || independent_statement.call(part)
+        candidates << part
+      else
+        candidates[-1] = "#{candidates.last} #{connector} #{part}"
+      end
+    end
+    candidates.reject(&:empty?)
+  end
+end

@@ -33,6 +33,7 @@
 class LeadQualification < ApplicationRecord
   belongs_to :account
   belongs_to :contact
+  belongs_to :offer, class_name: 'AiLeadEmployee::Offer', optional: true
   has_many :bookings, dependent: :destroy_async
   has_many :lead_handoffs, dependent: :destroy_async
   has_many :lead_qualification_decisions, dependent: :destroy_async
@@ -54,7 +55,7 @@ class LeadQualification < ApplicationRecord
   }
 
   validates :quality, :follow_up_state, :score, :configuration_version, :last_evaluated_at, presence: true
-  validates :contact_id, uniqueness: { scope: :account_id }
+  validates :contact_id, uniqueness: { scope: [:account_id, :offer_id] }
   validate :validate_account_scope
 
   after_update_commit :cancel_incompatible_follow_ups
@@ -63,6 +64,7 @@ class LeadQualification < ApplicationRecord
     lead_qualification_decisions.create!(
       account: account,
       contact: contact,
+      offer_id: offer_id,
       quality: quality,
       follow_up_state: follow_up_state,
       score: score,
@@ -79,10 +81,15 @@ class LeadQualification < ApplicationRecord
   def cancel_incompatible_follow_ups
     return unless saved_change_to_follow_up_state? && follow_up_state.in?(%w[human_review call_booked closed])
 
-    lead_follow_ups.pending.find_each { |follow_up| follow_up.cancel!("follow_up_state_#{follow_up_state}") }
+    AiLeadEmployee::FollowUpCancellation.call(
+      follow_ups: lead_follow_ups,
+      conversation_scope: Conversation.where(account_id: account_id, contact_id: contact_id),
+      reason: "follow_up_state_#{follow_up_state}"
+    )
   end
 
   def validate_account_scope
     errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id
+    errors.add(:offer, 'must belong to the same account') if offer.present? && offer.account_id != account_id
   end
 end

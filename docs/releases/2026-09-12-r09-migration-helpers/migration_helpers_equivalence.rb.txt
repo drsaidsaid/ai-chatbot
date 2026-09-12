@@ -1,0 +1,152 @@
+require_relative '../../config/environment'
+require 'json'
+abort 'Dedicated Rails test database required' unless Rails.env.test? && ActiveRecord::Base.connection.current_database == 'ale_r09_offers_20260911_spec'
+plan = JSON.parse(File.read('tmp/r09/migration-helpers-plan.json'))
+classes = %w[AddOfferScopedQualification AddQualificationEvidenceFieldKeys AddFollowUpAttemptLineage]
+plan.fetch('paths').zip(classes).each do |path, name|
+  original = File.read("tmp/r09/migration-helpers-before/#{path}")
+  eval(original.sub("class #{name}", "class Baseline#{name}"), TOPLEVEL_BINDING, "baseline_#{path}")
+  load path
+end
+
+def snapshot(db, schema)
+  db.schema_cache.clear!
+  result = db.tables.sort.to_h do |table|
+    columns = db.columns(table).map { |column| [column.name, column.sql_type, column.null, column.default, column.default_function] }
+    indexes = db.indexes(table).map { |index| [index.name, index.columns, index.unique, index.where, index.using, index.orders] }.sort_by(&:first)
+    keys = db.foreign_keys(table).map { |key| [key.to_table, key.options] }.sort_by(&:to_s)
+    checks = db.check_constraints(table).map { |check| [check.name, check.expression, check.options] }.sort_by(&:first)
+    rows = db.select_all("SELECT * FROM #{db.quote_table_name(table)} ORDER BY id").to_a
+    [table, { columns: columns, indexes: indexes, foreign_keys: keys, checks: checks, rows: rows }]
+  end
+  JSON.parse(JSON.generate(result).gsub(schema, 'historical_schema'))
+end
+
+def isolated(name)
+  db = ActiveRecord::Base.connection
+  result = nil
+  db.transaction(requires_new: true) do
+    db.execute("CREATE SCHEMA #{db.quote_table_name(name)}")
+    db.execute("SET LOCAL search_path TO #{db.quote_table_name(name)}")
+    db.schema_cache.clear!
+    result = yield db
+    raise ActiveRecord::Rollback
+  end
+  result
+ensure
+  db&.schema_cache&.clear!
+end
+
+def offer_tables(db)
+  db.execute <<~SQL
+    CREATE TABLE accounts (id bigint PRIMARY KEY);
+    CREATE TABLE contacts (id bigint PRIMARY KEY);
+    CREATE TABLE ai_lead_employee_offers (id bigint PRIMARY KEY, account_id bigint, name varchar);
+    CREATE TABLE conversations (id bigint PRIMARY KEY);
+    CREATE TABLE qualification_evidences (id bigint PRIMARY KEY, account_id bigint, contact_id bigint, signal integer NOT NULL, superseded_at timestamp);
+    CREATE TABLE lead_qualifications (id bigint PRIMARY KEY, account_id bigint, contact_id bigint);
+    CREATE TABLE lead_qualification_decisions (id bigint PRIMARY KEY);
+    CREATE UNIQUE INDEX index_lead_qualifications_on_account_id_and_contact_id ON lead_qualifications(account_id, contact_id);
+    INSERT INTO accounts VALUES (1);
+    INSERT INTO contacts VALUES (1);
+    INSERT INTO ai_lead_employee_offers VALUES (77, 1, 'Historical Offer');
+    INSERT INTO conversations VALUES (1);
+    INSERT INTO lead_qualifications VALUES (1, 1, 1);
+    INSERT INTO lead_qualification_decisions VALUES (1);
+  SQL
+  8.times { |signal| db.execute("INSERT INTO qualification_evidences VALUES (#{signal + 1}, 1, 1, #{signal}, NULL)") }
+end
+
+def run_offer_migrations(prefix, suffix, reverse: false)
+  schema = "r09_compare_#{suffix}"
+  isolated(schema) do |db|
+    offer_tables(db)
+    first = Object.const_get("#{prefix}AddOfferScopedQualification").new
+    first.suppress_messages { first.migrate(:up) }
+    result = { scoped: snapshot(db, schema) }
+    if reverse
+      first.suppress_messages { first.migrate(:down) }
+      result[:reversed] = snapshot(db, schema)
+    else
+      second = Object.const_get("#{prefix}AddQualificationEvidenceFieldKeys").new
+      second.suppress_messages { second.migrate(:up) }
+      result[:field_keys] = snapshot(db, schema)
+      begin
+        second.down
+      rescue ActiveRecord::IrreversibleMigration => error
+        result[:down] = [error.class.name, error.message]
+      end
+    end
+    result
+  end
+end
+
+def lineage_tables(db)
+  db.execute <<~SQL
+    CREATE TABLE accounts (id bigint PRIMARY KEY);
+    CREATE TABLE contacts (id bigint PRIMARY KEY);
+    CREATE TABLE ai_lead_employee_offers (id bigint PRIMARY KEY);
+    CREATE TABLE lead_qualifications (id bigint PRIMARY KEY, offer_id bigint);
+    CREATE TABLE messages (id bigint PRIMARY KEY, source_id varchar);
+    CREATE TABLE whatsapp_outbound_deliveries (id bigint PRIMARY KEY, message_id bigint, state varchar, dispatch_started_at timestamp, accepted_at timestamp);
+    CREATE TABLE lead_follow_ups (id bigint PRIMARY KEY, account_id bigint, contact_id bigint, conversation_id bigint,
+      lead_qualification_id bigint, message_id bigint, stage integer, attempt_number integer, status integer,
+      cancellation_reason varchar, content text, sent_at timestamp, created_at timestamp, updated_at timestamp);
+    CREATE UNIQUE INDEX idx_lead_follow_ups_on_logical_attempt ON lead_follow_ups (account_id, contact_id, stage, attempt_number);
+    INSERT INTO accounts VALUES (1);
+    INSERT INTO ai_lead_employee_offers VALUES (77);
+  SQL
+  cases = [nil, *%w[pending claimed dispatching accepted unknown failed canceled]].product([0, 1, 3], [nil, '', 'wamid.HISTORICAL'])
+  cases.each_with_index do |(state, status, source_id), index|
+    id = index + 1
+    offer = index.even? ? '77' : 'NULL'
+    admitted_at = %w[dispatching accepted unknown].include?(state) ? '2026-09-01 10:00:00' : nil
+    accepted_at = state == 'accepted' ? '2026-09-01 10:05:00' : nil
+    sent_at = status == 1 ? '2026-09-01 10:10:00' : nil
+    db.execute <<~SQL
+      INSERT INTO contacts VALUES (#{id});
+      INSERT INTO lead_qualifications VALUES (#{id}, #{offer});
+      INSERT INTO messages VALUES (#{id}, #{db.quote(source_id)});
+      INSERT INTO whatsapp_outbound_deliveries VALUES (#{id}, #{id}, #{db.quote(state)}, #{db.quote(admitted_at)}, #{db.quote(accepted_at)});
+      INSERT INTO lead_follow_ups VALUES (#{id}, 1, #{id}, #{100 + id}, #{id}, #{id}, 0, 1, #{status},
+        'offer_configuration_changed', 'Historical content #{id}', #{db.quote(sent_at)}, '2026-09-01 08:00:00', '2026-09-01 09:00:00');
+    SQL
+  end
+  cases.length
+end
+
+def run_lineage(prefix, suffix)
+  schema = "r09_compare_#{suffix}"
+  isolated(schema) do |db|
+    count = lineage_tables(db)
+    migration = Object.const_get("#{prefix}AddFollowUpAttemptLineage").new
+    migration.suppress_messages { migration.up }
+    result = { historical_rows: count, migrated: snapshot(db, schema) }
+    begin
+      migration.down
+    rescue ActiveRecord::IrreversibleMigration => error
+      result[:down] = [error.class.name, error.message]
+    end
+    result
+  end
+end
+
+results = {}
+[:offer_up, :offer_reverse, :lineage].each do |kind|
+  operation = if kind == :lineage
+                ->(prefix, suffix) { run_lineage(prefix, suffix) }
+              else
+                ->(prefix, suffix) { run_offer_migrations(prefix, suffix, reverse: kind == :offer_reverse) }
+              end
+  baseline = operation.call('Baseline', "#{kind}_old")
+  candidate = operation.call('', "#{kind}_new")
+  File.write("tmp/r09/migration-helpers-#{kind}-baseline.json", JSON.pretty_generate(baseline) + "\n")
+  File.write("tmp/r09/migration-helpers-#{kind}-candidate.json", JSON.pretty_generate(candidate) + "\n")
+  raise "Migration outcome differs: #{kind}" unless baseline == candidate
+  results[kind] = { equal: true }
+end
+remaining = ActiveRecord::Base.connection.select_values("SELECT nspname FROM pg_namespace WHERE nspname LIKE 'r09_compare_%'")
+raise 'Comparison schema leaked' unless remaining.empty?
+report = { comparisons: results, field_signal_rows: 8, lineage_history_rows: 72, remaining_comparison_schemas: remaining }
+File.write('tmp/r09/migration-helpers-equivalence-results.json', JSON.pretty_generate(report) + "\n")
+puts JSON.generate(report)

@@ -1,0 +1,228 @@
+diff --git a/app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue b/app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue
+index 6f4aac9..17f76c1 100644
+--- a/app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue
++++ b/app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue
+@@ -198,9 +198,15 @@ const isMobileViewport = () =>
+   typeof window.matchMedia === 'function' &&
+   window.matchMedia('(max-width: 1023px)').matches;
+ 
+-const resetTenantState = () => {
++const resetOperationState = () => {
+   exportOperation += 1;
+   reconsentOperation += 1;
++  isExporting.value = false;
++  isRecordingReconsent.value = false;
++};
++
++const resetTenantState = () => {
++  resetOperationState();
+   window.clearTimeout(searchTimer);
+   leads.value = [];
+   offers.value = [];
+@@ -215,8 +221,6 @@ const resetTenantState = () => {
+   editErrors.value = [];
+   errorMessage.value = '';
+   statusMessage.value = '';
+-  isExporting.value = false;
+-  isRecordingReconsent.value = false;
+   Object.keys(editForm).forEach(key => {
+     if (key === 'evidence') {
+       Object.keys(editForm.evidence).forEach(signal => {
+@@ -246,6 +250,7 @@ const loadLeads = async () => {
+     loadedAccountId = context.accountId;
+   }
+   if (loadedOfferId !== uiFilters.offer_id) {
++    resetOperationState();
+     leads.value = [];
+     selectedLead.value = null;
+     counts.value = {};
+diff --git a/app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js b/app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js
+index de45e11..c99a482 100644
+--- a/app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js
++++ b/app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js
+@@ -737,7 +737,7 @@ describe('LeadsDirectoryPage', () => {
+   });
+ 
+   it.each(['resolve', 'reject'])(
+-    'releases an obsolete export after an Offer switch and %s',
++    'enables a new Offer export before an obsolete export %s and preserves the newer operation',
+     async outcome => {
+       const offers = [
+         { id: 9, name: 'Support', enabled: true },
+@@ -748,27 +748,44 @@ describe('LeadsDirectoryPage', () => {
+         query: { offer_id: '9' },
+       });
+       let settle;
++      let resolveNew;
+       LeadsAPI.exportLeads.mockImplementationOnce(
+         () =>
+           new Promise((resolve, reject) => {
+             settle = outcome === 'resolve' ? resolve : reject;
+           })
+       );
++      LeadsAPI.exportLeads.mockImplementationOnce(
++        () =>
++          new Promise(resolve => {
++            resolveNew = resolve;
++          })
++      );
+       const exportButton = () =>
+         wrapper.findAll('button').find(button => button.text() === 'Export');
+       await exportButton().trigger('click');
+       expect(exportButton().element.disabled).toBe(true);
+       await wrapper.get('[data-testid="lead-offer-select"]').setValue('10');
+       await flushPromises();
++      expect(exportButton().element.disabled).toBe(false);
++      await exportButton().trigger('click');
++      expect(LeadsAPI.exportLeads).toHaveBeenLastCalledWith(
++        expect.objectContaining({ offer_id: '10' })
++      );
++      expect(exportButton().element.disabled).toBe(true);
+       settle(
+         outcome === 'resolve'
+           ? { data: new Blob(['old export']) }
+           : { response: { data: { error: 'Old export error' } } }
+       );
+       await flushPromises();
+-      expect(exportButton().element.disabled).toBe(false);
++      expect(exportButton().element.disabled).toBe(true);
+       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+       expect(wrapper.text()).not.toContain('Old export error');
++      resolveNew({ data: new Blob(['new export']) });
++      await flushPromises();
++      expect(exportButton().element.disabled).toBe(false);
++      expect(global.URL.createObjectURL).toHaveBeenCalledTimes(1);
+       wrapper.unmount();
+     }
+   );
+@@ -810,55 +827,83 @@ describe('LeadsDirectoryPage', () => {
+     wrapper.unmount();
+   });
+ 
+-  it('releases obsolete re-consent after switching Offers without applying the old Lead response', async () => {
+-    const stoppedLead = {
+-      ...leadPayload,
+-      detail: {
+-        ...leadPayload.detail,
+-        automated_contact_consent: {
+-          state: 'withdrawn',
+-          evidence: { id: 7, text: 'Please stop messaging me.' },
+-          reconsent_candidate: {
+-            source_message_id: 9,
+-            expected_event_id: 7,
+-            text: 'Yes, you can message me again.',
++  it.each(['resolve', 'reject'])(
++    'enables new Offer re-consent before the old request %s and preserves the newer operation',
++    async outcome => {
++      const stoppedLead = {
++        ...leadPayload,
++        detail: {
++          ...leadPayload.detail,
++          automated_contact_consent: {
++            state: 'withdrawn',
++            evidence: { id: 7, text: 'Please stop messaging me.' },
++            reconsent_candidate: {
++              source_message_id: 9,
++              expected_event_id: 7,
++              text: 'Yes, you can message me again.',
++            },
+           },
+         },
+-      },
+-    };
+-    const offers = [
+-      { id: 9, name: 'Support', enabled: true },
+-      { id: 10, name: 'Training', enabled: true },
+-    ];
+-    const { wrapper } = await mountPage({
+-      response: defaultResponse({
+-        leads: [stoppedLead],
+-        selected_lead: stoppedLead,
+-        offers,
+-      }),
+-      query: { offer_id: '9' },
+-    });
+-    let resolveOld;
+-    LeadsAPI.reconsent.mockImplementationOnce(
+-      () =>
+-        new Promise(resolve => {
+-          resolveOld = resolve;
+-        })
+-    );
+-    await wrapper.get('[data-testid="record-reconsent"]').trigger('click');
+-    expect(
+-      wrapper.get('[data-testid="record-reconsent"]').element.disabled
+-    ).toBe(true);
+-    await wrapper.get('[data-testid="lead-offer-select"]').setValue('10');
+-    await flushPromises();
+-    resolveOld({ data: { ...stoppedLead, name: 'Obsolete consent Lead' } });
+-    await flushPromises();
+-    expect(
+-      wrapper.get('[data-testid="record-reconsent"]').element.disabled
+-    ).toBe(false);
+-    expect(wrapper.text()).not.toContain('Obsolete consent Lead');
+-    wrapper.unmount();
+-  });
++      };
++      const offers = [
++        { id: 9, name: 'Support', enabled: true },
++        { id: 10, name: 'Training', enabled: true },
++      ];
++      const { wrapper } = await mountPage({
++        response: defaultResponse({
++          leads: [stoppedLead],
++          selected_lead: stoppedLead,
++          offers,
++        }),
++        query: { offer_id: '9' },
++      });
++      let settleOld;
++      let resolveNew;
++      LeadsAPI.reconsent.mockImplementationOnce(
++        () =>
++          new Promise((resolve, reject) => {
++            settleOld = outcome === 'resolve' ? resolve : reject;
++          })
++      );
++      LeadsAPI.reconsent.mockImplementationOnce(
++        () =>
++          new Promise(resolve => {
++            resolveNew = resolve;
++          })
++      );
++      await wrapper.get('[data-testid="record-reconsent"]').trigger('click');
++      expect(
++        wrapper.get('[data-testid="record-reconsent"]').element.disabled
++      ).toBe(true);
++      await wrapper.get('[data-testid="lead-offer-select"]').setValue('10');
++      await flushPromises();
++      expect(
++        wrapper.get('[data-testid="record-reconsent"]').element.disabled
++      ).toBe(false);
++      await wrapper.get('[data-testid="record-reconsent"]').trigger('click');
++      expect(LeadsAPI.reconsent).toHaveBeenCalledTimes(2);
++      expect(
++        wrapper.get('[data-testid="record-reconsent"]').element.disabled
++      ).toBe(true);
++      settleOld(
++        outcome === 'resolve'
++          ? { data: { ...stoppedLead, name: 'Obsolete consent Lead' } }
++          : { response: { data: { error: 'Obsolete consent error' } } }
++      );
++      await flushPromises();
++      expect(
++        wrapper.get('[data-testid="record-reconsent"]').element.disabled
++      ).toBe(true);
++      expect(wrapper.text()).not.toContain('Obsolete consent Lead');
++      expect(wrapper.text()).not.toContain('Obsolete consent error');
++      resolveNew({ data: stoppedLead });
++      await flushPromises();
++      expect(
++        wrapper.get('[data-testid="record-reconsent"]').element.disabled
++      ).toBe(false);
++      wrapper.unmount();
++    }
++  );
+ 
+   it('handles import and export controls', async () => {
+     LeadsAPI.importLeads.mockResolvedValue({

@@ -1,0 +1,19 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/services/ai_lead_employee/qualification_evidence_extractor_purchase_budget_capacity_spec.rb",
+  "spec/services/ai_lead_employee/qualification_evidence_extractor_purchase_capacity_continuations_spec.rb",
+  "spec/requests/ai_lead_employee/offer_dependent_fact_tails_spec.rb",
+  "spec/requests/ai_lead_employee/offer_independent_builtin_tails_spec.rb",
+  "spec/requests/ai_lead_employee/offer_capacity_continuations_spec.rb",
+  "spec/services/ai_lead_employee/qualification_service_spec.rb",
+  "spec/requests/ai_lead_employee/offer_builtin_typed_rules_spec.rb",
+  "spec/requests/ai_lead_employee/offer_qualification_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/spoken-helpers-green-results.json"
+]
