@@ -2,10 +2,14 @@
 
 require 'csv'
 require 'digest'
+require 'timeout'
 
+# rubocop:disable Metrics/ClassLength -- preview, bounded apply, and shared row normalization must use one resolution contract
 class AiLeadEmployee::LeadImportService
   MAX_FILE_BYTES = 5.megabytes
-  MAX_ROWS = 5000
+  MAX_ROWS = 100
+  LOCK_WAIT = 1.second
+  APPLY_DEADLINE = 5.seconds
   class ImportError < StandardError
     attr_reader :error_key
 
@@ -14,6 +18,8 @@ class AiLeadEmployee::LeadImportService
       super(error_key)
     end
   end
+
+  class ImportDeadlineExceeded < StandardError; end
 
   def initialize(account:, user:, file:, mode: 'preview', preview_digest: nil)
     @account = account
@@ -27,10 +33,9 @@ class AiLeadEmployee::LeadImportService
     raise Pundit::NotAuthorizedError unless access.administrator?
 
     content = read_content
-    preview = preview_payload(content)
-    return preview.except(:fingerprint) unless mode == 'apply'
+    return preview_payload(content).except(:fingerprint) unless mode == 'apply'
 
-    apply!(preview)
+    apply_content!(content)
   rescue CSV::MalformedCSVError => e
     invalid_file_payload(e.message)
   end
@@ -186,13 +191,49 @@ class AiLeadEmployee::LeadImportService
     raise ImportError, 'import_file_changed' unless valid_preview
     raise ImportError, 'import_has_errors' unless preview[:can_apply]
 
-    ActiveRecord::Base.transaction do
-      preview[:rows].each { |row| apply_row!(row) }
+    preview[:rows].each do |row|
+      apply_statement_timeout!
+      apply_row!(row)
     end
 
     preview.except(:fingerprint).merge(status: 'completed', imported_count: preview[:total_count])
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     raise ImportError, 'import_identity_changed'
+  end
+
+  def apply_content!(content)
+    Timeout.timeout(APPLY_DEADLINE, ImportDeadlineExceeded) do
+      @apply_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + APPLY_DEADLINE
+      ActiveRecord::Base.transaction do
+        configure_apply_timeouts!
+        ActiveRecord::Base.connection.execute('LOCK TABLE contacts IN SHARE ROW EXCLUSIVE MODE')
+        apply_statement_timeout!
+        apply!(preview_payload(content))
+      end
+    end
+  rescue ImportDeadlineExceeded, ActiveRecord::LockWaitTimeout
+    raise ImportError, 'import_retry_later'
+  rescue ActiveRecord::StatementInvalid => e
+    raise unless retryable_database_timeout?(e)
+
+    raise ImportError, 'import_retry_later'
+  end
+
+  def configure_apply_timeouts!
+    connection = ActiveRecord::Base.connection
+    connection.execute("SET LOCAL lock_timeout = '#{LOCK_WAIT.in_milliseconds.to_i}ms'")
+    connection.execute("SET LOCAL statement_timeout = '#{APPLY_DEADLINE.in_milliseconds.to_i}ms'")
+  end
+
+  def apply_statement_timeout!
+    remaining_ms = ((@apply_deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)) * 1000).floor
+    raise ImportDeadlineExceeded if remaining_ms <= 0
+
+    ActiveRecord::Base.connection.execute("SET LOCAL statement_timeout = '#{remaining_ms}ms'")
+  end
+
+  def retryable_database_timeout?(error)
+    error.cause.is_a?(PG::LockNotAvailable) || error.cause.is_a?(PG::QueryCanceled)
   end
 
   def signed_preview_digest(fingerprint)
@@ -206,7 +247,7 @@ class AiLeadEmployee::LeadImportService
   def apply_row!(row)
     attributes = row.slice(:name, :phone_number, :email, :business_name)
     if row[:action] == 'update'
-      contact = account.contacts.lock.find(row[:existing_lead_id])
+      contact = account.contacts.find(row[:existing_lead_id])
       AiLeadEmployee::LeadUpdateService.new(account: account, user: user, contact: contact, attributes: attributes).perform
     else
       account.contacts.create!(
@@ -226,3 +267,4 @@ class AiLeadEmployee::LeadImportService
     }
   end
 end
+# rubocop:enable Metrics/ClassLength

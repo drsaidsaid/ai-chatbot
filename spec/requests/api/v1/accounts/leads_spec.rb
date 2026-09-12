@@ -151,6 +151,23 @@ RSpec.describe 'Leads API', type: :request do
   end
 
   describe 'POST /api/v1/accounts/{account.id}/leads/import' do
+    it 'rejects files above the 100-row bounded apply limit during preview' do
+      file = Tempfile.new(['leads', '.csv'])
+      file.write("name,phone_number\n")
+      101.times { |index| file.write("Lead #{index},+2557#{index.to_s.rjust(8, '0')}\n") }
+      file.rewind
+
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error_key']).to eq('import_too_many_rows')
+    ensure
+      file&.close
+      file&.unlink
+    end
+
     it 'previews validation errors without writing' do
       file = Tempfile.new(['leads', '.csv'])
       file.write("name,phone_number,business_name\nImported Lead,+255713456789,Imported Co\nBroken Lead,not-a-phone,Broken Co\n")
@@ -250,7 +267,7 @@ RSpec.describe 'Leads API', type: :request do
       file&.unlink
     end
 
-    it 'shows an existing Lead update before applying it and records audit history' do
+    it 'shows an existing Lead update before applying it and records audit history' do # rubocop:disable RSpec/MultipleExpectations
       contact = create(:contact, account: account, name: 'Old Name', phone_number: '+255713456783')
       file = Tempfile.new(['leads', '.csv'])
       file.write("name,phone_number,business_name\nUpdated Name,+255713456783,Updated Co\n")
@@ -267,6 +284,13 @@ RSpec.describe 'Leads API', type: :request do
       )
       expect(contact.reload.name).to eq('Old Name')
 
+      workflow_counts = [
+        Conversation.count,
+        LeadQualification.count,
+        QualificationEvidence.count,
+        AiLeadEmployee::AiProviderUsage.count,
+        HumanReviewRequest.count
+      ]
       file.rewind
       post "/api/v1/accounts/#{account.id}/leads/import",
            headers: admin.create_new_auth_token,
@@ -281,10 +305,15 @@ RSpec.describe 'Leads API', type: :request do
       expect(Audited::Audit.where(auditable: contact).last.audited_changes).to include(
         'ai_lead_employee_action' => 'lead_edit'
       )
+      expect([Conversation.count,
+              LeadQualification.count,
+              QualificationEvidence.count,
+              AiLeadEmployee::AiProviderUsage.count,
+              HumanReviewRequest.count]).to eq(workflow_counts)
     ensure
       file&.close
       file&.unlink
-    end
+    end # rubocop:enable RSpec/MultipleExpectations
 
     it 'revalidates identity resolution when applying a previously safe preview' do
       file = Tempfile.new(['leads', '.csv'])
