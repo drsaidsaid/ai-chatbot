@@ -39,6 +39,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     intent
   rescue AiLeadEmployee::AiProvider::ProviderFailure => e
     handle_owned_provider_failure(e)
+  rescue AiLeadEmployee::ReplyAllowance::Exhausted => e
+    handle_customer_allowance_exhaustion(e.message)
   end
 
   private
@@ -110,11 +112,29 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       intent.lock!
       next intent unless owns_claim?
 
+      release_reply_allowance!('provider_failed')
       reason = final_block_reason
       next block_intent!(reason) if reason.present?
 
       AiLeadEmployee::Orchestration::ProviderFailureHandler.new(intent: intent, failure: failure,
                                                                 enqueue_review_alerts: enqueue_deliveries).perform
+    end
+    intent
+  end
+
+  def handle_customer_allowance_exhaustion(reason)
+    conversation.with_lock do
+      intent.lock!
+      next intent unless owns_claim?
+
+      intent.update!(
+        state: :blocked,
+        blocked_reason: reason,
+        blocked_at: Time.current,
+        completed_at: Time.current,
+        owner_token: nil,
+        lease_expires_at: nil
+      )
     end
     intent
   end
@@ -197,6 +217,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       status: AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS,
       provider_response: provider_response
     )
+    AiLeadEmployee::ReplyAllowance.register_deliveries!(usage: @reply_usage, messages: [outbound_message])
     create_outbox_event!(outbound_message)
     complete_intent!(
       outbound_message: outbound_message,
@@ -293,6 +314,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def build_provider_answer(answer_result)
+    @reply_usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: intent) if provider_purpose == 'answer'
     ai_provider_client.complete(
       messages: provider_messages(answer_result),
       temperature: 0.1,
@@ -331,7 +353,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
           outbound_intent_status: status,
           source_references: source_references,
           qualification: qualification_result_payload(qualification_result)
-        }.merge(provider_delivery_authority(provider_response))
+        }.merge(provider_delivery_authority(provider_response)).merge(reply_usage_authority)
       }
     )
   end
@@ -343,6 +365,17 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       provider_configuration_version: provider_response.configuration_version,
       provider_usage_period_on: provider_response.usage_period_on&.iso8601
     }
+  end
+
+  def reply_usage_authority
+    @reply_usage ? { ai_reply_usage_id: @reply_usage.id } : {}
+  end
+
+  def release_reply_allowance!(reason)
+    usage = @reply_usage || intent.ai_reply_usage
+    return unless usage
+
+    AiLeadEmployee::ReplyAllowance.release!(usage: usage, reason: reason)
   end
 
   def create_outbox_event!(outbound_message)
@@ -470,6 +503,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def block_intent!(reason, review_request: nil)
+    release_reply_allowance!(reason)
     intent.update!(state: :blocked, blocked_reason: reason, blocked_at: Time.current, review_request: review_request)
     intent
   end

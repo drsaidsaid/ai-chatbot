@@ -93,8 +93,9 @@ class Whatsapp::OutboundEligibility
     alert = Whatsapp::OutboundAlertAuthority.new(@message)
     return alert.failure_code if alert.alert?
 
-    lead_failure = lead_automation_failure
-    return lead_failure if lead_failure
+    prerequisite_failure = automation_prerequisite_failure
+    return prerequisite_failure if prerequisite_failure
+
     return unless provider_control_required?
 
     attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
@@ -103,6 +104,10 @@ class Whatsapp::OutboundEligibility
       configuration_version: attributes['provider_configuration_version'],
       usage_period_on: attributes['provider_usage_period_on']
     )
+  end
+
+  def automation_prerequisite_failure
+    lead_automation_failure || AiLeadEmployee::ReplyAllowance.delivery_failure_code(message: @message)
   end
 
   def provider_control_required?

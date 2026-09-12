@@ -19,6 +19,10 @@ class Whatsapp::OutboundAlertAuthority
   def failure_code
     return 'alert_authority_unavailable' unless record
 
+    subscription_alert? ? subscription_alert_failure : conversation_alert_failure
+  end
+
+  def conversation_alert_failure
     # The dispatch transaction already owns Conversation and delivery locks.
     # Serialize all authority updates, including the review rejection API, until
     # dispatching commits. Provider HTTP begins only after these locks are released.
@@ -54,7 +58,24 @@ class Whatsapp::OutboundAlertAuthority
                   LeadHandoff.find_by(account_id: @message.account_id, id: @attributes['handoff_id'])
                 when AiLeadEmployee::BookingService::PREPARATION_ALERT_TYPE
                   Booking.find_by(account_id: @message.account_id, id: @attributes['booking_id'])
+                when AiLeadEmployee::SubscriptionAlertDeliveryService::ALERT_TYPE
+                  AiLeadEmployee::AiSubscriptionAlert.find_by(
+                    account_id: @message.account_id, id: @attributes['ai_subscription_alert_id']
+                  )
                 end
+  end
+
+  def subscription_alert_failure
+    record.lock!
+    return 'alert_authority_unavailable' unless record.open?
+    return 'alert_recipient_removed' unless current_recipients.include?(normalize(@attributes['alert_recipient']))
+    return 'invalid_recipient' unless normalize(@attributes['alert_recipient']) == @message.conversation.contact_inbox.source_id
+
+    nil
+  end
+
+  def subscription_alert?
+    record.is_a?(AiLeadEmployee::AiSubscriptionAlert)
   end
 
   def record_current?
@@ -68,10 +89,18 @@ class Whatsapp::OutboundAlertAuthority
 
   def current_recipients
     account = @message.account.reload
+    return subscription_alert_recipients if subscription_alert?
     return Array(account.settings&.dig('ai_review_alert_recipients')).map { |value| normalize(value) } if record.is_a?(HumanReviewRequest)
 
-    recipients = alert_routes(account).flat_map { |route| route_recipients(route, account) }
-    recipients.filter_map { |value| normalize(value) }.uniq
+    routed_recipients(account)
+  end
+
+  def subscription_alert_recipients
+    Array(record.alert_recipients).map { |value| normalize(value) }
+  end
+
+  def routed_recipients(account)
+    alert_routes(account).flat_map { |route| route_recipients(route, account) }.filter_map { |value| normalize(value) }.uniq
   end
 
   def alert_routes(account)

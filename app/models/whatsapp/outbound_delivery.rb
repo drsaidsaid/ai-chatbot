@@ -3,8 +3,11 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
   belongs_to :account
   belongs_to :conversation
   belongs_to :message
+  belongs_to :ai_reply_usage, class_name: 'AiLeadEmployee::AiReplyUsage', optional: true
 
   enum :state, %w[pending claimed dispatching accepted unknown failed canceled].index_with(&:itself)
+
+  after_update_commit :reconcile_ai_reply_usage, if: :saved_change_to_state?
 
   MAX_CLAIM_ATTEMPTS = 3
 
@@ -55,6 +58,7 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
       lock!
       return false unless operator_allowed?(user)
       return false unless failed? && message.reload.source_id.blank?
+      return false unless AiLeadEmployee::ReplyAllowance.rereserve_for_delivery!(self)
 
       update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
       message.update!(status: :sent, external_error: nil)
@@ -88,6 +92,10 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
   end
 
   private
+
+  def reconcile_ai_reply_usage
+    AiLeadEmployee::ReplyAllowance.reconcile_delivery!(self)
+  end
 
   def recover_claim!
     if attempts >= MAX_CLAIM_ATTEMPTS

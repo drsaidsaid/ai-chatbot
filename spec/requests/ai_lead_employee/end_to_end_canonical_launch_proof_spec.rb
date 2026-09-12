@@ -26,6 +26,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
   let!(:provider_connection) { create(:ai_provider_connection, account: account) }
 
   before do
+    create(:ai_subscription, account: account, included_ai_replies: 100)
     InstallationConfig.where(name: 'WHATSAPP_APP_SECRET').delete_all
     GlobalConfig.clear_cache
     whatsapp_channel.inbox.update!(greeting_enabled: true, greeting_message: 'Welcome to AI Lead Employee.')
