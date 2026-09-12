@@ -40,7 +40,7 @@ class Whatsapp::TemplateSubmissionService
   end
 
   def unknown!
-    @revision.update!(status: :unknown, status_synced_at: Time.current)
+    @revision.update!(status: :unknown, rejection_reason: nil, status_synced_at: Time.current)
   end
 
   def submission_failed!(response)

@@ -219,14 +219,14 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
 
   it 'timestamps every unresolved reconciliation attempt even when the state remains unknown' do
     previous_sync = 2.hours.ago.change(usec: 0)
-    revision.update!(status: :unknown, status_synced_at: previous_sync)
+    revision.update!(status: :unknown, status_synced_at: previous_sync, rejection_reason: 'STALE_REJECTION')
     status_request = stub_request(:get, "#{endpoint}?name=order_update").to_return(status: 503)
     current_sync = Time.zone.parse('2026-09-12 20:45:00')
 
     travel_to(current_sync) { described_class.new(revision: revision).perform(reconcile: true) }
 
     expect(status_request).to have_been_requested.once
-    expect(revision.reload).to have_attributes(status: 'unknown', status_synced_at: current_sync)
+    expect(revision.reload).to have_attributes(status: 'unknown', status_synced_at: current_sync, rejection_reason: nil)
   end
 
   it 'records rejection details and later paused or disabled provider states' do
