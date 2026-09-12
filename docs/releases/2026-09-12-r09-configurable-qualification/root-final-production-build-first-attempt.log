@@ -1,0 +1,77 @@
+vite v6.4.2 building for production...
+transforming...
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 5083 modules transformed.
+
+<--- Last few GCs --->
+
+[89617:0x85f40c000]    72462 ms: Mark-Compact 2035.0 (2052.6) -> 2033.7 (2053.1) MB, pooled: 0 MB, 2772.88 / 0.00 ms  (average mu = 0.098, current mu = 0.008) allocation failure; scavenge might not succeed
+
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0x104e7d9f4 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 2: 0x1050f8000 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 3: 0x1053574b4 v8::internal::Heap::stack() [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 4: 0x10535a888 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 5: 0x10536ba7c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 6: 0x10536b350 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 7: 0x105d1fbe0 PushAllRegistersAndIterateStack [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 8: 0x1053551b8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+ 9: 0x105349ec4 v8::internal::HeapAllocator::AllocateRawWithRetryOrFailSlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+10: 0x105315960 v8::internal::FactoryBase<v8::internal::Factory>::NewFixedArrayWithFiller(v8::internal::DirectHandle<v8::internal::Map>, int, v8::internal::DirectHandle<v8::internal::HeapObject>, v8::internal::AllocationType) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+11: 0x10567e3ac v8::internal::DirectHandle<v8::internal::NumberDictionary> v8::internal::HashTable<v8::internal::NumberDictionary, v8::internal::NumberDictionaryShape>::EnsureCapacity<v8::internal::Isolate, v8::internal::DirectHandle>(v8::internal::Isolate*, v8::internal::DirectHandle<v8::internal::NumberDictionary>, int, v8::internal::AllocationType) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+12: 0x10567f0c4 v8::internal::DirectHandle<v8::internal::NumberDictionary> v8::internal::Dictionary<v8::internal::NumberDictionary, v8::internal::NumberDictionaryShape>::Add<v8::internal::Isolate, v8::internal::DirectHandle, (v8::internal::AllocationType)0>(v8::internal::Isolate*, v8::internal::DirectHandle<v8::internal::NumberDictionary>, unsigned int, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::PropertyDetails, v8::internal::InternalIndex*) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+13: 0x10552c800 v8::internal::(anonymous namespace)::DictionaryElementsAccessor::AddImpl(v8::internal::DirectHandle<v8::internal::JSObject>, unsigned int, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::PropertyAttributes, unsigned int) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+14: 0x105608ae4 v8::internal::JSObject::AddDataElement(v8::internal::DirectHandle<v8::internal::JSObject>, unsigned int, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::PropertyAttributes) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+15: 0x10568eff0 v8::internal::Object::AddDataProperty(v8::internal::LookupIterator*, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::PropertyAttributes, v8::Maybe<v8::internal::ShouldThrow>, v8::internal::StoreOrigin, v8::internal::EnforceDefineSemantics) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+16: 0x1057c0b94 v8::internal::Runtime::SetObjectProperty(v8::internal::Isolate*, v8::internal::DirectHandle<v8::internal::Union<v8::internal::Smi, v8::internal::HeapNumber, v8::internal::BigInt, v8::internal::String, v8::internal::Symbol, v8::internal::Boolean, v8::internal::Null, v8::internal::Undefined, v8::internal::JSReceiver>>, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::MaybeDirectHandle<v8::internal::Union<v8::internal::Smi, v8::internal::HeapNumber, v8::internal::BigInt, v8::internal::String, v8::internal::Symbol, v8::internal::Boolean, v8::internal::Null, v8::internal::Undefined, v8::internal::JSReceiver>>, v8::internal::StoreOrigin, v8::Maybe<v8::internal::ShouldThrow>) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+17: 0x10540f154 v8::internal::Runtime_KeyedStoreIC_Slow(int, unsigned long*, v8::internal::Isolate*) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+18: 0x105e12234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+19: 0x1299a9290
+20: 0x1299a8930
+21: 0x1299a78f4
+22: 0x1299627cc
+23: 0x129a36db4
+24: 0x129276740
+25: 0x129962a64
+26: 0x1299b098c
+27: 0x129568ea0
+28: 0x1299bc730
+29: 0x1292767b8
+30: 0x129a178d0
+31: 0x1299aefd4
+32: 0x129072c94
+33: 0x129a109a0
+34: 0x1293e0f40
+35: 0x129958d4c
+36: 0x105e41e60 Builtins_ArrayMap [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+37: 0x105d74bec Builtins_InterpreterEntryTrampoline [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+38: 0x105d74bec Builtins_InterpreterEntryTrampoline [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+39: 0x105db37e8 Builtins_AsyncFunctionAwaitResolveClosure [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+40: 0x105e88e58 Builtins_PromiseFulfillReactionJob [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+41: 0x105da2bd0 Builtins_RunMicrotasks [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+42: 0x105d727b0 Builtins_JSRunMicrotasksEntry [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+43: 0x10529b690 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+44: 0x10529bf04 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+45: 0x10529c040 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+46: 0x1052cade4 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+47: 0x1052cb744 v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+48: 0x104d5b0b8 node::InternalCallbackScope::Close() [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+49: 0x104d5aa3c node::CallbackScope::~CallbackScope() [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+50: 0x104e31180 (anonymous namespace)::uvimpl::Work::AfterThreadPoolWork(int) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+51: 0x104e31598 node::ThreadPoolWork::ScheduleWork()::'lambda'(uv_work_s*, int)::operator()(uv_work_s*, int) const [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+52: 0x104e3144c node::ThreadPoolWork::ScheduleWork()::'lambda'(uv_work_s*, int)::__invoke(uv_work_s*, int) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+53: 0x105d4baf8 uv__work_done [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+54: 0x105d4f548 uv__async_io [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+55: 0x105d63e40 uv__io_poll [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+56: 0x105d4fe9c uv_run [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+57: 0x104d5c6a8 node::SpinEventLoopInternal(node::Environment*) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+58: 0x104ed87d8 node::NodeMainInstance::Run() [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+59: 0x104e2a7e0 node::Start(int, char**) [/Users/ghalyasaid/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]
+60: 0x18f0dc4e4 start [/usr/lib/dyld]

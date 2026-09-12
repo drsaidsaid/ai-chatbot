@@ -46,4 +46,11 @@ Corrected source `50df1a0433de3911e1a39e5d25ad1ef5a63b8b26` requires every confi
 - Focused qualification, rule, reply-context, revision and admission behavior: 59 examples, 0 failures. See [root-optional-dimension-rails.log](root-optional-dimension-rails.log).
 - Focused RuboCop: 3 files inspected, no offenses. See [root-optional-dimension-rubocop.log](root-optional-dimension-rubocop.log).
 
+## Final build and browser acceptance
+
+The frozen corrected source passed a fresh Vite production build and a real Codex in-app browser save/reload check at desktop and 390 × 844. The isolated synthetic Offer used the stable boolean Sales Call Agreement field, a configured fit prerequisite and intentionally unconfigured readiness/action dimensions. See [root-final-build-browser-acceptance.md](root-final-build-browser-acceptance.md).
+
+- The successful build transformed 5,083 modules and completed in 1 minute 5 seconds. See [root-final-production-build.log](root-final-production-build.log).
+- The default-heap attempt reached asset generation and then exhausted its 2 GB heap; the successful retry raised only the build heap limit. See [root-final-production-build-first-attempt.log](root-final-production-build-first-attempt.log).
+
 SHA-256 checksums for the evidence files are recorded in [manifest.sha256](manifest.sha256). The unrelated untracked `graft/` directory was excluded.
