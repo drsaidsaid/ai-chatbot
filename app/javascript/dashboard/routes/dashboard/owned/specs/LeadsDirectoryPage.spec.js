@@ -145,6 +145,16 @@ vi.mock('vue-i18n', () => ({
   }),
 }));
 
+const deferred = () => {
+  let resolve;
+  let reject;
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+};
+
 const IconStub = {
   props: ['icon'],
   template: '<span class="icon-stub" />',
@@ -661,6 +671,184 @@ describe('LeadsDirectoryPage', () => {
       .trigger('click');
     await flushPromises();
     expect(LeadsAPI.exportLeads).toHaveBeenCalled();
+  });
+
+  it('discards a delayed import preview after the account changes', async () => {
+    const pendingPreview = deferred();
+    LeadsAPI.importLeads.mockReturnValue(pendingPreview.promise);
+    const { wrapper, router } = await mountPage();
+    const file = new File(['name,phone_number'], 'account-one.csv', {
+      type: 'text/csv',
+    });
+    const input = wrapper.find('input[type="file"]');
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [file],
+    });
+
+    await input.trigger('change');
+    await router.push({
+      name: 'owned_leads_index',
+      params: { accountId: 2 },
+      query: { lead_id: '2' },
+    });
+    await flushPromises();
+    pendingPreview.resolve({
+      data: {
+        import: {
+          status: 'ready',
+          digest: 'account-one',
+          can_apply: true,
+          rows: [{ line: 2, name: 'Wrong Account Lead', action: 'create' }],
+        },
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Wrong Account Lead');
+  });
+
+  it('discards a delayed import error after the account changes', async () => {
+    const pendingPreview = deferred();
+    LeadsAPI.importLeads.mockReturnValue(pendingPreview.promise);
+    const { wrapper, router } = await mountPage();
+    const input = wrapper.find('input[type="file"]');
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [new File(['one'], 'account-one.csv')],
+    });
+
+    await input.trigger('change');
+    await router.push({
+      name: 'owned_leads_index',
+      params: { accountId: 2 },
+      query: { lead_id: '2' },
+    });
+    pendingPreview.reject({
+      response: { data: { error: 'Old account import failed' } },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('Old account import failed');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+  });
+
+  it('keeps a new account preview when an old account apply completes', async () => {
+    const pendingApply = deferred();
+    LeadsAPI.importLeads
+      .mockResolvedValueOnce({
+        data: {
+          import: {
+            status: 'ready',
+            digest: 'account-one',
+            can_apply: true,
+            rows: [{ line: 2, name: 'Account One Lead', action: 'create' }],
+          },
+        },
+      })
+      .mockReturnValueOnce(pendingApply.promise)
+      .mockResolvedValueOnce({
+        data: {
+          import: {
+            status: 'ready',
+            digest: 'account-two',
+            can_apply: true,
+            rows: [{ line: 2, name: 'Account Two Lead', action: 'create' }],
+          },
+        },
+      });
+    const { wrapper, router } = await mountPage();
+    const input = wrapper.find('input[type="file"]');
+    const accountOneFile = new File(['one'], 'account-one.csv');
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [accountOneFile],
+    });
+    await input.trigger('change');
+    await flushPromises();
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Import Leads')
+      .trigger('click');
+
+    await router.push({
+      name: 'owned_leads_index',
+      params: { accountId: 2 },
+      query: { lead_id: '2' },
+    });
+    await flushPromises();
+    const accountTwoFile = new File(['two'], 'account-two.csv');
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [accountTwoFile],
+    });
+    await input.trigger('change');
+    await flushPromises();
+    expect(wrapper.get('[role="dialog"]').text()).toContain('Account Two Lead');
+
+    pendingApply.resolve({
+      data: { import: { status: 'completed', imported_count: 1 } },
+    });
+    await flushPromises();
+
+    expect(wrapper.get('[role="dialog"]').text()).toContain('Account Two Lead');
+  });
+
+  it('does not let a closed apply clear a newer preview', async () => {
+    const pendingApply = deferred();
+    LeadsAPI.importLeads
+      .mockResolvedValueOnce({
+        data: {
+          import: {
+            status: 'ready',
+            digest: 'first-preview',
+            can_apply: true,
+            rows: [{ line: 2, name: 'First Lead', action: 'create' }],
+          },
+        },
+      })
+      .mockReturnValueOnce(pendingApply.promise)
+      .mockResolvedValueOnce({
+        data: {
+          import: {
+            status: 'ready',
+            digest: 'new-preview',
+            can_apply: true,
+            rows: [{ line: 2, name: 'New Preview Lead', action: 'create' }],
+          },
+        },
+      });
+    const { wrapper } = await mountPage();
+    const input = wrapper.find('input[type="file"]');
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [new File(['first'], 'first.csv')],
+    });
+    await input.trigger('change');
+    await flushPromises();
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Import Leads')
+      .trigger('click');
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Cancel import')
+      .trigger('click');
+
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [new File(['new'], 'new.csv')],
+    });
+    await input.trigger('change');
+    await flushPromises();
+    pendingApply.reject({
+      response: { data: { error: 'Closed apply failed' } },
+    });
+    await flushPromises();
+
+    expect(wrapper.get('[role="dialog"]').text()).toContain('New Preview Lead');
+    expect(wrapper.text()).not.toContain('Closed apply failed');
   });
 
   it('distinguishes an empty directory from filtered no-results and offers reset', async () => {

@@ -44,6 +44,7 @@ const showMobileDetail = ref(false);
 const importInput = ref(null);
 const importFile = ref(null);
 const importPreview = ref(null);
+const importPreviewAccountId = ref(null);
 const editErrors = ref([]);
 const editForm = reactive({
   name: '',
@@ -68,6 +69,8 @@ const uiFilters = reactive({
   lead_id: '',
 });
 let searchTimer;
+let importOperation = 0;
+let loadedImportAccountId = route.params.accountId?.toString() || '';
 
 const qualityChips = computed(() => [
   {
@@ -336,6 +339,29 @@ const openImportPicker = () => {
   importInput.value?.click();
 };
 
+const currentAccountId = () => route.params.accountId?.toString() || '';
+const beginImportOperation = () => {
+  importOperation += 1;
+  return { id: importOperation, accountId: currentAccountId() };
+};
+const isCurrentImportOperation = operation =>
+  operation.id === importOperation &&
+  operation.accountId === currentAccountId();
+
+const clearImportState = () => {
+  showImportModal.value = false;
+  importFile.value = null;
+  importPreview.value = null;
+  importPreviewAccountId.value = null;
+  isImporting.value = false;
+  if (importInput.value) importInput.value.value = '';
+};
+
+const cancelImportOperation = () => {
+  importOperation += 1;
+  clearImportState();
+};
+
 const importError = error =>
   error.response?.data?.error ||
   (error.response?.data?.error_key
@@ -346,56 +372,70 @@ const previewImport = async event => {
   const [file] = event.target.files || [];
   if (!file) return;
 
+  const operation = beginImportOperation();
   statusMessage.value = '';
   errorMessage.value = '';
   isImporting.value = true;
   try {
     const { data } = await LeadsAPI.importLeads(file, { mode: 'preview' });
+    if (!isCurrentImportOperation(operation)) return;
     importFile.value = file;
     importPreview.value = data.import || null;
+    importPreviewAccountId.value = operation.accountId;
     showImportModal.value = true;
   } catch (error) {
+    if (!isCurrentImportOperation(operation)) return;
     errorMessage.value = importError(error);
   } finally {
-    isImporting.value = false;
-    event.target.value = '';
+    if (isCurrentImportOperation(operation)) {
+      isImporting.value = false;
+      event.target.value = '';
+    }
   }
 };
 
 const closeImportPreview = () => {
-  showImportModal.value = false;
-  importFile.value = null;
-  importPreview.value = null;
+  cancelImportOperation();
+};
+
+const handleImportModalVisibility = value => {
+  if (!value) cancelImportOperation();
 };
 
 const applyImport = async () => {
   if (
     !importFile.value ||
     !importPreview.value?.can_apply ||
+    importPreviewAccountId.value !== currentAccountId() ||
     isImporting.value
   ) {
     return;
   }
 
+  const operation = beginImportOperation();
+  const file = importFile.value;
+  const previewDigest = importPreview.value.digest;
   isImporting.value = true;
   errorMessage.value = '';
   try {
-    const { data } = await LeadsAPI.importLeads(importFile.value, {
+    const { data } = await LeadsAPI.importLeads(file, {
       mode: 'apply',
-      previewDigest: importPreview.value.digest,
+      previewDigest,
     });
+    if (!isCurrentImportOperation(operation)) return;
     const result = data.import || {};
     statusMessage.value = t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_RESULT', {
       status: importStatusLabel(result.status),
       imported: result.imported_count || 0,
       failed: result.error_count || 0,
     });
-    closeImportPreview();
+    clearImportState();
     await loadLeads();
   } catch (error) {
+    if (!isCurrentImportOperation(operation)) return;
     errorMessage.value = importError(error);
   } finally {
-    isImporting.value = false;
+    if (isCurrentImportOperation(operation)) isImporting.value = false;
   }
 };
 
@@ -503,8 +543,15 @@ const recordReconsent = async candidate => {
 };
 
 watch(
-  () => route.query,
-  async () => {
+  [() => route.params.accountId, () => route.query],
+  async ([accountId]) => {
+    const nextAccountId = accountId?.toString() || '';
+    if (loadedImportAccountId !== nextAccountId) {
+      cancelImportOperation();
+      statusMessage.value = '';
+      errorMessage.value = '';
+      loadedImportAccountId = nextAccountId;
+    }
     hydrateFromRoute();
     await loadLeads();
   },
@@ -1281,6 +1328,7 @@ watch(showEditModal, async value => {
       v-model:show="showImportModal"
       :show-close-button="false"
       size="mx-4 w-full max-w-3xl"
+      @update:show="handleImportModalVisibility"
     >
       <section
         v-if="importPreview"
