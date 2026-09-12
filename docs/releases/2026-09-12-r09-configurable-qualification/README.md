@@ -21,9 +21,7 @@ This evidence verifies the approved R09 contract amendment against the frozen so
 
 ## Browser acceptance
 
-Fresh acceptance was completed in the Codex in-app browser against the local application and isolated verification database. It covered all amended configuration choices, owner-authored question metadata, the requirement dimension, and save/reload persistence. See [browser-acceptance.md](browser-acceptance.md).
-
-The in-app browser exposed a fixed 1280 × 720 viewport during this run. It did not expose a usable phone-width override, so phone-width acceptance remains unresolved and is not represented as passing evidence.
+Fresh acceptance was completed in the Codex in-app browser against the local application and isolated verification database. It covered all amended configuration choices, owner-authored question metadata, the requirement dimension, and save/reload persistence. A follow-up pass used the browser viewport capability at 390 × 844, verified editing and persistence at phone width, and confirmed no horizontal overflow. See [browser-acceptance.md](browser-acceptance.md).
 
 ## Integrity
 

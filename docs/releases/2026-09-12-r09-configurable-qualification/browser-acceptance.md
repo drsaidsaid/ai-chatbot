@@ -28,6 +28,20 @@ Desktop acceptance passed for the amended R09 settings flow.
 8. Reloaded the page and confirmed the Offer name, enabled mode, sales-call next step, question text, question purpose, required-decision rule, decision area, currency, thresholds, and revision persisted.
 9. Confirmed the page states that questions are asked in order, one at a time, and exposes the existing Offer selector, currency selector, question ordering controls, budget ranges, rules, and score thresholds.
 
-## Limitation
+## Phone-width follow-up
 
-The in-app browser remained at 1280 × 720 and did not expose a usable viewport resize control in this run. Phone-width acceptance could not be executed in the required browser and remains unresolved.
+Date: 2026-09-12  
+Source commit: `1e460bb20de3193c4376faf7b415fe081b63eee3`  
+Source tree: `36c3d18ba3b5e3d8324d67351e4cfe4a2217a1fd`  
+Browser: Codex in-app browser viewport capability  
+Viewport: 390 × 844
+
+Phone-width acceptance passed. The browser viewport override was reset after the run.
+
+1. Opened the existing **Browser acceptance Offer** at 390 × 844. The native mobile navigation and settings-section selector were visible, and the Offer configuration remained fully editable.
+2. Confirmed the qualification mode choices, five next-step choices, three question-purpose choices, and three requirement decision-area choices were all exposed at phone width.
+3. Edited the question text, changed **What this answer decides** from **Action eligibility** to **Readiness**, changed the required-decision **Decision area** to **Readiness**, and saved successfully.
+4. Observed **Offer saved.** at revision 2, reloaded the page, and confirmed the revised question text, purpose, decision area, enabled qualification mode, and sales-call next step persisted.
+5. Confirmed no horizontal overflow with `innerWidth: 390`, `clientWidth: 390`, and `scrollWidth: 390`.
+
+The in-app browser screenshots attached to this acceptance run show the responsive header, settings controls, mobile navigation, and lower form controls at the exact 390 × 844 viewport.
