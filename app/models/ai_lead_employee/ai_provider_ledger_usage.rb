@@ -8,4 +8,15 @@ class AiLeadEmployee::AiProviderLedgerUsage < AiLeadEmployee::AiProviderLedgerRe
              inverse_of: :usages
 
   scope :for_utc_day, ->(day) { where(period_on: day) }
+
+  validate :account_matches_connection
+
+  private
+
+  def account_matches_connection
+    return if account_id.blank? || ai_provider_connection.blank?
+    return if account_id == ai_provider_connection.account_id
+
+    errors.add(:account_id, 'must match the AI provider connection Business Account')
+  end
 end

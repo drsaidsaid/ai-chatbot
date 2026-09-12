@@ -252,10 +252,10 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
   def expect_provider_configuration_not_leaked(provider_connection)
     expect_json_get("/api/v1/accounts/#{account.id}/ai_provider_connection", headers: admin.create_new_auth_token, status: :success)
     expect(response.parsed_body).to include(
-      'id' => self.provider_connection.id,
-      'status' => 'active',
-      'has_credentials' => true
+      'managed_service' => true,
+      'service_status' => 'active'
     )
+    expect(response.parsed_body).not_to have_key('has_credentials')
     expect(response.parsed_body.to_json).not_to include(provider_connection.id.to_s, provider_connection.model)
   end
 

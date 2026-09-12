@@ -20,7 +20,7 @@ class AiLeadEmployee::AiProvider::RuntimeControl
       authority_failure = provider_authority_failure(connection, configuration_version, usage_period_on)
       next authority_failure if authority_failure
 
-      used = connection.usages.for_utc_day(Time.current.utc.to_date).count
+      used = connection.usages.where(account_id: connection.account_id).for_utc_day(Time.current.utc.to_date).count
       'usage_limit_exhausted' if connection.daily_request_limit <= used
     end
   end

@@ -8,24 +8,27 @@ RSpec.describe 'AI provider delivery controls', type: :request do
   end
   let(:account) { channel.account }
   let(:admin) { create(:user, :administrator, account: account) }
+  let(:platform_app) { create(:platform_app) }
+  let(:platform_headers) { { api_access_token: platform_app.access_token.token } }
   let(:conversation) { create(:conversation, account: account, inbox: channel.inbox, control_state: :ai_active) }
-  let(:endpoint) { "/api/v1/accounts/#{account.id}/ai_provider_connection" }
+  let(:endpoint) { "/platform/api/v1/accounts/#{account.id}/ai_provider_connection" }
 
   before do
     create(:message, account: account, inbox: channel.inbox, conversation: conversation,
                      message_type: :incoming, provider_created_at: Time.current)
     create(:ai_provider_connection, account: account, daily_request_limit: 10)
+    create(:platform_app_permissible, platform_app: platform_app, permissible: account)
     approve_launch!
   end
 
-  it 'cancels a pending automated delivery when an administrator disables the provider', :aggregate_failures do
+  it 'cancels a pending automated delivery when a Platform Operator disables the provider', :aggregate_failures do
     reply = create(:message, :bot_message, account: account, inbox: channel.inbox, conversation: conversation,
                                            sender: nil, message_type: :outgoing, content: 'Pending automated answer')
     delivery = reply.whatsapp_outbound_delivery
     provider_request = stub_request(:post, %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages})
                        .to_return(status: 200, body: { messages: [{ id: 'wamid.SHOULD.NOT.SEND' }] }.to_json)
 
-    delete endpoint, headers: admin.create_new_auth_token, as: :json
+    delete endpoint, headers: platform_headers, as: :json
 
     expect(response).to have_http_status(:success)
     expect(response.parsed_body).to include('status' => 'disabled', 'readiness_status' => 'disabled')
@@ -41,7 +44,7 @@ RSpec.describe 'AI provider delivery controls', type: :request do
     delivery = reply.whatsapp_outbound_delivery
 
     patch endpoint,
-          headers: admin.create_new_auth_token,
+          headers: platform_headers,
           params: { model: 'openai/gpt-5.2', reply_token_limit: 256, daily_request_limit: 10 },
           as: :json
 

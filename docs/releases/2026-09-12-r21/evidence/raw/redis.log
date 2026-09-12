@@ -1,0 +1,11 @@
+88624:C 12 Sep 2026 18:12:01.317 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+88624:C 12 Sep 2026 18:12:01.318 * Redis version=8.0.1, bits=64, commit=00000000, modified=1, pid=88624, just started
+88624:C 12 Sep 2026 18:12:01.318 * Configuration loaded
+88624:M 12 Sep 2026 18:12:01.318 * monotonic clock: POSIX clock_gettime
+88624:M 12 Sep 2026 18:12:01.319 * Running mode=standalone, port=6435.
+88624:M 12 Sep 2026 18:12:01.319 # WARNING: The TCP backlog setting of 511 cannot be enforced because kern.ipc.somaxconn is set to the lower value of 128.
+88624:M 12 Sep 2026 18:12:01.320 * Server initialized
+88624:M 12 Sep 2026 18:12:01.320 * Ready to accept connections tcp
+88624:M 12 Sep 2026 18:26:20.259 * User requested shutdown...
+88624:M 12 Sep 2026 18:26:20.260 * Removing the pid file.
+88624:M 12 Sep 2026 18:26:20.260 # Redis is now ready to exit, bye bye...

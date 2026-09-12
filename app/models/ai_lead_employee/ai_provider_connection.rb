@@ -84,6 +84,28 @@ class AiLeadEmployee::AiProviderConnection < ApplicationRecord
     }.merge(usage_payload, health_payload)
   end
 
+  # Business Account payload. Provider identity, model routing, credential state,
+  # configuration revisions, provider costs and diagnostic failure classes are
+  # intentionally reserved for Platform Operators.
+  def managed_service_payload
+    usage = usage_payload
+    {
+      managed_service: true,
+      service_status: configured? ? 'active' : 'disabled',
+      readiness_status: readiness_status,
+      last_health_checked_at: last_health_checked_at,
+      last_health_checked_at_label: time_label(last_health_checked_at),
+      daily_request_limit: daily_request_limit,
+      requests_used_today: usage.fetch(:requests_used_today),
+      requests_remaining_today: usage.fetch(:requests_remaining_today),
+      usage_resets_at: usage.fetch(:usage_resets_at),
+      usage_resets_at_label: usage.fetch(:usage_resets_at_label),
+      automation_allowed: usage.fetch(:automation_allowed),
+      automation_paused_reason: usage.fetch(:automation_paused_reason),
+      reporting_timezone: usage.fetch(:reporting_timezone)
+    }
+  end
+
   def usage_payload
     usage = usage_summary
     reset_at = Time.current.utc.tomorrow.beginning_of_day
@@ -121,7 +143,7 @@ class AiLeadEmployee::AiProviderConnection < ApplicationRecord
   end
 
   def usage_summary(day: Time.current.utc.to_date)
-    records = usages.for_utc_day(day)
+    records = usages.where(account_id: account_id).for_utc_day(day)
     requests = records.count
     cost_data_complete = records.where(cost_available: false).none?
     {
@@ -134,7 +156,7 @@ class AiLeadEmployee::AiProviderConnection < ApplicationRecord
   def automation_paused_reason(requests_used: nil)
     return 'provider_disabled' unless configured?
 
-    requests_used ||= usages.for_utc_day(Time.current.utc.to_date).count
+    requests_used ||= usages.where(account_id: account_id).for_utc_day(Time.current.utc.to_date).count
     return 'usage_limit_exhausted' if daily_request_limit <= requests_used
 
     nil
