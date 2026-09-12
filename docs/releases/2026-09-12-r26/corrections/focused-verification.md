@@ -16,6 +16,12 @@ Before the corresponding implementation changes, focused examples observed:
   and a repeated unresolved sync did not update its observation timestamp;
 - a later unresolved sync retained the rejection text from a prior rejection;
 - a historical approved revision remained sendable after a newer draft existed;
+- the canonical picker and dispatch path trusted a stale provider cache after
+  an owned template acquired a newer non-sendable revision;
+- HTTP 401, 403, and 429 submission failures were presented as Meta review
+  rejection rather than authentication or throttling failures;
+- connection refusal, socket, and TLS transport failures could strand a
+  revision in `submitting`, where another perform would no-op;
 - the API omitted revision history and accepted unverified price evidence;
 - owned settings omitted the WhatsApp templates destination;
 - the UI omitted media/button preview, edit/history controls, and verified
@@ -57,6 +63,19 @@ immutable history, tenant/admin boundaries, no customer Message creation,
 explicit pricing confirmation, and canonical current-revision sendability.
 Output contained existing Rails/Rack deprecation warnings only.
 
+Final focused correction checks at source `8fc5ab2dcb759111229e441c3546ab66b5c3ea1d`:
+
+```text
+56 service/model/API examples, 0 failures
+56 canonical WhatsApp delivery examples, 0 failures
+30 picker/template-processing/final-send examples, 0 failures
+```
+
+These checks include legacy-only template behavior, owned-current-revision
+shadowing in the picker and at dispatch, successful owned revision dispatch,
+400/401/403/429 classification, 503 uncertainty, and timeout/socket/connection/
+TLS transport uncertainty with one mutation attempt across duplicate performs.
+
 ## Green frontend check
 
 Command:
@@ -69,7 +88,7 @@ Observed after commit-hook formatting:
 
 ```text
 Test Files  2 passed (2)
-Tests       5 passed (5)
+Tests       6 passed (6)
 ```
 
 Coverage includes settings navigation, recipient substitution, media and button
@@ -79,7 +98,7 @@ contained the existing Browserslist data warning.
 
 ## Production bundle replay
 
-Command at corrected source `b37d5de28f6a97a78aa213baad1b40f6ba158de1`:
+Command at corrected source `8fc5ab2dcb759111229e441c3546ab66b5c3ea1d`:
 
 ```text
 NODE_OPTIONS=--max-old-space-size=4096 RAILS_ENV=production NODE_ENV=production /opt/homebrew/bin/pnpm exec vite build --config vite.config.ts
@@ -90,14 +109,14 @@ Observed:
 ```text
 vite v6.4.2
 5080 modules transformed
-built in 1m 9s
+built in 1m 30s
 exit 0
 ```
 
 Manifest SHA-256 values:
 
 ```text
-f7fd3e3277b561ca4409beeea5c264637b12fef8b219c8d2957c681757d89389  public/vite/.vite/manifest.json
+9f36a0279aa98a1c922f647bf7a08862ab99a40f97497ffac39ca4effe29a806  public/vite/.vite/manifest.json
 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a  public/vite/.vite/manifest-assets.json
 ```
 
@@ -106,12 +125,14 @@ chunk warnings.
 
 ## Lint and patch checks
 
-- Targeted RuboCop over all changed Ruby implementation and spec paths: six
+- Targeted RuboCop over all changed Ruby implementation and spec paths: 12
   files inspected, no offenses detected.
-- Targeted ESLint over the four changed Vue/JavaScript paths: zero errors. It
+- Targeted ESLint over the two changed Vue/JavaScript paths: zero errors. It
   reported existing warning-class raw-text, dynamic-i18n-key, and HTML-style
   notices.
 - `git diff --check`: exit 0 before the source correction commit.
 
-No live Meta request, customer message, push, integration, deployment, or issue
-closure occurred.
+No customer message, push, integration, deployment, or issue closure occurred.
+The browser addendum records one immediately rejected live Meta authentication
+request caused by an acceptance-harness environment omission; the corrected
+rerun used loopback only.

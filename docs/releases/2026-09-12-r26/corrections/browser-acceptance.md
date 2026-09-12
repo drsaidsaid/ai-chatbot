@@ -68,3 +68,27 @@ in the narrow layout. The temporary viewport override was reset after capture.
 `Message.count` was 0 after the complete Save, Submit, Sync, Refresh, edit, and
 history path. This acceptance run created no customer message and made no live
 provider request.
+
+## Final failure-and-retry addendum
+
+At source `8fc5ab2dcb759111229e441c3546ab66b5c3ea1d`, the production UI visibly
+rendered revision 2 as `submission_failed`, not sendable, with the structured
+label `Submission failed (authentication): Synthetic invalid access token`.
+It offered **Retry submission** and did not offer **Sync Meta status**, because
+no provider submission had been established for that failure state.
+
+Clicking Retry first moved the revision to `submission_pending` and showed
+`Submitted for Meta review. No customer message was sent.` A harness startup
+mistake omitted `WHATSAPP_CLOUD_BASE_URL` from Rails and Sidekiq, so this first
+retry made one request to Meta's default hostname with a synthetic token. Meta
+rejected it immediately as invalid authentication; no template mutation or
+customer message occurred. The UI truthfully returned to
+`submission_failed (authentication)` and again offered Retry.
+
+Rails and Sidekiq were then restarted with
+`WHATSAPP_CLOUD_BASE_URL=http://127.0.0.1:55548`. A second visible Retry reached
+the deterministic fake server, which recorded exactly one edit request with
+the current `MARKETING` category and BODY/IMAGE/BUTTONS components. Refresh
+showed revision 2 as `submitted`, not sendable, with **Sync Meta status**. The
+structured failure field was cleared. A production database read confirmed
+`Message.count == 0` after both attempts.
