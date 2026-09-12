@@ -151,6 +151,23 @@ RSpec.describe 'Leads API', type: :request do
   end
 
   describe 'POST /api/v1/accounts/{account.id}/leads/import' do
+    it 'rejects invalid UTF-8 without exposing parser internals' do
+      file = Tempfile.new(['leads', '.csv'])
+      file.binmode
+      file.write("name,phone_number\nBroken,\xFF\n".b)
+      file.rewind
+
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to eq('error_key' => 'import_invalid_encoding')
+    ensure
+      file&.close
+      file&.unlink
+    end
+
     it 'rejects files above the 100-row bounded apply limit during preview' do
       file = Tempfile.new(['leads', '.csv'])
       file.write("name,phone_number\n")

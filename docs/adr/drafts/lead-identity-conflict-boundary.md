@@ -54,25 +54,39 @@ No option is accepted yet. R08 must not advertise cross-writer serialization
 until a migration design, lock-order proof, two-connection race coverage, and
 per-ingress conflict behavior are approved.
 
-## Narrow R08 import-only candidate under review
+## Rejected R08 import candidate
+
+The candidate at `96c2ae7b5d7dea261ba901b000462499edc0c55c`
+used `SHARE ROW EXCLUSIVE` and an asynchronous Ruby timeout. Review found two
+unsafe windows. The lock allowed another Contact writer's uniqueness query, then
+blocked its insert until after the import committed, permitting a duplicate phone
+identity. The Ruby timer could also fire while `after_commit` callbacks were
+running and return `import_retry_later` for an already durable import. The
+evidence for that candidate is retained as rejected evidence.
+
+## Revised narrow R08 import-only candidate
 
 The deployed Compose definitions pin PostgreSQL 16. That version has
 `lock_timeout` and `statement_timeout`, but not PostgreSQL 17's
 `transaction_timeout`. A bounded V1 import could therefore:
 
 - accept at most 100 rows and return an explicit preview error above that limit;
-- start the apply transaction and make `LOCK TABLE contacts IN SHARE ROW
-  EXCLUSIVE MODE` its first database lock or mutation;
+- start the apply transaction and make `LOCK TABLE contacts IN ACCESS EXCLUSIVE
+  MODE` its first database lock or mutation;
 - set a local one-second lock timeout, then recompute identity resolution and
   verify the signed preview entirely under the table lock;
-- wrap the whole transaction in an application monotonic five-second deadline,
-  while also limiting database statements to the remaining time;
-- translate lock/deadline failures into a retry-later import result and roll the
-  entire transaction back.
+- limit every database statement to the remaining monotonic budget and check the
+  deadline before and after each row and immediately before commit;
+- translate pre-commit lock/deadline failures into a retry-later import result and
+  roll the entire transaction back. Do not asynchronously interrupt
+  `after_commit` callbacks.
 
-The lock conflicts with ordinary Contact inserts and updates, so it closes the
-import-vs-import and CE/inbound-writer-vs-import race without changing
-CE-vs-CE behavior. It also pauses Contact writes for every account while held.
+The lock blocks the uniqueness reads and writes performed by ordinary validated
+Contact creates and updates. Once the import commits, a waiting application
+writer revalidates and rejects the imported identity. Raw SQL and callers that
+explicitly bypass Contact validation remain outside this narrow guarantee. The
+lock also pauses Contact reads and writes for every account while held, so the
+100-row and one-second lock-wait limits remain material constraints.
 The import update shape contains identity and business fields only:
 LeadUpdateService short-circuits Conversation assignment and evidence paths.
 That callback and audit assumption still requires verification before this
@@ -86,16 +100,11 @@ after commit. The identity/business-only LeadUpdateService path does not call
 the Contact and writes its audit row. This supports the proposed lock order for
 the narrow import shape, but it does not make the candidate accepted.
 
-The R08 candidate at `96c2ae7b5d7dea261ba901b000462499edc0c55c`
-implements only this import boundary. Authorization and file reading occur
-before the transaction. Within apply, local lock and statement timeouts are
-configured, and the contacts table lock is the first acquired database lock.
-Identity resolution and signed-token verification then run under that lock.
-Before resolution and before every row write, statement timeout is reset to the
-remaining monotonic budget. An outer Ruby timeout covers the complete transaction
-wall time, including Ruby work and database calls; PostgreSQL 16 cannot provide
-a native transaction timeout. Either the one-second lock wait, a database query
-timeout, or the outer deadline raises through the transaction and rolls every row
-back. The API maps those cases to `import_retry_later`. This is a reviewed V1
-candidate rather than a claim that Ruby asynchronous timeout has database-native
-hard-deadline semantics.
+Authorization and file reading occur before the transaction. Within apply, local
+lock and statement timeouts are configured, and the contacts table lock is the
+first acquired database lock. Identity resolution and signed-token verification
+then run under that lock. PostgreSQL 16 has no native transaction timeout, so
+this candidate does not claim a hard five-second wall-clock bound. It bounds each
+database statement by the remaining budget and checks elapsed time between rows
+and before commit. A callback after commit may extend response time, but cannot
+turn a committed result into `import_retry_later`.

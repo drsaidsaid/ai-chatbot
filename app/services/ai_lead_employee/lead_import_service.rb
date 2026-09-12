@@ -2,7 +2,6 @@
 
 require 'csv'
 require 'digest'
-require 'timeout'
 
 # rubocop:disable Metrics/ClassLength -- preview, bounded apply, and shared row normalization must use one resolution contract
 class AiLeadEmployee::LeadImportService
@@ -36,8 +35,8 @@ class AiLeadEmployee::LeadImportService
     return preview_payload(content).except(:fingerprint) unless mode == 'apply'
 
     apply_content!(content)
-  rescue CSV::MalformedCSVError => e
-    invalid_file_payload(e.message)
+  rescue CSV::MalformedCSVError
+    invalid_file_payload('CSV could not be parsed')
   end
 
   private
@@ -50,10 +49,13 @@ class AiLeadEmployee::LeadImportService
 
   def read_content
     file.rewind if file.respond_to?(:rewind)
-    content = file.read.to_s
+    content = file.read.to_s.b
     raise ImportError, 'import_file_too_large' if content.bytesize > MAX_FILE_BYTES
 
-    content
+    content.force_encoding(Encoding::UTF_8)
+    raise ImportError, 'import_invalid_encoding' unless content.valid_encoding? && content.exclude?("\u0000")
+
+    content.delete_prefix("\uFEFF")
   end
 
   def preview_payload(content)
@@ -194,6 +196,7 @@ class AiLeadEmployee::LeadImportService
     preview[:rows].each do |row|
       apply_statement_timeout!
       apply_row!(row)
+      ensure_apply_deadline!
     end
 
     preview.except(:fingerprint).merge(status: 'completed', imported_count: preview[:total_count])
@@ -202,14 +205,12 @@ class AiLeadEmployee::LeadImportService
   end
 
   def apply_content!(content)
-    Timeout.timeout(APPLY_DEADLINE, ImportDeadlineExceeded) do
-      @apply_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + APPLY_DEADLINE
-      ActiveRecord::Base.transaction do
-        configure_apply_timeouts!
-        ActiveRecord::Base.connection.execute('LOCK TABLE contacts IN SHARE ROW EXCLUSIVE MODE')
-        apply_statement_timeout!
-        apply!(preview_payload(content))
-      end
+    @apply_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + APPLY_DEADLINE
+    ActiveRecord::Base.transaction do
+      configure_apply_timeouts!
+      ActiveRecord::Base.connection.execute('LOCK TABLE contacts IN ACCESS EXCLUSIVE MODE')
+      apply_statement_timeout!
+      apply!(preview_payload(content)).tap { ensure_apply_deadline! }
     end
   rescue ImportDeadlineExceeded, ActiveRecord::LockWaitTimeout
     raise ImportError, 'import_retry_later'
@@ -230,6 +231,10 @@ class AiLeadEmployee::LeadImportService
     raise ImportDeadlineExceeded if remaining_ms <= 0
 
     ActiveRecord::Base.connection.execute("SET LOCAL statement_timeout = '#{remaining_ms}ms'")
+  end
+
+  def ensure_apply_deadline!
+    raise ImportDeadlineExceeded if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= @apply_deadline
   end
 
   def retryable_database_timeout?(error)

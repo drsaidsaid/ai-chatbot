@@ -30,6 +30,58 @@ RSpec.describe AiLeadEmployee::LeadImportService do
 
     expect(results.pluck(:status)).to contain_exactly('completed', 'import_file_changed')
     expect(Contact.where(account: account, phone_number: '+255713450001').count).to eq(1)
+  ensure
+    barrier&.reset
+    terminate_workers(workers)
+  end
+
+  it 'makes a validating Contact writer observe the identity created by an import holding the table lock' do
+    account = create(:account)
+    admin = create(:user, account: account, role: :administrator)
+    csv = "name,phone_number\nImported Lead,+255713450006\n"
+    token = preview_token(account, admin, csv)
+    importer = described_class.new(
+      account: account, user: admin, file: StringIO.new(csv), mode: 'apply', preview_digest: token
+    )
+    import_locked = Queue.new
+    continue_import = Queue.new
+    allow(importer).to receive(:apply!).and_wrap_original do |method, preview|
+      import_locked << true
+      continue_import.pop
+      method.call(preview)
+    end
+
+    import_worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection { importer.perform }
+    end
+    import_worker.report_on_exception = false
+    Timeout.timeout(4) { import_locked.pop }
+
+    writer_result = nil
+    writer_pid = Queue.new
+    writer_worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        writer_pid << ActiveRecord::Base.connection.raw_connection.backend_pid
+        Contact.create!(account: account, name: 'Direct Writer', phone_number: '+255713450006')
+        writer_result = :created
+      rescue ActiveRecord::RecordInvalid
+        writer_result = :identity_rejected
+      end
+    end
+    writer_worker.report_on_exception = false
+    wait_for_contact_lock_wait(Timeout.timeout(4) { writer_pid.pop })
+    continue_import << true
+    Timeout.timeout(8) do
+      import_worker.join
+      writer_worker.join
+    end
+
+    expect(import_worker.value).to include(status: 'completed')
+    expect(writer_result).to eq(:identity_rejected)
+    expect(Contact.where(account: account, phone_number: '+255713450006').count).to eq(1)
+  ensure
+    continue_import << true if continue_import && import_worker&.alive?
+    terminate_workers([import_worker, writer_worker])
   end
 
   it 'times out behind a direct Contact update and leaves that update untouched' do
@@ -40,6 +92,7 @@ RSpec.describe AiLeadEmployee::LeadImportService do
     token = preview_token(account, admin, csv)
 
     result = nil
+    worker = nil
     contact.with_lock do
       contact.update!(name: 'Concurrent Edit')
       worker = Thread.new do
@@ -53,6 +106,8 @@ RSpec.describe AiLeadEmployee::LeadImportService do
 
     expect(result).to include(status: 'import_retry_later')
     expect(contact.reload.name).to eq('Concurrent Edit')
+  ensure
+    terminate_workers([worker])
   end
 
   it 'rolls back earlier rows when the five-second transaction deadline expires' do
@@ -75,6 +130,23 @@ RSpec.describe AiLeadEmployee::LeadImportService do
     expect(Contact.where(account: account, phone_number: %w[+255713450003 +255713450004])).to be_empty
   ensure
     remove_slow_insert_trigger
+  end
+
+  it 'does not report retry-later when a slow after-commit callback follows a durable import' do
+    account = create(:account)
+    admin = create(:user, account: account, role: :administrator)
+    csv = "name,phone_number\nCommitted Lead,+255713450007\n"
+    token = preview_token(account, admin, csv)
+    slow_callback = proc { sleep 1.5 if phone_number == '+255713450007' }
+    Contact.set_callback(:commit, :after, slow_callback)
+    stub_const("#{described_class}::APPLY_DEADLINE", 1.second)
+
+    result = apply_result(account.id, admin.id, csv, token)
+
+    expect(result).to include(status: 'completed')
+    expect(Contact.where(account: account, phone_number: '+255713450007').count).to eq(1)
+  ensure
+    Contact.skip_callback(:commit, :after, slow_callback) if slow_callback
   end
 
   it 'preserves historical phone ambiguity while refusing to treat it as an import update' do
@@ -123,6 +195,31 @@ RSpec.describe AiLeadEmployee::LeadImportService do
       CREATE TRIGGER r08_slow_second_contact BEFORE INSERT ON contacts
       FOR EACH ROW EXECUTE FUNCTION r08_slow_second_contact();
     SQL
+  end
+
+  def wait_for_contact_lock_wait(process_id)
+    Timeout.timeout(4) do
+      loop do
+        waiting = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+          SELECT EXISTS (
+            SELECT 1 FROM pg_locks
+            WHERE pid = #{Integer(process_id)}
+              AND relation = 'contacts'::regclass
+              AND NOT granted
+          )
+        SQL
+        break if ActiveModel::Type::Boolean.new.cast(waiting)
+
+        sleep 0.01
+      end
+    end
+  end
+
+  def terminate_workers(workers)
+    Array(workers).compact.each do |worker|
+      worker.kill if worker.alive?
+      worker.join(2)
+    end
   end
 
   def remove_slow_insert_trigger
