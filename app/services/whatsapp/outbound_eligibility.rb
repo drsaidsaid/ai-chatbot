@@ -109,13 +109,20 @@ class Whatsapp::OutboundEligibility
 
   def qualification_failure(alert)
     attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
-    dependent = attributes.key?('qualification') || attributes['qualification_context'].present? ||
-                attributes['alert_type'] == AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE ||
-                attributes['delivery_type'] == 'qualification_follow_up'
-    return unless dependent
-
     origin = alert.alert? ? Conversation.find_by(account_id: @delivery.account_id, id: alert.origin_id) : @conversation
     return 'qualification_context_invalid' unless origin
+
+    offer_context_failure(origin, attributes) || qualification_context_failure(origin, attributes)
+  end
+
+  def offer_context_failure(origin, attributes)
+    AiLeadEmployee::OfferAnswerContext.new(
+      conversation: origin, context: attributes['offer_context']
+    ).failure_code
+  end
+
+  def qualification_context_failure(origin, attributes)
+    return unless qualification_dependent?(attributes)
 
     AiLeadEmployee::OfferDeliveryContext.new(
       conversation: origin, context: attributes['qualification_context'],
@@ -123,9 +130,16 @@ class Whatsapp::OutboundEligibility
     ).failure_code
   end
 
+  def qualification_dependent?(attributes)
+    attributes['qualification'].present? || attributes['qualification_context'].present? ||
+      attributes['alert_type'] == AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE ||
+      attributes['delivery_type'] == 'qualification_follow_up'
+  end
+
   def provider_control_required?
     attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
     return false if @message.template? || attributes['delivery_type'].in?(%w[qualification_follow_up booking_confirmation])
+    return false if attributes['outbound_intent_status'].in?(%w[review_acknowledgment conversation_reply])
 
     @message.sender_type != 'User' || attributes['orchestration_intent_id'].present?
   end

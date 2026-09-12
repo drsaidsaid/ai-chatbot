@@ -25,7 +25,7 @@ RSpec.describe 'Review acknowledgment delivery', type: :request do
 
   before do
     clean_committed_fixtures
-    approve_launch!
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).and_return(true)
   end
 
   after { clean_committed_fixtures }
@@ -136,7 +136,7 @@ RSpec.describe 'Review acknowledgment delivery', type: :request do
       when 'opt_out'
         create(:lead_follow_up_opt_out, account: account, contact: conversation.contact, conversation: conversation)
       when 'launch_withdrawal'
-        AiLeadEmployee::LaunchGate.for(account).update!(approved_at: nil)
+        allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(false)
       when 'window_expiry'
         incoming.update!(provider_created_at: 25.hours.ago)
       end
@@ -291,14 +291,5 @@ RSpec.describe 'Review acknowledgment delivery', type: :request do
     tables = database.tables - %w[schema_migrations ar_internal_metadata installation_configs]
     database.execute("TRUNCATE #{tables.map { |table| database.quote_table_name(table) }.join(', ')} CASCADE")
     clear_enqueued_jobs
-  end
-
-  def approve_launch!
-    AiLeadEmployee::Evaluation::ScenarioCatalog.required_keys.each do |scenario_key|
-      create(:ai_lead_employee_evaluation_run, :reviewed_pass, account: account, user: admin, scenario_key: scenario_key)
-    end
-    evaluator = AiLeadEmployee::Evaluation::LaunchGateEvaluator.new(account: account)
-    evaluator.update!(team_roleplay_completed: true, pilot_conversations_reviewed_count: 3)
-    evaluator.approve!(user: admin, notes: 'Synthetic emergency acknowledgment checks only')
   end
 end

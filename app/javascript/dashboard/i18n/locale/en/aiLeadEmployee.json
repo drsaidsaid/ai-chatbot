@@ -928,6 +928,8 @@
       "MODE_DISABLED": "Disabled",
       "MODE_ENABLED": "Enabled",
       "NEXT_STEP": "Next step after a useful answer",
+      "NEXT_STEP_PROMPT": "Optional next-step message",
+      "NEXT_STEP_URL": "Approved purchase or appointment link",
       "NEXT_ANSWER_ONLY": "Answer only",
       "NEXT_ENQUIRY": "Continue the enquiry",
       "NEXT_PURCHASE_LINK": "Share a purchase link",

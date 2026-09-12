@@ -3,7 +3,7 @@
 class AiLeadEmployee::ConversationIntentClassifier
   Result = Struct.new(:intent, :language, keyword_init: true) do
     def safe_conversation?
-      %i[greeting language_question acknowledgment qualification_answer generic_safe].include?(intent)
+      %i[greeting language_question acknowledgment qualification_answer generic_safe unrelated].include?(intent)
     end
 
     def risky?
@@ -17,7 +17,7 @@ class AiLeadEmployee::ConversationIntentClassifier
     end
 
     def requires_approved_knowledge?
-      %i[business_question risky_question].include?(intent)
+      %i[business_question risky_question personalized_strategy].include?(intent)
     end
   end
 
@@ -45,6 +45,25 @@ class AiLeadEmployee::ConversationIntentClassifier
     /\b(?:nataka|naomba|ningependa|nahitaji)[ ](?:kuongea|kuzungumza|kuwasiliana)
       [ ]na[ ](?:mtu|binadamu|mfanyakazi|timu|mwakilishi)\b/x
   ].freeze
+  UNRELATED_PATTERNS = [
+    /\b(?:weather|forecast|football|soccer|match score|recipe|pilau|movie|celebrity|politics|election)\b/,
+    /\b(?:hali ya hewa|mpira|mchezo|mapishi|siasa|uchaguzi)\b/
+  ].freeze
+  PERSONALIZED_STRATEGY_PATTERNS = [
+    /\b(?:build|create|write|design|give me) (?:a |an |my )?(?:marketing |sales |business )?(?:strategy|plan|campaign)\b/,
+    /\b(?:tell me exactly|what should i do|advise me)\b.{0,60}\b(?:grow|market|sell|business|company)\b/,
+    /\b(?:nitengenezee|niandikie|nishauri)\b.{0,60}\b(?:mkakati|mpango|biashara|masoko|mauzo)\b/
+  ].freeze
+  CONTENT_INTENT_CHECKS = {
+    risky_question: :risky_question?,
+    language_question: :language_question?,
+    greeting: :greeting?,
+    acknowledgment: :acknowledgment?,
+    unrelated: :unrelated?,
+    personalized_strategy: :personalized_strategy?,
+    qualification_answer: :qualification_answer?,
+    business_question: :business_question?
+  }.freeze
 
   def initialize(message:)
     @message = message.to_s
@@ -63,14 +82,15 @@ class AiLeadEmployee::ConversationIntentClassifier
   end
 
   def content_intent
-    return :risky_question if risky_question?
-    return :language_question if language_question?
-    return :greeting if greeting?
-    return :acknowledgment if acknowledgment?
-    return :qualification_answer if qualification_answer?
-    return :business_question if business_question?
+    CONTENT_INTENT_CHECKS.find { |_intent, predicate| send(predicate) }&.first || :generic_safe
+  end
 
-    :generic_safe
+  def unrelated?
+    UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
+  end
+
+  def personalized_strategy?
+    PERSONALIZED_STRATEGY_PATTERNS.any? { |pattern| normalized.match?(pattern) }
   end
 
   def requested_intent

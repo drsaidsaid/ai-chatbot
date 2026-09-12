@@ -3,7 +3,7 @@
 class AiLeadEmployee::ReviewAcknowledgment
   ELIGIBLE_REASONS = %w[
     no_approved_knowledge conflicting_knowledge sensitive_question angry_question
-    source_unverified stale_knowledge provider_failed
+    source_unverified stale_knowledge provider_failed human_requested
   ].freeze
 
   COPY = {
@@ -22,6 +22,10 @@ class AiLeadEmployee::ReviewAcknowledgment
     support_request: {
       english: 'I have recorded your support request for the team to review.',
       swahili: 'Nimeweka ombi lako la msaada kwa timu ili ilipitie.'
+    },
+    human_request: {
+      english: 'I have recorded your request for human help.',
+      swahili: 'Nimeweka ombi lako la msaada wa mtu kwa timu.'
     }
   }.freeze
 
@@ -40,6 +44,7 @@ class AiLeadEmployee::ReviewAcknowledgment
   private
 
   def category
+    return :human_request if @reason.to_s == 'human_requested'
     return :complaint if @reason.to_s == 'angry_question'
     return @request_intent if @reason.to_s == 'sensitive_question' && %i[refund_request support_request].include?(@request_intent)
 

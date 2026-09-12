@@ -70,14 +70,26 @@ class KnowledgeItem < ApplicationRecord
     approved? &&
       deactivated_at.blank? &&
       approved_at.present? &&
-      updated_at <= approved_at + 1.second &&
+      approved_revision_current? &&
       source_reference.present? &&
       !stale?
   end
 
   def approve!
     now = Time.current
-    self.metadata = metadata.merge('source_reference' => next_source_reference(now))
+    reference = next_source_reference(now)
+    revision = {
+      'title' => title,
+      'question' => question,
+      'answer' => answer,
+      'source_kind' => source_kind,
+      'approved_at' => now.iso8601(6),
+      'source_reference' => reference
+    }
+    self.metadata = metadata.merge(
+      'source_reference' => reference,
+      'approval_revisions' => Array(metadata['approval_revisions']) + [revision]
+    )
     update!(status: :approved, approved_at: now, rejected_at: nil, deactivated_at: nil, updated_at: now)
   end
 
@@ -94,6 +106,14 @@ class KnowledgeItem < ApplicationRecord
   end
 
   private
+
+  def approved_revision_current?
+    revision = Array(metadata['approval_revisions']).last
+    return updated_at <= approved_at + 1.second if revision.blank?
+
+    revision.values_at('title', 'question', 'answer', 'source_kind', 'source_reference') ==
+      [title, question, answer, source_kind, source_reference]
+  end
 
   def approval_source_reference(approved_at)
     "knowledge_item:#{id}:approved_at:#{approved_at.iso8601}"

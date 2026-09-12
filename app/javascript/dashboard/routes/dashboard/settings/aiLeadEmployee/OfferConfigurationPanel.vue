@@ -168,6 +168,12 @@ const save = async () => {
   status.value = '';
   try {
     const payload = { offer: JSON.parse(JSON.stringify(draft.value)) };
+    if (
+      !['purchase_link', 'appointment'].includes(payload.offer.next_step.kind)
+    )
+      delete payload.offer.next_step.url;
+    if (payload.offer.next_step.kind === 'answer_only')
+      delete payload.offer.next_step.prompt;
     payload.offer.questions.forEach((question, position) => {
       question.position = position;
     });
@@ -310,6 +316,34 @@ onMounted(load);
                 {{ label(`NEXT_${kind.toUpperCase()}`) }}
               </option>
             </select>
+          </label>
+        </div>
+        <div
+          v-if="draft.next_step.kind !== 'answer_only'"
+          class="grid gap-3 sm:grid-cols-2"
+        >
+          <label class="grid gap-1 text-sm">
+            {{ label('NEXT_STEP_PROMPT') }}
+            <input
+              v-model="draft.next_step.prompt"
+              :class="inputClass"
+              maxlength="240"
+              data-testid="next-step-prompt"
+            />
+          </label>
+          <label
+            v-if="
+              ['purchase_link', 'appointment'].includes(draft.next_step.kind)
+            "
+            class="grid gap-1 text-sm"
+          >
+            {{ label('NEXT_STEP_URL') }}
+            <input
+              v-model="draft.next_step.url"
+              :class="inputClass"
+              type="url"
+              data-testid="next-step-url"
+            />
           </label>
         </div>
         <fieldset class="grid gap-3">

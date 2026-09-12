@@ -262,4 +262,23 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
     expect(result.language).to eq(:swahili)
     expect(result).to be_safe_conversation
   end
+
+  ['Who won the football match?', 'What is the weather today?', 'Nipe mapishi ya pilau.'].each do |message|
+    it "recognizes an unrelated request without sending it to business Review: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:unrelated)
+      expect(result.review_reason).to be_nil
+      expect(result).to be_safe_conversation
+    end
+  end
+
+  ['Build a marketing strategy for my company.', 'Tell me exactly what I should do to grow my business.'].each do |message|
+    it "recognizes a request for personalized strategy: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:personalized_strategy)
+      expect(result).to be_requires_approved_knowledge
+    end
+  end
 end

@@ -393,7 +393,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
   end
 
   def expected_ai_employee_reply
-    "#{provider_response.content}\n\nWhat type of business do you run?"
+    provider_response.content
   end
 
   def reconcile_delivery_statuses(outbound_message)

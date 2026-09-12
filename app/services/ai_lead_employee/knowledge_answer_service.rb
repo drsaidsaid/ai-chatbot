@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::KnowledgeAnswerService
+  MATCH_STOPWORDS = %w[about are can does how is the this what when where which who why with your].freeze
   Result = Struct.new(:answer, :sources, :refusal_reason, keyword_init: true) do
     def answered?
       answer.present?
@@ -23,10 +24,12 @@ class AiLeadEmployee::KnowledgeAnswerService
     'supporting_document' => 4
   }.freeze
 
-  def initialize(account:, question:, document_scope: nil)
+  def initialize(account:, question:, document_scope: nil, offer: nil, language: nil)
     @account = account
     @question = question.to_s
     @document_scope = document_scope
+    @offer = offer
+    @language = language&.to_s
   end
 
   def perform
@@ -45,7 +48,7 @@ class AiLeadEmployee::KnowledgeAnswerService
 
   private
 
-  attr_reader :account, :question, :document_scope
+  attr_reader :account, :question, :document_scope, :offer, :language
 
   def approved_item_result
     matches = matching_items
@@ -58,7 +61,7 @@ class AiLeadEmployee::KnowledgeAnswerService
 
   def matching_items
     account.knowledge_items.usable_by_ai_employee
-           .select { |item| matches?(item) }
+           .select { |item| eligible_item?(item) && matches?(item) }
            .sort_by { |item| [APPROVED_ANSWER_PRIORITY.fetch(item.source_kind), -match_score(item), item.created_at] }
   end
 
@@ -97,7 +100,27 @@ class AiLeadEmployee::KnowledgeAnswerService
     return true if normalized_question.include?(normalized_item_question)
     return true if normalized_item_question.include?(normalized_question)
 
-    (tokens(normalized_question) & tokens(normalized_item_question)).size >= 2
+    question_tokens = tokens(normalized_question)
+    item_tokens = tokens(normalized_item_question)
+    overlap = (question_tokens & item_tokens).size
+    overlap >= 2 && overlap.fdiv([question_tokens.size, item_tokens.size].min) >= 0.75
+  end
+
+  def eligible_item?(item)
+    language_matches?(item.metadata['language']) && offer_scope_matches?(item.metadata['offer_ids'])
+  end
+
+  def language_matches?(configured_language)
+    configured_language.blank? || language.blank? || normalized_language(configured_language) == normalized_language(language)
+  end
+
+  def normalized_language(value)
+    { 'en' => 'english', 'sw' => 'swahili', 'kiswahili' => 'swahili' }.fetch(value.to_s.downcase, value.to_s.downcase)
+  end
+
+  def offer_scope_matches?(offer_ids)
+    ids = Array(offer_ids).filter_map { |id| Integer(id, exception: false) }
+    ids.empty? || (offer.present? && ids.include?(offer.id))
   end
 
   def match_score(item)
@@ -109,7 +132,7 @@ class AiLeadEmployee::KnowledgeAnswerService
   end
 
   def tokens(value)
-    value.split.select { |token| token.length >= 3 }
+    value.split.select { |token| token.length >= 3 && MATCH_STOPWORDS.exclude?(token) }
   end
 
   def source_payload(item)
@@ -120,7 +143,9 @@ class AiLeadEmployee::KnowledgeAnswerService
       type: 'knowledge_item',
       status: 'verified',
       approved_at: item.approved_at.iso8601,
-      source_reference: item.source_reference
+      source_reference: item.source_reference,
+      offer_id: offer&.id,
+      offer_configuration_version: offer&.configuration_version
     }
   end
 
@@ -129,15 +154,25 @@ class AiLeadEmployee::KnowledgeAnswerService
   end
 
   def matching_document
-    scope = document_scope.present? ? [document_scope] : account.knowledge_documents.eligible_for_ai_employee
+    scope = document_scope.present? ? [document_scope] : account.knowledge_documents.published.where(used_by_ai_employee: true)
     scope.select { |document| document.verified_source_reference? && matches_document?(document) }
          .min_by { |document| [-document_score(document), document.updated_at] }
   end
 
   def matches_document?(document)
-    return false unless document.published? && document.used_by_ai_employee? && document.general_question_access?
+    return false unless document.published? && document.used_by_ai_employee?
+    return false unless language_matches?(document.import_metadata['language'])
+    return false unless document.general_question_access? || offer_scope_matches?(document.offer_ids)
+    return false if document_expired?(document)
 
     (tokens(normalize(question)) & tokens(normalize([document.title, document.body].join(' ')))).size >= 2
+  end
+
+  def document_expired?(document)
+    expires_at = document.import_metadata['expires_at']
+    expires_at.present? && Time.zone.parse(expires_at.to_s) <= Time.current
+  rescue ArgumentError, TypeError
+    true
   end
 
   def document_score(document)
@@ -158,7 +193,9 @@ class AiLeadEmployee::KnowledgeAnswerService
       type: 'knowledge_document',
       status: 'verified',
       approved_at: document.published_at.iso8601,
-      source_reference: document.source_reference
+      source_reference: document.source_reference,
+      offer_id: offer&.id,
+      offer_configuration_version: offer&.configuration_version
     }
   end
 

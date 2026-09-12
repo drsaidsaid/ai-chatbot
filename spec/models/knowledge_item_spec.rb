@@ -16,4 +16,21 @@ RSpec.describe KnowledgeItem do
       'eligibility' => 8
     )
   end
+
+  it 'retains the exact approved answer in immutable approval revisions' do
+    item = create(:knowledge_item, status: :draft, approved_at: nil, metadata: {})
+
+    item.approve!
+    first_revision = item.metadata.fetch('approval_revisions').last
+    item.update!(answer: 'An unapproved replacement answer')
+
+    expect(first_revision).to include(
+      'question' => 'Do you offer consulting?',
+      'answer' => 'Yes, we offer consulting for qualified businesses.',
+      'source_kind' => 'faq',
+      'source_reference' => item.metadata.fetch('source_reference')
+    )
+    expect(item.reload.metadata.fetch('approval_revisions').last).to eq(first_revision)
+    expect(item).not_to be_verified_source_reference
+  end
 end

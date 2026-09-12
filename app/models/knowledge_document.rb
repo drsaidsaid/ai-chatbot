@@ -95,10 +95,14 @@ class KnowledgeDocument < ApplicationRecord
       published_content_digest.present? &&
       ActiveSupport::SecurityUtils.secure_compare(published_content_digest, content_digest) &&
       used_by_ai_employee? &&
-      general_question_access?
+      available_to_answer?
   end
 
   private
+
+  def available_to_answer?
+    general_question_access? || offer_ids.present?
+  end
 
   def content_digest
     Digest::SHA256.hexdigest(
@@ -115,7 +119,13 @@ class KnowledgeDocument < ApplicationRecord
       {
         event: event,
         title: title,
+        body: body,
         status: status,
+        used_by_ai_employee: used_by_ai_employee,
+        general_question_access: general_question_access,
+        offer_ids: Array(offer_ids),
+        sensitive_topics: Array(sensitive_topics),
+        content_digest: content_digest,
         editor_id: editor&.id,
         editor_name: editor&.name,
         recorded_at: Time.current.iso8601

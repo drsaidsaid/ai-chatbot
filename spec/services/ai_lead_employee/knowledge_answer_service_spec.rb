@@ -5,6 +5,24 @@ require 'rails_helper'
 RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
   let(:account) { create(:account) }
 
+  let(:selected_offer) do
+    AiLeadEmployee::Offer.create!(
+      account: account,
+      name: 'Growth coaching',
+      currency: 'USD',
+      enabled: true,
+      configuration: {
+        'qualification_mode' => 'disabled',
+        'next_step' => { 'kind' => 'answer_only' },
+        'questions' => [],
+        'budget_ranges' => [],
+        'rules' => [],
+        'score_weights' => {},
+        'score_thresholds' => { 'qualified' => 60, 'highly_qualified' => 80 }
+      }
+    )
+  end
+
   it 'answers from approved knowledge for the same Business Account' do
     item = create(:knowledge_item, account: account, question: 'Do you offer consulting?', answer: 'Yes, we offer consulting.')
 
@@ -15,6 +33,47 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.sources).to contain_exactly(
       include(id: item.id, title: item.title, source_kind: 'faq', status: 'verified')
     )
+  end
+
+  it 'uses shared and selected Offer knowledge while excluding another Offer' do
+    shared = create(:knowledge_item, account: account, question: 'What support is included?', answer: 'Email support is included.')
+    selected = create(
+      :knowledge_item,
+      account: account,
+      question: 'How does coaching support work?',
+      answer: 'Growth coaching includes a weekly session.',
+      metadata: { 'source_reference' => 'growth-coaching-support-v1', 'offer_ids' => [selected_offer.id] }
+    )
+    other_offer = AiLeadEmployee::Offer.create!(account: account, name: 'Audit', currency: 'USD', enabled: true)
+    create(
+      :knowledge_item,
+      account: account,
+      question: 'How does audit support work?',
+      answer: 'The audit includes a written report.',
+      metadata: { 'source_reference' => 'audit-support-v1', 'offer_ids' => [other_offer.id] }
+    )
+
+    shared_result = described_class.new(account: account, offer: selected_offer, question: shared.question).perform
+    selected_result = described_class.new(account: account, offer: selected_offer, question: selected.question).perform
+    excluded_result = described_class.new(account: account, offer: selected_offer, question: 'How does audit support work?').perform
+
+    expect(shared_result.answer).to eq(shared.answer)
+    expect(selected_result.answer).to eq(selected.answer)
+    expect(excluded_result).to be_refused
+  end
+
+  it 'does not answer from approved knowledge in a different configured language' do
+    create(
+      :knowledge_item,
+      account: account,
+      question: 'What support is included?',
+      answer: 'English support details.',
+      metadata: { 'language' => 'english' }
+    )
+
+    result = described_class.new(account: account, question: 'Msaada gani unapatikana?', language: :swahili).perform
+
+    expect(result).to be_refused
   end
 
   it 'prefers FAQ, offer, pricing, objection, and policy knowledge over supporting documents' do
@@ -44,6 +103,54 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.sources).to contain_exactly(
       include(id: document.id, title: document.title, source_kind: 'document', status: 'verified')
     )
+  end
+
+  it 'excludes a published Document scoped to another Offer' do
+    other_offer = AiLeadEmployee::Offer.create!(account: account, name: 'Audit', currency: 'USD', enabled: true)
+    create(
+      :knowledge_document,
+      account: account,
+      title: 'Audit delivery',
+      body: 'Audit delivery includes a written report and review call.',
+      general_question_access: false,
+      offer_ids: [other_offer.id]
+    )
+
+    result = described_class.new(account: account, offer: selected_offer, question: 'What does audit delivery include?').perform
+
+    expect(result).to be_refused
+  end
+
+  it 'answers from a published Document scoped to the selected Offer' do
+    document = create(
+      :knowledge_document,
+      account: account,
+      title: 'Growth coaching delivery',
+      body: 'Growth coaching delivery includes a weekly review call.',
+      general_question_access: false,
+      offer_ids: [selected_offer.id]
+    )
+
+    result = described_class.new(
+      account: account, offer: selected_offer, question: 'What does growth coaching delivery include?'
+    ).perform
+
+    expect(result.answer).to include('weekly review call')
+    expect(result.sources).to contain_exactly(include(id: document.id, offer_id: selected_offer.id))
+  end
+
+  it 'accepts standard language aliases in approved metadata' do
+    item = create(
+      :knowledge_item,
+      account: account,
+      question: 'Msaada gani unapatikana?',
+      answer: 'Tunatoa msaada kwa barua pepe.',
+      metadata: { 'language' => 'sw', 'source_reference' => 'sw-support-v1' }
+    )
+
+    result = described_class.new(account: account, question: item.question, language: :swahili).perform
+
+    expect(result.answer).to eq(item.answer)
   end
 
   it 'does not use Documents for exact sensitive claims without an Approved Answer' do

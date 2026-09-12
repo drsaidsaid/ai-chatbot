@@ -244,17 +244,20 @@ Basic human assistance is available separately from a qualified sales appointmen
 
 ### Out-of-Scope and Sensitive Topics
 
-The authorized September 2026 emergency repair distinguishes a transactional
-complaint/refund/support request from an informational question about approved
-policy or services. Transactional requests reach Review before sales
-qualification, without requiring the Lead to qualify for support. An eligible
-inbound Review or provider failure receives one fixed English/Swahili
-acknowledgment after Review persistence, with no commercial promise or appended
-sales question. The original refusal/failure remains visible. Normal greetings
-and supported qualification statements receive an appropriate reply without a
-false knowledge Review, and the next question comes from persisted evidence.
-Acknowledgments remain subject to current R04 delivery authority; no automated
-post-handoff exception or new semantic retrieval is included.
+R11 applies an answer-first conversation policy. Approved buying questions are
+answered before the system decides whether one current Offer question or next
+step is useful. Qualification remains optional and no default sales interview is
+invented. Human-help, complaint, refund and support requests reach Review without
+sales qualification. A relevant unknown receives a truthful English or Swahili
+acknowledgment only after its Review is persisted; the acknowledgment makes no
+callback or timing promise. Unrelated topics receive a polite business boundary
+without creating a false Review.
+
+Grounded answers use approved shared knowledge and knowledge for the selected
+Offer, filtered by validity and language. Published Offer configuration controls
+qualification and progression to enquiry, purchase, appointment or sales-call
+steps. Personalized strategy remains within approved business material or an
+applicable configured Offer; the service does not provide unbounded consulting.
 
 The agent must escalate instead of improvising on:
 

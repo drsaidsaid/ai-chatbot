@@ -5,6 +5,7 @@ import KnowledgeItemsPanel from '../KnowledgeItemsPanel.vue';
 import KnowledgeDocumentsAPI from 'dashboard/api/knowledgeDocuments';
 import KnowledgeItemsAPI from 'dashboard/api/knowledgeItems';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
+import OffersAPI from 'dashboard/api/qualificationOffers';
 
 const i18n = withFullI18n();
 
@@ -36,6 +37,10 @@ vi.mock('dashboard/api/humanReviewRequests', () => ({
     resolve: vi.fn(),
     reject: vi.fn(),
   },
+}));
+
+vi.mock('dashboard/api/qualificationOffers', () => ({
+  default: { get: vi.fn() },
 }));
 
 vi.mock('dashboard/composables', () => ({
@@ -156,6 +161,9 @@ describe('KnowledgeItemsPanel', () => {
     });
     HumanReviewRequestsAPI.reject.mockResolvedValue({
       data: { ...reviewRequest, status: 'rejected' },
+    });
+    OffersAPI.get.mockResolvedValue({
+      data: [{ id: 9, name: 'Growth coaching' }],
     });
   });
 
@@ -307,16 +315,45 @@ describe('KnowledgeItemsPanel', () => {
     await wrapper
       .find('textarea[placeholder="Approved answer"]')
       .setValue('Refunds require approval.');
+    await wrapper
+      .find('select[aria-label="Approved Answer language"]')
+      .setValue('english');
+    await wrapper
+      .find('select[aria-label="Approved Answer Offer scope"]')
+      .setValue('9');
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
-    expect(KnowledgeItemsAPI.create).toHaveBeenCalled();
+    expect(KnowledgeItemsAPI.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: { language: 'english', offer_ids: [9] },
+      })
+    );
 
+    await wrapper.get('[data-testid="knowledge-tab-drafts"]').trigger('click');
     await wrapper
       .findAll('button')
       .find(button => button.text() === 'Reject')
       .trigger('click');
     await flushPromises();
     expect(KnowledgeItemsAPI.reject).toHaveBeenCalledWith(6);
+  });
+
+  it('saves a document for one selected Offer', async () => {
+    const wrapper = await mountComponent();
+
+    await wrapper
+      .find('select[aria-label="Document Offer scope"]')
+      .setValue('9');
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Save draft')
+      .trigger('click');
+    await flushPromises();
+
+    expect(KnowledgeDocumentsAPI.update).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ offer_ids: [9] })
+    );
   });
 
   it('separates reusable knowledge drafts from customer Review Requests', async () => {
