@@ -1,0 +1,17 @@
+3459cc426f39c342267f0c2ad3cb77febe4c0fbe4b713ffd29c8a5aba9d23045  docs/releases/2026-09-12-r08-lead-directory/README.md
+1d3c84ba715f13972fab11ec653728de8a59a6b45f1273c00ba381147ef817c8  docs/releases/2026-09-12-r08-lead-directory/changed-source-tree.txt
+b4004e6b2eaf5a575b1b111ab19cd97bbf8242381d4b582b8fd9997d4b48610a  docs/releases/2026-09-12-r08-lead-directory/commands-and-environment.md
+e6d652bd7fa8ff2190d0cb0b70af82c0e73dd3a95d20d9634e61d45899b7ed3b  docs/releases/2026-09-12-r08-lead-directory/evidence-validation.log
+3be00f52f03c1017e0bf3fead1240652a71ff99661f2f3cdf7754b0e173477d3  docs/releases/2026-09-12-r08-lead-directory/historical-failures.md
+81f7ccb10503bb7a5e79bbbd3f5c6f7547d9afe16d39a34c28eb9aeef2427ba8  docs/releases/2026-09-12-r08-lead-directory/hook-path-audit.log
+efeb30d56eb759e64dd93a771f642b4027b702051d351333b552f7a2ecf9cc5d  docs/releases/2026-09-12-r08-lead-directory/rspec-green.log
+0df24a3d0a9193f51fb65085759f0c07bda8301702fbf6701c7d1385ed00e706  docs/releases/2026-09-12-r08-lead-directory/rspec-red.log
+7f4fc09375706cdafc4d28543f71044353f3b60a32a8ae71c6d3bc11ed8a05a0  docs/releases/2026-09-12-r08-lead-directory/source-diff.patch.gz.base64
+98f9e0403c85c87cf936df5fd1fa02dcd473d0410589c41a4d9d409cbc4de775  docs/releases/2026-09-12-r08-lead-directory/source-tree-app-javascript-dashboard.txt.gz.base64
+9c82cef6b2ff0074a601121f9cd1e4cc6f99c23b2eb37bb9940d11be2c5a41df  docs/releases/2026-09-12-r08-lead-directory/source-tree-app-javascript-other.txt.gz.base64
+bd9d75e9d0438edd5cce8af9dbba7d483c554a1e90d2957f37cc5b3a41d3d728  docs/releases/2026-09-12-r08-lead-directory/source-tree-app-other.txt.gz.base64
+dedaa3e7b5af40286d88a6a447a4d9504d4f8545bf0691d4ddc55fe9f606b049  docs/releases/2026-09-12-r08-lead-directory/source-tree-other.txt.gz.base64
+03c72a62117f258eb9c6f3714ed6bb0f7fc95c1081737e12206dbcac36e8584a  docs/releases/2026-09-12-r08-lead-directory/source-tree-spec.txt.gz.base64
+395c08d5d9bd91d415facb184b4c90fc76aeee3fb3dbd7379134b2db28d8a305  docs/releases/2026-09-12-r08-lead-directory/vite-4g-green.log
+6785cec13d3b47cbeaa32d6167df3ae5b230192623bec90f6ad1448ecffa0521  docs/releases/2026-09-12-r08-lead-directory/vite-default-heap-failure.log
+
