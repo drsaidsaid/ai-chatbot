@@ -86,6 +86,8 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def content_intent
+    return :qualification_answer if pending_offer_answer?
+
     CONTENT_INTENT_CHECKS.find { |_intent, predicate| send(predicate) }&.first || :generic_safe
   end
 
@@ -155,7 +157,7 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def qualification_answer?
-    pending_offer_answer? || (token_match?(QUALIFICATION_TOKENS) && !question?)
+    token_match?(QUALIFICATION_TOKENS) && !question?
   end
 
   def pending_offer_answer?

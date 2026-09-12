@@ -16,7 +16,7 @@ class AiLeadEmployee::OfferEvidenceRecorder
   end
 
   def answers_pending_question?
-    processable_message? && answered_question.present?
+    processable_message? && observations.present?
   end
 
   private
