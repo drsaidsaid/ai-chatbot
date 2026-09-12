@@ -1,0 +1,52 @@
+..F
+
+Failures:
+
+  1) Pre-commit staged-file checks reports a staging failure after checking every eligible path
+     Failure/Error: expect(status.success?).to be(false), output
+
+       fatal: Unable to create '/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/r09-hook-20260912-78973-bhvpau/.git/index.lock': File exists.
+
+       Another git process seems to be running in this repository, e.g.
+       an editor opened by 'git commit'. Please make sure all processes
+       are terminated then try again. If it still fails, a git process
+       may have crashed in this repository earlier:
+       remove the file manually to continue.
+       fatal: Unable to create '/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/r09-hook-20260912-78973-bhvpau/.git/index.lock': File exists.
+
+       Another git process seems to be running in this repository, e.g.
+       an editor opened by 'git commit'. Please make sure all processes
+       are terminated then try again. If it still fails, a git process
+       may have crashed in this repository earlier:
+       remove the file manually to continue.
+       fatal: Unable to create '/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/r09-hook-20260912-78973-bhvpau/.git/index.lock': File exists.
+
+       Another git process seems to be running in this repository, e.g.
+       an editor opened by 'git commit'. Please make sure all processes
+       are terminated then try again. If it still fails, a git process
+       may have crashed in this repository earlier:
+       remove the file manually to continue.
+       fatal: Unable to create '/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/r09-hook-20260912-78973-bhvpau/.git/index.lock': File exists.
+
+       Another git process seems to be running in this repository, e.g.
+       an editor opened by 'git commit'. Please make sure all processes
+       are terminated then try again. If it still fails, a git process
+       may have crashed in this repository earlier:
+       remove the file manually to continue.
+       fatal: Unable to create '/private/var/folders/kd/mmymb6mx3130nkd0whbygmdr0000gn/T/r09-hook-20260912-78973-bhvpau/.git/index.lock': File exists.
+
+       Another git process seems to be running in this repository, e.g.
+       an editor opened by 'git commit'. Please make sure all processes
+       are terminated then try again. If it still fails, a git process
+       may have crashed in this repository earlier:
+       remove the file manually to continue.
+     # ./spec/hooks/pre_commit_spec.rb:81:in 'block (3 levels) in <top (required)>'
+     # ./spec/hooks/pre_commit_spec.rb:76:in 'block (2 levels) in <top (required)>'
+
+Finished in 4.9 seconds (files took 0.46167 seconds to load)
+3 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/hooks/pre_commit_spec.rb:75 # Pre-commit staged-file checks reports a staging failure after checking every eligible path
+

@@ -1,0 +1,19 @@
+......F
+
+Failures:
+
+  1) Pre-commit staged-file checks with an option-like root filename passes the name as a pathname without adding linter options
+     Failure/Error: expect(status.success?).to be(true), output
+
+       Unexpected linter options
+       husky - pre-commit hook exited with code 1 (error)
+     # ./spec/system/pre_commit_spec.rb:136:in 'block (4 levels) in <top (required)>'
+     # ./spec/system/pre_commit_spec.rb:132:in 'block (3 levels) in <top (required)>'
+
+Finished in 10.14 seconds (files took 0.49414 seconds to load)
+7 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/system/pre_commit_spec.rb:131 # Pre-commit staged-file checks with an option-like root filename passes the name as a pathname without adding linter options
+

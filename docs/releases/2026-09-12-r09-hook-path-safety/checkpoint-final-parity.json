@@ -1,0 +1,14 @@
+{
+  "commit": "b78b7053fd09794a6db91e4b761c6472997df902",
+  "commit_tree": "48d2ebabc263d925ac58b5c7224011c8e86f9e5f",
+  "branch": "codex/r09-offer-qualification-20260911",
+  "working_tree_clean": true,
+  "normal_hooks_bypassed": false,
+  "hooks_changed_any_source_or_evidence": false,
+  "reviewed_nonrelease_source": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+  "nonrelease_manifest_byte_equal": true,
+  "nonrelease_paths": 8972,
+  "historical_payloads_unchanged": 104,
+  "browser_acceptance": "pending external browser access",
+  "integration_push_deployment": "not performed"
+}

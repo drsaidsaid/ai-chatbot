@@ -1,0 +1,16 @@
+.F
+
+Failures:
+
+  1) Pre-commit staged-file checks reports a Ruby check failure while checking every eligible staged path
+     Failure/Error: expect(status.success?).to be(false), output
+     # ./spec/hooks/pre_commit_spec.rb:69:in 'block (3 levels) in <top (required)>'
+     # ./spec/hooks/pre_commit_spec.rb:65:in 'block (2 levels) in <top (required)>'
+
+Finished in 3.21 seconds (files took 0.45668 seconds to load)
+2 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/hooks/pre_commit_spec.rb:64 # Pre-commit staged-file checks reports a Ruby check failure while checking every eligible staged path
+

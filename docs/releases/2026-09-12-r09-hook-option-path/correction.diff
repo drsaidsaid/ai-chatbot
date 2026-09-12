@@ -1,0 +1,83 @@
+diff --git a/.husky/pre-commit b/.husky/pre-commit
+index 41aec62a..65692703 100755
+--- a/.husky/pre-commit
++++ b/.husky/pre-commit
+@@ -14,7 +14,7 @@ abort 'Unable to enumerate staged files' unless status.success?
+ files = output.split("\0").select { |path| File.file?(path) }
+ checks_passed = true
+ files.grep(/\.rb\z/).each do |path|
+-  passed = system('bundle', 'exec', 'rubocop', '--force-exclusion', '-a', path)
++  passed = system('bundle', 'exec', 'rubocop', '--force-exclusion', '-a', '--', path)
+   checks_passed = false unless passed
+ end
+ files.each do |path|
+diff --git a/spec/system/pre_commit_spec.rb b/spec/system/pre_commit_spec.rb
+index 7939f811..2f819336 100644
+--- a/spec/system/pre_commit_spec.rb
++++ b/spec/system/pre_commit_spec.rb
+@@ -21,18 +21,29 @@ RSpec.describe 'Pre-commit staged-file checks' do
+     FileUtils.cp(File.join(repository, '.husky/_/husky.sh'), File.join(directory, '.husky/_/husky.sh'))
+   end
+ 
+-  def prepare_scratch(directory)
+-    git(directory, 'init', '--quiet')
+-    install_hook(directory)
+-    FileUtils.mkdir_p(File.join(directory, 'fake-bin'))
+-    File.write(File.join(directory, 'fake-bin/npx'), "#!/bin/sh\nexit \"${FAKE_NPX_EXIT:-0}\"\n")
++  def write_linter(directory)
+     File.write(File.join(directory, 'fake-bin/bundle'), <<~SCRIPT)
+       #!/usr/bin/env ruby
+       require 'json'
+-      File.open(ENV.fetch('HOOK_CALLS'), 'a') { |file| file.puts(JSON.generate(ARGV)) }
+-      ARGV.drop(4).each { |path| File.open(path, 'a') { |file| file.puts('# formatted') } }
++      separator = ARGV.index('--')
++      options = separator ? ARGV[2...separator] : ARGV.drop(2).take_while { |argument| argument.start_with?('-') }
++      paths = separator ? ARGV.drop(separator + 1) : ARGV.drop(2 + options.length)
++      abort 'Unexpected linter command' unless ARGV.first(2) == ['exec', 'rubocop']
++      abort 'Unexpected linter options' unless options == ['--force-exclusion', '-a']
++      File.open(ENV.fetch('HOOK_CALLS'), 'a') do |file|
++        file.puts(JSON.generate('options' => options, 'paths' => paths, 'terminated' => !separator.nil?))
++      end
++      paths.each { |path| File.open(path, 'a') { |file| file.puts('# formatted') } }
+       exit Integer(ENV.fetch('FAKE_RUBOCOP_EXIT', '0'))
+     SCRIPT
++  end
++
++  def prepare_scratch(directory)
++    git(directory, 'init', '--quiet')
++    install_hook(directory)
++    FileUtils.mkdir_p(File.join(directory, 'fake-bin'))
++    File.write(File.join(directory, 'fake-bin/npx'), "#!/bin/sh\nexit \"${FAKE_NPX_EXIT:-0}\"\n")
++    write_linter(directory)
+     FileUtils.chmod('+x', Dir[File.join(directory, 'fake-bin/*')])
+     [*paths, 'docs/evidence.rb.txt', 'lib/not_staged.rb'].each do |path|
+       FileUtils.mkdir_p(File.dirname(File.join(directory, path)))
+@@ -49,7 +60,7 @@ RSpec.describe 'Pre-commit staged-file checks' do
+ 
+   def checked_paths(directory)
+     log = File.join(directory, 'calls.jsonl')
+-    File.exist?(log) ? File.readlines(log).flat_map { |line| JSON.parse(line).drop(4) } : []
++    File.exist?(log) ? File.readlines(log).flat_map { |line| JSON.parse(line).fetch('paths') } : []
+   end
+ 
+   it 'checks and stages every eligible path including spaces, newlines and long paths' do
+@@ -117,4 +128,19 @@ RSpec.describe 'Pre-commit staged-file checks' do
+       expect(checked_paths(directory)).to match_array(paths.drop(1))
+     end
+   end
++
++  context 'with an option-like root filename' do
++    let(:paths) { super() + ['--require=payload.rb'] }
++
++    it 'passes the name as a pathname without adding linter options' do
++      Dir.mktmpdir('r09-hook-') do |directory|
++        prepare_scratch(directory)
++        output, status = run_hook(directory)
++
++        expect(status.success?).to be(true), output
++        expect(checked_paths(directory)).to match_array(paths)
++        expect(git(directory, 'diff', '--name-only')).to eq('')
++      end
++    end
++  end
+ end
