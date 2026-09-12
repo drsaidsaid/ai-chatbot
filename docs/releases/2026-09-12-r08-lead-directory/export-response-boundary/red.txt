@@ -1,0 +1,124 @@
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/notification.rb:49)
+.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {open: 0, resolved: 1, pending: 2, snoozed: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/conversation.rb:88)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :priority, {low: 0, medium: 1, high: 2, urgent: 3}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/conversation.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :control_state, {ai_active: 0, handoff_requested: 1, human_active: 2, ai_paused: 3, closed: 4}
+ (called from <class:Conversation> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/conversation.rb:90)
+.DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :message_type, {incoming: 0, outgoing: 1, activity: 2, template: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/message.rb:89)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :content_type, {text: 0, input_text: 1, input_textarea: 2, input_email: 3, input_select: 4, cards: 5, form: 6, article: 7, incoming_email: 8, input_csat: 9, integrations: 10, sticker: 11, voice_call: 12}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/message.rb:90)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {sent: 0, delivered: 1, read: 2, failed: 3}
+ (called from <class:Message> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/message.rb:105)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :quality, {unknown: 0, unqualified: 1, low_qualified: 2, qualified: 3, highly_qualified: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/lead_qualification.rb:41)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :follow_up_state, {no_follow_up: 0, nurture: 1, human_review: 2, call_booked: 3, closed: 4}
+ (called from <class:LeadQualification> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/lead_qualification.rb:48)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {confirmed: 0, canceled: 1, completed: 2}
+ (called from <class:Booking> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/booking.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :status, {pending: 0, sent: 1, cancelled: 2, failed: 3}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/lead_follow_up.rb:58)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :stage, {incomplete_qualification: 0, qualified_nurture: 1}
+ (called from <class:LeadFollowUp> at /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot/app/models/lead_follow_up.rb:64)
+.FFF
+
+Failures:
+
+  1) AiLeadEmployee::LeadExportCsv does not retain distinct export batch results in an enabled caller query cache
+     Failure/Error: artifact&.close!
+
+     NameError:
+       undefined local variable or method 'artifact' for #<RSpec::ExampleGroups::AiLeadEmployeeLeadExportCsv:0x000000012cd44068>
+     # ./spec/services/ai_lead_employee/lead_export_csv_spec.rb:62:in 'block (2 levels) in <top (required)>'
+     # ------------------
+     # --- Caused by: ---
+     #   
+     #   expected: 0
+     #        got: 22
+     #   
+     #   (compared using ==)
+     #   ./spec/services/ai_lead_employee/lead_export_csv_spec.rb:59:in 'block (3 levels) in <top (required)>'
+
+  2) R08 Lead export artifact lifecycle does not expose a sendfile path and deletes the artifact when an offload-selected response aborts
+     Failure/Error: [200, { 'content-type' => 'text/csv' }, AiLeadEmployee::LeadExportBody.new(artifact)]
+
+     NameError:
+       uninitialized constant AiLeadEmployee::LeadExportBody
+     # ./spec/requests/r08_lead_export_artifact_spec.rb:19:in 'block (3 levels) in <main>'
+     # ./spec/requests/r08_lead_export_artifact_spec.rb:23:in 'block (2 levels) in <main>'
+
+  3) R08 Lead export artifact lifecycle deletes the artifact after a normally consumed response
+     Failure/Error: [200, { 'content-type' => 'text/csv' }, AiLeadEmployee::LeadExportBody.new(artifact)]
+
+     NameError:
+       uninitialized constant AiLeadEmployee::LeadExportBody
+     # ./spec/requests/r08_lead_export_artifact_spec.rb:44:in 'block (3 levels) in <main>'
+     # ./spec/requests/r08_lead_export_artifact_spec.rb:48:in 'block (2 levels) in <main>'
+
+Finished in 1.96 seconds (files took 3.42 seconds to load)
+6 examples, 3 failures
+
+Failed examples:
+
+rspec ./spec/services/ai_lead_employee/lead_export_csv_spec.rb:49 # AiLeadEmployee::LeadExportCsv does not retain distinct export batch results in an enabled caller query cache
+rspec ./spec/requests/r08_lead_export_artifact_spec.rb:11 # R08 Lead export artifact lifecycle does not expose a sendfile path and deletes the artifact when an offload-selected response aborts
+rspec ./spec/requests/r08_lead_export_artifact_spec.rb:36 # R08 Lead export artifact lifecycle deletes the artifact after a normally consumed response
+
