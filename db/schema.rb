@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_11_001700) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -1591,6 +1591,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_11_001700) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "offer_id"
+    t.jsonb "assessment", default: {}, null: false
     t.index ["account_id", "contact_id", "decided_at"], name: "idx_lead_qualification_decisions_on_lead"
     t.index ["account_id"], name: "index_lead_qualification_decisions_on_account_id"
     t.index ["contact_id"], name: "index_lead_qualification_decisions_on_contact_id"
@@ -1613,6 +1614,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_11_001700) do
     t.datetime "updated_at", null: false
     t.bigint "offer_id"
     t.datetime "stale_at"
+    t.jsonb "assessment", default: {}, null: false
     t.index ["account_id", "contact_id", "offer_id"], name: "idx_lead_qualifications_per_offer", unique: true
     t.index ["account_id", "contact_id"], name: "idx_legacy_lead_qualification", unique: true, where: "(offer_id IS NULL)"
     t.index ["account_id", "quality"], name: "index_lead_qualifications_on_account_id_and_quality"

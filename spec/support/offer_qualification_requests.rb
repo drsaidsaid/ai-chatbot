@@ -3,15 +3,43 @@
 module OfferQualificationRequests
   def r09_question(key, answer_type:, prompt:, **attributes)
     { 'key' => key, 'meaning' => key.humanize, 'answer_type' => answer_type,
-      'prompt' => prompt, 'position' => 0, 'enabled' => true, 'required' => true }.merge(attributes.stringify_keys)
+      'prompt' => prompt, 'position' => 0, 'enabled' => true, 'required' => true, 'purpose' => 'fit' }.merge(attributes.stringify_keys)
   end
 
   def r09_configuration(name: 'Message support', currency: 'TZS', minimum: '500000.00', questions: nil, **attributes)
+    legacy_contract = attributes.delete(:legacy_contract) { true }
     questions ||= [r09_question('budget', answer_type: 'money', prompt: 'What can you spend on this Offer?'),
                    r09_question('problem', answer_type: 'text', prompt: 'What problem should this Offer solve?', position: 1)]
-    { 'name' => name, 'currency' => currency, 'enabled' => true, 'questions' => questions,
+    rules = configured_rules(attributes, legacy_contract, minimum, currency)
+    weights = configured_weights(attributes, legacy_contract)
+    { 'name' => name, 'currency' => currency, 'enabled' => true, 'qualification_mode' => 'enabled',
+      'next_step' => { 'kind' => legacy_contract ? 'sales_call' : 'answer_only' }, 'questions' => questions,
       'budget_ranges' => [{ 'label' => 'Supported budget', 'minimum' => minimum, 'maximum' => nil, 'enabled' => true, 'position' => 0 }],
-      'rules' => [], 'score_thresholds' => { 'qualified' => 60, 'highly_qualified' => 80 } }.merge(attributes.stringify_keys)
+      'rules' => rules, 'score_weights' => weights,
+      'score_thresholds' => { 'qualified' => 60, 'highly_qualified' => 80 } }.merge(attributes.stringify_keys)
+  end
+
+  def configured_rules(attributes, legacy_contract, minimum, currency)
+    return Array(attributes.delete(:rules)) if attributes.key?(:rules)
+
+    legacy_contract ? legacy_offer_rules(minimum, currency) : []
+  end
+
+  def configured_weights(attributes, legacy_contract)
+    return attributes.delete(:score_weights) || {} if attributes.key?(:score_weights)
+
+    legacy_contract ? AiLeadEmployee::QualificationService::SIGNAL_WEIGHTS : {}
+  end
+
+  def legacy_offer_rules(minimum, currency)
+    %w[problem urgency decision_authority].map do |field|
+      { kind: 'requirement', dimension: 'fit', field: field, operator: 'positive', value: nil, priority: 0, enabled: true }
+    end + [
+      { kind: 'requirement', dimension: 'fit', field: 'budget', operator: 'gte',
+        value: { amount: minimum, currency: currency }, priority: 0, enabled: true },
+      { kind: 'hard_rule', field: 'budget', operator: 'lt', value: { amount: minimum, currency: currency },
+        forced_outcome: 'unqualified', priority: 0, enabled: true }
+    ]
   end
 
   def r09_create_offer(configuration = r09_configuration)

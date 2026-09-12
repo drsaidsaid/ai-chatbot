@@ -5,8 +5,8 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
   before_action :ensure_latest_conversation!
 
   def show
-    qualification = read_context.qualification(contact) || empty_qualification(read_context.offer)
-    authorize qualification, :show?
+    qualification = read_context.qualification(contact)
+    authorize qualification || empty_qualification(read_context.offer), :show?
 
     render json: qualification_payload(qualification)
   end
@@ -27,8 +27,7 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
   def record_offer_evidence
     selected_offer = current_account.qualification_offers.find(params.require(:offer_id))
     evidence = write_offer_evidence(selected_offer)
-    qualification = access.qualifications.find_by(contact: contact, offer: selected_offer) ||
-                    empty_qualification(selected_offer)
+    qualification = access.qualifications.find_by(contact: contact, offer: selected_offer)
     render json: qualification_payload(qualification).merge(evidence_id: evidence.id)
   rescue ArgumentError, ActiveRecord::RecordInvalid => e
     render json: { error: e.message }, status: :unprocessable_entity
@@ -76,19 +75,20 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
     contact.lead_qualification || LeadQualification.new(account: current_account, contact: contact)
   end
 
-  def qualification_payload(qualification)
+  def qualification_payload(qualification) # rubocop:disable Metrics/CyclomaticComplexity
     {
-      id: qualification.id,
+      id: qualification&.id,
       contact_id: contact.id,
-      offer_id: qualification.offer_id,
-      stale_at: qualification.stale_at&.iso8601,
-      quality: qualification.quality,
-      follow_up_state: qualification.follow_up_state,
-      score: qualification.score,
-      reasons: qualification.reasons,
-      missing_signals: qualification.missing_signals,
-      evidence: qualification.evidence_snapshot,
-      configuration_version: qualification.configuration_version
+      offer_id: qualification&.offer_id || read_context.offer&.id,
+      stale_at: qualification&.stale_at&.iso8601,
+      quality: qualification&.quality,
+      follow_up_state: qualification&.follow_up_state,
+      score: qualification&.score,
+      reasons: qualification&.reasons || [],
+      missing_signals: qualification&.missing_signals || [],
+      evidence: qualification&.evidence_snapshot || {},
+      assessment: read_context.assessment_for(qualification),
+      configuration_version: qualification&.configuration_version
     }.merge(qualification_context_payload(qualification))
   end
 
@@ -124,6 +124,8 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
   end
 
   def handoffs_payload(qualification)
+    return [] unless qualification
+
     access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5).map do |handoff|
       {
         id: handoff.id,
@@ -138,6 +140,8 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
   end
 
   def follow_ups_payload(qualification)
+    return [] unless qualification
+
     access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(10).map { |follow_up| follow_up_payload(follow_up) }
   end
 

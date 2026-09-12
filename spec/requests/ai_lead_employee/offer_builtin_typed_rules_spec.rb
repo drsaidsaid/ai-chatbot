@@ -29,7 +29,7 @@ RSpec.describe 'Typed rules for built-in Offer fields', type: :request do
 
   [
     ['I am not the decision maker.', 'unqualified', 200],
-    ['I am the owner.', 'low_qualified', 100],
+    ['I am the owner.', 'highly_qualified', 100],
     ['I am not sure who decides.', 'unknown', 0]
   ].each do |statement, quality, score|
     it "applies an authority false hard exclusion only to supported false evidence: #{statement}" do

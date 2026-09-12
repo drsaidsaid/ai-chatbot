@@ -107,8 +107,11 @@ RSpec.describe 'Offer evidence lifecycle', type: :request do
     original_decision = r09_qualification(first).lead_qualification_decisions.last.attributes
     unchanged = r09_qualification(second).attributes
     ranges = first.fetch('budget_ranges').map { |range| range.merge('minimum' => '900000.00') }
+    rules = first.fetch('rules').map do |rule|
+      rule['field'] == 'budget' ? rule.merge('value' => { 'amount' => '900000.00', 'currency' => 'TZS' }) : rule
+    end
 
-    r09_update_offer(first, budget_ranges: ranges)
+    r09_update_offer(first, budget_ranges: ranges, rules: rules)
     expect(response).to have_http_status(:success)
     updated = response.parsed_body
     verify_configuration_invalidation(first, second, original_evidence, unchanged)

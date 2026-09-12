@@ -120,6 +120,11 @@ RSpec.describe AiLeadEmployee::OfferConfigurationWriter do
     offer = AiLeadEmployee::Offer.find(scenario.fetch(:offer).id)
     attributes = offer.payload
     attributes.fetch('budget_ranges').first['minimum'] = '900000.00'
+    attributes['rules'] = [{
+      'kind' => 'hard_rule', 'field' => 'budget', 'operator' => 'lt',
+      'value' => { 'amount' => '900000.00', 'currency' => 'TZS' },
+      'forced_outcome' => 'unqualified', 'priority' => 0, 'enabled' => true
+    }]
     described_class.new(offer: offer, attributes: attributes).perform
   end
 

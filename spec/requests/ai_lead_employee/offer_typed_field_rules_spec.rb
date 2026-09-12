@@ -72,7 +72,7 @@ RSpec.describe 'Typed Offer answers and qualification rules', type: :request do
     expect(r09_qualification(offer).evidence_snapshot).not_to have_key('team_size')
   end
 
-  it 'records an unknown answer without scoring it or repeatedly asking the same question' do
+  it 'records an unknown answer without scoring it and asks for clarification' do
     question = r09_question('team_size', answer_type: 'number', prompt: 'How many people work in your team?')
     offer = r09_create_offer(r09_configuration(questions: [question], score_weights: { team_size: 50 }))
     conversation = r09_conversation(offer: offer)
@@ -83,10 +83,10 @@ RSpec.describe 'Typed Offer answers and qualification rules', type: :request do
     expect(r09_qualification(offer)).to have_attributes(score: 0, quality: 'unknown')
     expect(r09_qualification(offer).missing_signals).to include('team_size')
     expect(r09_qualification(offer).evidence_snapshot.fetch('team_size')).to include('polarity' => 'unknown', 'message_id' => incoming.id)
-    expect(replied.outbound_message.content).not_to include(question.fetch('prompt'))
+    expect(replied.outbound_message.content).to include(question.fetch('prompt'))
   end
 
-  it 'applies a saved numeric score rule with its reason while keeping unsupported budget as missing evidence' do
+  it 'applies a saved numeric score rule without inventing a budget requirement' do
     question = r09_question('team_size', answer_type: 'number', prompt: 'How many people work in your team?')
     rule = { kind: 'score_rule', field: 'team_size', operator: 'gte', value: 10, score_delta: 30, priority: 0, enabled: true }
     offer = r09_create_offer(r09_configuration(questions: [question], rules: [rule], score_weights: { team_size: 0 }))
@@ -98,7 +98,7 @@ RSpec.describe 'Typed Offer answers and qualification rules', type: :request do
 
     expect(qualification).to have_attributes(score: 30, quality: 'low_qualified')
     expect(qualification.reasons.join(' ').downcase).to include('team size', '30')
-    expect(qualification.missing_signals).to include('budget')
+    expect(qualification.missing_signals).to be_empty
     expect(qualification.evidence_snapshot.fetch('team_size')).to include('message_id' => answer.id)
   end
 
@@ -117,7 +117,7 @@ RSpec.describe 'Typed Offer answers and qualification rules', type: :request do
 
   it 'rejects an incompatible rule atomically instead of saving a field comparison it cannot evaluate' do
     question = r09_question('uses_crm', answer_type: 'boolean', prompt: 'Do you currently use a CRM?')
-    offer = r09_create_offer(r09_configuration(questions: [question]))
+    offer = r09_create_offer(r09_configuration(questions: [question], legacy_contract: false))
     rule = { kind: 'score_rule', field: 'uses_crm', operator: 'gte', value: 100, score_delta: 50, priority: 0, enabled: true }
 
     r09_update_offer(offer, name: 'Must not be saved', rules: [rule])

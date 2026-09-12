@@ -420,6 +420,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def unsupported_human_request?(qualification_result)
     qualification_result.present? &&
+      qualification_result.offer_id.nil? &&
       qualification_result.qualification&.highly_qualified? == false &&
       triggering_message.content.to_s.match?(/\b(human|person|operator|agent|sales|representative)\b/i)
   end
@@ -432,20 +433,24 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def qualification_source_references(qualification_result)
-    qualification_result.qualification.evidence_snapshot.values.filter_map { |evidence| evidence['source_reference'] }
+    qualification_result.qualification&.evidence_snapshot&.values&.filter_map { |evidence| evidence['source_reference'] } || []
   end
 
   def qualification_result_payload(qualification_result)
     return nil if qualification_result.blank?
 
+    qualification = qualification_result.qualification
     {
-      'quality' => qualification_result.qualification.quality,
-      'offer_id' => qualification_result.qualification.offer_id,
-      'score' => qualification_result.qualification.score,
-      'missing_signals' => qualification_result.qualification.missing_signals,
+      'quality' => qualification&.quality,
+      'offer_id' => qualification&.offer_id || qualification_result.offer_id,
+      'qualification_mode' => qualification_result.qualification_mode,
+      'assessment' => qualification&.assessment || qualification_result.assessment,
+      'next_step' => qualification_result.next_step,
+      'score' => qualification&.score,
+      'missing_signals' => qualification&.missing_signals || [],
       'next_question' => qualification_result.next_question,
       'next_question_key' => qualification_result.next_question_key,
-      'configuration_version' => qualification_result.qualification.configuration_version
+      'configuration_version' => qualification&.configuration_version
     }.merge(qualification_result.qualification_context || {})
   end
 

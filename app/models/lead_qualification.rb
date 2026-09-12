@@ -70,6 +70,7 @@ class LeadQualification < ApplicationRecord
       score: score,
       reasons: reasons,
       missing_signals: missing_signals,
+      assessment: assessment,
       evidence_snapshot: evidence_snapshot,
       configuration_version: configuration_version,
       decided_at: last_evaluated_at

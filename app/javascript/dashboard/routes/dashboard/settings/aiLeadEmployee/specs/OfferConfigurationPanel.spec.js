@@ -15,6 +15,8 @@ const offer = () => ({
   name: 'Message support',
   currency: 'TZS',
   enabled: true,
+  qualification_mode: 'enabled',
+  next_step: { kind: 'answer_only' },
   version: 3,
   questions: [
     {
@@ -25,6 +27,7 @@ const offer = () => ({
       position: 0,
       enabled: true,
       required: true,
+      purpose: 'fit',
     },
   ],
   budget_ranges: [
@@ -62,6 +65,36 @@ beforeEach(() => {
   });
 });
 afterEach(() => vi.unstubAllGlobals());
+
+it('saves explicit qualification mode, question purpose, requirement dimension and next step', async () => {
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="qualification-mode"]').setValue('enabled');
+  await wrapper.get('[data-testid="next-step"]').setValue('sales_call');
+  await wrapper
+    .get('[data-testid="question-purpose-0"]')
+    .setValue('action_eligibility');
+  await wrapper.get('[data-testid="add-rule"]').trigger('click');
+  await wrapper.get('[data-testid="rule-effect-0"]').setValue('requirement');
+  await wrapper
+    .get('[data-testid="rule-dimension-0"]')
+    .setValue('action_eligibility');
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(axios.patch.mock.calls[0][1].offer).toMatchObject({
+    qualification_mode: 'enabled',
+    next_step: { kind: 'sales_call' },
+    questions: [expect.objectContaining({ purpose: 'action_eligibility' })],
+    rules: [
+      expect.objectContaining({
+        kind: 'requirement',
+        dimension: 'action_eligibility',
+      }),
+    ],
+  });
+});
 
 it('edits one Offer while preserving exact human currency units and its revision', async () => {
   const wrapper = mountPanel();

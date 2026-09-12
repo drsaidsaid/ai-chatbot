@@ -49,6 +49,8 @@ class AiLeadEmployee::OfferQualificationReadContext
   def metadata
     {
       offer_id: offer&.id,
+      qualification_mode: offer&.qualification_mode,
+      next_step: offer&.next_step,
       selection_required: selection_required?,
       current_configuration_version: offer&.configuration_version,
       fields: field_definitions,
@@ -73,11 +75,21 @@ class AiLeadEmployee::OfferQualificationReadContext
 
   def qualification_metadata(qualification)
     metadata.merge(configuration_version: qualification&.persisted? ? qualification.configuration_version : nil,
-                   stale_at: qualification&.stale_at&.iso8601)
+                   stale_at: qualification&.stale_at&.iso8601,
+                   assessment: assessment_for(qualification))
+  end
+
+  def assessment_for(qualification)
+    return qualification.assessment if qualification&.persisted?
+
+    status = offer && !offer.qualification_enabled? ? 'not_evaluated' : 'not_assessed'
+    AiLeadEmployee::OfferRules::REQUIREMENT_DIMENSIONS.index_with do
+      { 'status' => status, 'missing_fields' => [], 'reasons' => [] }
+    end
   end
 
   def next_question(qualification)
-    return if selection_required? || (offer && !offer.enabled?)
+    return if qualification_question_suppressed?
 
     snapshot = qualification&.evidence_snapshot || {}
     return next_offer_question(snapshot) if offer
@@ -98,9 +110,14 @@ class AiLeadEmployee::OfferQualificationReadContext
 
   private
 
+  def qualification_question_suppressed?
+    selection_required? || (offer && (!offer.enabled? || !offer.qualification_enabled?))
+  end
+
   def next_offer_question(snapshot)
     offer.questions.find do |question|
-      !snapshot.key?(question['key']) || snapshot.dig(question['key'], 'asserted') == false
+      question['required'] && (!snapshot.key?(question['key']) || snapshot.dig(question['key'], 'asserted') == false ||
+        snapshot.dig(question['key'], 'polarity') == 'unknown')
     end&.fetch('prompt')
   end
 
@@ -108,14 +125,15 @@ class AiLeadEmployee::OfferQualificationReadContext
     return [] unless offer
 
     offer.configuration.fetch('questions', []).map do |question|
-      question.slice('key', 'meaning', 'answer_type', 'options', 'period', 'enabled')
+      question.slice('key', 'meaning', 'answer_type', 'options', 'period', 'enabled', 'required', 'purpose', 'prompt')
     end
   end
 
   def offers
     @offers ||= @account.qualification_offers.order(:position, :id).map do |candidate|
       { id: candidate.id, name: candidate.name, currency: candidate.currency,
-        enabled: candidate.enabled, configuration_version: candidate.configuration_version }
+        enabled: candidate.enabled, qualification_mode: candidate.qualification_mode,
+        next_step: candidate.next_step, configuration_version: candidate.configuration_version }
     end
   end
 end

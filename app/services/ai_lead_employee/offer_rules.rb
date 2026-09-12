@@ -9,6 +9,7 @@ class AiLeadEmployee::OfferRules
   }.freeze
   POLARITY_OPERATORS = %w[positive negative known].freeze
   ORDERED_OPERATORS = %w[lt lte gt gte].freeze
+  REQUIREMENT_DIMENSIONS = %w[fit readiness action_eligibility].freeze
 
   def self.normalize(rules, questions:, currency:)
     raise ArgumentError, 'Rules must be a list' unless rules.is_a?(Array)
@@ -20,11 +21,11 @@ class AiLeadEmployee::OfferRules
       field = fields.fetch(rule['field']) { raise ArgumentError, 'Unknown rule field' }
       validate_effect!(rule)
       value = normalize_value(rule, field, currency)
-      rule.slice('kind', 'field', 'operator', 'score_delta', 'forced_outcome', 'priority', 'enabled').merge('value' => value)
+      rule.slice('kind', 'dimension', 'field', 'operator', 'score_delta', 'forced_outcome', 'priority', 'enabled').merge('value' => value)
     end
   end
 
-  def self.validate_effect!(rule)
+  def self.validate_effect!(rule) # rubocop:disable Metrics/CyclomaticComplexity
     raise ArgumentError, 'Invalid rule priority' unless rule['priority'].is_a?(Integer) && rule['priority'] >= 0
     raise ArgumentError, 'Invalid rule enabled state' unless [true, false].include?(rule['enabled'])
 
@@ -33,6 +34,8 @@ class AiLeadEmployee::OfferRules
       validate_score_effect!(rule)
     when 'hard_rule'
       raise ArgumentError, 'Hard rules can only force unqualified' unless rule['forced_outcome'] == 'unqualified'
+    when 'requirement'
+      raise ArgumentError, 'Requirement needs a valid dimension' unless REQUIREMENT_DIMENSIONS.include?(rule['dimension'])
     else
       raise ArgumentError, 'Unsupported rule kind'
     end
@@ -128,13 +131,33 @@ class AiLeadEmployee::OfferRules
 
   def reasons
     matches.map do |rule|
-      effect = rule['kind'] == 'score_rule' ? "+#{rule['score_delta']}" : 'Unqualified'
+      effect = case rule['kind']
+               when 'score_rule' then "+#{rule['score_delta']}"
+               when 'requirement' then 'Requirement met'
+               else 'Unqualified'
+               end
       fact = @snapshot.fetch(rule['field'])
       "#{rule['field'].humanize}: #{rule['operator']} #{rule['value']} → #{effect} (evidence #{fact['evidence_id']})"
     end
   end
 
+  def requirements
+    @offer.configuration.fetch('rules', []).select { |rule| rule['enabled'] && rule['kind'] == 'requirement' }
+  end
+
+  def requirement_state(rule)
+    fact = @snapshot[rule['field']]
+    return :missing unless fact && fact['polarity'] != 'unknown' && fact['asserted'] != false
+    return :missing if comparison_rule?(rule) && comparison_values(rule, fact).first.nil?
+
+    matches?(rule) ? :met : :not_met
+  end
+
   private
+
+  def comparison_rule?(rule)
+    POLARITY_OPERATORS.exclude?(rule['operator'])
+  end
 
   def matches?(rule)
     fact = @snapshot[rule['field']]

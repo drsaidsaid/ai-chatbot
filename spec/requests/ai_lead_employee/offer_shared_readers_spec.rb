@@ -111,7 +111,7 @@ RSpec.describe 'Offer context in shared qualification readers', type: :request d
                                                                              params: { offer_id: first.fetch('id') }
 
     expect(response).to have_http_status(:success)
-    expect(response.parsed_body.fetch('quality')).to eq('unknown')
+    expect(response.parsed_body.fetch('quality')).to be_nil
     expect(response.parsed_body.fetch('evidence')).to be_empty
     expect(response.body).not_to include('987654')
   end
@@ -135,7 +135,7 @@ RSpec.describe 'Offer context in shared qualification readers', type: :request d
     get "/api/v1/accounts/#{account.id}/lead_qualifications/#{r09_lead.id}", headers: r09_headers
 
     expect(response).to have_http_status(:success)
-    expect(response.parsed_body).to include('selection_required' => true, 'offer_id' => nil, 'quality' => 'unknown', 'score' => 0,
+    expect(response.parsed_body).to include('selection_required' => true, 'offer_id' => nil, 'quality' => nil, 'score' => nil,
                                             'evidence' => {}, 'evidence_records' => [], 'next_question' => nil)
     expect(response.parsed_body.fetch('offers').map { |offer| offer.fetch('id') }).to contain_exactly(first.fetch('id'), second.fetch('id'))
     expect(response.parsed_body.fetch('legacy_qualification')).to include('scope' => 'legacy_unscoped', 'quality' => 'highly_qualified')
@@ -155,7 +155,7 @@ RSpec.describe 'Offer context in shared qualification readers', type: :request d
 
   it 'applies quality filtering and counts to one explicit Offer rather than another Offer of the same Lead' do
     first, _second, conversation, = prepare_two_qualified_offers
-    r09_update_offer(first, budget_ranges: [{ label: 'Higher minimum', minimum: '900000.00', enabled: true, position: 0 }])
+    r09_update_offer(first, **higher_budget_requirement(first))
     expect(response).to have_http_status(:success)
     r09_receive(conversation, 'Hello')
 
@@ -209,7 +209,7 @@ RSpec.describe 'Offer context in shared qualification readers', type: :request d
 
   it 'exports qualification values from the explicit Offer through the existing CSV endpoint' do
     first, _second, conversation, = prepare_two_qualified_offers
-    r09_update_offer(first, budget_ranges: [{ label: 'Higher minimum', minimum: '900000.00', enabled: true, position: 0 }])
+    r09_update_offer(first, **higher_budget_requirement(first))
     expect(response).to have_http_status(:success)
     r09_receive(conversation, 'Hello')
 
@@ -218,5 +218,14 @@ RSpec.describe 'Offer context in shared qualification readers', type: :request d
     expect(response).to have_http_status(:success)
     rows = CSV.parse(response.body, headers: true)
     expect(rows.map { |row| row['quality'] }).to eq(['unqualified'])
+  end
+
+  def higher_budget_requirement(offer)
+    {
+      budget_ranges: [{ label: 'Higher minimum', minimum: '900000.00', enabled: true, position: 0 }],
+      rules: offer.fetch('rules').map do |rule|
+        rule['field'] == 'budget' ? rule.merge('value' => { 'amount' => '900000.00', 'currency' => 'TZS' }) : rule
+      end
+    }
   end
 end

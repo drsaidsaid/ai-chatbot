@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AiLeadEmployee::HighlyQualifiedHandoffService
+class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/ClassLength
   ALERT_TYPE = 'highly_qualified_sales_handoff'
   DEFAULT_UNQUALIFIED_HUMAN_REQUEST_EXPLANATION =
     'I need to confirm a few details first so the right Human Operator can help you.'
@@ -111,11 +111,23 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
   end
 
   def automatic_handoff_allowed?
-    qualification&.highly_qualified? &&
+    qualification.present? &&
       qualification.account_id == account.id &&
       qualification.contact_id == conversation.contact_id &&
       conversation.ai_active? &&
       conversation.assignee_id.blank? &&
+      qualification_action_allowed?
+  end
+
+  def qualification_action_allowed?
+    return legacy_highly_qualified? unless qualification.offer
+    return false unless qualification.offer.next_step['kind'] == 'sales_call'
+
+    qualification.assessment.values.all? { |dimension| dimension['status'].in?(%w[met not_required]) }
+  end
+
+  def legacy_highly_qualified?
+    qualification.highly_qualified? &&
       (AiLeadEmployee::QualificationService::REQUIRED_HIGHLY_QUALIFIED_SIGNALS - qualification.evidence_snapshot.keys).empty?
   end
 
@@ -193,6 +205,7 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
       'score' => qualification.score,
       'reasons' => qualification.reasons,
       'missing_signals' => qualification.missing_signals,
+      'assessment' => qualification.assessment,
       'evidence' => qualification.evidence_snapshot,
       'configuration_version' => qualification.configuration_version,
       'qualification_context' => qualification_context

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::Offer < ApplicationRecord
+  QUALIFICATION_MODES = %w[not_configured disabled enabled].freeze
+  NEXT_STEP_KINDS = %w[answer_only enquiry purchase_link sales_call appointment].freeze
   self.table_name = 'ai_lead_employee_offers'
 
   belongs_to :account
@@ -21,12 +23,32 @@ class AiLeadEmployee::Offer < ApplicationRecord
     configuration.fetch('budget_ranges', []).select { |range| range['enabled'] }
   end
 
+  def qualification_mode
+    configured = configuration['qualification_mode']
+    return configured if QUALIFICATION_MODES.include?(configured)
+
+    qualification_configured? ? 'enabled' : 'not_configured'
+  end
+
+  def qualification_enabled?
+    qualification_mode == 'enabled'
+  end
+
+  def next_step
+    configuration.fetch('next_step', { 'kind' => 'answer_only' })
+  end
+
   def payload
     configuration.merge('id' => id, 'name' => name, 'currency' => currency, 'enabled' => enabled,
                         'version' => configuration_version, 'budget_ranges' => public_budget_ranges)
   end
 
   private
+
+  def qualification_configured?
+    configuration.fetch('questions', []).any? || configuration.fetch('rules', []).any? ||
+      configuration.fetch('score_weights', {}).any?
+  end
 
   def public_budget_ranges
     configuration.fetch('budget_ranges', []).map do |range|

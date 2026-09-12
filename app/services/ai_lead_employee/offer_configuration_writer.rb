@@ -5,6 +5,7 @@ class AiLeadEmployee::OfferConfigurationWriter
 
   REQUIRED_QUESTION_FIELDS = %w[key meaning prompt].freeze
   QUESTION_TYPES = %w[text boolean number money choice].freeze
+  QUESTION_PURPOSES = %w[fit readiness action_eligibility].freeze
 
   def initialize(offer:, attributes:)
     @offer = offer
@@ -51,6 +52,8 @@ class AiLeadEmployee::OfferConfigurationWriter
     raise ArgumentError, 'Unsupported currency' unless AiLeadEmployee::OfferMoney::PRECISION.key?(currency)
 
     {
+      'qualification_mode' => normalized_qualification_mode,
+      'next_step' => normalized_next_step,
       'questions' => normalized_questions,
       'budget_ranges' => attributes.fetch('budget_ranges', []).map { |range| normalize_range(range, currency) },
       'rules' => AiLeadEmployee::OfferRules.normalize(attributes.fetch('rules', []), questions: normalized_questions, currency: currency),
@@ -65,13 +68,17 @@ class AiLeadEmployee::OfferConfigurationWriter
     raise ArgumentError, 'Question keys must be unique' unless questions.pluck('key').uniq.length == questions.length
 
     questions.each { |question| validate_question!(question) }
-    questions.map { |question| question.slice('key', 'meaning', 'answer_type', 'prompt', 'position', 'enabled', 'required', 'options', 'period') }
+    questions.map do |question|
+      question.slice('key', 'meaning', 'answer_type', 'prompt', 'position', 'enabled', 'required', 'options', 'period', 'purpose')
+              .merge('purpose' => question['purpose'].presence || 'fit')
+    end
   end
 
   def validate_question!(question)
     validate_question_definition!(question)
     validate_choices!(question['options']) if question['answer_type'] == 'choice'
     raise ArgumentError, 'Invalid question position' unless question['position'].is_a?(Integer) && question['position'] >= 0
+    raise ArgumentError, 'Unsupported question purpose' unless QUESTION_PURPOSES.include?(question['purpose'].presence || 'fit')
   end
 
   def validate_question_definition!(question)
@@ -123,6 +130,27 @@ class AiLeadEmployee::OfferConfigurationWriter
     end
 
     weights
+  end
+
+  def normalized_qualification_mode
+    mode = attributes['qualification_mode'].presence || inferred_qualification_mode
+    raise ArgumentError, 'Unsupported qualification mode' unless AiLeadEmployee::Offer::QUALIFICATION_MODES.include?(mode)
+
+    mode
+  end
+
+  def inferred_qualification_mode
+    configured = attributes.fetch('questions', []).any? || attributes.fetch('rules', []).any? ||
+                 attributes.fetch('score_weights', {}).any?
+    configured ? 'enabled' : 'not_configured'
+  end
+
+  def normalized_next_step
+    next_step = attributes.fetch('next_step', { 'kind' => 'answer_only' })
+    raise ArgumentError, 'Next step must be an object' unless next_step.is_a?(Hash)
+    raise ArgumentError, 'Unsupported next step' unless AiLeadEmployee::Offer::NEXT_STEP_KINDS.include?(next_step['kind'])
+
+    next_step.slice('kind')
   end
 
   def normalized_thresholds

@@ -24,6 +24,7 @@ class AiLeadEmployee::QualificationService
   ].freeze
 
   Result = Struct.new(:qualification, :qualification_context, :next_question, :next_question_key, :new_evidence, :review_request_reason,
+                      :qualification_mode, :offer_id, :assessment, :next_step,
                       keyword_init: true)
 
   def initialize(conversation:, incoming_message: nil)

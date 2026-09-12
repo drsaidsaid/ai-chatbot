@@ -35,10 +35,12 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
   end
 
   def offer_params
-    permitted = params.require(:offer).permit(:name, :currency, :enabled, :version,
+    permitted = params.require(:offer).permit(:name, :currency, :enabled, :version, :qualification_mode,
                                               questions: [
-                                                :key, :meaning, :answer_type, :prompt, :position, :enabled, :required, :period, { options: [] }
+                                                :key, :meaning, :answer_type, :prompt, :position, :enabled, :required,
+                                                :period, :purpose, { options: [] }
                                               ],
+                                              next_step: [:kind],
                                               budget_ranges: [:label, :minimum, :maximum, :position, :enabled],
                                               score_weights: {}, score_thresholds: [:qualified, :highly_qualified]).to_h
     permitted.merge('rules' => rule_params)
@@ -53,7 +55,7 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
 
       value = rule[:value]
       value = value.permit(:amount, :currency).to_h if value.is_a?(ActionController::Parameters)
-      rule.permit(:kind, :field, :operator, :score_delta, :forced_outcome, :priority, :enabled).to_h.merge('value' => value)
+      rule.permit(:kind, :dimension, :field, :operator, :score_delta, :forced_outcome, :priority, :enabled).to_h.merge('value' => value)
     end
   end
 end

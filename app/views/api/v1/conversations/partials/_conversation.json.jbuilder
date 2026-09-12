@@ -64,31 +64,35 @@ qualification_context = AiLeadEmployee::OfferQualificationReadContext.new(
 )
 qualification = qualification_context.qualification(conversation.contact)
 if qualification.present? || qualification_context.offers_configured?
-  qualification ||= LeadQualification.new(account: conversation.account, contact: conversation.contact, offer: qualification_context.offer)
   json.lead_qualification do
-    json.quality qualification.quality
-    json.follow_up_state qualification.follow_up_state
-    json.score qualification.score
-    json.reasons qualification.reasons
-    json.missing_signals qualification.missing_signals
-    json.evidence qualification.evidence_snapshot
+    json.quality qualification&.quality
+    json.follow_up_state qualification&.follow_up_state
+    json.score qualification&.score
+    json.reasons qualification&.reasons || []
+    json.missing_signals qualification&.missing_signals || []
+    json.evidence qualification&.evidence_snapshot || {}
     json.merge! qualification_context.qualification_metadata(qualification)
     json.legacy_qualification qualification_context.legacy_payload(qualification_context.legacy_qualifications.find_by(contact: conversation.contact))
     json.next_question qualification_context.next_question(qualification)
     json.evidence_records qualification_context.evidence_records(conversation.contact) do |evidence|
       json.partial! 'api/v1/conversations/partials/qualification_evidence', evidence: evidence, qualification_context: qualification_context
     end
-    json.handoffs access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5) do |handoff|
-      json.id handoff.id
-      json.status handoff.status
-      json.alert_type handoff.alert_type
-      json.assignee_id handoff.assignee_id
-      json.handed_off_at handoff.handed_off_at&.iso8601
-      json.alert_recipients handoff.alert_recipients
-      json.alert_deliveries handoff.alert_deliveries
-    end
-    json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
-      json.partial! 'api/v1/conversations/partials/qualification_follow_up', follow_up: follow_up
+    if qualification
+      json.handoffs access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5) do |handoff|
+        json.id handoff.id
+        json.status handoff.status
+        json.alert_type handoff.alert_type
+        json.assignee_id handoff.assignee_id
+        json.handed_off_at handoff.handed_off_at&.iso8601
+        json.alert_recipients handoff.alert_recipients
+        json.alert_deliveries handoff.alert_deliveries
+      end
+      json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
+        json.partial! 'api/v1/conversations/partials/qualification_follow_up', follow_up: follow_up
+      end
+    else
+      json.handoffs []
+      json.follow_ups []
     end
   end
 end

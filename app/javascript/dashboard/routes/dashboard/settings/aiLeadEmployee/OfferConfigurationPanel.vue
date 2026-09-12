@@ -49,6 +49,8 @@ const newOffer = () => {
     name: '',
     currency: 'TZS',
     enabled: true,
+    qualification_mode: 'not_configured',
+    next_step: { kind: 'answer_only' },
     questions: [],
     budget_ranges: [],
     rules: [],
@@ -71,6 +73,7 @@ const addQuestion = () => {
     position: draft.value.questions.length,
     enabled: true,
     required: true,
+    purpose: 'fit',
   });
 };
 const moveQuestion = (index, delta) => {
@@ -99,6 +102,7 @@ const changeCurrency = () => {
 const addRule = () =>
   draft.value.rules.push({
     kind: 'score_rule',
+    dimension: 'fit',
     field: 'budget',
     operator: 'positive',
     value: null,
@@ -132,9 +136,11 @@ const resetRule = rule => {
 
 const orderedDraft = offer => ({
   ...offer,
-  questions: [...offer.questions].sort(
-    (left, right) => left.position - right.position
-  ),
+  qualification_mode: offer.qualification_mode || 'not_configured',
+  next_step: offer.next_step || { kind: 'answer_only' },
+  questions: [...offer.questions]
+    .sort((left, right) => left.position - right.position)
+    .map(question => ({ purpose: 'fit', ...question })),
 });
 
 const load = async () => {
@@ -263,6 +269,48 @@ onMounted(load);
           <input v-model="draft.enabled" type="checkbox" />
           {{ label('ENABLED') }}
         </label>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="grid gap-1 text-sm">
+            {{ label('QUALIFICATION_MODE') }}
+            <select
+              v-model="draft.qualification_mode"
+              :class="inputClass"
+              data-testid="qualification-mode"
+            >
+              <option value="not_configured">
+                {{ label('MODE_NOT_CONFIGURED') }}
+              </option>
+              <option value="disabled">
+                {{ label('MODE_DISABLED') }}
+              </option>
+              <option value="enabled">
+                {{ label('MODE_ENABLED') }}
+              </option>
+            </select>
+          </label>
+          <label class="grid gap-1 text-sm">
+            {{ label('NEXT_STEP') }}
+            <select
+              v-model="draft.next_step.kind"
+              :class="inputClass"
+              data-testid="next-step"
+            >
+              <option
+                v-for="kind in [
+                  'answer_only',
+                  'enquiry',
+                  'purchase_link',
+                  'sales_call',
+                  'appointment',
+                ]"
+                :key="kind"
+                :value="kind"
+              >
+                {{ label(`NEXT_${kind.toUpperCase()}`) }}
+              </option>
+            </select>
+          </label>
+        </div>
         <fieldset class="grid gap-3">
           <legend class="mb-3 text-base font-semibold">
             {{ label('QUESTIONS') }}
@@ -336,6 +384,22 @@ onMounted(load);
                 :class="inputClass"
                 :data-testid="`question-prompt-${index}`"
               />
+            </label>
+            <label class="grid gap-1 text-sm">
+              {{ label('PURPOSE') }}
+              <select
+                v-model="question.purpose"
+                :class="inputClass"
+                :data-testid="`question-purpose-${index}`"
+              >
+                <option value="fit">{{ label('PURPOSE_FIT') }}</option>
+                <option value="readiness">
+                  {{ label('PURPOSE_READINESS') }}
+                </option>
+                <option value="action_eligibility">
+                  {{ label('PURPOSE_ACTION_ELIGIBILITY') }}
+                </option>
+              </select>
             </label>
             <div class="flex flex-wrap items-center gap-3">
               <label class="flex items-center gap-2 text-sm">
@@ -589,6 +653,7 @@ onMounted(load);
               <select
                 v-model="rule.kind"
                 :class="inputClass"
+                :data-testid="`rule-effect-${index}`"
                 @change="
                   rule.forced_outcome =
                     rule.kind === 'hard_rule' ? 'unqualified' : null
@@ -599,6 +664,28 @@ onMounted(load);
                 </option>
                 <option value="hard_rule">
                   {{ label('EXCLUDE') }}
+                </option>
+                <option value="requirement">
+                  {{ label('REQUIREMENT') }}
+                </option>
+              </select>
+            </label>
+            <label
+              v-if="rule.kind === 'requirement'"
+              class="grid gap-1 text-sm"
+            >
+              {{ label('DIMENSION') }}
+              <select
+                v-model="rule.dimension"
+                :class="inputClass"
+                :data-testid="`rule-dimension-${index}`"
+              >
+                <option value="fit">{{ label('PURPOSE_FIT') }}</option>
+                <option value="readiness">
+                  {{ label('PURPOSE_READINESS') }}
+                </option>
+                <option value="action_eligibility">
+                  {{ label('PURPOSE_ACTION_ELIGIBILITY') }}
                 </option>
               </select>
             </label>

@@ -25,16 +25,16 @@ RSpec.describe 'Typed Offer answer boundaries', type: :request do
     end
   end
 
-  it 'keeps unsupported buying evidence missing even when a custom score exceeds both thresholds' do
+  it 'uses only the configured custom fit and score instead of universal buying fields' do
     question = r09_question('team_size', answer_type: 'number', prompt: 'How many people work in your team?')
-    offer = r09_create_offer(r09_configuration(questions: [question], score_weights: { team_size: 100 }))
+    offer = r09_create_offer(r09_configuration(questions: [question], score_weights: { team_size: 100 }, legacy_contract: false))
     conversation = r09_conversation(offer: offer)
     r09_receive(conversation, 'My budget is TZS 600000.')
 
     r09_receive(conversation, '12')
 
-    expect(r09_qualification(offer).quality).to eq('low_qualified')
-    expect(r09_qualification(offer).missing_signals).to include('problem', 'urgency', 'decision_authority')
+    expect(r09_qualification(offer).quality).to eq('highly_qualified')
+    expect(r09_qualification(offer).missing_signals).to be_empty
   end
 
   it 'matches an explicit false boolean with a saved equality rule without positive presence points' do
