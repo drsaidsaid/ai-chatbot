@@ -260,7 +260,7 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     usage, messages, deliveries = terminal_partial_reply(second_accepted: true)
     operator = create(:platform_app, finance_operations_enabled: true)
     gate = Queue.new
-    actions = [
+    workers = [
       lambda {
         described_class.reconcile!(usage: usage, outcome: 'confirmed_partial_failure', platform_app: operator,
                                    reason: 'terminal_provider_lookup')
@@ -279,7 +279,7 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
       end
     end
     2.times { gate << true }
-    actions.each(&:value)
+    workers.each(&:value)
 
     expect(usage.reload.status).to be_in(%w[settled partial_failure_closed])
     expect(deliveries.second.retry_for?(create(:user, account: account, role: :administrator))).to be(false)
@@ -292,6 +292,49 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     end
     expect(successful).to eq(available)
     expect(AiLeadEmployee::AiReplyUsage.where(account: account).capacity_holding.count).to eq(2)
+  end
+
+  it 'does not deadlock concurrent payment confirmation and partial closure' do
+    usage, = terminal_partial_reply
+    operator = create(:platform_app, finance_operations_enabled: true)
+    request = AiLeadEmployee::Subscriptions::RequestService.new(
+      account: account, requested_by: create(:user, account: account, role: :administrator),
+      plan: subscription.ai_service_plan, purpose: :top_up
+    ).perform
+    gate = Queue.new
+    workers = [
+      lambda {
+        described_class.reconcile!(usage: usage, outcome: 'confirmed_partial_failure', platform_app: operator,
+                                   reason: 'terminal_provider_lookup')
+      },
+      lambda {
+        AiLeadEmployee::Subscriptions::PaymentConfirmationService.new(
+          account: account, request: request, platform_app: operator,
+          attributes: { payment_reference: 'CONCURRENT-CLOSE', amount: request.quoted_amount,
+                        currency: request.currency, confirmed_at: Time.current.iso8601 }
+        ).perform
+      }
+    ].map do |action|
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          gate.pop
+          action.call
+        rescue StandardError => e
+          e
+        end
+      end
+    end
+    2.times { gate << true }
+
+    expect(workers).to all(satisfy { |thread| thread.join(10) == thread })
+    outcomes = workers.map(&:value)
+    errors = outcomes.grep(StandardError)
+    expect(errors).to all(be_a(AiLeadEmployee::Subscriptions::PaymentConfirmationService::InvalidConfirmation).and(
+                            have_attributes(message: 'Subscription changed after this request; create a new payment request')
+                          ))
+    expect(usage.reload).to be_partial_failure_closed
+    expect(request.reload.status).to be_in(%w[pending confirmed])
+    expect(AiLeadEmployee::SubscriptionPaymentConfirmation.where(account: account).count).to eq(request.confirmed? ? 1 : 0)
   end
 
   it 'rechecks current finance authority before closing a partial failure' do

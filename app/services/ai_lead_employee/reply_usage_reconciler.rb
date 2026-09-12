@@ -134,24 +134,26 @@ class AiLeadEmployee::ReplyUsageReconciler
     end
 
     def manual_partial_close!(usage, platform_app, reason)
-      usage.ai_subscription.with_lock do
-        usage.lock!
+      usage.account.with_lock do
         operator = current_finance_operator!(platform_app)
-        return usage if terminal_usage?(usage)
-        raise ArgumentError, 'Only a pending partial delivery can be closed' unless usage.partially_delivered?
+        usage.ai_subscription.with_lock do
+          usage.lock!
+          return usage if terminal_usage?(usage)
+          raise ArgumentError, 'Only a pending partial delivery can be closed' unless usage.partially_delivered?
 
-        deliveries = usage.whatsapp_outbound_deliveries.reload
-        unless canonical_partial_failure?(usage, deliveries)
-          raise ArgumentError, 'Canonical sent and terminal failure evidence is required for partial closure'
+          deliveries = usage.whatsapp_outbound_deliveries.reload
+          unless canonical_partial_failure?(usage, deliveries)
+            raise ArgumentError, 'Canonical sent and terminal failure evidence is required for partial closure'
+          end
+
+          usage.update!(
+            status: :partial_failure_closed, released_at: Time.current, reconciliation_reason: reason,
+            reconciled_by_platform_app: operator
+          )
+          usage.ai_subscription.resolve_alerts!(kind: :allowance_exhausted) if
+            AiLeadEmployee::ReplyAllowance.available_source(usage.ai_subscription)
+          usage
         end
-
-        usage.update!(
-          status: :partial_failure_closed, released_at: Time.current, reconciliation_reason: reason,
-          reconciled_by_platform_app: operator
-        )
-        usage.ai_subscription.resolve_alerts!(kind: :allowance_exhausted) if
-          AiLeadEmployee::ReplyAllowance.available_source(usage.ai_subscription)
-        usage
       end
     end
 
