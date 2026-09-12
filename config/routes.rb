@@ -208,6 +208,10 @@ Rails.application.routes.draw do
             post :health_check
             post :retry_receiving
           end
+          resources :whatsapp_templates, only: [:index, :show, :create, :update] do
+            post :submit, on: :member
+            post :reconcile, on: :member
+          end
           resources :lead_qualifications, only: [:show] do
             post :evidence, on: :member
           end

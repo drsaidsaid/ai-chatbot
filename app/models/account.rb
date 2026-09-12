@@ -110,6 +110,7 @@ class Account < ApplicationRecord
   has_many :web_widgets, dependent: :destroy_async, class_name: '::Channel::WebWidget'
   has_many :webhooks, dependent: :destroy_async
   has_many :whatsapp_channels, dependent: :destroy_async, class_name: '::Channel::Whatsapp'
+  has_many :whatsapp_templates, dependent: :destroy_async
   has_many :qualification_budget_ranges, dependent: :destroy_async
   has_many :qualification_evidences, dependent: :destroy_async
   has_many :qualification_questions, dependent: :destroy_async
