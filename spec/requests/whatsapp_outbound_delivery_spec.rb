@@ -853,6 +853,47 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     end
   end
 
+  {
+    'an empty provider catalog' => [],
+    'a nonempty provider catalog that omits it' => [
+      { id: 'meta-legacy', name: 'legacy_update', language: 'en_US', category: 'UTILITY', status: 'APPROVED',
+        components: [{ type: 'BODY', text: 'Legacy' }] }
+    ]
+  }.each do |catalog_description, provider_templates|
+    it "blocks an approved owned template missing from #{catalog_description}" do
+      channel.update_columns( # rubocop:disable Rails/SkipsModelValidations
+        message_templates: [{ 'id' => 'meta-owned', 'name' => 'owned_update', 'language' => 'en_US', 'status' => 'APPROVED' }]
+      )
+      template = WhatsappTemplate.create!(account: channel.account, channel: channel, created_by: admin, name: 'owned_update')
+      revision = template.revisions.create!(
+        account: channel.account, channel: channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+        body: 'Hello', status: :approved, provider_template_id: 'meta-owned', submitted_at: Time.current,
+        submission_key: SecureRandom.uuid, content_digest: 'approved-owned-digest'
+      )
+      outgoing.update!(additional_attributes: { template_params: {
+                         name: 'owned_update', language: 'en_US', owned_revision_id: revision.id,
+                         owned_content_digest: revision.content_digest, provider_template_id: revision.provider_template_id,
+                         processed_params: {}
+                       } })
+      stub_request(:get, "https://graph.facebook.com/v14.0/#{channel.provider_config['business_account_id']}/message_templates").to_return(
+        status: 200, body: { data: provider_templates }.to_json, headers: { 'Content-Type' => 'application/json' }
+      )
+      send_request = stub_request(:post, provider_url)
+
+      channel.provider_service.sync_templates
+      get "/api/v1/accounts/#{channel.account_id}/inboxes/#{channel.inbox.id}/message_templates",
+          headers: admin.create_new_auth_token, as: :json
+      SendReplyJob.perform_now(outgoing.id)
+
+      owned = response.parsed_body.fetch('payload').find { |item| item['name'] == 'owned_update' }
+      expect(revision.reload).to be_disabled
+      expect(owned).to include('status' => 'DISABLED', 'owned_revision_id' => revision.id)
+      expect(response.parsed_body.fetch('payload').map { |item| item['name'] }).to include('legacy_update') if provider_templates.any?
+      expect(outgoing.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'template_unavailable')
+      expect(send_request).not_to have_been_requested
+    end
+  end
+
   it 'blocks a selected revision changed after processing but before the dispatch authorization commit' do
     channel.update!(message_templates: [])
     template = WhatsappTemplate.create!(account: channel.account, channel: channel, created_by: admin, name: 'owned_update')

@@ -38,11 +38,11 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     templates = fetch_whatsapp_templates
     account = whatsapp_channel.account
     whatsapp_channel.with_lock do
-      project_owned_negative_states!(templates)
+      project_owned_provider_states!(templates) unless templates.nil?
       # update_columns skips touch, so bump the cache key ourselves; only if templates changed
-      account.update_cache_key('inbox') if templates.present? && templates != whatsapp_channel.message_templates
+      account.update_cache_key('inbox') unless templates.nil? || templates == whatsapp_channel.message_templates
       attributes = { message_templates_last_updated: Time.current }
-      attributes[:message_templates] = templates if templates.present?
+      attributes[:message_templates] = templates unless templates.nil?
       whatsapp_channel.update_columns(attributes) # rubocop:disable Rails/SkipsModelValidations
     end
   end
@@ -54,14 +54,17 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     unless response.success?
       Rails.logger.warn "[WHATSAPP] Template sync failed for account #{whatsapp_channel.account_id} " \
                         "inbox #{whatsapp_channel.inbox&.id}: #{response.code} #{error_message(response)}"
-      return []
+      return nil
     end
 
     next_cursor = response.dig('paging', 'cursors', 'after')
+    templates = Array(response['data'])
+    return templates if next_cursor.blank?
 
-    return response['data'] + fetch_whatsapp_templates(after: next_cursor) if next_cursor.present?
+    following_templates = fetch_whatsapp_templates(after: next_cursor)
+    return nil if following_templates.nil?
 
-    response['data']
+    templates + following_templates
   end
 
   def validate_provider_config?
@@ -101,22 +104,31 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
 
   private
 
-  def project_owned_negative_states!(templates)
-    Array(templates).each do |provider|
-      status = provider['status'].to_s.downcase
-      next unless status.in?(%w[paused disabled])
+  def project_owned_provider_states!(templates)
+    providers_by_identity = Array(templates).index_by { |provider| provider_identity(provider) }
+    WhatsappTemplate.where(account_id: whatsapp_channel.account_id, channel_id: whatsapp_channel.id).find_each do |template|
+      revision = template.latest_revision
+      next if revision&.provider_template_id.blank?
 
-      template = WhatsappTemplate.find_by(
-        account_id: whatsapp_channel.account_id,
-        channel_id: whatsapp_channel.id,
-        name: provider['name']
-      )
-      revision = template&.latest_revision
-      next unless revision&.provider_template_id.to_s == provider['id'].to_s && revision.language == provider['language']
-
+      provider = providers_by_identity[provider_identity(revision, name: template.name)]
       revision.lock!
+      status = owned_provider_status(revision, provider)
+      next unless status
+
       revision.update!(status: status, rejection_reason: nil, status_synced_at: Time.current)
     end
+  end
+
+  def provider_identity(record, name: nil)
+    id = record.respond_to?(:provider_template_id) ? record.provider_template_id : record['id']
+    language = record.respond_to?(:language) ? record.language : record['language']
+    [id.to_s, name || record['name'], language.to_s.downcase]
+  end
+
+  def owned_provider_status(revision, provider)
+    return 'disabled' if provider.nil? && revision.approved?
+
+    provider&.dig('status')&.downcase&.in?(%w[paused disabled]) ? provider['status'].downcase : nil
   end
 
   def provider_phone_matches?(number)
