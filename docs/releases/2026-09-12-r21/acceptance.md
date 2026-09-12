@@ -11,27 +11,26 @@
 
 ## Automated verification
 
-- Rails provider control, usage, platform authorization, delivery and
-  end-to-end request coverage at commit `6a1dd7e3`: 95 examples, 0 failures.
-  After the isolation patch, the complete `ai_provider_usage_controls_spec.rb`
-  file was rerun at the final source and passed: 11 examples, 0 failures. It
-  includes the regression proving a mismatched legacy usage row cannot consume
-  another account's runtime allowance; the other 84 pre-patch examples were
-  not rerun as a single final-source suite.
+- The complete R21-changed Rails spec set ran against final runtime source
+  `e8c974ec`: 85 examples, 0 failures. The retained log includes provider
+  control, usage isolation, platform authorization, delivery, and end-to-end
+  coverage.
 - Vue managed-service page, navigation and settings layout coverage: 12 tests,
   0 failures.
 - Focused RuboCop: 16 files, no offenses.
 - Focused ESLint: no errors; warnings are pre-existing formatting warnings in
   the settings shell outside the changed label.
 - Full production Vite build at `6a1dd7e3`: passed (5,078 modules
-  transformed). The post-review patch is Ruby-only and does not change the
-  frontend artifact.
+  transformed). A retained source-equivalence check proves no frontend source
+  changed between that build and final runtime source `e8c974ec`; the retained
+  Vite manifest SHA-256 is unchanged.
 - Route inspection and `git diff --check`: passed.
 
 ## Browser acceptance
 
-The in-app browser was run against the disposable release database and
-production assets.
+The in-app browser was run against final runtime source `e8c974ec`, the
+disposable release database, and production assets at both 1280 x 720 and
+390 x 844.
 
 - A Business Account admin saw `Managed AI service`, service `Active`,
   readiness `Healthy`, usage `1 / 25`, `24 requests remain`, and an EAT reset
@@ -45,12 +44,11 @@ production assets.
 - An unauthenticated platform endpoint request returned HTTP 401 with only
   `Invalid access_token`. Permitted and unpermitted Platform App paths are also
   covered by request specs using synthetic tokens.
-- Browser logs contained no errors. One informational client-storage cleanup
-  message was observed.
+- At 390 x 844, the card measured 358 pixels wide with 16-pixel side margins,
+  body scroll width equaled the viewport width, and the settings selector plus
+  mobile bottom navigation were visible. There was no horizontal overflow.
+- Final desktop, phone, and Team Member browser logs contained no errors or
+  warnings.
 
-The in-app browser surface exposes a fixed 1280 x 720 viewport. Its capability
-inventory offers only page assets and WebMCP, creating a tab with width/height
-options remained 1280 x 720, and page-level `window.resizeTo` is unavailable.
-The responsive implementation therefore remains covered by the component's
-single-column base layout and `sm:grid-cols-2` enhancement rather than a
-separately captured phone-browser run.
+Exact DOM observations are retained in
+[`evidence/browser-observations.json`](evidence/browser-observations.json).

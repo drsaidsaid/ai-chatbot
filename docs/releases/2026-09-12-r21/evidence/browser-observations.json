@@ -1,0 +1,66 @@
+{
+  "recorded_at_utc": "2026-09-12T15:24:21Z",
+  "runtime_source": "e8c974ec94886fc143e1c7defae4bac7270eed62",
+  "branch_tip_before_evidence_commit": "59ca179cb988ce47c9e60b6e45cc7e35029a898f",
+  "browser": {
+    "name": "Codex In-app Browser",
+    "id": "3",
+    "type": "iab"
+  },
+  "fixture": {
+    "database": "ale_release_r21_browser",
+    "postgres": "127.0.0.1:55535",
+    "redis": "127.0.0.1:6435/1",
+    "rails": "127.0.0.1:3215",
+    "external_network": "blocked by WebMock except localhost"
+  },
+  "desktop_admin": {
+    "viewport": { "width": 1280, "height": 720 },
+    "body_client_width": 1280,
+    "body_scroll_width": 1280,
+    "managed_card_rect": { "x": 424, "y": 81, "width": 768, "right": 1192 },
+    "managed_card_controls": 0,
+    "visible_values": ["Active", "Healthy", "1 / 25", "24 requests remain", "2026-09-13 03:00 EAT"],
+    "openrouter_visible": false,
+    "private_model_visible": false,
+    "api_key_visible": false,
+    "console_errors_or_warnings": []
+  },
+  "phone_admin": {
+    "viewport_capability_sequence": [
+      "visibility.set(false)",
+      "viewport.reset()",
+      "viewport.set({width:390,height:844})",
+      "create a fresh in-app browser tab"
+    ],
+    "viewport": { "width": 390, "height": 844 },
+    "body_client_width": 390,
+    "body_scroll_width": 390,
+    "horizontal_overflow": false,
+    "managed_card_rect": { "x": 16, "y": 246, "width": 358, "right": 374 },
+    "managed_card_controls": 0,
+    "visible_values": ["Active", "Healthy", "1 / 25", "24 requests remain", "2026-09-13 03:00 EAT"],
+    "mobile_navigation_visible": true,
+    "settings_section_select_visible": true,
+    "openrouter_visible": false,
+    "private_model_visible": false,
+    "api_key_visible": false,
+    "console_errors_or_warnings": []
+  },
+  "team_member": {
+    "requested_url": "http://127.0.0.1:3215/app/accounts/1/settings/ai-provider",
+    "result_url": "http://127.0.0.1:3215/app/accounts/1/dashboard?queue=all",
+    "settings_link_visible": false,
+    "provider_or_managed_service_text_visible": false,
+    "console_errors_or_warnings": []
+  },
+  "platform_without_token": {
+    "status": 401,
+    "body": { "error": "Invalid access_token" },
+    "raw_response": "raw/platform-unauthorized.http"
+  },
+  "screenshots": {
+    "desktop": "captured and visually inspected in the browser automation transcript; no local image export was available",
+    "phone": "captured and visually inspected in the browser automation transcript; no local image export was available"
+  }
+}
