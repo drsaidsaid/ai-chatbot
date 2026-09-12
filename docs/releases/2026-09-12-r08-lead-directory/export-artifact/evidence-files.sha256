@@ -1,0 +1,14 @@
+5b035cb673743a322f3beee33f4012c3161581d06c6d1d96dbbd99c2e1577be4  docs/releases/2026-09-12-r08-lead-directory/export-artifact/README.md
+d6c8889e757f989506385c25644041485250eed2b7bd4d9b9589969daadd1dbf  docs/releases/2026-09-12-r08-lead-directory/export-artifact/changed-source-tree.txt
+613f5cdb169c60fa84b5a870395e705219d60cd6ea510d27fb4cac3903732503  docs/releases/2026-09-12-r08-lead-directory/export-artifact/evidence-validation.txt
+3f3ea3b536e52f552a718d1bfffe387a9fe8d5aff1331f26d86dea8902b010f5  docs/releases/2026-09-12-r08-lead-directory/export-artifact/final-green.txt
+b64bc13007d44e31de7f723fc4580eb56d99b7091100e386df81977ac920a8fd  docs/releases/2026-09-12-r08-lead-directory/export-artifact/middleware-and-offload-audit.md
+4d74db4f41182c7c87af5cf792ade452d54bbc84ac9f949e381fd8d47a86f1aa  docs/releases/2026-09-12-r08-lead-directory/export-artifact/pre-final-green.txt
+ff04136d96bc0b388310081158a9e98dad54d5b1d98cd42154f67f2c6cba8425  docs/releases/2026-09-12-r08-lead-directory/export-artifact/red-observation.md
+1eec3bd99ad438588a438357f3905b45cc0d2403b2961db44cf2f7f4a7c9e92c  docs/releases/2026-09-12-r08-lead-directory/export-artifact/rubocop-green.txt
+3356c2963de16f485623356ca6c86d94a196982611f048016807afc0b4cd8ad3  docs/releases/2026-09-12-r08-lead-directory/export-artifact/source-tree-app-javascript-dashboard.txt.gz.base64
+4e3bef551bdf189d5beac5fc20eef5990274c21aaf637f953edff5d8ae7aa6c6  docs/releases/2026-09-12-r08-lead-directory/export-artifact/source-tree-app-javascript-other.txt.gz.base64
+eb82fa8c1169527c2957306c8effc98bba0ea7a5745d0eb11140b6ef92d0f3f6  docs/releases/2026-09-12-r08-lead-directory/export-artifact/source-tree-app-other.txt.gz.base64
+aef97563c5e2862fd8f97cd9dd1c8b57887da2bd28288c15e50a54bf39fda479  docs/releases/2026-09-12-r08-lead-directory/export-artifact/source-tree-other.txt.gz.base64
+aa4784cd9bc7ef18bef660d01467055fbdb0fe5f6f68505296584382aaee8d17  docs/releases/2026-09-12-r08-lead-directory/export-artifact/source-tree-spec.txt.gz.base64
+88da9563fd24977067fb817b5b4928bf1578427a844fba7bb036ce411f9b4e71  docs/releases/2026-09-12-r08-lead-directory/export-artifact/source.diff.gz.base64
