@@ -28,7 +28,7 @@ class AiLeadEmployee::LeadsDirectoryService
     leads = rows_for(contacts)
     {
       leads: leads,
-      selected_lead: selected_lead_payload(contacts, leads),
+      selected_lead: selected_lead_payload(contacts),
       counts: quality_counts,
       filter_options: filter_options,
       meta: pagination_payload(page_scope, page)
@@ -36,7 +36,7 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def export_rows
-    rows_for(filtered_scope.limit(1000).to_a)
+    rows_for(filtered_scope.to_a)
   end
 
   private
@@ -175,7 +175,7 @@ class AiLeadEmployee::LeadsDirectoryService
 
   def rows_for(contacts)
     preload_context_for(contacts)
-    contacts.map { |contact| lead_payload(contact) }
+    contacts.map { |contact| row_payload(contact, lead_context_for(contact)) }
   end
 
   def lead_payload(contact)
@@ -378,17 +378,16 @@ class AiLeadEmployee::LeadsDirectoryService
     qualification&.evidence_snapshot&.transform_values { |item| item['value'] } || {}
   end
 
-  def selected_lead_payload(contacts, rows)
-    selected_id = params[:lead_id].presence || contacts.first&.id
+  def selected_lead_payload(contacts)
+    selected_id = params[:lead_id].presence
     return if selected_id.blank?
 
-    page_index = contacts.index { |contact| contact.id.to_s == selected_id.to_s }
-    return rows[page_index] if page_index
-
-    selected_contact = base_contact_scope.where(id: selected_id).first
+    selected_contact = contacts.find { |contact| contact.id.to_s == selected_id.to_s }
+    selected_contact ||= base_contact_scope.where(id: selected_id).first
     return if selected_contact.blank?
 
-    rows_for([selected_contact]).first
+    preload_context_for([selected_contact]) unless contacts.include?(selected_contact)
+    lead_payload(selected_contact)
   end
 
   def pagination_payload(scope, page)

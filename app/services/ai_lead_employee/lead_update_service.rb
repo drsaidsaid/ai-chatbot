@@ -42,9 +42,13 @@ class AiLeadEmployee::LeadUpdateService
   end
 
   def validate_required_fields!
-    return unless attributes.key?(:name) && attributes[:name].blank?
+    if attributes.key?(:name) && attributes[:name].blank?
+      contact.errors.add(:name, "can't be blank")
+      raise ActiveRecord::RecordInvalid, contact
+    end
+    return unless attributes[:phone_number].present? && !attributes[:phone_number].match?(/\A\+[1-9]\d{1,14}\z/)
 
-    contact.errors.add(:name, "can't be blank")
+    contact.errors.add(:phone_number, I18n.t('errors.contacts.phone_number.invalid'))
     raise ActiveRecord::RecordInvalid, contact
   end
 

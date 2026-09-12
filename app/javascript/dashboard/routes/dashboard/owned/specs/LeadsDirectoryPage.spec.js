@@ -36,6 +36,18 @@ vi.mock('vue-i18n', () => ({
         'AI_LEAD_EMPLOYEE.LEADS.PREVIOUS_PAGE': 'Previous page',
         'AI_LEAD_EMPLOYEE.LEADS.NEXT_PAGE': 'Next page',
         'AI_LEAD_EMPLOYEE.LEADS.IMPORT_ERROR': 'Lead import failed',
+        'AI_LEAD_EMPLOYEE.LEADS.IMPORT_PREVIEW_TITLE': 'Review Lead import',
+        'AI_LEAD_EMPLOYEE.LEADS.IMPORT_PREVIEW_SUMMARY':
+          'Import preview summary',
+        'AI_LEAD_EMPLOYEE.LEADS.IMPORT_APPLY': 'Import Leads',
+        'AI_LEAD_EMPLOYEE.LEADS.IMPORT_CANCEL': 'Cancel import',
+        'AI_LEAD_EMPLOYEE.LEADS.IMPORT_CAN_APPLY': 'Ready to import',
+        'AI_LEAD_EMPLOYEE.LEADS.IMPORT_CANNOT_APPLY': 'Fix the listed errors',
+        'AI_LEAD_EMPLOYEE.LEADS.FILTERS_SHOW': 'Show filters',
+        'AI_LEAD_EMPLOYEE.LEADS.FILTERS_HIDE': 'Hide filters',
+        'AI_LEAD_EMPLOYEE.LEADS.OPEN_LEAD': 'Open Jane Nkosi',
+        'AI_LEAD_EMPLOYEE.LEADS.EMPTY_DIRECTORY': 'No Leads yet',
+        'AI_LEAD_EMPLOYEE.LEADS.EMPTY_RESET': 'Reset filters',
         'AI_LEAD_EMPLOYEE.LEADS.EXPORT_STARTED': 'Lead export started',
         'AI_LEAD_EMPLOYEE.LEADS.EXPORT_ERROR': 'Lead export failed',
         'AI_LEAD_EMPLOYEE.LEADS.OPEN_CONVERSATION': 'Open conversation',
@@ -268,7 +280,7 @@ const defaultResponse = overrides => ({
 
 const mountPage = async ({
   response = defaultResponse(),
-  query = {},
+  query = { lead_id: '2' },
   attachTo,
 } = {}) => {
   LeadsAPI.get.mockResolvedValue(response);
@@ -326,8 +338,8 @@ describe('LeadsDirectoryPage', () => {
     vi.useRealTimers();
   });
 
-  it('renders filter chips, dense rows, selected detail, and long text truncation', async () => {
-    const { wrapper } = await mountPage();
+  it('keeps the directory wide until a Lead is opened on demand', async () => {
+    const { wrapper } = await mountPage({ query: {} });
 
     expect(wrapper.text()).toContain('Leads');
     expect(wrapper.text()).toContain('Highly Qualified');
@@ -336,13 +348,52 @@ describe('LeadsDirectoryPage', () => {
     expect(wrapper.text()).toContain(
       'Nuru Boutique With A Very Long Business Name'
     );
-    expect(wrapper.text()).toContain('Why this lead matters');
-    expect(wrapper.text()).toContain('Open conversation');
-    expect(wrapper.text()).toContain('Booking #5');
-    expect(
-      wrapper.find('a[href="/app/accounts/1/bookings?booking_id=5"]').exists()
-    ).toBe(true);
+    expect(wrapper.text()).not.toContain('Why this lead matters');
+    expect(wrapper.find('[aria-label="Selected Lead detail"]').exists()).toBe(
+      false
+    );
     expect(wrapper.find('td .truncate').exists()).toBe(true);
+  });
+
+  it('opens a desktop row with the keyboard and retains route-backed context', async () => {
+    const { wrapper, router } = await mountPage({
+      query: { q: 'nuru', page: '2', sort: 'name' },
+    });
+    const row = wrapper.get('tr[tabindex="0"]');
+
+    expect(row.attributes('aria-label')).toBe('Open Jane Nkosi');
+    await row.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+
+    expect(router.currentRoute.value.query).toMatchObject({
+      q: 'nuru',
+      page: '2',
+      sort: 'name',
+      lead_id: '2',
+    });
+    expect(wrapper.text()).toContain('Why this lead matters');
+    expect(
+      wrapper
+        .findAll('a[href="/app/accounts/1/conversations/42"]')
+        .some(link => link.text().includes('Open conversation'))
+    ).toBe(true);
+  });
+
+  it('keeps phone filters collapsed and gives every filter an accessible name', async () => {
+    const { wrapper } = await mountPage({ query: {} });
+
+    expect(wrapper.get('[data-testid="lead-filters"]').classes()).toContain(
+      'hidden'
+    );
+    expect(
+      ['Assignee', 'Source', 'Follow-up state', 'Booking status'].every(label =>
+        wrapper.find(`select[aria-label="${label}"]`).exists()
+      )
+    ).toBe(true);
+    await wrapper.get('button[aria-label="Show filters"]').trigger('click');
+    expect(wrapper.get('[data-testid="lead-filters"]').classes()).not.toContain(
+      'hidden'
+    );
   });
 
   it('applies quality chips, dropdown filters, sorting, pagination, and row selection through query-backed API calls', async () => {
@@ -371,9 +422,7 @@ describe('LeadsDirectoryPage', () => {
     await flushPromises();
     expect(router.currentRoute.value.query.page).toBe('2');
 
-    await wrapper
-      .find('input[aria-label="Select Jane Nkosi"]')
-      .trigger('click');
+    await wrapper.get('tr[tabindex="0"]').trigger('click');
     await flushPromises();
     expect(router.currentRoute.value.query.lead_id).toBe('2');
   });
@@ -553,16 +602,32 @@ describe('LeadsDirectoryPage', () => {
     );
   });
 
-  it('handles import and export controls', async () => {
-    LeadsAPI.importLeads.mockResolvedValue({
-      data: {
-        import: {
-          status: 'partial',
-          imported_count: 1,
-          failed_count: 1,
+  it('previews a Lead import before applying the same file', async () => {
+    const preview = {
+      status: 'ready',
+      digest: 'same-file',
+      total_count: 1,
+      create_count: 1,
+      update_count: 0,
+      error_count: 0,
+      can_apply: true,
+      rows: [
+        {
+          line: 2,
+          name: 'Imported Lead',
+          phone_number: '+255713456789',
+          action: 'create',
+          errors: [],
         },
-      },
-    });
+      ],
+    };
+    LeadsAPI.importLeads
+      .mockResolvedValueOnce({ data: { import: preview } })
+      .mockResolvedValueOnce({
+        data: {
+          import: { ...preview, status: 'completed', imported_count: 1 },
+        },
+      });
     LeadsAPI.exportLeads.mockResolvedValue({ data: new Blob(['id,name']) });
     const { wrapper } = await mountPage();
 
@@ -573,8 +638,22 @@ describe('LeadsDirectoryPage', () => {
     Object.defineProperty(input.element, 'files', { value: [file] });
     await input.trigger('change');
     await flushPromises();
-    expect(LeadsAPI.importLeads).toHaveBeenCalledWith(file);
-    expect(wrapper.text()).toContain('Partial: 1 imported, 1 failed');
+    expect(LeadsAPI.importLeads).toHaveBeenCalledWith(file, {
+      mode: 'preview',
+    });
+    expect(wrapper.get('[role="dialog"]').text()).toContain('Imported Lead');
+    expect(wrapper.get('[role="dialog"]').text()).toContain('Ready to import');
+
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Import Leads')
+      .trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.importLeads).toHaveBeenLastCalledWith(file, {
+      mode: 'apply',
+      previewDigest: 'same-file',
+    });
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
 
     await wrapper
       .findAll('button')
@@ -584,8 +663,9 @@ describe('LeadsDirectoryPage', () => {
     expect(LeadsAPI.exportLeads).toHaveBeenCalled();
   });
 
-  it('renders empty and error states', async () => {
+  it('distinguishes an empty directory from filtered no-results and offers reset', async () => {
     const { wrapper } = await mountPage({
+      query: {},
       response: defaultResponse({
         leads: [],
         selected_lead: null,
@@ -598,7 +678,16 @@ describe('LeadsDirectoryPage', () => {
       }),
     });
 
+    expect(wrapper.text()).toContain('No Leads yet');
+
+    await wrapper.vm.$router.replace({
+      name: 'owned_leads_index',
+      params: { accountId: 1 },
+      query: { quality: 'qualified' },
+    });
+    await flushPromises();
     expect(wrapper.text()).toContain('No leads match these filters');
+    expect(wrapper.text()).toContain('Reset filters');
 
     LeadsAPI.get.mockRejectedValueOnce({
       response: { data: { error: 'Failed load' } },
@@ -606,7 +695,7 @@ describe('LeadsDirectoryPage', () => {
     await wrapper.vm.$router.replace({
       name: 'owned_leads_index',
       params: { accountId: 1 },
-      query: { quality: 'qualified' },
+      query: { quality: 'unknown' },
     });
     await flushPromises();
     expect(wrapper.text()).toContain('Failed load');

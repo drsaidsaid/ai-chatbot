@@ -190,6 +190,8 @@
       "LOADING": "Loading leads",
       "LOAD_ERROR": "Leads could not be loaded",
       "EMPTY": "No leads match these filters",
+      "EMPTY_DIRECTORY": "No Leads yet",
+      "EMPTY_RESET": "Reset filters",
       "EMPTY_VALUE": "Not captured",
       "UNASSIGNED": "Unassigned",
       "NO_BOOKING": "No booking",
@@ -209,11 +211,20 @@
       "NEXT_PAGE": "Next page",
       "IMPORT_RESULT": "{status}: {imported} imported, {failed} failed",
       "IMPORT_ERROR": "Lead import failed",
+      "IMPORT_PREVIEW_TITLE": "Review Lead import",
+      "IMPORT_PREVIEW_SUMMARY": "{total} rows: {create} new, {update} updates, {error} errors",
+      "IMPORT_APPLY": "Import Leads",
+      "IMPORT_CANCEL": "Cancel import",
+      "IMPORT_CAN_APPLY": "Ready to import. Existing Lead updates are listed before anything changes.",
+      "IMPORT_CANNOT_APPLY": "Fix the listed errors and choose the corrected CSV again.",
       "EXPORT_STARTED": "Lead export started",
       "EXPORT_ERROR": "Lead export failed",
       "OPEN_CONVERSATION": "Open conversation",
+      "OPEN_LEAD": "Open {name}",
       "EDIT_LEAD": "Edit lead",
       "BACK_TO_LIST": "Back to leads",
+      "FILTERS_SHOW": "Show filters",
+      "FILTERS_HIDE": "Hide filters",
       "CONSENT": {
         "STOPPED": "Automated contact stopped",
         "STOPPED_DESCRIPTION": "The Lead asked automated messages to stop. AI resume does not clear this instruction.",
@@ -247,9 +258,13 @@
         "CONFIRMED": "Confirmed"
       },
       "IMPORT_STATUS": {
+        "READY": "Ready",
+        "INVALID": "Invalid",
         "COMPLETED": "Completed",
-        "PARTIAL": "Partial",
-        "FAILED": "Failed"
+        "CREATE": "New Lead",
+        "UPDATE": "Update existing Lead",
+        "ERROR": "Error",
+        "AMBIGUOUS": "Ambiguous identity"
       },
       "NEXT_ACTION": {
         "CAPTURE_MISSING_SIGNALS": "Capture missing signals",
@@ -294,7 +309,13 @@
         "CLOSED": "Closed"
       },
       "ERROR": {
-        "SELECT_CSV_FILE": "Select a CSV file to import"
+        "SELECT_CSV_FILE": "Select a CSV file to import",
+        "IMPORT_FILE_TOO_LARGE": "Choose a CSV file smaller than 5 MB",
+        "IMPORT_MISSING_HEADERS": "The CSV file must include a header row",
+        "IMPORT_TOO_MANY_ROWS": "Import up to 5,000 Leads at a time",
+        "IMPORT_FILE_CHANGED": "The file or matching Lead data changed. Review the import again.",
+        "IMPORT_HAS_ERRORS": "Fix the listed import errors before applying changes",
+        "IMPORT_IDENTITY_CHANGED": "Lead matching changed during the import. Review the file again."
       },
       "FILTER": {
         "ASSIGNEE": "Assignee",

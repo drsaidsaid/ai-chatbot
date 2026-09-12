@@ -51,9 +51,11 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
       create(:lead_follow_up, account: account, contact: qualified, conversation: conversation, lead_qualification: qualification,
                               scheduled_at: 1.day.from_now)
 
-      payload = described_class.new(account: account, user: admin, params: { q: 'automate', per_page: 25 }).perform
+      payload = described_class.new(account: account, user: admin,
+                                    params: { q: 'automate', per_page: 25, lead_id: qualified.id }).perform
 
       expect(payload[:leads].pluck(:id)).to eq([qualified.id])
+      expect(payload[:leads].first).not_to have_key(:detail)
       expect(payload[:counts]).to include('all' => 1, 'qualified' => 1, 'unknown' => 0)
       expect(payload[:meta]).to include(page: 1, per_page: 25, total_count: 1)
       expect(payload[:selected_lead]).to include(
@@ -67,6 +69,16 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
       )
       expect(payload[:selected_lead].dig(:detail, :strongest_evidence).first).to include(signal: 'problem')
       expect(payload[:selected_lead].dig(:detail, :conversation_summary, :last_message_preview)).to eq('Please automate WhatsApp lead capture.')
+    end
+
+    it 'does not select or serialize Lead detail until the caller requests one' do
+      contact = create(:contact, :with_phone_number, account: account, name: 'On-demand Lead')
+      create(:conversation, account: account, inbox: inbox, contact: contact)
+
+      payload = described_class.new(account: account, user: admin, params: {}).perform
+
+      expect(payload[:selected_lead]).to be_nil
+      expect(payload[:leads].first).not_to have_key(:detail)
     end
 
     it 'keeps Leads distinct from Inbox queues by including all quality levels and Unknown contacts' do
@@ -103,13 +115,14 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
           follow_up_state: 'call_booked',
           assignee_id: operator.id,
           source_id: inbox.id,
-          booking_status: 'booked'
+          booking_status: 'booked',
+          lead_id: booked.id
         }
       ).perform
 
       expect(payload[:leads].pluck(:id)).to eq([booked.id])
       expect(payload[:leads].first.dig(:booking, :status)).to eq('confirmed')
-      expect(payload[:leads].first.dig(:detail, :related_bookings).first).to include(
+      expect(payload[:selected_lead].dig(:detail, :related_bookings).first).to include(
         id: booking.id,
         path: "/app/accounts/#{account.id}/bookings?booking_id=#{booking.id}"
       )

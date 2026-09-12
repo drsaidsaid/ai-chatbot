@@ -49,7 +49,16 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def import
     return render json: { error_key: 'select_csv_file' }, status: :unprocessable_entity if params[:import_file].blank?
 
-    render json: { import: import_payload }
+    result = AiLeadEmployee::LeadImportService.new(
+      account: current_account,
+      user: Current.user,
+      file: params[:import_file],
+      mode: params[:mode],
+      preview_digest: params[:preview_digest]
+    ).perform
+    render json: { import: result }
+  rescue AiLeadEmployee::LeadImportService::ImportError => e
+    render json: { error_key: e.error_key }, status: :unprocessable_entity
   end
 
   def export
@@ -106,57 +115,6 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def administrator?
     current_account.account_users.find_by(user: Current.user)&.administrator?
-  end
-
-  def import_payload
-    result = { imported_count: 0, failures: [] }
-
-    CSV.foreach(params[:import_file].path, headers: true).with_index(2) do |row, line_number|
-      import_row(row)
-      result[:imported_count] += 1
-    rescue ActiveRecord::RecordInvalid => e
-      result[:failures] << { line: line_number, error: e.record.errors.full_messages.to_sentence }
-    end
-
-    completed_import_payload(result)
-  rescue CSV::MalformedCSVError => e
-    failed_import_payload(e.message)
-  end
-
-  def completed_import_payload(result)
-    {
-      status: result[:failures].present? ? 'partial' : 'completed',
-      imported_count: result[:imported_count],
-      failed_count: result[:failures].size,
-      failures: result[:failures]
-    }
-  end
-
-  def failed_import_payload(message)
-    {
-      status: 'failed',
-      imported_count: 0,
-      failed_count: 1,
-      failures: [{ line: nil, error: message }]
-    }
-  end
-
-  def import_row(row)
-    name = row['name'].presence || row['lead'].presence
-    phone_number = row['phone_number'].presence || row['phone'].presence
-    email = row['email'].presence
-    business_name = row['business_name'].presence || row['company_name'].presence || row['business'].presence
-    contact = import_contact_for(phone_number, email)
-    contact.assign_attributes(name: name, email: email)
-    contact.additional_attributes = (contact.additional_attributes || {}).merge('company_name' => business_name).compact
-    contact.save!
-  end
-
-  def import_contact_for(phone_number, email)
-    return current_account.contacts.find_or_initialize_by(phone_number: phone_number) if phone_number.present?
-    return current_account.contacts.find_or_initialize_by(email: email) if email.present?
-
-    current_account.contacts.new
   end
 
   def export_csv

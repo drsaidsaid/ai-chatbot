@@ -27,7 +27,7 @@ RSpec.describe 'Leads API', type: :request do
 
       get "/api/v1/accounts/#{account.id}/leads",
           headers: admin.create_new_auth_token,
-          params: { q: 'pricing', quality: 'qualified', sort: 'score', direction: 'desc' },
+          params: { q: 'pricing', quality: 'qualified', sort: 'score', direction: 'desc', lead_id: contact.id },
           as: :json
 
       expect(response).to have_http_status(:success)
@@ -40,6 +40,11 @@ RSpec.describe 'Leads API', type: :request do
       )
       preview = response.parsed_body['selected_lead']['detail']['conversation_summary']['last_message_preview']
       expect(preview).to eq('Need pricing for a WhatsApp demo.')
+      expect(response.parsed_body['selected_lead']).to include(
+        'quality' => 'qualified',
+        'conversation' => include('status' => 'open'),
+        'detail' => include('qualification' => include('follow_up_state' => 'no_follow_up'))
+      )
       expect(response.parsed_body['filter_options']).to be_present
       expect(response.parsed_body['meta']).to include('page' => 1, 'per_page' => 25)
     end
@@ -73,16 +78,17 @@ RSpec.describe 'Leads API', type: :request do
       expect(Audited::Audit.where(auditable: contact).last.audited_changes).to include('ai_lead_employee_action' => 'lead_edit')
     end
 
-    it 'returns validation errors for invalid phone or required fields' do
+    it 'returns validation errors instead of silently retaining an invalid phone edit' do
       contact = create(:contact, :with_phone_number, account: account, name: 'Jane Nkosi')
 
       patch "/api/v1/accounts/#{account.id}/leads/#{contact.id}",
             headers: admin.create_new_auth_token,
-            params: { lead: { name: '', phone_number: '123' } },
+            params: { lead: { name: 'Jane Nkosi', phone_number: '123' } },
             as: :json
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.parsed_body['error']).to include("Name can't be blank")
+      expect(response.parsed_body['error']).to match(/phone/i)
+      expect(contact.reload.phone_number).not_to eq('123')
     end
 
     it 'prevents Human Operators from updating Leads outside their visible conversations' do
@@ -145,21 +151,162 @@ RSpec.describe 'Leads API', type: :request do
   end
 
   describe 'POST /api/v1/accounts/{account.id}/leads/import' do
-    it 'returns visible partial-import failure state' do
+    it 'previews validation errors without writing' do
       file = Tempfile.new(['leads', '.csv'])
       file.write("name,phone_number,business_name\nImported Lead,+255713456789,Imported Co\nBroken Lead,not-a-phone,Broken Co\n")
       file.rewind
 
       post "/api/v1/accounts/#{account.id}/leads/import",
            headers: admin.create_new_auth_token,
-           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv') }
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
 
       expect(response).to have_http_status(:success)
       expect(response.parsed_body['import']).to include(
-        'status' => 'partial',
-        'imported_count' => 1,
-        'failed_count' => 1
+        'status' => 'invalid',
+        'create_count' => 1,
+        'error_count' => 1,
+        'can_apply' => false
       )
+      expect(response.parsed_body.dig('import', 'rows')).to include(
+        hash_including('line' => 3, 'action' => 'error', 'errors' => include(a_string_matching(/phone/i)))
+      )
+      expect(account.contacts.where(name: 'Imported Lead')).not_to exist
+    ensure
+      file&.close
+      file&.unlink
+    end
+
+    it 'applies the unchanged valid file only after preview' do
+      file = Tempfile.new(['leads', '.csv'])
+      file.write("name,phone_number,business_name\nImported Lead,+255713456789,Imported Co\n")
+      file.rewind
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+      digest = response.parsed_body.dig('import', 'digest')
+
+      expect(response.parsed_body['import']).to include(
+        'status' => 'ready', 'create_count' => 1, 'update_count' => 0, 'can_apply' => true
+      )
+      expect(account.contacts.where(name: 'Imported Lead')).not_to exist
+
+      file.rewind
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: {
+             import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'),
+             mode: 'apply', preview_digest: digest
+           }
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['import']).to include('status' => 'completed', 'imported_count' => 1)
+      expect(account.contacts.find_by!(phone_number: '+255713456789')).to have_attributes(name: 'Imported Lead')
+    ensure
+      file&.close
+      file&.unlink
+    end
+
+    it 'refuses ambiguous identities and a file changed after preview' do
+      phone_match = create(:contact, account: account, name: 'Phone Match', phone_number: '+255713456780')
+      email_match = create(:contact, account: account, name: 'Email Match', email: 'lead@example.com')
+      file = Tempfile.new(['leads', '.csv'])
+      file.write("name,phone_number,email\nAmbiguous,+255713456780,lead@example.com\n")
+      file.rewind
+
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+
+      expect(response.parsed_body['import']).to include('status' => 'invalid', 'can_apply' => false)
+      expect(response.parsed_body.dig('import', 'rows', 0)).to include('action' => 'ambiguous')
+      expect(phone_match.reload.email).to be_blank
+      expect(email_match.reload.phone_number).to be_blank
+
+      file.rewind
+      file.truncate(0)
+      file.write("name,phone_number\nSafe,+255713456781\n")
+      file.rewind
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+      digest = response.parsed_body.dig('import', 'digest')
+      file.rewind
+      file.truncate(0)
+      file.write("name,phone_number\nChanged,+255713456782\n")
+      file.rewind
+
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: {
+             import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'),
+             mode: 'apply', preview_digest: digest
+           }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error_key']).to eq('import_file_changed')
+      expect(account.contacts.where(name: 'Changed')).not_to exist
+    ensure
+      file&.close
+      file&.unlink
+    end
+
+    it 'shows an existing Lead update before applying it and records audit history' do
+      contact = create(:contact, account: account, name: 'Old Name', phone_number: '+255713456783')
+      file = Tempfile.new(['leads', '.csv'])
+      file.write("name,phone_number,business_name\nUpdated Name,+255713456783,Updated Co\n")
+      file.rewind
+
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+      digest = response.parsed_body.dig('import', 'digest')
+
+      expect(response.parsed_body['import']).to include('create_count' => 0, 'update_count' => 1, 'can_apply' => true)
+      expect(response.parsed_body.dig('import', 'rows', 0)).to include(
+        'action' => 'update', 'existing_lead_id' => contact.id
+      )
+      expect(contact.reload.name).to eq('Old Name')
+
+      file.rewind
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: {
+             import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'),
+             mode: 'apply', preview_digest: digest
+           }
+
+      expect(response).to have_http_status(:success)
+      expect(contact.reload).to have_attributes(name: 'Updated Name')
+      expect(contact.additional_attributes['company_name']).to eq('Updated Co')
+      expect(Audited::Audit.where(auditable: contact).last.audited_changes).to include(
+        'ai_lead_employee_action' => 'lead_edit'
+      )
+    ensure
+      file&.close
+      file&.unlink
+    end
+
+    it 'revalidates identity resolution when applying a previously safe preview' do
+      file = Tempfile.new(['leads', '.csv'])
+      file.write("name,phone_number\nPreviewed Lead,+255713456784\n")
+      file.rewind
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+      digest = response.parsed_body.dig('import', 'digest')
+      concurrent = create(:contact, account: account, name: 'Concurrent Lead', phone_number: '+255713456784')
+
+      file.rewind
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: {
+             import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'),
+             mode: 'apply', preview_digest: digest
+           }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error_key']).to eq('import_file_changed')
+      expect(concurrent.reload.name).to eq('Concurrent Lead')
     ensure
       file&.close
       file&.unlink
@@ -180,6 +327,46 @@ RSpec.describe 'Leads API', type: :request do
       expect(response.media_type).to eq('text/csv')
       expect(response.body).to include('id,name,phone_number,email,business_name,quality,score')
       expect(response.body).to include('Jane Nkosi')
+    end
+
+    it 'exports only Leads matching the current filters' do
+      matching = create(:contact, :with_phone_number, account: account, name: 'Matching Lead')
+      excluded = create(:contact, :with_phone_number, account: account, name: 'Excluded Lead')
+      create(:conversation, account: account, inbox: inbox, contact: matching)
+      create(:conversation, account: account, inbox: inbox, contact: excluded)
+      create(:lead_qualification, account: account, contact: matching, quality: :qualified)
+      create(:lead_qualification, account: account, contact: excluded, quality: :unqualified)
+
+      post "/api/v1/accounts/#{account.id}/leads/export",
+           headers: admin.create_new_auth_token,
+           params: { quality: 'qualified' },
+           as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include('Matching Lead')
+      expect(response.body).not_to include('Excluded Lead')
+    end
+
+    it 'does not truncate a large filtered export at the directory page limit' do
+      now = Time.current
+      rows = Array.new(1001) do |index|
+        {
+          account_id: account.id,
+          name: "Export Lead #{index}",
+          phone_number: "+2557#{index.to_s.rjust(8, '0')}",
+          created_at: now,
+          updated_at: now
+        }
+      end
+      Contact.insert_all!(rows) # rubocop:disable Rails/SkipsModelValidations -- large export fixture; request validates exported behavior
+
+      post "/api/v1/accounts/#{account.id}/leads/export",
+           headers: admin.create_new_auth_token,
+           params: { q: 'Export Lead' },
+           as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(CSV.parse(response.body, headers: true).length).to eq(1001)
     end
   end
 end

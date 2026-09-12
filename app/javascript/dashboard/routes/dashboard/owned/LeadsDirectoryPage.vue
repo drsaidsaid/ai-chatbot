@@ -32,14 +32,18 @@ const filterOptions = ref({
 const isAdmin = computed(() => meta.value.visibility === 'admin');
 const isLoading = ref(false);
 const isExporting = ref(false);
+const isImporting = ref(false);
 const isRecordingReconsent = ref(false);
 const errorMessage = ref('');
 const statusMessage = ref('');
 const showMoreFilters = ref(false);
+const showMobileFilters = ref(false);
 const showEditModal = ref(false);
+const showImportModal = ref(false);
 const showMobileDetail = ref(false);
 const importInput = ref(null);
-const selectedLeadIds = ref(new Set());
+const importFile = ref(null);
+const importPreview = ref(null);
 const editErrors = ref([]);
 const editForm = reactive({
   name: '',
@@ -49,12 +53,6 @@ const editForm = reactive({
   city: '',
   country: '',
   assignee_id: '',
-  evidence: {
-    problem: '',
-    budget: '',
-    urgency: '',
-    decision_authority: '',
-  },
 });
 const uiFilters = reactive({
   q: '',
@@ -115,17 +113,32 @@ const pageEnd = computed(() =>
 
 const hasNextPage = computed(() => meta.value.page < meta.value.total_pages);
 const hasPreviousPage = computed(() => meta.value.page > 1);
-const pageLeadIds = computed(() => leads.value.map(lead => lead.id));
-const selectedLeadIdsOnPage = computed(() =>
-  pageLeadIds.value.filter(id => selectedLeadIds.value.has(id))
-);
-const allPageLeadsSelected = computed(
+const hasActiveFilters = computed(
   () =>
-    pageLeadIds.value.length > 0 &&
-    selectedLeadIdsOnPage.value.length === pageLeadIds.value.length
+    Boolean(uiFilters.q) ||
+    uiFilters.quality !== 'all' ||
+    Boolean(uiFilters.follow_up_state) ||
+    Boolean(uiFilters.assignee_id) ||
+    Boolean(uiFilters.source_id) ||
+    Boolean(uiFilters.booking_status)
 );
-const somePageLeadsSelected = computed(
-  () => selectedLeadIdsOnPage.value.length > 0 && !allPageLeadsSelected.value
+const showDesktopDetail = computed(() =>
+  Boolean(uiFilters.lead_id && selectedLead.value)
+);
+const mobileFiltersLabel = computed(() =>
+  showMobileFilters.value
+    ? t('AI_LEAD_EMPLOYEE.LEADS.FILTERS_HIDE')
+    : t('AI_LEAD_EMPLOYEE.LEADS.FILTERS_SHOW')
+);
+const emptyStateLabel = computed(() =>
+  hasActiveFilters.value
+    ? t('AI_LEAD_EMPLOYEE.LEADS.EMPTY')
+    : t('AI_LEAD_EMPLOYEE.LEADS.EMPTY_DIRECTORY')
+);
+const importReadinessLabel = computed(() =>
+  importPreview.value?.can_apply
+    ? t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_CAN_APPLY')
+    : t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_CANNOT_APPLY')
 );
 
 const cleanQuery = query =>
@@ -189,7 +202,7 @@ const loadLeads = async () => {
   try {
     const { data } = await LeadsAPI.get(requestParams());
     leads.value = data.leads || [];
-    selectedLead.value = data.selected_lead || leads.value[0] || null;
+    selectedLead.value = uiFilters.lead_id ? data.selected_lead || null : null;
     showMobileDetail.value = Boolean(uiFilters.lead_id && isMobileViewport());
     counts.value = data.counts || {};
     meta.value = { ...meta.value, ...(data.meta || {}) };
@@ -210,29 +223,6 @@ const selectLead = lead => {
   replaceQuery({ lead_id: lead.id });
 };
 
-const isLeadBulkSelected = lead => selectedLeadIds.value.has(lead.id);
-
-const toggleLeadBulkSelection = lead => {
-  const nextSelectedIds = new Set(selectedLeadIds.value);
-  if (nextSelectedIds.has(lead.id)) {
-    nextSelectedIds.delete(lead.id);
-  } else {
-    nextSelectedIds.add(lead.id);
-  }
-  selectedLeadIds.value = nextSelectedIds;
-  selectLead(lead);
-};
-
-const togglePageBulkSelection = () => {
-  const nextSelectedIds = new Set(selectedLeadIds.value);
-  if (allPageLeadsSelected.value) {
-    pageLeadIds.value.forEach(id => nextSelectedIds.delete(id));
-  } else {
-    pageLeadIds.value.forEach(id => nextSelectedIds.add(id));
-  }
-  selectedLeadIds.value = nextSelectedIds;
-};
-
 const sortBy = sort => {
   const nextDirection =
     uiFilters.sort === sort && uiFilters.direction === 'desc' ? 'asc' : 'desc';
@@ -245,6 +235,7 @@ const pageTo = page => {
 
 const clearFilters = () => {
   showMobileDetail.value = false;
+  showMobileFilters.value = false;
   replaceQuery({
     q: '',
     quality: '',
@@ -345,29 +336,66 @@ const openImportPicker = () => {
   importInput.value?.click();
 };
 
-const importLeads = async event => {
+const importError = error =>
+  error.response?.data?.error ||
+  (error.response?.data?.error_key
+    ? labelFor('ERROR', error.response.data.error_key)
+    : t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_ERROR'));
+
+const previewImport = async event => {
   const [file] = event.target.files || [];
   if (!file) return;
 
   statusMessage.value = '';
   errorMessage.value = '';
+  isImporting.value = true;
   try {
-    const { data } = await LeadsAPI.importLeads(file);
+    const { data } = await LeadsAPI.importLeads(file, { mode: 'preview' });
+    importFile.value = file;
+    importPreview.value = data.import || null;
+    showImportModal.value = true;
+  } catch (error) {
+    errorMessage.value = importError(error);
+  } finally {
+    isImporting.value = false;
+    event.target.value = '';
+  }
+};
+
+const closeImportPreview = () => {
+  showImportModal.value = false;
+  importFile.value = null;
+  importPreview.value = null;
+};
+
+const applyImport = async () => {
+  if (
+    !importFile.value ||
+    !importPreview.value?.can_apply ||
+    isImporting.value
+  ) {
+    return;
+  }
+
+  isImporting.value = true;
+  errorMessage.value = '';
+  try {
+    const { data } = await LeadsAPI.importLeads(importFile.value, {
+      mode: 'apply',
+      previewDigest: importPreview.value.digest,
+    });
     const result = data.import || {};
     statusMessage.value = t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_RESULT', {
       status: importStatusLabel(result.status),
       imported: result.imported_count || 0,
-      failed: result.failed_count || 0,
+      failed: result.error_count || 0,
     });
+    closeImportPreview();
     await loadLeads();
   } catch (error) {
-    errorMessage.value =
-      error.response?.data?.error ||
-      (error.response?.data?.error_key
-        ? labelFor('ERROR', error.response.data.error_key)
-        : t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_ERROR'));
+    errorMessage.value = importError(error);
   } finally {
-    event.target.value = '';
+    isImporting.value = false;
   }
 };
 
@@ -404,11 +432,6 @@ const openEditModal = () => {
   editForm.city = fields.city || '';
   editForm.country = fields.country || '';
   editForm.assignee_id = fields.assignee_id || '';
-  editForm.evidence.problem = fields.evidence?.problem || '';
-  editForm.evidence.budget = fields.evidence?.budget || '';
-  editForm.evidence.urgency = fields.evidence?.urgency || '';
-  editForm.evidence.decision_authority =
-    fields.evidence?.decision_authority || '';
   editErrors.value = [];
   showEditModal.value = true;
 };
@@ -442,7 +465,6 @@ const saveLead = async () => {
         city: editForm.city,
         country: editForm.country,
         ...(isAdmin.value ? { assignee_id: editForm.assignee_id } : {}),
-        evidence: editForm.evidence,
       },
     });
     selectedLead.value = data;
@@ -540,12 +562,13 @@ watch(showEditModal, async value => {
           type="file"
           accept=".csv,text/csv"
           class="sr-only"
-          @change="importLeads"
+          @change="previewImport"
         />
         <button
           v-if="isAdmin"
           type="button"
           class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
+          :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.IMPORT')"
           @click="openImportPicker"
         >
           <Icon icon="i-lucide-upload" class="size-4" />
@@ -558,6 +581,7 @@ watch(showEditModal, async value => {
           type="button"
           class="inline-flex h-9 items-center gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand disabled:opacity-60"
           :disabled="isExporting"
+          :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.EXPORT')"
           @click="exportLeads"
         >
           <Icon icon="i-lucide-download" class="size-4" />
@@ -565,18 +589,13 @@ watch(showEditModal, async value => {
             t('AI_LEAD_EMPLOYEE.LEADS.EXPORT')
           }}</span>
         </button>
-        <button
-          type="button"
-          class="grid size-9 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-brand"
-          :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.MORE_ACTIONS')"
-          @click="showMoreFilters = !showMoreFilters"
-        >
-          <Icon icon="i-lucide-ellipsis-vertical" class="size-4" />
-        </button>
       </div>
     </header>
 
-    <main class="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_292px]">
+    <main
+      class="grid min-h-0 flex-1"
+      :class="showDesktopDetail ? 'lg:grid-cols-[minmax(0,1fr)_340px]' : ''"
+    >
       <section class="flex min-h-0 flex-col overflow-hidden">
         <div
           v-if="!showMobileDetail"
@@ -594,6 +613,17 @@ watch(showEditModal, async value => {
               :placeholder="t('AI_LEAD_EMPLOYEE.LEADS.SEARCH')"
             />
           </div>
+
+          <button
+            type="button"
+            class="mt-3 inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm font-medium text-n-slate-12 md:hidden"
+            :aria-label="mobileFiltersLabel"
+            :aria-expanded="String(showMobileFilters)"
+            @click="showMobileFilters = !showMobileFilters"
+          >
+            <Icon icon="i-lucide-list-filter" class="size-4" />
+            {{ mobileFiltersLabel }}
+          </button>
 
           <div class="mt-0 flex gap-3 overflow-x-auto pb-1 md:mt-0">
             <button
@@ -614,11 +644,14 @@ watch(showEditModal, async value => {
           </div>
 
           <div
-            class="mt-3 grid gap-2 md:grid-cols-2 lg:grid-cols-[152px_160px_184px_184px_140px]"
+            data-testid="lead-filters"
+            class="mt-3 gap-2 md:grid md:grid-cols-2 lg:grid-cols-[152px_160px_184px_184px_140px]"
+            :class="showMobileFilters ? 'grid' : 'hidden'"
           >
             <select
               v-model="uiFilters.assignee_id"
               class="h-9 min-w-0 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12"
+              :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.FILTER.ASSIGNEE')"
               @change="
                 applyFilter({ assignee_id: uiFilters.assignee_id, lead_id: '' })
               "
@@ -643,6 +676,7 @@ watch(showEditModal, async value => {
             <select
               v-model="uiFilters.source_id"
               class="h-9 min-w-0 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12"
+              :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.FILTER.SOURCE')"
               @change="
                 applyFilter({ source_id: uiFilters.source_id, lead_id: '' })
               "
@@ -661,6 +695,7 @@ watch(showEditModal, async value => {
             <select
               v-model="uiFilters.follow_up_state"
               class="h-9 min-w-0 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12"
+              :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.FILTER.FOLLOW_UP')"
               @change="
                 applyFilter({
                   follow_up_state: uiFilters.follow_up_state,
@@ -682,6 +717,7 @@ watch(showEditModal, async value => {
             <select
               v-model="uiFilters.booking_status"
               class="h-9 min-w-0 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12"
+              :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.FILTER.BOOKING')"
               @change="
                 applyFilter({
                   booking_status: uiFilters.booking_status,
@@ -819,33 +855,22 @@ watch(showEditModal, async value => {
         </div>
 
         <div class="hidden min-h-0 flex-1 overflow-auto lg:block">
-          <table class="w-full min-w-[1060px] table-fixed text-left text-sm">
+          <table class="w-full min-w-[1120px] table-fixed text-left text-sm">
             <colgroup>
-              <col class="w-10" />
-              <col class="w-[146px]" />
-              <col class="w-[136px]" />
+              <col class="w-[220px]" />
+              <col class="w-[150px]" />
               <col class="w-[116px]" />
               <col class="w-[66px]" />
               <col class="w-[126px]" />
               <col class="w-[110px]" />
               <col class="w-[106px]" />
-              <col class="w-[124px]" />
+              <col class="w-[180px]" />
               <col class="w-[113px]" />
             </colgroup>
             <thead
               class="sticky top-0 z-10 border-b border-n-weak bg-n-background text-xs font-medium text-n-slate-11"
             >
               <tr>
-                <th class="px-3 py-3">
-                  <input
-                    type="checkbox"
-                    class="rounded border-n-weak"
-                    :checked="allPageLeadsSelected"
-                    :indeterminate="somePageLeadsSelected"
-                    :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.SELECT_ALL')"
-                    @change="togglePageBulkSelection"
-                  />
-                </th>
                 <th class="px-3 py-3">
                   <button
                     type="button"
@@ -928,36 +953,42 @@ watch(showEditModal, async value => {
             </thead>
             <tbody class="divide-y divide-n-weak bg-n-background">
               <tr v-if="isLoading">
-                <td colspan="10" class="px-4 py-8 text-sm text-n-slate-11">
+                <td colspan="9" class="px-4 py-8 text-sm text-n-slate-11">
                   {{ t('AI_LEAD_EMPLOYEE.LEADS.LOADING') }}
                 </td>
               </tr>
               <tr v-else-if="!leads.length">
-                <td colspan="10" class="px-4 py-8 text-sm text-n-slate-11">
-                  {{ t('AI_LEAD_EMPLOYEE.LEADS.EMPTY') }}
+                <td
+                  colspan="9"
+                  class="px-4 py-10 text-center text-sm text-n-slate-11"
+                >
+                  <p>
+                    {{ emptyStateLabel }}
+                  </p>
+                  <button
+                    v-if="hasActiveFilters"
+                    type="button"
+                    class="mt-3 rounded-lg border border-n-weak px-3 py-2 font-medium text-n-slate-12"
+                    @click="clearFilters"
+                  >
+                    {{ t('AI_LEAD_EMPLOYEE.LEADS.EMPTY_RESET') }}
+                  </button>
                 </td>
               </tr>
               <template v-else>
                 <tr
                   v-for="lead in leads"
                   :key="lead.id"
-                  class="h-[58px] cursor-pointer hover:bg-n-alpha-2"
+                  class="h-[58px] cursor-pointer hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-n-brand"
                   :class="selectedLead?.id === lead.id ? 'bg-n-blue-2' : ''"
+                  tabindex="0"
+                  :aria-label="
+                    t('AI_LEAD_EMPLOYEE.LEADS.OPEN_LEAD', { name: lead.name })
+                  "
                   @click="selectLead(lead)"
+                  @keydown.enter.prevent="selectLead(lead)"
+                  @keydown.space.prevent="selectLead(lead)"
                 >
-                  <td class="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      class="rounded border-n-weak"
-                      :checked="isLeadBulkSelected(lead)"
-                      :aria-label="
-                        t('AI_LEAD_EMPLOYEE.LEADS.SELECT_ROW', {
-                          name: lead.name,
-                        })
-                      "
-                      @click.stop="toggleLeadBulkSelection(lead)"
-                    />
-                  </td>
                   <td class="min-w-0 px-3 py-2">
                     <div class="flex min-w-0 items-center gap-2">
                       <span
@@ -1074,9 +1105,22 @@ watch(showEditModal, async value => {
           <p v-if="isLoading" class="py-6 text-sm text-n-slate-11">
             {{ t('AI_LEAD_EMPLOYEE.LEADS.LOADING') }}
           </p>
-          <p v-else-if="!leads.length" class="py-6 text-sm text-n-slate-11">
-            {{ t('AI_LEAD_EMPLOYEE.LEADS.EMPTY') }}
-          </p>
+          <div
+            v-else-if="!leads.length"
+            class="py-8 text-center text-sm text-n-slate-11"
+          >
+            <p>
+              {{ emptyStateLabel }}
+            </p>
+            <button
+              v-if="hasActiveFilters"
+              type="button"
+              class="mt-3 rounded-lg border border-n-weak px-3 py-2 font-medium text-n-slate-12"
+              @click="clearFilters"
+            >
+              {{ t('AI_LEAD_EMPLOYEE.LEADS.EMPTY_RESET') }}
+            </button>
+          </div>
           <div v-else class="grid gap-3">
             <button
               v-for="lead in leads"
@@ -1174,7 +1218,7 @@ watch(showEditModal, async value => {
           <button
             type="button"
             class="flex h-12 w-full items-center gap-2 border-b border-n-weak px-4 text-sm font-medium text-n-slate-12"
-            @click="showMobileDetail = false"
+            @click="replaceQuery({ lead_id: '' })"
           >
             <Icon icon="i-lucide-arrow-left" class="size-4" />
             {{ t('AI_LEAD_EMPLOYEE.LEADS.BACK_TO_LIST') }}
@@ -1201,11 +1245,19 @@ watch(showEditModal, async value => {
       </section>
 
       <aside
+        v-if="showDesktopDetail"
         class="hidden min-h-0 border-l border-n-weak bg-n-background lg:flex lg:flex-col"
         :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.DETAIL_LABEL')"
       >
+        <button
+          type="button"
+          class="flex h-11 shrink-0 items-center gap-2 border-b border-n-weak px-4 text-sm font-medium text-n-slate-12"
+          @click="replaceQuery({ lead_id: '' })"
+        >
+          <Icon icon="i-lucide-arrow-left" class="size-4" />
+          {{ t('AI_LEAD_EMPLOYEE.LEADS.BACK_TO_LIST') }}
+        </button>
         <LeadDetail
-          v-if="selectedLead"
           :lead="selectedLead"
           :is-admin="isAdmin"
           :is-recording-reconsent="isRecordingReconsent"
@@ -1224,6 +1276,101 @@ watch(showEditModal, async value => {
         />
       </aside>
     </main>
+
+    <Modal
+      v-model:show="showImportModal"
+      :show-close-button="false"
+      size="mx-4 w-full max-w-3xl"
+    >
+      <section
+        v-if="importPreview"
+        class="flex max-h-[80vh] w-full flex-col overflow-hidden rounded-lg border border-n-weak bg-n-solid-1 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_PREVIEW_TITLE')"
+      >
+        <header class="flex items-center gap-3 border-b border-n-weak p-5">
+          <div class="min-w-0 flex-1">
+            <h2 class="text-lg font-semibold text-n-slate-12">
+              {{ t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_PREVIEW_TITLE') }}
+            </h2>
+            <p class="mt-1 text-sm text-n-slate-11">
+              {{
+                t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_PREVIEW_SUMMARY', {
+                  total: importPreview.total_count,
+                  create: importPreview.create_count,
+                  update: importPreview.update_count,
+                  error: importPreview.error_count,
+                })
+              }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="grid size-9 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+            :aria-label="t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_CANCEL')"
+            @click="closeImportPreview"
+          >
+            <Icon icon="i-lucide-x" class="size-4" />
+          </button>
+        </header>
+        <div class="min-h-0 overflow-auto p-5">
+          <p
+            class="mb-3 rounded-md p-3 text-sm font-medium"
+            :class="
+              importPreview.can_apply
+                ? 'bg-n-teal-3 text-n-teal-11'
+                : 'bg-n-ruby-3 text-n-ruby-11'
+            "
+          >
+            {{ importReadinessLabel }}
+          </p>
+          <ul class="grid gap-2" aria-live="polite">
+            <li
+              v-for="row in importPreview.rows"
+              :key="row.line"
+              class="rounded-md border border-n-weak p-3 text-sm"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <span class="font-medium text-n-slate-12">
+                  {{ row.name || t('AI_LEAD_EMPLOYEE.LEADS.EMPTY_VALUE') }}
+                </span>
+                <span class="shrink-0 text-xs uppercase text-n-slate-11">
+                  {{ importStatusLabel(row.action) }}
+                </span>
+              </div>
+              <p class="mt-1 text-xs text-n-slate-11">
+                {{ row.phone_number || row.email }}
+              </p>
+              <p
+                v-for="message in row.errors"
+                :key="message"
+                class="mt-1 text-xs text-n-ruby-11"
+              >
+                {{ message }}
+              </p>
+            </li>
+          </ul>
+        </div>
+        <footer class="flex justify-end gap-2 border-t border-n-weak p-4">
+          <button
+            type="button"
+            class="h-9 rounded-lg border border-n-weak px-4 text-sm font-medium text-n-slate-12"
+            @click="closeImportPreview"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_CANCEL') }}
+          </button>
+          <button
+            type="button"
+            class="h-9 rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
+            :disabled="!importPreview.can_apply || isImporting"
+            @click="applyImport"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.LEADS.IMPORT_APPLY') }}
+          </button>
+        </footer>
+      </section>
+    </Modal>
 
     <Modal
       v-model:show="showEditModal"
@@ -1322,25 +1469,6 @@ watch(showEditModal, async value => {
                 {{ assignee.name }}
               </option>
             </select>
-          </label>
-        </div>
-
-        <div class="mt-5 grid gap-3 md:grid-cols-2">
-          <label
-            v-for="signal in [
-              'problem',
-              'budget',
-              'urgency',
-              'decision_authority',
-            ]"
-            :key="signal"
-            class="block text-xs font-medium text-n-slate-11"
-          >
-            {{ evidenceSignalLabel(signal) }}
-            <input
-              v-model="editForm.evidence[signal]"
-              class="mt-1 h-10 w-full rounded-md border border-n-weak bg-n-background px-3 text-sm text-n-slate-12"
-            />
           </label>
         </div>
 
