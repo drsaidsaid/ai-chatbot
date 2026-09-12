@@ -43,6 +43,28 @@ RSpec.describe WhatsappTemplateRevision do
     expect(incomplete_cost.errors[:meta_charge_estimate]).to be_present
   end
 
+  it 'rejects template components that Meta cannot submit', :aggregate_failures do
+    missing_example = build_revision(variables: [{ 'position' => 1, 'example' => '' }])
+    invalid_media = build_revision(revision_number: 2, media: { 'format' => 'AUDIO', 'example' => {} })
+    invalid_url_button = build_revision(
+      revision_number: 3,
+      buttons: [{ 'type' => 'URL', 'text' => 'View order', 'url' => '' }]
+    )
+    invalid_phone_button = build_revision(
+      revision_number: 4,
+      buttons: [{ 'type' => 'PHONE_NUMBER', 'text' => 'Call us', 'phone_number' => '' }]
+    )
+
+    expect(missing_example).not_to be_valid
+    expect(missing_example.errors[:variables]).to be_present
+    expect(invalid_media).not_to be_valid
+    expect(invalid_media.errors[:media]).to be_present
+    expect(invalid_url_button).not_to be_valid
+    expect(invalid_url_button.errors[:buttons]).to be_present
+    expect(invalid_phone_button).not_to be_valid
+    expect(invalid_phone_button.errors[:buttons]).to be_present
+  end
+
   it 'keeps submitted content immutable while allowing provider status reconciliation' do
     revision = create_revision(status: :submitted, submitted_at: Time.current, provider_template_id: 'meta-1')
 
@@ -50,6 +72,24 @@ RSpec.describe WhatsappTemplateRevision do
     expect(revision.reload.body).to eq('Hello {{1}}')
     expect(revision.update(status: :approved, status_synced_at: Time.current)).to be(true)
     expect(revision).to be_sendable
+  end
+
+  it 'keeps the Meta template language fixed when an approved provider template is edited' do
+    create_revision(status: :approved, submitted_at: Time.current, provider_template_id: 'meta-1')
+    translated_edit = build_revision(revision_number: 2, language: 'sw')
+
+    expect(translated_edit).not_to be_valid
+    expect(translated_edit.errors[:language]).to include('cannot change when editing an existing Meta template')
+  end
+
+  it 'never treats an older approval as sendable after a newer revision exists' do
+    approved = create_revision(status: :approved, submitted_at: Time.current, provider_template_id: 'meta-1')
+    expect(approved).to be_sendable
+
+    current_draft = create_revision(revision_number: 2)
+
+    expect(approved.reload).not_to be_sendable
+    expect(current_draft).not_to be_sendable
   end
 
   it 'shows missing Meta pricing as unknown rather than zero' do

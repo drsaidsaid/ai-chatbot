@@ -61,8 +61,9 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
   def template = @template = current_account.whatsapp_templates.find(params[:id])
 
   def template_params
-    params.permit(:inbox_id, :name, :language, :category, :body, media: {}, buttons: %i[type text url], variables: %i[position example],
-                                                                 meta_charge_estimate: %i[amount currency market effective_on source])
+    params.permit(:inbox_id, :name, :language, :category, :body, media: {}, buttons: %i[type text url phone_number],
+                                                                 variables: %i[position example],
+                                                                 meta_charge_estimate: %i[amount currency market effective_on source confirmed])
   end
 
   # rubocop:disable Metrics/AbcSize
@@ -72,7 +73,7 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
       account: current_account, channel: record.channel, revision_number: previous ? previous.revision_number + 1 : 1,
       language: template_params.fetch(:language), category: template_params.fetch(:category), body: template_params.fetch(:body),
       media: template_params[:media] || {}, buttons: template_params[:buttons] || [], variables: template_params[:variables] || [],
-      meta_charge_estimate: template_params[:meta_charge_estimate] || {}, submission_key: SecureRandom.uuid
+      meta_charge_estimate: verified_charge_estimate, submission_key: SecureRandom.uuid
     )
     revision.content_digest = Digest::SHA256.hexdigest(revision.preview.to_json)
     revision.save!
@@ -81,14 +82,38 @@ class Api::V1::Accounts::WhatsappTemplatesController < Api::V1::Accounts::BaseCo
 
   def payload(record)
     revision = record.latest_revision
-    {
+    revision_payload(revision, current: true).merge(
       id: record.id, inbox_id: record.channel.inbox&.id, name: record.name, revision: revision.revision_number,
-      language: revision.language, category: revision.category, status: revision.status, meta_approval: revision.meta_approval,
-      provider_template_id: revision.provider_template_id, rejection_reason: revision.rejection_reason,
-      last_sync_at: revision.status_synced_at, preview: revision.preview,
+      revisions: record.revisions.order(revision_number: :desc).map { |item| revision_payload(item, current: item.id == revision.id) }
+    )
+  end
+
+  def revision_payload(revision, current:)
+    {
+      revision: revision.revision_number, language: revision.language, category: revision.category, status: revision.status,
+      meta_approval: revision.meta_approval, provider_template_id: revision.provider_template_id,
+      rejection_reason: revision.rejection_reason, last_sync_at: revision.status_synced_at, preview: revision.preview,
       meta_charge_estimate: revision.meta_charge_estimate.presence,
       meta_charge_status: revision.meta_charge_estimate.present? ? 'available' : 'unknown',
-      sendable: revision.sendable?
+      sendable: revision.sendable?, current: current
     }
+  end
+
+  def verified_charge_estimate
+    estimate = template_params[:meta_charge_estimate]&.to_h
+    return {} if estimate.blank?
+
+    confirmed = ActiveModel::Type::Boolean.new.cast(estimate.delete('confirmed'))
+    unless confirmed
+      invalid_revision = WhatsappTemplateRevision.new
+      invalid_revision.errors.add(:meta_charge_estimate, 'source must be confirmed by the Business Account admin')
+      raise ActiveRecord::RecordInvalid, invalid_revision
+    end
+
+    estimate.merge(
+      'authority' => 'business_account_admin',
+      'verified_by_user_id' => Current.user.id,
+      'verified_at' => Time.current.iso8601
+    )
   end
 end

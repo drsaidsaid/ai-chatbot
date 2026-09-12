@@ -18,6 +18,7 @@ vi.mock('dashboard/api/whatsappTemplates', () => ({
   default: {
     get: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
     submit: vi.fn(),
     reconcile: vi.fn(),
   },
@@ -37,6 +38,20 @@ describe('WhatsappTemplatesPage', () => {
           meta_approval: 'submitted',
           sendable: false,
           meta_charge_estimate: null,
+          preview: {
+            body: 'Hello {{1}}',
+            media: {},
+            buttons: [],
+            variables: [{ position: 1, example: 'Asha' }],
+          },
+          revisions: [
+            {
+              revision: 1,
+              status: 'submitted',
+              current: true,
+              preview: { body: 'Hello {{1}}', media: {}, buttons: [] },
+            },
+          ],
         },
         {
           id: 11,
@@ -53,11 +68,35 @@ describe('WhatsappTemplatesPage', () => {
             effective_on: '2026-09-12',
             source: 'Meta rate card',
           },
+          preview: {
+            body: 'Approved copy',
+            media: {},
+            buttons: [],
+            variables: [],
+          },
+          revisions: [
+            {
+              revision: 2,
+              status: 'approved',
+              current: true,
+              preview: { body: 'Approved copy', media: {}, buttons: [] },
+            },
+            {
+              revision: 1,
+              status: 'rejected',
+              current: false,
+              rejection_reason: 'INVALID_FORMAT',
+              preview: { body: 'Old copy', media: {}, buttons: [] },
+            },
+          ],
         },
       ],
     });
     whatsappTemplatesAPI.create.mockResolvedValue({
       data: { id: 13, status: 'draft', name: 'follow_up' },
+    });
+    whatsappTemplatesAPI.update.mockResolvedValue({
+      data: { id: 12, status: 'draft', name: 'order_update', revision: 2 },
     });
     whatsappTemplatesAPI.submit.mockResolvedValue({ data: {} });
     whatsappTemplatesAPI.reconcile.mockResolvedValue({ data: {} });
@@ -82,6 +121,8 @@ describe('WhatsappTemplatesPage', () => {
     await wrapper.find('#whatsapp-template-button-text').setValue('Thanks');
 
     expect(wrapper.text()).toContain('Hello Asha');
+    expect(wrapper.text()).toContain('Image header');
+    expect(wrapper.text()).toContain('Thanks');
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 
@@ -95,7 +136,7 @@ describe('WhatsappTemplatesPage', () => {
           format: 'IMAGE',
           example: { header_handle: ['https://example.test/header.png'] },
         },
-        buttons: [{ type: 'QUICK_REPLY', text: 'Thanks', url: '' }],
+        buttons: [{ type: 'QUICK_REPLY', text: 'Thanks' }],
       })
     );
   });
@@ -117,5 +158,70 @@ describe('WhatsappTemplatesPage', () => {
     await flushPromises();
 
     expect(whatsappTemplatesAPI.reconcile).toHaveBeenCalledWith(12);
+  });
+
+  it('loads an existing template into the form, saves a new revision, and shows immutable history', async () => {
+    const wrapper = shallowMount(WhatsappTemplatesPage);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Revision history');
+    expect(wrapper.text()).toMatch(/Revision 1 · rejected\s+· INVALID_FORMAT/);
+    await wrapper.get('[data-testid="edit-template-12"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('textarea').element.value).toBe('Hello {{1}}');
+    expect(wrapper.find('input[pattern]').attributes('disabled')).toBeDefined();
+    expect(wrapper.findAll('select')[0].attributes('disabled')).toBeDefined();
+    expect(
+      wrapper.get('[data-testid="template-language"]').attributes('disabled')
+    ).toBeDefined();
+    await wrapper.find('#whatsapp-template-variable-1').setValue('Neema');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    expect(whatsappTemplatesAPI.update).toHaveBeenCalledWith(
+      12,
+      expect.objectContaining({
+        body: 'Hello {{1}}',
+        variables: [{ position: 1, example: 'Neema' }],
+      })
+    );
+  });
+
+  it('submits only an explicitly owner-verified Meta estimate and can refresh provider states', async () => {
+    const wrapper = shallowMount(WhatsappTemplatesPage);
+    await flushPromises();
+    const selects = wrapper.findAll('select');
+    await selects[0].setValue('7');
+    await wrapper.find('input[pattern]').setValue('priced_template');
+    await wrapper.find('textarea').setValue('Price notice');
+    await wrapper.get('[data-testid="estimate-amount"]').setValue('0.025');
+    await wrapper.get('[data-testid="estimate-currency"]').setValue('USD');
+    await wrapper.get('[data-testid="estimate-market"]').setValue('TZ');
+    await wrapper
+      .get('[data-testid="estimate-effective-on"]')
+      .setValue('2026-09-12');
+    await wrapper
+      .get('[data-testid="estimate-source"]')
+      .setValue('https://developers.facebook.com/rates');
+    await wrapper.get('[data-testid="estimate-confirmed"]').setValue(true);
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    expect(whatsappTemplatesAPI.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meta_charge_estimate: {
+          amount: '0.025',
+          currency: 'USD',
+          market: 'TZ',
+          effective_on: '2026-09-12',
+          source: 'https://developers.facebook.com/rates',
+          confirmed: true,
+        },
+      })
+    );
+    await wrapper.get('[data-testid="refresh-templates"]').trigger('click');
+    await flushPromises();
+    expect(whatsappTemplatesAPI.get).toHaveBeenCalledTimes(2);
   });
 });

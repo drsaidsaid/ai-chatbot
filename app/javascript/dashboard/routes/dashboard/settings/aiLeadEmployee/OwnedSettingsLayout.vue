@@ -42,6 +42,11 @@ const sections = [
     matches: ['settings_inbox', 'whatsapp_connection'],
   },
   {
+    key: 'whatsapp_templates',
+    route: 'ai_lead_employee_settings_whatsapp_templates',
+    matches: ['whatsapp_templates'],
+  },
+  {
     key: 'ai',
     route: 'ai_lead_employee_settings_ai_testing',
     matches: ['ai_testing', 'ai_provider', 'test_center'],

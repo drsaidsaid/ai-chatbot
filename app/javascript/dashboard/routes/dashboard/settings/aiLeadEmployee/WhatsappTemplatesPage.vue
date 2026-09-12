@@ -9,6 +9,8 @@ import Button from 'dashboard/components-next/button/Button.vue';
 const store = useStore();
 const templates = ref([]);
 const saving = ref(false);
+const loading = ref(false);
+const editingTemplateId = ref(null);
 const variableExamples = ref({});
 const form = ref({
   inbox_id: '',
@@ -21,6 +23,13 @@ const form = ref({
   button_type: '',
   button_text: '',
   button_url: '',
+  button_phone_number: '',
+  estimate_amount: '',
+  estimate_currency: '',
+  estimate_market: '',
+  estimate_effective_on: '',
+  estimate_source: '',
+  estimate_confirmed: false,
 });
 const inboxes = computed(() =>
   store.getters['inboxes/getInboxes'].filter(
@@ -43,59 +52,115 @@ const previewBody = computed(() =>
 );
 
 const load = async () => {
-  await store.dispatch('inboxes/get');
-  const { data } = await whatsappTemplatesAPI.get();
-  templates.value = data;
+  loading.value = true;
+  try {
+    await store.dispatch('inboxes/get');
+    const { data } = await whatsappTemplatesAPI.get();
+    templates.value = data;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const resetForm = inboxId => {
+  form.value = {
+    inbox_id: inboxId || '',
+    name: '',
+    language: 'en_US',
+    category: 'UTILITY',
+    body: '',
+    media_type: '',
+    media_url: '',
+    button_type: '',
+    button_text: '',
+    button_url: '',
+    button_phone_number: '',
+    estimate_amount: '',
+    estimate_currency: '',
+    estimate_market: '',
+    estimate_effective_on: '',
+    estimate_source: '',
+    estimate_confirmed: false,
+  };
+  editingTemplateId.value = null;
+  variableExamples.value = {};
+};
+
+const draftPayload = () => {
+  const variables = variablePositions.value.map(position => ({
+    position,
+    example: variableExamples.value[position]?.trim() || '',
+  }));
+  const media =
+    form.value.media_type && form.value.media_url
+      ? {
+          format: form.value.media_type,
+          example: { header_handle: [form.value.media_url] },
+        }
+      : {};
+  const button = form.value.button_type
+    ? {
+        type: form.value.button_type,
+        text: form.value.button_text,
+        ...(form.value.button_type === 'URL'
+          ? { url: form.value.button_url }
+          : {}),
+        ...(form.value.button_type === 'PHONE_NUMBER'
+          ? { phone_number: form.value.button_phone_number }
+          : {}),
+      }
+    : null;
+  const hasEstimate = [
+    form.value.estimate_amount,
+    form.value.estimate_currency,
+    form.value.estimate_market,
+    form.value.estimate_effective_on,
+    form.value.estimate_source,
+  ].some(Boolean);
+
+  return {
+    inbox_id: form.value.inbox_id,
+    name: form.value.name,
+    language: form.value.language,
+    category: form.value.category,
+    body: form.value.body,
+    variables,
+    media,
+    buttons: button ? [button] : [],
+    ...(hasEstimate
+      ? {
+          meta_charge_estimate: {
+            amount: form.value.estimate_amount,
+            currency: form.value.estimate_currency,
+            market: form.value.estimate_market,
+            effective_on: form.value.estimate_effective_on,
+            source: form.value.estimate_source,
+            confirmed: form.value.estimate_confirmed,
+          },
+        }
+      : {}),
+  };
 };
 
 const save = async () => {
   saving.value = true;
   try {
-    const variables = variablePositions.value.map(position => ({
-      position,
-      example: variableExamples.value[position]?.trim() || '',
-    }));
-    const media =
-      form.value.media_type && form.value.media_url
-        ? {
-            format: form.value.media_type,
-            example: { header_handle: [form.value.media_url] },
-          }
-        : {};
-    const buttons = form.value.button_type
-      ? [
-          {
-            type: form.value.button_type,
-            text: form.value.button_text,
-            url: form.value.button_url,
-          },
-        ]
-      : [];
-    const { data } = await whatsappTemplatesAPI.create({
-      inbox_id: form.value.inbox_id,
-      name: form.value.name,
-      language: form.value.language,
-      category: form.value.category,
-      body: form.value.body,
-      variables,
-      media,
-      buttons,
-    });
-    templates.value.unshift(data);
-    form.value = {
-      inbox_id: form.value.inbox_id,
-      name: '',
-      language: 'en_US',
-      category: 'UTILITY',
-      body: '',
-      media_type: '',
-      media_url: '',
-      button_type: '',
-      button_text: '',
-      button_url: '',
-    };
-    variableExamples.value = {};
-    useAlert('Draft saved. Local validation is not Meta approval.');
+    const payload = draftPayload();
+    const editedTemplateId = editingTemplateId.value;
+    const { data } = editedTemplateId
+      ? await whatsappTemplatesAPI.update(editedTemplateId, payload)
+      : await whatsappTemplatesAPI.create(payload);
+    const existingIndex = templates.value.findIndex(
+      item => item.id === data.id
+    );
+    if (existingIndex >= 0) templates.value.splice(existingIndex, 1, data);
+    else templates.value.unshift(data);
+    resetForm(form.value.inbox_id);
+    useAlert(
+      editedTemplateId
+        ? 'New revision saved. Local validation is not Meta approval.'
+        : 'Draft saved. Local validation is not Meta approval.'
+    );
   } catch (error) {
     useAlert(
       error.response?.data?.error || 'Template draft could not be saved.'
@@ -106,15 +171,47 @@ const save = async () => {
 };
 
 const submit = async record => {
-  await whatsappTemplatesAPI.submit(record.id);
-  record.status = 'submission_pending';
-  record.meta_approval = 'submission_pending';
+  const { data } = await whatsappTemplatesAPI.submit(record.id);
+  Object.assign(record, data);
   useAlert('Submitted for Meta review. No customer message was sent.');
 };
 
 const reconcile = async record => {
   await whatsappTemplatesAPI.reconcile(record.id);
   useAlert('Reconciliation requested; the template was not submitted again.');
+};
+
+const edit = record => {
+  const preview = record.preview || {};
+  const media = preview.media || {};
+  const button = preview.buttons?.[0] || {};
+  const estimate = record.meta_charge_estimate || {};
+  editingTemplateId.value = record.id;
+  form.value = {
+    inbox_id: record.inbox_id,
+    name: record.name,
+    language: record.language,
+    category: record.category,
+    body: preview.body || '',
+    media_type: media.format || '',
+    media_url: media.example?.header_handle?.[0] || '',
+    button_type: button.type || '',
+    button_text: button.text || '',
+    button_url: button.url || '',
+    button_phone_number: button.phone_number || '',
+    estimate_amount: estimate.amount || '',
+    estimate_currency: estimate.currency || '',
+    estimate_market: estimate.market || '',
+    estimate_effective_on: estimate.effective_on || '',
+    estimate_source: estimate.source || '',
+    estimate_confirmed: false,
+  };
+  variableExamples.value = Object.fromEntries(
+    (preview.variables || []).map(variable => [
+      variable.position,
+      variable.example || '',
+    ])
+  );
 };
 
 onMounted(load);
@@ -142,6 +239,7 @@ onMounted(load);
           <select
             v-model="form.inbox_id"
             required
+            :disabled="Boolean(editingTemplateId)"
             class="mt-1 w-full rounded border border-n-weak bg-n-solid-1 p-2"
           >
             <option value="" disabled>Select an inbox</option>
@@ -155,12 +253,15 @@ onMounted(load);
             >Name<input
               v-model.trim="form.name"
               required
+              :disabled="Boolean(editingTemplateId)"
               pattern="[a-z0-9_]+"
               class="mt-1 w-full rounded border border-n-weak p-2" /></label
           ><label class="text-sm font-medium text-n-slate-12"
             >Language<input
               v-model.trim="form.language"
               required
+              :disabled="Boolean(editingTemplateId)"
+              data-testid="template-language"
               class="mt-1 w-full rounded border border-n-weak p-2" /></label
           ><label class="text-sm font-medium text-n-slate-12"
             >Category<select
@@ -247,6 +348,19 @@ onMounted(load);
               class="mt-1 w-full rounded border border-n-weak p-2"
             />
           </label>
+          <label
+            v-if="form.button_type === 'PHONE_NUMBER'"
+            class="text-sm font-medium text-n-slate-12"
+          >
+            Phone number
+            <input
+              id="whatsapp-template-button-phone"
+              v-model.trim="form.button_phone_number"
+              required
+              type="tel"
+              class="mt-1 w-full rounded border border-n-weak p-2"
+            />
+          </label>
         </div>
         <div
           v-if="variablePositions.length"
@@ -271,21 +385,113 @@ onMounted(load);
         </div>
         <aside class="rounded bg-n-solid-2 p-4 text-sm text-n-slate-12">
           <p class="font-medium">Recipient preview</p>
+          <p v-if="form.media_type" class="mt-2 text-n-slate-11">
+            {{
+              `${form.media_type.charAt(0)}${form.media_type.slice(1).toLowerCase()} header`
+            }}
+            <span v-if="form.media_url">· {{ form.media_url }}</span>
+          </p>
           <p class="mt-2 whitespace-pre-wrap">
             {{ previewBody || 'Your template text will appear here.' }}
+          </p>
+          <p v-if="form.button_type" class="mt-3">
+            <span class="inline-flex rounded border border-n-weak px-3 py-1">
+              {{ form.button_text || 'Button preview' }}
+            </span>
           </p>
           <p class="mt-2 text-n-slate-11">
             Use numbered variables such as &#123;&#123;1&#125;&#125;. They are
             checked before saving, but only Meta can approve a template.
           </p>
         </aside>
-        <Button type="submit" :is-loading="saving">Save draft</Button>
+        <fieldset class="grid gap-3 rounded border border-n-weak p-4">
+          <legend class="px-1 text-sm font-medium text-n-slate-12">
+            Optional owner-verified Meta charge estimate
+          </legend>
+          <p class="text-sm text-n-slate-11">
+            Enter a current Meta source; the product does not invent or assume a
+            rate. Leave every field empty to keep the estimate unknown.
+          </p>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <label class="text-sm text-n-slate-11"
+              >Amount<input
+                v-model.trim="form.estimate_amount"
+                data-testid="estimate-amount"
+                inputmode="decimal"
+                class="mt-1 w-full rounded border border-n-weak p-2"
+            /></label>
+            <label class="text-sm text-n-slate-11"
+              >Currency<input
+                v-model.trim="form.estimate_currency"
+                data-testid="estimate-currency"
+                maxlength="3"
+                class="mt-1 w-full rounded border border-n-weak p-2 uppercase"
+            /></label>
+            <label class="text-sm text-n-slate-11"
+              >Market<input
+                v-model.trim="form.estimate_market"
+                data-testid="estimate-market"
+                class="mt-1 w-full rounded border border-n-weak p-2"
+            /></label>
+            <label class="text-sm text-n-slate-11"
+              >Effective date<input
+                v-model="form.estimate_effective_on"
+                data-testid="estimate-effective-on"
+                type="date"
+                class="mt-1 w-full rounded border border-n-weak p-2"
+            /></label>
+            <label class="text-sm text-n-slate-11 sm:col-span-2"
+              >Meta source or rate-card reference<input
+                v-model.trim="form.estimate_source"
+                data-testid="estimate-source"
+                class="mt-1 w-full rounded border border-n-weak p-2"
+            /></label>
+          </div>
+          <label class="flex items-start gap-2 text-sm text-n-slate-12">
+            <input
+              v-model="form.estimate_confirmed"
+              data-testid="estimate-confirmed"
+              type="checkbox"
+              class="mt-1"
+            />
+            I verified this estimate against the named Meta source for this
+            market and effective date.
+          </label>
+        </fieldset>
+        <div class="flex flex-wrap gap-2">
+          <Button type="submit" :is-loading="saving">
+            {{ editingTemplateId ? 'Save new revision' : 'Save draft' }}
+          </Button>
+          <button
+            v-if="editingTemplateId"
+            type="button"
+            class="rounded border border-n-weak px-3 py-2 text-sm"
+            @click="resetForm(form.inbox_id)"
+          >
+            Cancel edit
+          </button>
+        </div>
       </form>
       <section>
-        <h2 class="text-lg font-semibold text-n-slate-12">Saved templates</h2>
-        <p class="mt-1 text-sm text-n-slate-11">
-          Missing Meta pricing is shown as unknown, never as zero.
-        </p>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold text-n-slate-12">
+              Saved templates
+            </h2>
+            <p class="mt-1 text-sm text-n-slate-11">
+              Missing Meta pricing is shown as unknown, never as zero.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="refresh-templates"
+            class="rounded border border-n-weak px-3 py-2 text-sm"
+            :disabled="loading"
+            @click="load"
+          >
+            {{ loading ? 'Refreshing…' : 'Refresh templates' }}
+          </button>
+        </div>
         <div
           v-for="record in templates"
           :key="record.id"
@@ -309,8 +515,23 @@ onMounted(load);
                     : 'Unknown — obtain a current Meta estimate before broadcast.'
                 }}
               </p>
+              <p
+                v-if="record.meta_charge_estimate?.authority"
+                class="text-n-slate-11"
+              >
+                Verified by Business Account admin ·
+                {{ record.meta_charge_estimate.verified_at }}
+              </p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                :data-testid="`edit-template-${record.id}`"
+                class="rounded border border-n-weak px-3 py-2"
+                @click="edit(record)"
+              >
+                Edit as new revision
+              </button>
               <Button
                 v-if="record.status === 'draft'"
                 sm
@@ -330,6 +551,24 @@ onMounted(load);
           <p v-if="record.rejection_reason" class="mt-2 text-n-ruby-11">
             Meta rejection: {{ record.rejection_reason }}
           </p>
+          <details v-if="record.revisions?.length" class="mt-3">
+            <summary class="cursor-pointer font-medium text-n-slate-12">
+              Revision history
+            </summary>
+            <ol class="mt-2 grid gap-2 border-l border-n-weak pl-3">
+              <li
+                v-for="revision in record.revisions"
+                :key="revision.revision"
+                class="text-n-slate-11"
+              >
+                Revision {{ revision.revision }} · {{ revision.status }}
+                <template v-if="revision.rejection_reason">
+                  · {{ revision.rejection_reason }}
+                </template>
+                <span v-if="revision.current"> · current</span>
+              </li>
+            </ol>
+          </details>
         </div>
       </section>
     </section>

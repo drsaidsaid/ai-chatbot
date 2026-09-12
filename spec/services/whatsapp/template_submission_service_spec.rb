@@ -19,7 +19,7 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
       content_digest: 'digest', status: :submission_pending, submitted_at: Time.current, submitted_by: admin
     )
   end
-  let(:endpoint) { 'https://graph.facebook.com/v14.0/waba-r26/message_templates' }
+  let(:endpoint) { 'https://graph.facebook.com/v22.0/waba-r26/message_templates' }
 
   it 'claims a pending revision once so duplicate jobs cannot create duplicate Meta templates' do
     create_request = stub_request(:post, endpoint).to_return(
@@ -33,10 +33,109 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
     expect(revision.reload).to have_attributes(status: 'submitted', provider_template_id: 'meta-1')
   end
 
+  it 'submits Meta-compatible component examples and button fields' do
+    schema_revision = WhatsappTemplateRevision.create!(
+      whatsapp_template: template, account: account, channel: channel, revision_number: 1,
+      language: 'en_US', category: 'UTILITY', submission_key: 'submission-schema', content_digest: 'schema-digest',
+      status: :submission_pending, submitted_at: Time.current, submitted_by: admin,
+      body: 'Hello {{1}}',
+      variables: [{ 'position' => 1, 'example' => 'Asha' }],
+      media: { 'format' => 'IMAGE', 'example' => { 'header_handle' => ['https://example.test/header.png'] } },
+      buttons: [
+        { 'type' => 'QUICK_REPLY', 'text' => 'Thanks', 'url' => '' },
+        { 'type' => 'URL', 'text' => 'View order', 'url' => 'https://example.test/orders/{{1}}' },
+        { 'type' => 'PHONE_NUMBER', 'text' => 'Call us', 'phone_number' => '+255700000000' }
+      ]
+    )
+    request = stub_request(:post, endpoint).with do |provider_request|
+      JSON.parse(provider_request.body) == {
+        'name' => 'order_update',
+        'language' => 'en_US',
+        'category' => 'UTILITY',
+        'components' => [
+          { 'type' => 'BODY', 'text' => 'Hello {{1}}', 'example' => { 'body_text' => [['Asha']] } },
+          { 'type' => 'HEADER', 'format' => 'IMAGE',
+            'example' => { 'header_handle' => ['https://example.test/header.png'] } },
+          { 'type' => 'BUTTONS', 'buttons' => [
+            { 'type' => 'QUICK_REPLY', 'text' => 'Thanks' },
+            { 'type' => 'URL', 'text' => 'View order', 'url' => 'https://example.test/orders/{{1}}' },
+            { 'type' => 'PHONE_NUMBER', 'text' => 'Call us', 'phone_number' => '+255700000000' }
+          ] }
+        ]
+      }
+    end.to_return(status: 200, body: { id: 'meta-schema' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+    described_class.new(revision: schema_revision).perform
+
+    expect(request).to have_been_requested.once
+  end
+
+  it 'edits the existing Meta template when submitting a new local revision' do
+    revision.update!(status: :approved, provider_template_id: 'meta-approved')
+    edited_revision = WhatsappTemplateRevision.create!(
+      whatsapp_template: template, account: account, channel: channel, revision_number: 2,
+      language: 'en_US', category: 'MARKETING', body: 'Order {{1}} is ready',
+      variables: [{ 'position' => 1, 'example' => 'A-123' }], submission_key: 'submission-edit-r26',
+      content_digest: 'edited-digest', status: :submission_pending, submitted_at: Time.current, submitted_by: admin
+    )
+    edit_request = stub_request(:post, 'https://graph.facebook.com/v22.0/meta-approved').with do |provider_request|
+      JSON.parse(provider_request.body) == {
+        'category' => 'MARKETING',
+        'components' => [
+          { 'type' => 'BODY', 'text' => 'Order {{1}} is ready', 'example' => { 'body_text' => [['A-123']] } }
+        ]
+      }
+    end.to_return(status: 200, body: { success: true }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+    described_class.new(revision: edited_revision).perform
+
+    expect(edit_request).to have_been_requested.once
+    expect(edited_revision.reload).to have_attributes(status: 'submitted', provider_template_id: 'meta-approved')
+  end
+
+  it 'reconciles an uncertain edit without retrying the provider mutation' do
+    revision.update!(status: :approved, provider_template_id: 'meta-approved')
+    edited_revision = WhatsappTemplateRevision.create!(
+      whatsapp_template: template, account: account, channel: channel, revision_number: 2,
+      language: 'en_US', category: 'UTILITY', body: 'Updated order', submission_key: 'submission-edit-timeout',
+      content_digest: 'edited-timeout-digest', status: :submission_pending, submitted_at: Time.current, submitted_by: admin
+    )
+    edit_request = stub_request(:post, 'https://graph.facebook.com/v22.0/meta-approved').to_timeout
+    status_request = stub_request(:get, "#{endpoint}?name=order_update").to_return(
+      {
+        status: 200,
+        body: { data: [{ id: 'meta-approved', name: 'order_update', language: 'en_US', status: 'APPROVED',
+                         components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      },
+      {
+        status: 200,
+        body: { data: [{ id: 'meta-approved', name: 'order_update', language: 'en_US', status: 'APPROVED',
+                         components: [{ type: 'BODY', text: 'Updated order' }] }] }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      }
+    )
+
+    described_class.new(revision: edited_revision).perform
+    described_class.new(revision: edited_revision.reload).perform
+    described_class.new(revision: edited_revision.reload).perform(reconcile: true)
+
+    expect(edit_request).to have_been_requested.once
+    expect(edited_revision.reload).to have_attributes(status: 'unknown', provider_template_id: nil)
+    expect(revision.reload).not_to be_sendable
+
+    described_class.new(revision: edited_revision.reload).perform(reconcile: true)
+
+    expect(status_request).to have_been_requested.times(2)
+    expect(edited_revision.reload).to have_attributes(status: 'approved', provider_template_id: 'meta-approved')
+  end
+
   it 'reconciles an uncertain timeout without repeating Meta creation' do
     create_request = stub_request(:post, endpoint).to_timeout
     status_request = stub_request(:get, "#{endpoint}?name=order_update")
-                     .to_return(status: 200, body: { data: [{ id: 'meta-2', name: 'order_update', status: 'APPROVED' }] }.to_json,
+                     .to_return(status: 200, body: { data: [{ id: 'meta-2', name: 'order_update', language: 'en_US',
+                                                              status: 'APPROVED',
+                                                              components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                                 headers: { 'Content-Type' => 'application/json' })
 
     described_class.new(revision: revision).perform
@@ -48,15 +147,39 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
     expect(revision.reload).to have_attributes(status: 'approved', provider_template_id: 'meta-2')
   end
 
+  it 'matches reconciliation by name, language, and submitted components instead of attaching an older approval' do
+    status_request = stub_request(:get, "#{endpoint}?name=order_update")
+                     .to_return(status: 200, body: {
+                       data: [
+                         { id: 'meta-old', name: 'order_update', language: 'en_US', status: 'APPROVED',
+                           components: [{ type: 'BODY', text: 'Old content' }] },
+                         { id: 'meta-wrong-language', name: 'order_update', language: 'sw', status: 'APPROVED',
+                           components: [{ type: 'BODY', text: 'Order ready' }] },
+                         { id: 'meta-current', name: 'order_update', language: 'en_US', status: 'REJECTED',
+                           rejected_reason: 'INVALID_FORMAT', components: [{ type: 'BODY', text: 'Order ready' }] }
+                       ]
+                     }.to_json, headers: { 'Content-Type' => 'application/json' })
+    revision.update!(status: :unknown)
+
+    described_class.new(revision: revision).perform(reconcile: true)
+
+    expect(status_request).to have_been_requested.once
+    expect(revision.reload).to have_attributes(status: 'rejected', provider_template_id: 'meta-current',
+                                               rejection_reason: 'INVALID_FORMAT')
+  end
+
   it 'records rejection details and later paused or disabled provider states' do
     status_request = stub_request(:get, "#{endpoint}?name=order_update")
                      .to_return(
-                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', status: 'REJECTED',
-                                                       rejected_reason: 'INVALID_FORMAT' }] }.to_json,
+                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', status: 'REJECTED',
+                                                       rejected_reason: 'INVALID_FORMAT',
+                                                       components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                          headers: { 'Content-Type' => 'application/json' } },
-                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', status: 'PAUSED' }] }.to_json,
+                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', status: 'PAUSED',
+                                                       components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                          headers: { 'Content-Type' => 'application/json' } },
-                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', status: 'DISABLED' }] }.to_json,
+                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', status: 'DISABLED',
+                                                       components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                          headers: { 'Content-Type' => 'application/json' } }
                      )
     revision.update!(status: :unknown)
