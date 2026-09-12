@@ -16,22 +16,12 @@ class AiLeadEmployee::LeadExportCsv
   end
 
   def build
-    membership = authorized_membership!
-    artifact = Tempfile.new(['lead-export-', '.csv'])
-    artifact.chmod(0o600)
-    with_export_snapshot do
-      directory = AiLeadEmployee::LeadsDirectoryService.new(
-        account: membership.account,
-        user: membership.user,
-        params: params
-      )
-      artifact.write(CSV.generate_line(COLUMNS))
-      directory.each_export_row { |row| artifact.write(CSV.generate_line(csv_row(row))) }
+    artifact = nil
+    ActiveRecord::Base.uncached do
+      artifact = build_artifact(authorized_membership!)
+      authorized_membership!
+      finalize_artifact(artifact)
     end
-    authorized_membership!
-    artifact.flush
-    artifact.rewind
-    artifact
   rescue StandardError
     artifact&.close!
     raise
@@ -40,6 +30,28 @@ class AiLeadEmployee::LeadExportCsv
   private
 
   attr_reader :account_id, :user_id, :params
+
+  def build_artifact(membership)
+    artifact = Tempfile.new(['lead-export-', '.csv'])
+    artifact.chmod(0o600)
+    with_export_snapshot do
+      directory = AiLeadEmployee::LeadsDirectoryService.new(
+        account: membership.account, user: membership.user, params: params
+      )
+      artifact.write(CSV.generate_line(COLUMNS))
+      directory.each_export_row { |row| artifact.write(CSV.generate_line(csv_row(row))) }
+    end
+    artifact
+  rescue StandardError
+    artifact&.close!
+    raise
+  end
+
+  def finalize_artifact(artifact)
+    artifact.flush
+    artifact.rewind
+    artifact
+  end
 
   def authorized_membership!
     membership = AccountUser.includes(:account, :user).find_by!(account_id: account_id, user_id: user_id)

@@ -45,4 +45,21 @@ RSpec.describe AiLeadEmployee::LeadExportCsv do
   ensure
     artifact&.close!
   end
+
+  it 'does not retain distinct export batch results in an enabled caller query cache' do
+    stub_const('AiLeadEmployee::LeadsDirectoryService::EXPORT_BATCH_SIZE', 2)
+    5.times { |index| create(:contact, :with_phone_number, account: account, name: "Cached Lead #{index}") }
+    connection = ActiveRecord::Base.connection
+    export = described_class.new(account_id: account.id, user_id: admin.id, params: {})
+    artifact = nil
+
+    connection.cache do
+      connection.clear_query_cache
+      initial_cache_size = connection.query_cache.size
+      artifact = export.build
+      expect(connection.query_cache.size).to eq(initial_cache_size)
+    end
+  ensure
+    artifact&.close!
+  end
 end

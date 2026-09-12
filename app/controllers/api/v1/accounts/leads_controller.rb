@@ -62,16 +62,21 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
       user_id: Current.user.id,
       params: lead_directory_params.to_h
     ).build
+    prepare_export_response(artifact)
+  end
+
+  private
+
+  def prepare_export_response(artifact)
     request.env[Rack::RACK_TEMPFILES] ||= []
     request.env[Rack::RACK_TEMPFILES] << artifact
+    request.env[AiLeadEmployee::LeadExportBodyMiddleware::ENV_KEY] = artifact
     response.headers['Cache-Control'] = 'private, no-store'
     send_file artifact.path,
               filename: "leads-#{Time.zone.today.iso8601}.csv",
               type: 'text/csv',
               disposition: 'attachment'
   end
-
-  private
 
   def directory_payload(extra_params = {})
     AiLeadEmployee::LeadsDirectoryService.new(
