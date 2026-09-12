@@ -779,6 +779,7 @@
         "USED": "used",
         "REMAINING": "remaining",
         "USAGE_SUMMARY": "{used} used · {remaining} remaining",
+        "RECONCILIATION_REQUIRED": "{count} reply credit is held for delivery reconciliation. It is not billed as a completed reply and cannot be retried.",
         "USAGE_PERCENTAGE": "{value}%",
         "RENEWS": "Included credits renew on {date}",
         "EXHAUSTED": "AI replies are paused because no credits remain. Incoming messages and human replies are still available. Request a top-up or upgrade to resume AI work.",

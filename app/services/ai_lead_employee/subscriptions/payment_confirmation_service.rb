@@ -24,6 +24,9 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     raise InvalidConfirmation, 'Confirmation time is required' if confirmed_at.blank?
 
     account.with_lock do
+      operator = PlatformApp.lock.find_by(id: platform_app&.id, finance_operations_enabled: true)
+      raise InvalidConfirmation, 'Platform app no longer has finance authority' unless operator
+
       existing = AiLeadEmployee::SubscriptionPaymentConfirmation.find_by(account: account, payment_reference: payment_reference)
       return ensure_same_confirmation!(existing) if existing
 
@@ -61,7 +64,11 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
 
   def validate_current_entitlement!
     subscription = AiLeadEmployee::AiSubscription.find_by(account_id: account.id)
-    return validate_new_subscription!(subscription) if request.purpose == 'new_subscription'
+    if request.purpose == 'new_subscription'
+      raise InvalidConfirmation, 'Business Account already has a subscription' if subscription
+
+      return
+    end
 
     raise InvalidConfirmation, 'Business Account has no subscription' unless subscription
 
@@ -69,10 +76,6 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
 
     validator = CURRENT_PLAN_VALIDATORS[request.purpose]
     send(validator, subscription) if validator
-  end
-
-  def validate_new_subscription!(subscription)
-    raise InvalidConfirmation, 'Business Account already has a subscription' if subscription
   end
 
   def validate_subscription_snapshot!(subscription)
@@ -192,7 +195,7 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
   end
 
   def rebalance_current_period_top_ups!(subscription)
-    active = subscription.reply_usages.where(status: %w[reserved settled], period_started_at: subscription.period_started_at)
+    active = subscription.reply_usages.capacity_holding.where(period_started_at: subscription.period_started_at)
     available_included = subscription.included_ai_replies - active.included.count
     return unless available_included.positive?
 
@@ -202,9 +205,7 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
   end
 
   def confirmed_units
-    return unless request.purpose == 'top_up'
-
-    request.requested_ai_replies
+    request.requested_ai_replies if request.purpose == 'top_up'
   end
 
   def required_subscription!
@@ -213,7 +214,6 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
   end
 
   def reporting_zone
-    timezone = account.reporting_timezone.presence
-    (ActiveSupport::TimeZone[timezone] if timezone) || ActiveSupport::TimeZone['UTC']
+    ActiveSupport::TimeZone[account.reporting_timezone.presence || 'UTC']
   end
 end

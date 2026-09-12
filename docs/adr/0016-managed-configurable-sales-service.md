@@ -16,6 +16,8 @@ Provider ownership becomes platform-operated. Business Account admins cannot con
 
 Manual verified payments activate monthly plans, carried-forward top-ups or plan upgrades through a durable idempotent entitlement boundary. Reserve before AI work and settle one billable logical reply at confirmed canonical send; internal work and retry count are not client charges. Costs and customer charges are separate ledgers. Unknown provider costs cannot become zero. Meta billing remains separate and clearly labelled.
 
+A terminal split reply with both confirmed-sent and failed parts is recorded as `partially_delivered`: it is not billed as a completed reply or released for reuse, remains a visible capacity hold requiring reconciliation, and cannot be resent automatically. Canonical receipt evidence and provider cost records remain unchanged. Settlement time is the latest canonical receipt time, falling back to reconciliation time only when the provider supplies no timestamp. The payment entitlement service itself locks and rechecks the current Platform Operator finance authority; controller authorization alone is not sufficient.
+
 Inbound ad-set mapping (including future ads), template management and bounded consented broadcasts are now approved V1 scope. This supersedes their earlier blanket deferral. Paid API execution still requires bounded concrete authorisation. Broad ad management, additional channels, autonomous marketing and WhatsApp Status publishing remain out of scope.
 
 ## Preserved boundaries

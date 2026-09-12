@@ -48,7 +48,8 @@ describe('AiProviderSettingsPage', () => {
           included_ai_replies: 3000,
           used_ai_replies: 800,
           reserved_ai_replies: 1,
-          remaining_ai_replies: 2199,
+          reconciliation_required_ai_replies: 1,
+          remaining_ai_replies: 2198,
           usage_percentage: 26.7,
           renewal_date: '2026-10-12T08:00:00Z',
           automation_allowed: true,
@@ -89,10 +90,13 @@ describe('AiProviderSettingsPage', () => {
 
     expect(wrapper.text()).toContain('Growth');
     expect(wrapper.text()).toContain(
-      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.USAGE_SUMMARY 800 2199'
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.USAGE_SUMMARY 800 2198'
     );
     expect(wrapper.text()).toContain(
       'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.USAGE_PERCENTAGE 26.7'
+    );
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.RECONCILIATION_REQUIRED 1'
     );
     expect(wrapper.text()).toContain('2026-10-12T08:00:00Z');
     expect(wrapper.text()).toContain('Billed directly by Meta');

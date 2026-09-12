@@ -60,7 +60,9 @@ class AiLeadEmployee::ReplyAllowance
 
       usage = AiLeadEmployee::AiReplyUsage.includes(:ai_subscription).find_by(id: usage_id, account_id: message.account_id)
       return 'customer_allowance_unavailable' unless usage
-      return 'customer_allowance_released' if usage.released?
+
+      terminal_failure = usage.delivery_failure_code
+      return terminal_failure if terminal_failure
       return 'subscription_inactive' unless usage.ai_subscription.active?
       return 'customer_allowance_period_expired' if usage.reserved? && at >= usage.period_ends_at
     end
@@ -69,7 +71,7 @@ class AiLeadEmployee::ReplyAllowance
       usage = delivery_usage(delivery)
       return true unless usage
       return true if usage.reserved?
-      return false if usage.settled?
+      return false unless usage.released?
 
       usage.ai_subscription.with_lock do
         subscription = usage.ai_subscription
@@ -139,7 +141,7 @@ class AiLeadEmployee::ReplyAllowance
     end
 
     def summary_for(subscription)
-      usages = subscription.reply_usages.where(status: %w[reserved settled])
+      usages = subscription.reply_usages.capacity_holding
       period_usages = usages.where(period_started_at: subscription.period_started_at)
       counts = usage_counts(subscription, usages, period_usages)
       active_summary(subscription, counts)
@@ -151,6 +153,7 @@ class AiLeadEmployee::ReplyAllowance
       {
         settled: period_usages.settled.count,
         reserved: period_usages.reserved.count,
+        reconciliation_required: period_usages.partially_delivered.count,
         included_remaining: included_remaining,
         top_up_remaining: top_up_remaining,
         remaining: included_remaining + top_up_remaining
@@ -158,25 +161,27 @@ class AiLeadEmployee::ReplyAllowance
     end
 
     def active_summary(subscription, counts)
-      total_capacity = counts.values_at(:settled, :reserved, :remaining).sum
+      total_capacity = counts.values_at(:settled, :reserved, :reconciliation_required, :remaining).sum
+      unavailable = counts[:settled] + counts[:reconciliation_required]
       {
         status: 'active', plan_id: subscription.ai_service_plan_id, plan_name: subscription.ai_service_plan.name,
         currency: subscription.ai_service_plan.currency, renewal_date: subscription.renews_at,
         included_ai_replies: subscription.included_ai_replies, used_ai_replies: counts[:settled],
         reserved_ai_replies: counts[:reserved], remaining_ai_replies: counts[:remaining],
-        top_up_ai_replies_remaining: counts[:top_up_remaining], usage_percentage: usage_percentage(counts[:settled], total_capacity),
+        reconciliation_required_ai_replies: counts[:reconciliation_required],
+        top_up_ai_replies_remaining: counts[:top_up_remaining], usage_percentage: usage_percentage(unavailable, total_capacity),
         automation_allowed: counts[:remaining].positive?,
         automation_paused_reason: counts[:remaining].zero? ? 'customer_allowance_exhausted' : nil,
         action_required_alerted_at: subscription.action_required_alerted_at
       }
     end
 
-    def usage_percentage(settled, total_capacity)
-      total_capacity.zero? ? 100.0 : ((settled.to_f / total_capacity) * 100).round(1)
+    def usage_percentage(consumed, total_capacity)
+      total_capacity.zero? ? 100.0 : ((consumed.to_f / total_capacity) * 100).round(1)
     end
 
     def available_source(subscription)
-      active = subscription.reply_usages.where(status: %w[reserved settled])
+      active = subscription.reply_usages.capacity_holding
       included_used = active.where(period_started_at: subscription.period_started_at, allowance_source: 'included').count
       return 'included' if included_used < subscription.included_ai_replies
 
@@ -187,6 +192,7 @@ class AiLeadEmployee::ReplyAllowance
     def unavailable_summary
       {
         status: 'inactive', included_ai_replies: 0, used_ai_replies: 0, reserved_ai_replies: 0,
+        reconciliation_required_ai_replies: 0,
         remaining_ai_replies: 0, top_up_ai_replies_remaining: 0, usage_percentage: 0.0,
         automation_allowed: false, automation_paused_reason: 'subscription_inactive'
       }
@@ -198,6 +204,7 @@ class AiLeadEmployee::ReplyAllowance
         status: 'renewal_due', plan_id: subscription.ai_service_plan_id, plan_name: subscription.ai_service_plan.name,
         currency: subscription.ai_service_plan.currency, renewal_date: subscription.renews_at,
         included_ai_replies: subscription.included_ai_replies, used_ai_replies: 0, reserved_ai_replies: 0,
+        reconciliation_required_ai_replies: 0,
         remaining_ai_replies: 0, top_up_ai_replies_remaining: 0, usage_percentage: 100.0,
         automation_allowed: false, automation_paused_reason: 'subscription_renewal_due',
         action_required_alerted_at: subscription.action_required_alerted_at

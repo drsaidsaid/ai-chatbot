@@ -134,7 +134,7 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     expect(second_usage.reload).to be_released
   end
 
-  it 'meters a split reply once and leaves a partial send for conservative reconciliation' do
+  it 'marks a terminal partial reply for reconciliation without billing, releasing, or allowing resend' do
     intent = intent_for
     usage = described_class.reserve!(intent: intent, at: Time.zone.parse('2026-09-12 08:00:00 UTC'))
     messages = Array.new(2) do
@@ -154,22 +154,49 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     ).perform
     second_delivery.update!(state: :failed, failure_code: 'provider_rejected')
 
-    expect(usage.reload).to have_attributes(status: 'reserved', reconciliation_reason: 'partial_delivery_requires_reconciliation')
+    expect(usage.reload).to have_attributes(
+      status: 'partially_delivered', settled_at: nil, released_at: nil,
+      reconciliation_reason: 'partial_delivery_requires_reconciliation'
+    )
+    expect(described_class.summary(account: account)).to include(
+      used_ai_replies: 0, reserved_ai_replies: 0, reconciliation_required_ai_replies: 1,
+      remaining_ai_replies: 0, automation_allowed: false
+    )
+    expect(second_delivery.retry_for?(create(:user, account: account, role: :administrator))).to be(false)
+
+    Whatsapp::MessageStatusProjector.new(
+      message: messages.first.reload,
+      status: { status: 'failed', timestamp: 1.minute.from_now.to_i.to_s }
+    ).perform
+    expect(usage.reload).to be_partially_delivered
 
     expect do
       described_class.reconcile!(usage: usage, outcome: 'confirmed_not_sent', platform_app: create(:platform_app),
                                  reason: 'operator_lookup_not_found')
     end.to raise_error(ArgumentError, 'Confirmed sent evidence prevents allowance release')
-    expect(usage.reload).to be_reserved
+    expect(usage.reload).to be_partially_delivered
+    expect(AiLeadEmployee::AiReplyUsage.where(account: account).settled.count).to eq(0)
+  end
 
-    second_delivery.update!(
-      state: :accepted, accepted_at: Time.current, provider_message_id: 'wamid.part.2'
-    )
+  it 'settles at the canonical receipt time rather than the earlier HTTP acceptance time' do
+    intent = intent_for
+    usage = described_class.reserve!(intent: intent, at: Time.zone.parse('2026-09-12 08:00:00 UTC'))
+    message = create(:message, account: account, inbox: intent.conversation.inbox, conversation: intent.conversation,
+                               message_type: :outgoing,
+                               additional_attributes: { ai_lead_employee: { ai_reply_usage_id: usage.id } })
+    delivery = delivery_for(message, usage)
+    described_class.register_deliveries!(usage: usage, messages: [message])
+    delivery.update!(state: :accepted, accepted_at: Time.zone.parse('2026-09-12 08:00:02 UTC'),
+                     provider_message_id: 'wamid.delayed.receipt')
+
     Whatsapp::MessageStatusProjector.new(
-      message: messages.second.reload, status: { status: 'sent', timestamp: Time.current.to_i.to_s }
+      message: message.reload,
+      status: { status: 'sent', timestamp: Time.zone.parse('2026-09-12 08:05:00 UTC').to_i.to_s }
     ).perform
-    expect(usage.reload).to be_settled
-    expect(AiLeadEmployee::AiReplyUsage.where(account: account).settled.count).to eq(1)
+
+    expect(usage.reload).to have_attributes(
+      status: 'settled', settled_at: Time.zone.parse('2026-09-12 08:05:00 UTC')
+    )
   end
 
   it 'does not bill HTTP acceptance and releases a later provider failed receipt' do

@@ -9,6 +9,7 @@ const subscription = ref({
   status: 'inactive',
   used_ai_replies: 0,
   reserved_ai_replies: 0,
+  reconciliation_required_ai_replies: 0,
   remaining_ai_replies: 0,
   usage_percentage: 0,
   automation_allowed: false,
@@ -127,6 +128,18 @@ onMounted(load);
           t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.RENEWS', {
             date: subscription.renewal_date,
           })
+        }}
+      </p>
+      <p
+        v-if="subscription.reconciliation_required_ai_replies"
+        class="mt-2 text-xs text-n-amber-11"
+        role="status"
+      >
+        {{
+          t(
+            'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.RECONCILIATION_REQUIRED',
+            { count: subscription.reconciliation_required_ai_replies }
+          )
         }}
       </p>
       <div

@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
   let(:account) { create(:account, settings: { reporting_timezone: 'Africa/Dar_es_Salaam' }) }
   let(:admin) { create(:user, account: account, role: :administrator) }
-  let(:platform_app) { create(:platform_app) }
+  let(:platform_app) { create(:platform_app, finance_operations_enabled: true) }
   let(:starter) { create(:ai_service_plan, code: 'starter', included_ai_replies: 10, monthly_price: 100_000) }
   let(:growth) { create(:ai_service_plan, code: 'growth', included_ai_replies: 30, monthly_price: 250_000) }
 
@@ -154,5 +154,48 @@ RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
     end.to raise_error(described_class::InvalidConfirmation, /cannot be in the future/)
 
     expect(request.reload).to be_pending
+  end
+
+  it 'rejects an unprivileged platform app without mutating payment or entitlement state' do
+    request = request_for(plan: starter, purpose: 'new_subscription')
+    unprivileged_app = create(:platform_app, finance_operations_enabled: false)
+
+    expect do
+      described_class.new(
+        account: account, request: request, platform_app: unprivileged_app,
+        attributes: { payment_reference: 'UNAUTHORISED', amount: 100_000, currency: request.currency,
+                      confirmed_at: Time.current.iso8601 }
+      ).perform
+    end.to raise_error(described_class::InvalidConfirmation, /finance authority/)
+
+    expect(AiLeadEmployee::SubscriptionPaymentConfirmation.where(account: account)).to be_empty
+    expect(AiLeadEmployee::AiSubscription.where(account: account)).to be_empty
+    expect(request.reload).to be_pending
+  end
+
+  it 'rechecks finance authority at execution after the platform app is revoked' do
+    request = request_for(plan: starter, purpose: 'new_subscription')
+    service = described_class.new(
+      account: account, request: request, platform_app: platform_app,
+      attributes: { payment_reference: 'REVOKED', amount: 100_000, currency: request.currency,
+                    confirmed_at: Time.current.iso8601 }
+    )
+    platform_app.update!(finance_operations_enabled: false)
+
+    expect { service.perform }.to raise_error(described_class::InvalidConfirmation, /finance authority/)
+
+    expect(AiLeadEmployee::SubscriptionPaymentConfirmation.where(account: account)).to be_empty
+    expect(AiLeadEmployee::AiSubscription.where(account: account)).to be_empty
+    expect(request.reload).to be_pending
+  end
+
+  it 'does not disclose an existing confirmation to a now-unprivileged platform app' do
+    request = request_for(plan: starter, purpose: 'new_subscription')
+    confirm(request, reference: 'EXISTING-AUTHORISED', amount: 100_000)
+    platform_app.update!(finance_operations_enabled: false)
+
+    expect do
+      confirm(request, reference: 'EXISTING-AUTHORISED', amount: 100_000)
+    end.to raise_error(described_class::InvalidConfirmation, /finance authority/)
   end
 end

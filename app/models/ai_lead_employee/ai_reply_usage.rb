@@ -2,6 +2,7 @@
 
 class AiLeadEmployee::AiReplyUsage < ApplicationRecord
   self.table_name = 'ai_reply_usages'
+  CAPACITY_HOLDING_STATUSES = %w[reserved settled partially_delivered].freeze
 
   belongs_to :account
   belongs_to :ai_subscription, class_name: 'AiLeadEmployee::AiSubscription'
@@ -9,8 +10,10 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
   belongs_to :reconciled_by_platform_app, class_name: 'PlatformApp', optional: true
   has_many :whatsapp_outbound_deliveries, class_name: 'Whatsapp::OutboundDelivery', dependent: :nullify
 
-  enum :status, %w[reserved settled released].index_with(&:itself)
+  enum :status, %w[reserved settled released partially_delivered].index_with(&:itself)
   enum :allowance_source, %w[included top_up].index_with(&:itself)
+
+  scope :capacity_holding, -> { where(status: CAPACITY_HOLDING_STATUSES) }
 
   validates :reserved_at, :period_started_at, :period_ends_at, presence: true
   validates :ai_orchestration_intent_id, uniqueness: true
@@ -25,6 +28,11 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
 
     usage_id = delivery.message.additional_attributes.dig('ai_lead_employee', 'ai_reply_usage_id')
     find_by(id: usage_id, account_id: delivery.account_id)
+  end
+
+  def delivery_failure_code
+    return 'customer_allowance_released' if released?
+    return 'customer_allowance_reconciliation_required' if partially_delivered?
   end
 
   private
@@ -45,5 +53,8 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
   def terminal_timestamp
     errors.add(:settled_at, 'is required for settled usage') if settled? && settled_at.blank?
     errors.add(:released_at, 'is required for released usage') if released? && released_at.blank?
+    return unless partially_delivered? && reconciliation_reason.blank?
+
+    errors.add(:reconciliation_reason, 'is required for a partially delivered usage')
   end
 end
