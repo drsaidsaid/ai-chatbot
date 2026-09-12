@@ -1,0 +1,47 @@
+
+An error occurred while loading ./spec/requests/whatsapp_outbound_concurrency_spec.rb. - Did you mean?
+                    rspec ./spec/requests/whatsapp_outbound_crash_spec.rb
+                    rspec ./spec/requests/whatsapp_outbound_delivery_spec.rb
+                    rspec ./spec/requests/whatsapp_concurrency_spec.rb
+
+Failure/Error: __send__(method, file)
+
+LoadError:
+  cannot load such file -- /Users/ghalyasaid/.codex/worktrees/bcb9/AI Chatbot/spec/requests/whatsapp_outbound_concurrency_spec.rb
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/configuration.rb:2138:in 'Kernel#load'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/configuration.rb:2138:in 'RSpec::Core::Configuration#load_file_handling_errors'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/configuration.rb:1638:in 'block in RSpec::Core::Configuration#load_spec_files'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/configuration.rb:1636:in 'Array#each'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/configuration.rb:1636:in 'RSpec::Core::Configuration#load_spec_files'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/runner.rb:102:in 'RSpec::Core::Runner#setup'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/runner.rb:86:in 'RSpec::Core::Runner#run'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/runner.rb:71:in 'RSpec::Core::Runner.run'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/lib/rspec/core/runner.rb:45:in 'RSpec::Core::Runner.invoke'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/lib/ruby/gems/3.4.0/gems/rspec-core-3.13.0/exe/rspec:4:in '<top (required)>'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/bin/rspec:25:in 'Kernel#load'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/bin/rspec:25:in '<top (required)>'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/cli/exec.rb:58:in 'Kernel.load'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/cli/exec.rb:58:in 'Bundler::CLI::Exec#kernel_load'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/cli/exec.rb:23:in 'Bundler::CLI::Exec#run'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/cli.rb:455:in 'Bundler::CLI#exec'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/vendor/thor/lib/thor.rb:527:in 'Bundler::Thor.dispatch'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/vendor/thor/lib/thor/base.rb:584:in 'Bundler::Thor::Base::ClassMethods#start'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/cli.rb:29:in 'Bundler::CLI.start'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/exe/bundle:28:in 'block in <top (required)>'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/lib/bundler/friendly_errors.rb:117:in 'Bundler.with_friendly_errors'
+# /Users/ghalyasaid/.gem/ruby/3.4.0/gems/bundler-2.5.16/exe/bundle:20:in '<top (required)>'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle:25:in 'Kernel#load'
+# /Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle:25:in '<main>'
+#
+#   Showing full backtrace because every line was filtered out.
+#   See docs for RSpec::Configuration#backtrace_exclusion_patterns and
+#   RSpec::Configuration#backtrace_inclusion_patterns for more information.
+
+
+Finished in 0.00005 seconds (files took 3.31 seconds to load)
+0 examples, 0 failures, 1 error occurred outside of examples
+
+exit_code=1

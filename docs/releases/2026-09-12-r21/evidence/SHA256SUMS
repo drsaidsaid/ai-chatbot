@@ -3,10 +3,10 @@ bdfa018a92ef3241183e06d9386a4b4280d1b4239d779b238070c9eb96f10483  ./acceptance.m
 4beb30081e78b7048c870d1afeffc2729b2fd861e536371eebddc7c807e9f8d2  ./evidence/raw/browser-fixture-corrected.log
 3654f2297db802bacb29e9b1b8519767b4c2ede58b6237e220d890b983d913c9  ./evidence/raw/browser-fixture.log
 4f1530967206e02707751468ac18628ed0927a69c1378fac6dc782eccf52010f  ./evidence/raw/browser-server.log
-eee085f37d732d4a2bd333341d860f5a31373b887beeccac277c50444ddd98c1  ./evidence/raw/platform-unauthorized.http
+4296d3a6dcc4445cd0ee90bbdfe336fa2b7704cac76c6b9f01d41d621d72856d  ./evidence/raw/platform-unauthorized.http
 a338a6d5e93f68176668f3520ab8fda8533bff7e2fb7da987bdfb771021f0ce7  ./evidence/raw/postgres.log
 c72c6f5bc39ebcaf552d2cc6743f8e8fb4d3771d0f688e241eb09879ac9daf5a  ./evidence/raw/rails-combined-final-corrected.log
-f348e40676f496ab3ebbca33c127810bfc41e5f850967483d483c83b274b0221  ./evidence/raw/rails-combined-final.log
+d99c5f971e57d4f3e9e51514f2aa94ce6924f25b65b653ddb726ed5dc443dda4  ./evidence/raw/rails-combined-final.log
 b9fc903f5d4d437091e5db8c54b1f4bc3e9b6b6cf2b5caf24a54c01a534d23e2  ./evidence/raw/rails-r21-final.log
 96f8a409756d9731ded188b916be1db77100676c597beb90520b8c58ef49edf0  ./evidence/raw/rails-whatsapp-concurrency-example.log
 50fbcf23d4825d02ac9cbfdb4769430d18238de0ad6d8ac79ff07e05a3e7c947  ./evidence/raw/redis.log

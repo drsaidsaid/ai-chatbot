@@ -1,0 +1,46 @@
+Run options: include {locations: {"./spec/requests/whatsapp_concurrency_spec.rb" => [125]}}
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :sender_name_type, {friendly: 0, professional: 1}
+ (called from <class:Inbox> at /Users/ghalyasaid/.codex/worktrees/bcb9/AI Chatbot/app/models/inbox.rb:81)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :role, {agent: 0, administrator: 1}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/bcb9/AI Chatbot/app/models/account_user.rb:34)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :availability, {online: 0, offline: 1, busy: 2}
+ (called from <class:AccountUser> at /Users/ghalyasaid/.codex/worktrees/bcb9/AI Chatbot/app/models/account_user.rb:35)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :contact_type, {visitor: 0, lead: 1, customer: 2}
+ (called from <class:Contact> at /Users/ghalyasaid/.codex/worktrees/bcb9/AI Chatbot/app/models/contact.rb:74)
+DEPRECATION WARNING: Defining enums with keyword arguments is deprecated and will be removed
+in Rails 8.0. Positional arguments should be used instead:
+
+enum :notification_type, {conversation_creation: 1, conversation_assignment: 2, assigned_conversation_new_message: 3, conversation_mention: 4, participating_conversation_new_message: 5, sla_missed_first_response: 6, sla_missed_next_response: 7, sla_missed_resolution: 8}
+ (called from <class:Notification> at /Users/ghalyasaid/.codex/worktrees/bcb9/AI Chatbot/app/models/notification.rb:49)
+F
+
+Failures:
+
+  1) WhatsApp database recovery recovers an orchestration intent when its post-commit queue operation fails
+     Failure/Error: raise ApprovalBlocked, blocking_reasons.join('; ') unless approval_ready?
+
+     AiLeadEmployee::Evaluation::LaunchGateEvaluator::ApprovalBlocked:
+       Missing passing reviews for approved_answer, safe_swahili_language_question, unknown_safe_question, controlled_claim_requires_review, sensitive_question, angry_lead, unsupported_media, duplicate_event, stale_ai_job, human_takeover, coexistence_echo, opt_out, booking_conflict, tenant_isolation; Reviewed qualification accuracy is below 85%
+     # ./app/services/ai_lead_employee/evaluation/launch_gate_evaluator.rb:31:in 'AiLeadEmployee::Evaluation::LaunchGateEvaluator#approve!'
+     # ./spec/requests/whatsapp_concurrency_spec.rb:132:in 'block (2 levels) in <top (required)>'
+
+Finished in 1.55 seconds (files took 2.99 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/requests/whatsapp_concurrency_spec.rb:125 # WhatsApp database recovery recovers an orchestration intent when its post-commit queue operation fails
+
+exit_code=1

@@ -1,0 +1,41 @@
+2026-09-12 18:12:01.223 EAT [88608] LOG:  starting PostgreSQL 18.6 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.1.1.101), 64-bit
+2026-09-12 18:12:01.224 EAT [88608] LOG:  listening on IPv4 address "127.0.0.1", port 55535
+2026-09-12 18:12:01.224 EAT [88608] LOG:  listening on Unix socket "/tmp/.s.PGSQL.55535"
+2026-09-12 18:12:01.236 EAT [88616] LOG:  database system was shut down at 2026-09-12 17:36:33 EAT
+2026-09-12 18:12:01.243 EAT [88608] LOG:  database system is ready to accept connections
+2026-09-12 18:12:48.732 EAT [91289] ERROR:  duplicate key value violates unique constraint "index_whatsapp_webhook_events_on_channel_id_and_event_key"
+2026-09-12 18:12:48.732 EAT [91289] DETAIL:  Key (channel_id, event_key)=(73, 3be4f442579d487a8d7558d47d6e440fa0d7213c4fbc4f16dbdff1e232ac04fc) already exists.
+2026-09-12 18:12:48.732 EAT [91289] STATEMENT:  INSERT INTO "whatsapp_webhook_events" ("receipt_id", "account_id", "inbox_id", "channel_id", "event_key", "kind", "provider_message_id", "provider_created_at", "payload", "state", "attempts", "processed_at", "next_attempt_at", "error_code", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING "id"
+2026-09-12 18:13:41.855 EAT [91355] FATAL:  terminating connection due to administrator command
+2026-09-12 18:13:41.855 EAT [91355] CONTEXT:  SQL statement "SELECT pg_sleep(60)"
+	PL/pgSQL function r03_pause_event() line 1 at PERFORM
+2026-09-12 18:13:41.855 EAT [91355] STATEMENT:  UPDATE "whatsapp_webhook_events" SET "state" = $1, "attempts" = $2, "processed_at" = $3, "updated_at" = $4 WHERE "whatsapp_webhook_events"."id" = $5
+2026-09-12 18:13:46.424 EAT [91366] FATAL:  terminating connection due to administrator command
+2026-09-12 18:13:46.424 EAT [91366] CONTEXT:  SQL statement "SELECT pg_sleep(60)"
+	PL/pgSQL function r04_pause_outbound() line 1 at PERFORM
+2026-09-12 18:13:46.424 EAT [91366] STATEMENT:  UPDATE "whatsapp_outbound_deliveries" SET "state" = $1, "lease_expires_at" = $2, "dispatch_started_at" = $3, "updated_at" = $4 WHERE "whatsapp_outbound_deliveries"."id" = $5
+2026-09-12 18:13:50.254 EAT [91375] FATAL:  terminating connection due to administrator command
+2026-09-12 18:13:50.254 EAT [91375] CONTEXT:  SQL statement "SELECT pg_sleep(60)"
+	PL/pgSQL function r04_pause_outbound() line 1 at PERFORM
+2026-09-12 18:13:50.254 EAT [91375] STATEMENT:  UPDATE "messages" SET "updated_at" = $1, "source_id" = $2 WHERE "messages"."id" = $3
+2026-09-12 18:15:23.073 EAT [3623] ERROR:  duplicate key value violates unique constraint "index_whatsapp_webhook_events_on_channel_id_and_event_key"
+2026-09-12 18:15:23.073 EAT [3623] DETAIL:  Key (channel_id, event_key)=(144, 3be4f442579d487a8d7558d47d6e440fa0d7213c4fbc4f16dbdff1e232ac04fc) already exists.
+2026-09-12 18:15:23.073 EAT [3623] STATEMENT:  INSERT INTO "whatsapp_webhook_events" ("receipt_id", "account_id", "inbox_id", "channel_id", "event_key", "kind", "provider_message_id", "provider_created_at", "payload", "state", "attempts", "processed_at", "next_attempt_at", "error_code", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING "id"
+2026-09-12 18:15:41.911 EAT [88614] LOG:  checkpoint starting: wal
+2026-09-12 18:15:46.366 EAT [3647] LOG:  skipping analyze of "working_hours" --- lock not available
+2026-09-12 18:15:46.388 EAT [3647] LOG:  skipping analyze of "messages" --- lock not available
+2026-09-12 18:15:46.389 EAT [3647] LOG:  skipping analyze of "users" --- lock not available
+2026-09-12 18:15:46.389 EAT [3647] LOG:  skipping analyze of "contacts" --- lock not available
+2026-09-12 18:15:46.389 EAT [3647] LOG:  skipping analyze of "conversations" --- lock not available
+2026-09-12 18:15:46.389 EAT [3647] LOG:  skipping analyze of "whatsapp_outbound_deliveries" --- lock not available
+2026-09-12 18:15:46.389 EAT [3647] LOG:  skipping analyze of "ai_lead_employee_evaluation_runs" --- lock not available
+2026-09-12 18:19:52.231 EAT [88614] LOG:  checkpoint complete: wrote 2602 buffers (15.9%), wrote 6 SLRU buffers; 0 WAL file(s) added, 0 removed, 33 recycled; write=219.490 s, sync=15.133 s, total=250.320 s; sync files=262911, longest=0.003 s, average=0.001 s; distance=539807 kB, estimate=539807 kB; lsn=0/4E28FAB0, redo lsn=0/40104D10
+2026-09-12 18:20:41.252 EAT [88614] LOG:  checkpoint starting: time
+2026-09-12 18:25:15.132 EAT [88614] LOG:  checkpoint complete: wrote 3571 buffers (21.8%), wrote 2 SLRU buffers; 0 WAL file(s) added, 0 removed, 14 recycled; write=269.759 s, sync=0.019 s, total=273.881 s; sync files=434, longest=0.001 s, average=0.001 s; distance=230956 kB, estimate=508922 kB; lsn=0/4E292808, redo lsn=0/4E28FF98
+2026-09-12 18:26:20.300 EAT [88608] LOG:  received fast shutdown request
+2026-09-12 18:26:20.302 EAT [88608] LOG:  aborting any active transactions
+2026-09-12 18:26:20.305 EAT [88608] LOG:  background worker "logical replication launcher" (PID 88619) exited with exit code 1
+2026-09-12 18:26:20.305 EAT [88614] LOG:  shutting down
+2026-09-12 18:26:20.306 EAT [88614] LOG:  checkpoint starting: shutdown immediate
+2026-09-12 18:26:20.316 EAT [88614] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.005 s, total=0.010 s; sync files=1, longest=0.001 s, average=0.001 s; distance=10 kB, estimate=458031 kB; lsn=0/4E2928B8, redo lsn=0/4E2928B8
+2026-09-12 18:26:20.327 EAT [88608] LOG:  database system is shut down
