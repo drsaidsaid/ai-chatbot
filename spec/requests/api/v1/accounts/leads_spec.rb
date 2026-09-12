@@ -185,6 +185,31 @@ RSpec.describe 'Leads API', type: :request do
       file&.unlink
     end
 
+    it 'resolves a maximum-size preview with bounded Contact identity queries' do
+      file = Tempfile.new(['leads', '.csv'])
+      file.write("name,phone_number,email\n")
+      50.times { |index| file.write("Phone Lead #{index},+25571#{index.to_s.rjust(7, '0')},\n") }
+      50.times { |index| file.write("Email Lead #{index},,lead-#{index}@example.com\n") }
+      file.rewind
+      identity_queries = []
+      subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _start, _finish, _id, payload|
+        sql = payload[:sql]
+        identity_queries << sql if sql.start_with?('SELECT "contacts".* FROM "contacts" WHERE "contacts"."account_id"')
+      end
+
+      post "/api/v1/accounts/#{account.id}/leads/import",
+           headers: admin.create_new_auth_token,
+           params: { import_file: Rack::Test::UploadedFile.new(file.path, 'text/csv'), mode: 'preview' }
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body.dig('import', 'total_count')).to eq(100)
+      expect(identity_queries.size).to be <= 2
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
+      file&.close
+      file&.unlink
+    end
+
     it 'previews validation errors without writing' do
       file = Tempfile.new(['leads', '.csv'])
       file.write("name,phone_number,business_name\nImported Lead,+255713456789,Imported Co\nBroken Lead,not-a-phone,Broken Co\n")

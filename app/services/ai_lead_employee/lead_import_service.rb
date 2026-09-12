@@ -60,7 +60,13 @@ class AiLeadEmployee::LeadImportService
 
   def preview_payload(content)
     table = import_table(content)
-    rows = table.each_with_index.map { |row, index| preview_row(row, index + 2) }
+    normalized_rows = table.each_with_index.map do |row, index|
+      { attributes: normalized_attributes(row), line: index + 2 }
+    end
+    identity_index = identity_index_for(normalized_rows.pluck(:attributes))
+    rows = normalized_rows.map do |row|
+      preview_row(row[:attributes], row[:line], identity_index)
+    end
     mark_duplicate_file_identities!(rows)
     preview_summary(rows, preview_digest_for(content, rows))
   end
@@ -97,9 +103,8 @@ class AiLeadEmployee::LeadImportService
     Digest::SHA256.hexdigest([Digest::SHA256.hexdigest(content), resolution].to_json)
   end
 
-  def preview_row(csv_row, line)
-    attributes = normalized_attributes(csv_row)
-    matches = identity_matches(attributes)
+  def preview_row(attributes, line, identity_index)
+    matches = identity_matches(attributes, identity_index)
     errors = validation_errors(attributes)
     action = row_action(matches, errors)
     errors << 'Phone and email identify different existing Leads' if action == 'ambiguous'
@@ -127,11 +132,29 @@ class AiLeadEmployee::LeadImportService
     keys.lazy.map { |key| values[key].to_s.strip.presence }.find(&:present?)
   end
 
-  def identity_matches(attributes)
-    matches = []
-    matches.concat(account.contacts.where(phone_number: attributes[:phone_number]).to_a) if attributes[:phone_number].present?
-    matches.concat(account.contacts.where('LOWER(email) = ?', attributes[:email]).to_a) if attributes[:email].present?
-    matches.uniq(&:id)
+  def identity_index_for(rows)
+    phones = rows.pluck(:phone_number).compact.uniq
+    emails = rows.pluck(:email).compact.uniq
+    phone_matches = load_identity_contacts(phone_number: phones)
+    email_matches = load_identity_contacts('LOWER(email) IN (?)', emails)
+    {
+      phone: phone_matches.group_by(&:phone_number),
+      email: email_matches.group_by { |contact| contact.email&.downcase }
+    }
+  end
+
+  def load_identity_contacts(*conditions)
+    values = conditions.last
+    return [] if values.empty?
+
+    apply_statement_timeout! if @apply_deadline
+    account.contacts.where(*conditions).to_a
+  end
+
+  def identity_matches(attributes, identity_index)
+    phone_matches = identity_index[:phone].fetch(attributes[:phone_number], [])
+    email_matches = identity_index[:email].fetch(attributes[:email], [])
+    (phone_matches + email_matches).uniq(&:id)
   end
 
   def validation_errors(attributes)
@@ -206,12 +229,14 @@ class AiLeadEmployee::LeadImportService
 
   def apply_content!(content)
     @apply_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + APPLY_DEADLINE
-    ActiveRecord::Base.transaction do
-      configure_apply_timeouts!
-      ActiveRecord::Base.connection.execute('LOCK TABLE contacts IN SHARE ROW EXCLUSIVE MODE')
-      apply_statement_timeout!
-      apply!(preview_payload(content)).tap { ensure_apply_deadline! }
-    end
+    ActiveRecord::Base.transaction { apply_before_commit!(content) }
+  end
+
+  def apply_before_commit!(content)
+    configure_apply_timeouts!
+    ActiveRecord::Base.connection.execute('LOCK TABLE contacts IN SHARE ROW EXCLUSIVE MODE')
+    apply_statement_timeout!
+    apply!(preview_payload(content)).tap { ensure_apply_deadline! }
   rescue ImportDeadlineExceeded, ActiveRecord::LockWaitTimeout
     raise ImportError, 'import_retry_later'
   rescue ActiveRecord::StatementInvalid => e

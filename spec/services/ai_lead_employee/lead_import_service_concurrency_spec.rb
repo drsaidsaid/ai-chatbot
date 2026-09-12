@@ -162,6 +162,25 @@ RSpec.describe AiLeadEmployee::LeadImportService do
     Contact.skip_callback(:commit, :after, slow_callback) if slow_callback
   end
 
+  it 'does not translate a matching database exception raised after commit into retry-later' do
+    account = create(:account)
+    admin = create(:user, account: account, role: :administrator)
+    csv = "name,phone_number\nCommitted Lead,+255713450009\n"
+    token = preview_token(account, admin, csv)
+    callback = proc do
+      raise ActiveRecord::LockWaitTimeout, 'after-commit sentinel' if phone_number == '+255713450009'
+    end
+    Contact.set_callback(:commit, :after, callback)
+    service = described_class.new(
+      account: account, user: admin, file: StringIO.new(csv), mode: 'apply', preview_digest: token
+    )
+
+    expect { service.perform }.to raise_error(ActiveRecord::LockWaitTimeout, 'after-commit sentinel')
+    expect(Contact.where(account: account, phone_number: '+255713450009')).to exist
+  ensure
+    Contact.skip_callback(:commit, :after, callback) if callback
+  end
+
   it 'preserves historical phone ambiguity while refusing to treat it as an import update' do
     account = create(:account)
     admin = create(:user, account: account, role: :administrator)

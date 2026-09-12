@@ -73,7 +73,7 @@ approximate a uniqueness constraint and still could not govern raw SQL or
 validation-bypassing writes. This broader lock is not accepted. Its tests and
 evidence are retained as candidate evidence.
 
-## Accepted narrow R08 import-owned boundary
+## Implemented narrow R08 import-owned candidate
 
 The deployed Compose definitions pin PostgreSQL 16. That version has
 `lock_timeout` and `statement_timeout`, but not PostgreSQL 17's
@@ -115,7 +115,9 @@ after commit. The identity/business-only LeadUpdateService path does not call
 the Contact and writes its audit row. This supports the proposed lock order for
 the narrow import shape, but it does not make the candidate accepted.
 
-Authorization and file reading occur before the transaction. Within apply, local
+This candidate is implemented for review; it does not accept the separate
+system-wide identity design or mark the full R08 ticket accepted. Authorization
+and file reading occur before the transaction. Within apply, local
 lock and statement timeouts are configured, and the contacts table lock is the
 first acquired database lock. Identity resolution and signed-token verification
 then run under that lock. PostgreSQL 16 has no native transaction timeout, so
