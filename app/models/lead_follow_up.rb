@@ -54,6 +54,14 @@ class LeadFollowUp < ApplicationRecord
   belongs_to :lead_qualification
   belongs_to :qualification_question, optional: true
   belongs_to :message, optional: true
+  belongs_to :follow_up_attempt, class_name: 'LeadFollowUpAttempt', inverse_of: :lead_follow_ups
+  belongs_to :replaces_follow_up, class_name: 'LeadFollowUp', optional: true
+  belongs_to :replaced_by_follow_up, class_name: 'LeadFollowUp', optional: true
+
+  CONTEXT_REPLACEMENT_REASONS = %w[offer_configuration_changed offer_selection_changed qualification_decision_changed].freeze
+  IMMUTABLE_ATTRIBUTES = %w[account_id contact_id conversation_id lead_qualification_id qualification_question_id
+                            follow_up_attempt_id stage attempt_number content question_text question_key qualification_context
+                            control_version replaces_follow_up_id].freeze
 
   enum status: {
     pending: 0,
@@ -67,18 +75,42 @@ class LeadFollowUp < ApplicationRecord
   }
 
   validates :attempt_number, :stage, :status, :question_text, :control_version, :scheduled_at, presence: true
-  validates :attempt_number, uniqueness: { scope: [:account_id, :contact_id, :stage] }
   validate :validate_account_scope
+  validate :preserve_artifact
+  validate :validate_lineage
 
   scope :pending_for_conversation, ->(conversation) { pending.where(account: conversation.account, conversation: conversation) }
 
   def cancel!(reason)
-    return unless pending?
-
-    update!(status: :cancelled, cancellation_reason: reason, cancelled_at: Time.current)
+    AiLeadEmployee::FollowUpCancellation.call(follow_ups: self.class.where(id: id), reason: reason)
   end
 
   private
+
+  def preserve_artifact
+    return unless persisted?
+
+    IMMUTABLE_ATTRIBUTES.each do |attribute|
+      errors.add(attribute, 'is immutable') if will_save_change_to_attribute?(attribute)
+    end
+    errors.add(:message_id, 'cannot replace the original Message') if message_id_in_database && will_save_change_to_message_id?
+  end
+
+  def validate_lineage
+    return unless follow_up_attempt
+
+    validate_attempt_scope
+    [replaces_follow_up, replaced_by_follow_up].compact.each do |relative|
+      errors.add(:follow_up_attempt, 'must match lineage') unless relative.follow_up_attempt_id == follow_up_attempt_id
+    end
+  end
+
+  def validate_attempt_scope
+    expected = [account_id, contact_id, lead_qualification&.offer_id, stage, attempt_number]
+    actual = [follow_up_attempt.account_id, follow_up_attempt.contact_id, follow_up_attempt.offer_id, follow_up_attempt.stage,
+              follow_up_attempt.attempt_number]
+    errors.add(:follow_up_attempt, 'must match artifact scope and budget') unless expected == actual
+  end
 
   def validate_account_scope
     errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id

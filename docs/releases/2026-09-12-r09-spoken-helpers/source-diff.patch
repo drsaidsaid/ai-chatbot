@@ -1,0 +1,377 @@
+diff --git a/app/services/ai_lead_employee/qualification_budget_clauses.rb b/app/services/ai_lead_employee/qualification_budget_clauses.rb
+index 0e6542a..f419794 100644
+--- a/app/services/ai_lead_employee/qualification_budget_clauses.rb
++++ b/app/services/ai_lead_employee/qualification_budget_clauses.rb
+@@ -3,7 +3,11 @@
+ # Unknown adversative tails stay attached. Only supported independent assertions
+ # can be separated from a spending claim without discarding possible conditions.
+ class AiLeadEmployee::QualificationBudgetClauses
+-  REPLACEMENT = /\A(?:(?:actually|correction)[:,]?\s+)?(?:(?:my|our)\s+budget\b|(?:budget|bajeti)\b|(?:i|we) can spend\b|(?:ninaweza|naweza|tunaweza) kutumia\b|(?:ninaweza|naweza) kutenga\b|nimetenga\b|ninatenga\b|nitatenga\b|(?:i|we) (?:have )?(?:set aside|allocated)\b)/
++  REPLACEMENT = Regexp.new(
++    '\\A(?:(?:actually|correction)[:,]?\\s+)?(?:(?:my|our)\\s+budget\\b|(?:budget|bajeti)\\b|(?:i|we) ca' \
++    'n spend\\b|(?:ninaweza|naweza|tunaweza) kutumia\\b|(?:ninaweza|naweza) kutenga\\b|nimetenga\\b|nin' \
++    'atenga\\b|nitatenga\\b|(?:i|we) (?:have )?(?:set aside|allocated)\\b)'
++  )
+ 
+   def self.for(content, independent_statement:)
+     statements = content.split(/(?<=[.!?])\s+|[;\n]+/).map(&:strip).reject(&:empty?)
+diff --git a/app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb b/app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb
+index 0f5aac6..f05ca2d 100644
+--- a/app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb
++++ b/app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb
+@@ -27,8 +27,7 @@ class AiLeadEmployee::QualificationBudgetEvidenceExtractor
+     return 'unknown' if restricted_continuation?
+     return contextual_value if fragment.nil? && contextual
+     return unless fragment
+-    return 'unknown' if content.match?(AiLeadEmployee::QualificationEvidenceExtractor::UNKNOWN)
+-    return 'unknown' if basis == 'capacity' && @capacity_prefix.to_s.match?(UNCERTAIN_ALLOCATION)
++    return 'unknown' if uncertain_claim?
+     return 'no budget' if denied_budget?
+ 
+     normalized_value(fragment)
+@@ -38,6 +37,11 @@ class AiLeadEmployee::QualificationBudgetEvidenceExtractor
+ 
+   attr_reader :content, :contextual
+ 
++  def uncertain_claim?
++    content.match?(AiLeadEmployee::QualificationEvidenceExtractor::UNKNOWN) ||
++      (basis == 'capacity' && @capacity_prefix.to_s.match?(UNCERTAIN_ALLOCATION))
++  end
++
+   def restricted_continuation?
+     return false unless self.class.financial_statement?(content)
+ 
+diff --git a/app/services/ai_lead_employee/qualification_budget_tail.rb b/app/services/ai_lead_employee/qualification_budget_tail.rb
+new file mode 100644
+index 0000000..77af604
+--- /dev/null
++++ b/app/services/ai_lead_employee/qualification_budget_tail.rb
+@@ -0,0 +1,43 @@
++# frozen_string_literal: true
++
++class AiLeadEmployee::QualificationBudgetTail
++  FINANCIAL = Regexp.new(
++    '\\b(?:budget|bajeti|money|funds?|loan|bank|financ\\w*|spend|pay|afford|pesa|mkopo|benki|kutumia|' \
++    'kulipa)\\b'
++  )
++  AUTHORITY = Regexp.new(
++    '\\A(?:(?:i|we) (?:am|are|do not|don\'t|cannot|can\'t|can|own|decide)\\b|mimi (?:ni|ndiye)\\b|ninaam' \
++    'ua\\b|sifanyi\\b)'
++  )
++  VOLUME = Regexp.new(
++    '\\A(?:(?:i|we) (?:handle|receive|get|manage)|ninapokea|tunapokea|nahudumia) \\d+\\s*(?:leads|inqu' \
++    'iries|messages|calls|maulizo|ujumbe|wateja)(?: (?:a|per) (?:day|week|month))?[.!]*\\z'
++  )
++  URGENCY = Regexp.new(
++    '\\A(?:(?:i|we) (?:want|need|would like) to (?:start|begin) (?:now|today|tomorrow|this week|this ' \
++    'month)|(?:nataka|nahitaji|tunataka) kuanza (?:leo|kesho|wiki hii|mwezi huu))[.!]*\\z'
++  )
++  PROBLEM = Regexp.new(
++    '\\A(?:(?:my|our) (?:problem|inquiries|leads|sales|responses|customers|replies)\\b|(?:i|we) (?:ne' \
++    'ed|want) (?:more (?:leads|inquiries|customers)\\b|help (?:answering|responding to) (?:customer ' \
++    ')?(?:messages|inquiries)\\b)|(?:i am|we are) not sure (?:what|which) problem\\b|(?:nahitaji|nata' \
++    'ka) (?:wateja|maulizo|mauzo)\\b)'
++  )
++  CONTACT = Regexp.new(
++    '\\A(?:(?:my|our) (?:phone|email|mobile|whatsapp)|(?:phone|email|simu|namba))\\b'
++  )
++
++  ANCHORS = [
++    [AUTHORITY, :extract_decision_authority],
++    [VOLUME, :extract_lead_volume],
++    [URGENCY, :extract_urgency],
++    [PROBLEM, :extract_problem],
++    [CONTACT, :extract_contact_details]
++  ].freeze
++
++  def self.independent?(text)
++    return false if text.match?(FINANCIAL)
++
++    ANCHORS.any? { |pattern, extractor| text.match?(pattern) && yield(extractor).present? }
++  end
++end
+diff --git a/app/services/ai_lead_employee/qualification_contact_extractor.rb b/app/services/ai_lead_employee/qualification_contact_extractor.rb
+new file mode 100644
+index 0000000..84af9dc
+--- /dev/null
++++ b/app/services/ai_lead_employee/qualification_contact_extractor.rb
+@@ -0,0 +1,20 @@
++# frozen_string_literal: true
++
++class AiLeadEmployee::QualificationContactExtractor
++  def self.value(text)
++    email = text.scan(%r{[a-z0-9.!#$%&'*+/=\?^_\x60{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}}i).find do |candidate|
++      URI::MailTo::EMAIL_REGEXP.match?(candidate)
++    end
++    return email if email
++
++    extract_phone(text)
++  end
++
++  def self.extract_phone(text)
++    label = text.match(/\b(?:phone|telephone|mobile|whatsapp|simu|namba)\b(?:\s+(?:number|is|ni|yangu|at|me|on))*\s*[:=]?\s*/)
++    phone = label&.post_match&.match(/\A\+?\d[\d\s()-]{7,}\d(?!\d)/)&.[](0)
++    phone if phone && phone.delete('^0-9').length.between?(9, 15)
++  end
++
++  private_class_method :extract_phone
++end
+diff --git a/app/services/ai_lead_employee/qualification_evidence_extractor.rb b/app/services/ai_lead_employee/qualification_evidence_extractor.rb
+index 9f7b258..d305095 100644
+--- a/app/services/ai_lead_employee/qualification_evidence_extractor.rb
++++ b/app/services/ai_lead_employee/qualification_evidence_extractor.rb
+@@ -1,6 +1,10 @@
+ # frozen_string_literal: true
+ 
+ require_relative 'qualification_budget_clauses'
++require_relative 'qualification_budget_tail'
++require_relative 'qualification_observation'
++require_relative 'qualification_urgency_extractor'
++require_relative 'qualification_contact_extractor'
+ 
+ class AiLeadEmployee::QualificationEvidenceExtractor
+   NEGATIVE_VALUES = ['no business', 'no need', 'not urgent', 'not decision maker', 'no budget'].freeze
+@@ -29,20 +33,8 @@ class AiLeadEmployee::QualificationEvidenceExtractor
+ 
+   # The display-value API is retained for callers that do not need semantics.
+   def evidence
+-    facts = clauses.each_with_object({}) do |clause, result|
+-      next if question?(clause)
+-
+-      extractors.each do |signal, extractor|
+-        value = extractor.call(clause)
+-        result[signal] = value if value.present?
+-      end
+-    end
+-    budget_statements.each do |statement|
+-      next if question?(statement)
+-
+-      value = extract_budget(statement)
+-      facts['budget'] = value if value.present?
+-    end
++    facts = clause_evidence
++    add_budget_evidence(facts)
+     contextual = contextual_answer if facts.empty?
+     facts[answered_signal] = contextual if contextual.present?
+     facts
+@@ -50,14 +42,7 @@ class AiLeadEmployee::QualificationEvidenceExtractor
+ 
+   def observations
+     evidence.to_h do |signal, value|
+-      observation = { 'value' => value, 'polarity' => POLARITY_FOR_VALUE.fetch(value, 'positive') }
+-      observation.merge!(AiLeadEmployee::QualificationAmountParser.parse(value) || {}) if signal == 'budget' && observation['polarity'] == 'positive'
+-      observation['typed_value'] = value.to_i if signal == 'lead_volume' && observation['polarity'] == 'positive'
+-      if signal == 'decision_authority' && observation['polarity'] != 'unknown'
+-        observation['typed_value'] = observation['polarity'] == 'positive'
+-      end
+-      observation['basis'] = @budget_basis if signal == 'budget' && observation['polarity'] == 'positive' && @budget_basis
+-      [signal, observation]
++      [signal, AiLeadEmployee::QualificationObservation.new(signal: signal, value: value, budget_basis: @budget_basis).value]
+     end
+   end
+ 
+@@ -71,24 +56,30 @@ class AiLeadEmployee::QualificationEvidenceExtractor
+ 
+   attr_reader :content, :answered_signal
+ 
+-  def independent_budget_tail?(text)
+-    return false if question?(text)
+-    return false if text.match?(/\b(?:budget|bajeti|money|funds?|loan|bank|financ\w*|spend|pay|afford|pesa|mkopo|benki|kutumia|kulipa)\b/)
++  def clause_evidence
++    clauses.each_with_object({}) do |clause, result|
++      next if question?(clause)
+ 
+-    authority_anchor = /\A(?:(?:i|we) (?:am|are|do not|don't|cannot|can't|can|own|decide)\b|mimi (?:ni|ndiye)\b|ninaamua\b|sifanyi\b)/
+-    return true if text.match?(authority_anchor) && extract_decision_authority(text).present?
++      extractors.each do |signal, extractor|
++        value = extractor.call(clause)
++        result[signal] = value if value.present?
++      end
++    end
++  end
+ 
+-    volume_anchor = /\A(?:(?:i|we) (?:handle|receive|get|manage)|ninapokea|tunapokea|nahudumia) \d+\s*(?:leads|inquiries|messages|calls|maulizo|ujumbe|wateja)(?: (?:a|per) (?:day|week|month))?[.!]*\z/
+-    return true if text.match?(volume_anchor) && extract_lead_volume(text).present?
++  def add_budget_evidence(facts)
++    budget_statements.each do |statement|
++      next if question?(statement)
+ 
+-    urgency_anchor = /\A(?:(?:i|we) (?:want|need|would like) to (?:start|begin) (?:now|today|tomorrow|this week|this month)|(?:nataka|nahitaji|tunataka) kuanza (?:leo|kesho|wiki hii|mwezi huu))[.!]*\z/
+-    return true if text.match?(urgency_anchor) && extract_urgency(text).present?
++      value = extract_budget(statement)
++      facts['budget'] = value if value.present?
++    end
++  end
+ 
+-    problem_anchor = /\A(?:(?:my|our) (?:problem|inquiries|leads|sales|responses|customers|replies)\b|(?:i|we) (?:need|want) (?:more (?:leads|inquiries|customers)\b|help (?:answering|responding to) (?:customer )?(?:messages|inquiries)\b)|(?:i am|we are) not sure (?:what|which) problem\b|(?:nahitaji|nataka) (?:wateja|maulizo|mauzo)\b)/
+-    return true if text.match?(problem_anchor) && extract_problem(text).present?
++  def independent_budget_tail?(text)
++    return false if question?(text)
+ 
+-    contact_anchor = /\A(?:(?:my|our) (?:phone|email|mobile|whatsapp)|(?:phone|email|simu|namba))\b/
+-    text.match?(contact_anchor) && extract_contact_details(text).present?
++    AiLeadEmployee::QualificationBudgetTail.independent?(text) { |extractor| send(extractor, text) }
+   end
+ 
+   def budget_statements
+@@ -152,18 +143,7 @@ class AiLeadEmployee::QualificationEvidenceExtractor
+   end
+ 
+   def extract_urgency(text = content)
+-    return 'not urgent' if denied_urgency?(text)
+-    return 'unknown' if unknown_about?(text, /\b(?:when|start|urgent|lini|muda)\b/)
+-    return 'urgent' if text.match?(/\b(?:urgent|asap|immediately|haraka)\b/)
+-    return unless timing_intent?(text)
+-
+-    timed_urgency(text)
+-  end
+-
+-  def timed_urgency(text)
+-    return 'urgent' if text.match?(/\b(?:now|today|tomorrow|leo|kesho)\b/)
+-    return 'this week' if text.match?(/\b(?:this week|wiki hii)\b/)
+-    return 'this month' if text.match?(/\b(?:this month|mwezi huu)\b/)
++    AiLeadEmployee::QualificationUrgencyExtractor.new(answered_signal: answered_signal).value(text)
+   end
+ 
+   def extract_budget(text)
+@@ -177,20 +157,6 @@ class AiLeadEmployee::QualificationEvidenceExtractor
+     value
+   end
+ 
+-  def denied_urgency?(text)
+-    return true if text.match?(/\bnot (?:ready|in a hurry|urgent|now)\b|\b(?:isn't|isnt) urgent\b|\bno (?:rush|urgency)\b/)
+-    return true if text.match?(/\b(?:next year|postponed|baadaye|mwakani)\b|\b(?:si|sio) (?:haraka|dharura)\b/)
+-
+-    text.match?(Regexp.union(
+-                  /\b(?:sitaki|sipangi|sihitaji|siwezi|siko tayari)\b.*\b(?:kuanza|haraka|leo|kesho)\b/,
+-                  /\b(?:do not|don't|dont|cannot|can't|cant|not ready to|not going to)\b.{0,40}\b(?:start|begin)\b/
+-                ))
+-  end
+-
+-  def timing_intent?(text)
+-    answered_signal == 'urgency' || text.match?(/\b(?:want|needs?|would like|ready|start|begin|solve|fix|nataka|nahitaji|kuanza)\b/)
+-  end
+-
+   def extract_decision_authority(text)
+     return 'unknown' if unknown_about?(text, /\b(?:decid\w*|owner|authori\w*|approv\w*|uamuzi|mamlaka)\b/)
+ 
+@@ -216,18 +182,7 @@ class AiLeadEmployee::QualificationEvidenceExtractor
+   end
+ 
+   def extract_contact_details(text)
+-    email = text.scan(%r{[a-z0-9.!#$%&'*+/=\?^_\x60{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}}i).find do |candidate|
+-      URI::MailTo::EMAIL_REGEXP.match?(candidate)
+-    end
+-    return email if email
+-
+-    extract_phone(text)
+-  end
+-
+-  def extract_phone(text)
+-    label = text.match(/\b(?:phone|telephone|mobile|whatsapp|simu|namba)\b(?:\s+(?:number|is|ni|yangu|at|me|on))*\s*[:=]?\s*/)
+-    phone = label&.post_match&.match(/\A\+?\d[\d\s()-]{7,}\d(?!\d)/)&.[](0)
+-    phone if phone && phone.delete('^0-9').length.between?(9, 15)
++    AiLeadEmployee::QualificationContactExtractor.value(text)
+   end
+ 
+   def contextual_answer
+diff --git a/app/services/ai_lead_employee/qualification_observation.rb b/app/services/ai_lead_employee/qualification_observation.rb
+new file mode 100644
+index 0000000..51f1ce2
+--- /dev/null
++++ b/app/services/ai_lead_employee/qualification_observation.rb
+@@ -0,0 +1,31 @@
++# frozen_string_literal: true
++
++class AiLeadEmployee::QualificationObservation
++  def initialize(signal:, value:, budget_basis:)
++    @signal = signal
++    @display_value = value
++    @budget_basis = budget_basis
++  end
++
++  def value
++    observation = {
++      'value' => display_value,
++      'polarity' => AiLeadEmployee::QualificationEvidenceExtractor::POLARITY_FOR_VALUE.fetch(display_value, 'positive')
++    }
++    if signal == 'budget' && observation['polarity'] == 'positive'
++      observation.merge!(AiLeadEmployee::QualificationAmountParser.parse(display_value) || {})
++    end
++    assign_typed_value(observation)
++    observation['basis'] = budget_basis if signal == 'budget' && observation['polarity'] == 'positive' && budget_basis
++    observation
++  end
++
++  private
++
++  attr_reader :signal, :display_value, :budget_basis
++
++  def assign_typed_value(observation)
++    observation['typed_value'] = display_value.to_i if signal == 'lead_volume' && observation['polarity'] == 'positive'
++    observation['typed_value'] = observation['polarity'] == 'positive' if signal == 'decision_authority' && observation['polarity'] != 'unknown'
++  end
++end
+diff --git a/app/services/ai_lead_employee/qualification_urgency_extractor.rb b/app/services/ai_lead_employee/qualification_urgency_extractor.rb
+new file mode 100644
+index 0000000..e49fdce
+--- /dev/null
++++ b/app/services/ai_lead_employee/qualification_urgency_extractor.rb
+@@ -0,0 +1,44 @@
++# frozen_string_literal: true
++
++class AiLeadEmployee::QualificationUrgencyExtractor
++  def initialize(answered_signal:)
++    @answered_signal = answered_signal
++  end
++
++  def value(text)
++    return 'not urgent' if denied_urgency?(text)
++    return 'unknown' if unknown_about_urgency?(text)
++    return 'urgent' if text.match?(/\b(?:urgent|asap|immediately|haraka)\b/)
++    return unless timing_intent?(text)
++
++    timed_urgency(text)
++  end
++
++  private
++
++  attr_reader :answered_signal
++
++  def unknown_about_urgency?(text)
++    text.match?(AiLeadEmployee::QualificationEvidenceExtractor::UNKNOWN) && text.match?(/\b(?:when|start|urgent|lini|muda)\b/)
++  end
++
++  def timed_urgency(text)
++    return 'urgent' if text.match?(/\b(?:now|today|tomorrow|leo|kesho)\b/)
++    return 'this week' if text.match?(/\b(?:this week|wiki hii)\b/)
++    return 'this month' if text.match?(/\b(?:this month|mwezi huu)\b/)
++  end
++
++  def denied_urgency?(text)
++    return true if text.match?(/\bnot (?:ready|in a hurry|urgent|now)\b|\b(?:isn't|isnt) urgent\b|\bno (?:rush|urgency)\b/)
++    return true if text.match?(/\b(?:next year|postponed|baadaye|mwakani)\b|\b(?:si|sio) (?:haraka|dharura)\b/)
++
++    text.match?(Regexp.union(
++                  /\b(?:sitaki|sipangi|sihitaji|siwezi|siko tayari)\b.*\b(?:kuanza|haraka|leo|kesho)\b/,
++                  /\b(?:do not|don't|dont|cannot|can't|cant|not ready to|not going to)\b.{0,40}\b(?:start|begin)\b/
++                ))
++  end
++
++  def timing_intent?(text)
++    answered_signal == 'urgency' || text.match?(/\b(?:want|needs?|would like|ready|start|begin|solve|fix|nataka|nahitaji|kuanza)\b/)
++  end
++end
+diff --git a/docs/issues/v1-completion-20260909/r09-production-cleanup-plan.md b/docs/issues/v1-completion-20260909/r09-production-cleanup-plan.md
+index e3de53d..31b3a07 100644
+--- a/docs/issues/v1-completion-20260909/r09-production-cleanup-plan.md
++++ b/docs/issues/v1-completion-20260909/r09-production-cleanup-plan.md
+@@ -95,3 +95,8 @@ Compare complete old/new interpretation pipelines on literal regression cases
+ and spending/continuation combinations, as supplementary evidence. Run the
+ existing extraction and budget-continuation specs and Offer request boundary
+ specs on each frozen candidate; no broad application regression/build.
++
++The spoken group also moves the existing email/phone recognizer into
++QualificationContactExtractor to keep the parent extractor bounded. Copy its
++patterns and validation order exactly; contextual contact still prefixes the
++same text before invoking it. Include contact inputs in old/new comparisons.

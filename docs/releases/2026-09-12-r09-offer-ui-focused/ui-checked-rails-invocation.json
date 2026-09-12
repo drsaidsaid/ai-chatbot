@@ -1,0 +1,14 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/requests/ai_lead_employee/offer_shared_readers_spec.rb",
+  "spec/requests/ai_lead_employee/offer_directory_filter_boundaries_spec.rb",
+  "spec/requests/ai_lead_employee/offer_selection_authority_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/ui-checked-rails-results.json"
+]

@@ -1,0 +1,19 @@
+{
+  "source_tree": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "path": "app/views/api/v1/conversations/partials/_conversation.json.jbuilder",
+  "source_sha256": "e1d960000ebe9479310b3a91efcdfa6d57ab60a13b9b7538cdd9833ae4712e27",
+  "configuration_identity": "lint-accepted9a-identity.json",
+  "exact_before_after": true,
+  "invocation": [
+    "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+    "exec",
+    "rubocop",
+    "--force-exclusion",
+    "app/views/api/v1/conversations/partials/_conversation.json.jbuilder",
+    "--format",
+    "json",
+    "--out",
+    "/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/lint-accepted9a-jbuilder-results.json"
+  ],
+  "exit_code": 1
+}

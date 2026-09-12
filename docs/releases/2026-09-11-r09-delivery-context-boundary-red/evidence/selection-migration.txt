@@ -1,0 +1,8 @@
+== 20260911001600 AddOfferSelectionVersion: migrating =========================
+-- add_column(:conversations, :offer_selection_version, :bigint, {null: false, default: 0})
+   -> 0.0123s
+-- add_check_constraint(:conversations, "offer_selection_version >= 0", {name: "conversations_offer_selection_version_nonnegative"})
+   -> 0.0012s
+== 20260911001600 AddOfferSelectionVersion: migrated (0.0138s) ================
+
+Loading Installation config

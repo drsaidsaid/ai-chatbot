@@ -1,0 +1,79 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Offer selection authority', type: :request do
+  include_context 'Offer qualification requests'
+
+  let(:member) { create(:user, account: account, role: :agent) }
+  let(:initial_offer) { r09_create_offer(r09_configuration) }
+  let(:replacement_offer) { r09_create_offer(r09_configuration(name: 'Training')) }
+  let(:conversation) do
+    record = r09_conversation(offer: initial_offer)
+    record.update!(assignee: member)
+    record
+  end
+
+  it 'allows a current assigned User to select an Offer' do
+    select_replacement(member.create_new_auth_token)
+
+    expect(response).to have_http_status(:success)
+    expect(conversation.reload.offer_id).to eq(replacement_offer.fetch('id'))
+  end
+
+  it 'allows a current administrator without assignment to select an Offer' do
+    select_replacement(r09_headers)
+
+    expect(response).to have_http_status(:success)
+    expect(conversation.reload.offer_id).to eq(replacement_offer.fetch('id'))
+  end
+
+  it 'denies an unrelated authenticated account bot and leaves the selection unchanged' do
+    bot = create(:agent_bot, account: account)
+    select_replacement({ api_access_token: bot.access_token.token })
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(conversation.reload.offer_id).to eq(initial_offer.fetch('id'))
+  end
+
+  it 'denies an unassigned account User and leaves the selection unchanged' do
+    other_member = create(:user, account: account, role: :agent)
+    select_replacement(other_member.create_new_auth_token)
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(conversation.reload.offer_id).to eq(initial_offer.fetch('id'))
+  end
+
+  it 'rechecks assignment after an earlier authorized read' do
+    record = conversation
+    headers = member.create_new_auth_token
+    get "/api/v1/accounts/#{account.id}/conversations/#{record.display_id}", headers: headers
+    expect(response).to have_http_status(:success)
+    record.update!(assignee: create(:user, account: account, role: :agent))
+
+    select_replacement(headers)
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(record.reload.offer_id).to eq(initial_offer.fetch('id'))
+  end
+
+  it 'rechecks current membership even when a formerly assigned User still has a valid token' do
+    record = conversation
+    headers = member.create_new_auth_token
+    get "/api/v1/accounts/#{account.id}/conversations/#{record.display_id}", headers: headers
+    expect(response).to have_http_status(:success)
+    AccountUser.find_by!(account: account, user: member).destroy!
+
+    select_replacement(headers)
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(record.reload.offer_id).to eq(initial_offer.fetch('id'))
+  end
+
+  def select_replacement(headers)
+    record = conversation
+    offer_id = replacement_offer.fetch('id')
+    patch "/api/v1/accounts/#{account.id}/conversations/#{record.display_id}/qualification_offer",
+          headers: headers, params: { offer_id: offer_id }, as: :json
+  end
+end

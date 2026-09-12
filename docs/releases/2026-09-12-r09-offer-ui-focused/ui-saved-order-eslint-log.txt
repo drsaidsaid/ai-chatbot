@@ -1,0 +1,13 @@
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue
+   37:22  warning  '`AI_LEAD_EMPLOYEE.OFFERS.${key}`' dynamic key is used'                 @intlify/vue-i18n/no-dynamic-keys
+  255:55  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  334:61  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  338:61  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  454:59  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  527:56  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  618:59  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+
+✖ 7 problems (0 errors, 7 warnings)
+  0 errors and 6 warnings potentially fixable with the `--fix` option.
+

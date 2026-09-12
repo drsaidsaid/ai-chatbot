@@ -1,0 +1,143 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (13 tests | 1 failed) 317ms
+   ✓ LeadsDirectoryPage > renders filter chips, dense rows, selected detail, and long text truncation
+   ✓ LeadsDirectoryPage > applies quality chips, dropdown filters, sorting, pagination, and row selection through query-backed API calls
+   ✓ LeadsDirectoryPage > debounces search and requests matching server data
+   ✓ LeadsDirectoryPage > dismisses an unsaved Lead edit with Escape so the workspace is usable again
+   ✓ LeadsDirectoryPage > validates and saves the edit form
+   ✓ LeadsDirectoryPage > lets an administrator record re-consent from the newer verified message
+   ✓ LeadsDirectoryPage > shows granted automated-contact evidence independently of qualification
+   ✓ LeadsDirectoryPage > lets a Team Member edit assigned details without offering imports, exports or reassignment
+   ✓ LeadsDirectoryPage > carries explicit Offer scope through selection, filters and export
+   ✓ LeadsDirectoryPage > edits shared identity without resubmitting unscoped evidence when Offers exist
+   × LeadsDirectoryPage > ignores directory results arriving after a newer Offer selection 25ms
+     → expected 'LeadsSearch leads by name, phone, or …' not to contain 'Boutique owner wants to automate lead…'
+   ✓ LeadsDirectoryPage > handles import and export controls
+   ✓ LeadsDirectoryPage > renders empty and error states
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > edits one Offer while preserving exact human currency units and its revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > creates a separate Offer with ordered questions and a typed money rule
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > keeps question ordering unambiguous after removing and adding questions
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > retains a conflicted draft until the owner explicitly reloads the newer revision
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > uses the per-Offer API from the existing settings tab without fetching unrelated settings
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+[Vue warn]: Failed to resolve component: RouterLink
+If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement. 
+  at <AiLeadEmployeeSettingsShell section="offers_qualification" ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+stderr | app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > uses the per-Offer API from the existing settings tab without fetching unrelated settings
+[Vue warn]: Failed to resolve component: RouterLink
+If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement. 
+  at <AiLeadEmployeeSettingsShell section="offers_qualification" ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js (5 tests | 1 failed) 143ms
+   ✓ edits one Offer while preserving exact human currency units and its revision
+   ✓ creates a separate Offer with ordered questions and a typed money rule
+   × keeps question ordering unambiguous after removing and adding questions 21ms
+     → expected [ [ 'budget', +0 ], …(2) ] to deeply equal [ [ 'budget', +0 ], …(2) ]
+   ✓ retains a conflicted draft until the owner explicitly reloads the newer revision
+   ✓ uses the per-Offer API from the existing settings tab without fetching unrelated settings
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > ignores directory results arriving after a newer Offer selection
+AssertionError: expected 'LeadsSearch leads by name, phone, or …' not to contain 'Boutique owner wants to automate lead…'
+
+Expected: "Boutique owner wants to automate lead capture on WhatsApp."
+Received: "LeadsSearch leads by name, phone, or businessImportExportAI_LEAD_EMPLOYEE.OFFERS.SELECT AI_LEAD_EMPLOYEE.OFFERS.CHOOSESupportTrainingAll100Highly Qualified12Qualified28Low Qualified34Unqualified18Unknown8AssigneeMineUnassignedJohnSourceWhatsApp salesFollow-up stateNurtureHuman ReviewBooking statusBookedNo Booking More filtersLead Business Lead Quality Score SourceAssigneeLast contact Next actionBookingLoading leadsLoading leadsShowing 1-25 of 100 leads1JNJane Nkosi+255713456789Nuru Boutique With A Very Long Business Name / Arusha, TZContact channelsPhone+255713456789Emailjane@example.comSourceWhatsApp salesQualificationLead QualityQualifiedScoreAI_LEAD_EMPLOYEE.LEADS.DETAIL.SCORE_OUT_OF_100Why this lead mattersBoutique owner wants to automate lead capture on WhatsApp.Strongest evidenceAI_LEAD_EMPLOYEE.LEADS.DETAIL.EVIDENCE_ITEMMissing signalsTeam SizeConversation summaryAI_LEAD_EMPLOYEE.LEADS.DETAIL.LAST_MESSAGE_WITH_TIMEYes, I would like to see a demo tomorrow afternoon.AI_LEAD_EMPLOYEE.LEADS.DETAIL.TOTAL_MESSAGES_COUNTConversation statusOpenAI control stateAI ActiveOwner & follow-upAssigneeJohnFollow-up stateNurtureNext actionSend proposalDueAug 27, 1:00 PMRelatedAI_LEAD_EMPLOYEE.LEADS.DETAIL.CONVERSATION_NUMBERAug 27, 11:35 AMBookingsBooking #5Confirmed - Aug 27, 5:30 PMActions Open conversation Edit lead"
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:639:32
+    637|     await wrapper.get('[data-testid="lead-offer-select"]').setValue('9…
+    638|     await flushPromises();
+    639|     expect(wrapper.text()).not.toContain('Boutique owner wants to auto…
+       |                                ^
+    640|     await wrapper.get('[data-testid="lead-offer-select"]').setValue('1…
+    641|     await flushPromises();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js > keeps question ordering unambiguous after removing and adding questions
+AssertionError: expected [ [ 'budget', +0 ], …(2) ] to deeply equal [ [ 'budget', +0 ], …(2) ]
+
+- Expected
++ Received
+
+  [
+    [
+      "budget",
+      0,
+    ],
+    [
+      "urgency",
+-     1,
++     2,
+    ],
+    [
+      "business_type",
+      2,
+    ],
+  ]
+
+ ❯ app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js:158:107
+    156|   await wrapper.get('form').trigger('submit');
+    157|   await flushPromises();
+    158|   expect(axios.patch.mock.calls[0][1].offer.questions.map(question => …
+       |                                                                                                           ^
+    159| });
+    160| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 16 passed (18)
+   Start at  03:57:58
+   Duration  3.17s (transform 1.41s, setup 221ms, collect 1.49s, tests 460ms, environment 693ms, prepare 93ms)
+

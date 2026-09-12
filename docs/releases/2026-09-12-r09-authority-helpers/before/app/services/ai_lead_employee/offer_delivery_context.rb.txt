@@ -1,0 +1,65 @@
+# frozen_string_literal: true
+
+# Context is captured from the decision just written, never reconstructed for an
+# old artifact. Callers own the origin Conversation and Offer locks when checking.
+class AiLeadEmployee::OfferDeliveryContext
+  def self.capture(conversation:, qualification:, decision:, next_question_key:)
+    {
+      'scope' => 'offer', 'account_id' => conversation.account_id, 'contact_id' => conversation.contact_id,
+      'origin_conversation_id' => conversation.id, 'offer_id' => qualification.offer_id,
+      'selection_version' => conversation.offer_selection_version,
+      'configuration_version' => decision.configuration_version,
+      'qualification_id' => qualification.id, 'decision_id' => decision.id,
+      'next_question_key' => next_question_key
+    }.freeze
+  end
+
+  def initialize(conversation:, context:, required: false)
+    @conversation = conversation
+    @context = context.is_a?(Hash) ? context : {}
+    @required = required
+  end
+
+  # Lock the saved and current Offer before domain/delivery rows. The Conversation
+  # lock serializes selection changes; stable Offer ordering also covers A -> B.
+  def lock_offers!
+    AiLeadEmployee::Offer.where(account_id: conversation.account_id, id: [conversation.offer_id, context['offer_id']].compact)
+                         .order(:id).lock('FOR NO KEY UPDATE').load
+  end
+
+  def failure_code
+    return missing_context_failure if context.empty?
+    return 'qualification_context_invalid' unless valid_identity?
+    return 'offer_selection_changed' unless conversation.offer_id == context['offer_id'] &&
+                                            conversation.offer_selection_version == context['selection_version']
+
+    offer = AiLeadEmployee::Offer.find_by(account_id: conversation.account_id, id: context['offer_id'])
+    return 'offer_configuration_changed' unless offer&.enabled? && offer.configuration_version == context['configuration_version']
+
+    qualification = LeadQualification.find_by(id: context['qualification_id'], account_id: conversation.account_id,
+                                              contact_id: conversation.contact_id, offer_id: offer.id)
+    return 'qualification_decision_changed' unless qualification && qualification.stale_at.nil? &&
+                                                   qualification.configuration_version == context['configuration_version']
+
+    decision = qualification.lead_qualification_decisions.order(id: :desc).first
+    return 'qualification_decision_changed' unless decision && decision.id == context['decision_id'] &&
+                                                   decision.offer_id == offer.id && decision.account_id == conversation.account_id &&
+                                                   decision.contact_id == conversation.contact_id
+
+    nil
+  end
+
+  private
+
+  attr_reader :conversation, :context
+
+  def missing_context_failure
+    'qualification_context_missing' if @required || conversation.offer_id.present?
+  end
+
+  def valid_identity?
+    context['scope'] == 'offer' && context['account_id'] == conversation.account_id &&
+      context['contact_id'] == conversation.contact_id && context['origin_conversation_id'] == conversation.id &&
+      %w[offer_id selection_version configuration_version qualification_id decision_id].all? { |key| context[key].is_a?(Integer) }
+  end
+end

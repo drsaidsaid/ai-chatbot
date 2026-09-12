@@ -1,0 +1,14 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/requests/ai_lead_employee/offer_builtin_typed_rules_spec.rb",
+  "spec/requests/ai_lead_employee/offer_typed_field_rules_spec.rb",
+  "spec/requests/ai_lead_employee/offer_typed_answer_boundaries_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/typed-helpers-green-results.json"
+]

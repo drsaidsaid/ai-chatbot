@@ -1,0 +1,34 @@
+# frozen_string_literal: true
+
+class AddOfferScopedQualification < ActiveRecord::Migration[7.2]
+  def change
+    add_column :ai_lead_employee_offers, :currency, :string, null: false, default: 'TZS'
+    add_column :ai_lead_employee_offers, :configuration, :jsonb, null: false, default: {}
+    add_column :ai_lead_employee_offers, :configuration_version, :integer, null: false, default: 1
+
+    create_configuration_revisions
+
+    [:conversations, :qualification_evidences, :lead_qualifications, :lead_qualification_decisions].each do |table|
+      add_reference table, :offer, foreign_key: { to_table: :ai_lead_employee_offers }
+    end
+    add_column :lead_qualifications, :stale_at, :datetime
+    remove_index :lead_qualifications, [:account_id, :contact_id]
+    add_index :lead_qualifications, [:account_id, :contact_id, :offer_id], unique: true, name: 'idx_lead_qualifications_per_offer'
+    add_index :lead_qualifications, [:account_id, :contact_id], unique: true, where: 'offer_id IS NULL', name: 'idx_legacy_lead_qualification'
+    add_index :qualification_evidences, [:account_id, :contact_id, :offer_id, :signal, :superseded_at],
+              name: 'idx_qualification_evidence_offer_current'
+  end
+
+  private
+
+  def create_configuration_revisions
+    create_table :offer_configuration_revisions do |t|
+      t.references :account, null: false, foreign_key: true
+      t.references :offer, null: false, foreign_key: { to_table: :ai_lead_employee_offers }
+      t.integer :version, null: false
+      t.jsonb :snapshot, null: false
+      t.timestamps
+      t.index [:offer_id, :version], unique: true
+    end
+  end
+end

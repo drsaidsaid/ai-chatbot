@@ -1,0 +1,13 @@
+{
+  "tree": "90cd969197a38088d1e8b8c669d99d6224c55730",
+  "ref": "refs/r09/capacity-continuations-20260911",
+  "base": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "source_count": 31,
+  "green_runs": [
+    40,
+    6,
+    16
+  ],
+  "failures": 0,
+  "note": "External metadata after freeze; intermediate uncommitted R09 correction."
+}

@@ -1,0 +1,45 @@
+# frozen_string_literal: true
+
+# Budget modifiers stay attached; an explicit later assertion is a new candidate.
+class AiLeadEmployee::QualificationBudgetClauses
+  ADVERSATIVE = /\b(?:but|lakini)\b/
+  NEW_BUDGET = /\A(?:(?:my|our|the)\s+)?(?:budget|bajeti)\b/
+  OTHER_QUESTION = /\A(?:are you|is your|can you|do you|what is your|who is your|je wewe)\b/
+
+  def self.for(content)
+    statements = content.split(/(?<=[.!?])\s+|[;\n]+/).map(&:strip).reject(&:empty?)
+    joined = statements.each_with_object([]) do |statement, result|
+      if result.any? && statement.match?(/\A(?:but|lakini)\b/)
+        result[-1] = "#{result.last} #{statement}"
+      else
+        result << statement
+      end
+    end
+    joined.flat_map { |statement| independent_candidates(statement) }
+  end
+
+  def self.independent_candidates(statement)
+    parts = statement.split(/(\b(?:but|lakini)\b)/)
+    candidates = [parts.shift.to_s.strip]
+    parts.each_slice(2) do |connector, part|
+      part = part.to_s.strip
+      if independent_assertion?(part)
+        candidates << part
+      else
+        candidates[-1] = "#{candidates.last} #{connector} #{part}"
+      end
+    end
+    candidates.reject(&:empty?)
+  end
+
+  def self.independent_assertion?(part)
+    text = part.sub(/\A(?:actually|correction)[:,]?\s+/, '')
+    return true if text.match?(NEW_BUDGET) || text.match?(OTHER_QUESTION)
+
+    [AiLeadEmployee::QualificationBudgetEvidenceExtractor::ALLOCATION,
+     AiLeadEmployee::QualificationBudgetEvidenceExtractor::CAPACITY].any? do |pattern|
+      assertion = text.match(pattern)
+      assertion && (assertion.pre_match.strip.empty? || assertion.pre_match.match?(/\A(?:i|we|mimi)\b/))
+    end
+  end
+end

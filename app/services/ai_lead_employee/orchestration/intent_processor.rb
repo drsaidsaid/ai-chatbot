@@ -240,6 +240,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     AiLeadEmployee::HighlyQualifiedHandoffService.new(
       conversation: conversation,
       qualification: qualification_result.qualification,
+      qualification_context: qualification_result.qualification_context,
       defer_alert_delivery: true
     ).perform
   end
@@ -330,7 +331,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
           delivery_boundary: AiLeadEmployee::Orchestration::DecisionPlaceholder::DELIVERY_BOUNDARY,
           outbound_intent_status: status,
           source_references: source_references,
-          qualification: qualification_result_payload(qualification_result)
+          qualification: qualification_result_payload(qualification_result),
+          qualification_context: qualification_result.qualification_context
         }.merge(provider_delivery_authority(provider_response))
       }
     )
@@ -356,7 +358,9 @@ class AiLeadEmployee::Orchestration::IntentProcessor
         conversation_id: conversation.id,
         triggering_message_id: triggering_message.id,
         orchestration_intent_id: intent.id,
-        channel: 'whatsapp'
+        channel: 'whatsapp',
+        qualification: outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification'),
+        qualification_context: outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification_context')
       }
     )
     @outbox_event_id = outbox_event.id
@@ -416,6 +420,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def unsupported_human_request?(qualification_result)
     qualification_result.present? &&
+      qualification_result.offer_id.nil? &&
       qualification_result.qualification&.highly_qualified? == false &&
       triggering_message.content.to_s.match?(/\b(human|person|operator|agent|sales|representative)\b/i)
   end
@@ -428,19 +433,25 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def qualification_source_references(qualification_result)
-    qualification_result.qualification.evidence_snapshot.values.filter_map { |evidence| evidence['source_reference'] }
+    qualification_result.qualification&.evidence_snapshot&.values&.filter_map { |evidence| evidence['source_reference'] } || []
   end
 
   def qualification_result_payload(qualification_result)
     return nil if qualification_result.blank?
 
+    qualification = qualification_result.qualification
     {
-      'quality' => qualification_result.qualification.quality,
-      'score' => qualification_result.qualification.score,
-      'missing_signals' => qualification_result.qualification.missing_signals,
+      'quality' => qualification&.quality,
+      'offer_id' => qualification&.offer_id || qualification_result.offer_id,
+      'qualification_mode' => qualification_result.qualification_mode,
+      'assessment' => qualification&.assessment || qualification_result.assessment,
+      'next_step' => qualification_result.next_step,
+      'score' => qualification&.score,
+      'missing_signals' => qualification&.missing_signals || [],
       'next_question' => qualification_result.next_question,
-      'configuration_version' => qualification_result.qualification.configuration_version
-    }
+      'next_question_key' => qualification_result.next_question_key,
+      'configuration_version' => qualification&.configuration_version
+    }.merge(qualification_result.qualification_context || {})
   end
 
   def record_ai_employee_decision!(status:, qualification_result:, source_references: [])

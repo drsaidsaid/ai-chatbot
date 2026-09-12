@@ -4,8 +4,22 @@
 # lint js and vue files
 npx --no-install lint-staged
 
-# lint only staged ruby files that still exist (not deleted)
-git diff --name-only --cached | xargs -I {} sh -c 'test -f "{}" && echo "{}"' | grep '\.rb$' | xargs -I {} bundle exec rubocop --force-exclusion -a "{}" || true
+# Preserve exact staged paths, including spaces, newlines and long names.
+ruby <<'RUBY'
+require 'open3'
 
-# stage rubocop changes to files
-git diff --name-only --cached | xargs -I {} sh -c 'test -f "{}" && git add "{}"' || true
+output, status = Open3.capture2('git', 'diff', '--name-only', '--cached', '-z')
+abort 'Unable to enumerate staged files' unless status.success?
+
+files = output.split("\0").select { |path| File.file?(path) }
+checks_passed = true
+files.grep(/\.rb\z/).each do |path|
+  passed = system('bundle', 'exec', 'rubocop', '--force-exclusion', '-a', '--', path)
+  checks_passed = false unless passed
+end
+files.each do |path|
+  staged = system('git', 'add', '--', path)
+  checks_passed = false unless staged
+end
+exit(checks_passed ? 0 : 1)
+RUBY

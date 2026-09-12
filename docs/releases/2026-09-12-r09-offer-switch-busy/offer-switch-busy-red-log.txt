@@ -1,0 +1,85 @@
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (21 tests | 4 failed) 530ms
+   ✓ LeadsDirectoryPage > renders filter chips, dense rows, selected detail, and long text truncation
+   ✓ LeadsDirectoryPage > applies quality chips, dropdown filters, sorting, pagination, and row selection through query-backed API calls
+   ✓ LeadsDirectoryPage > debounces search and requests matching server data
+   ✓ LeadsDirectoryPage > dismisses an unsaved Lead edit with Escape so the workspace is usable again
+   ✓ LeadsDirectoryPage > validates and saves the edit form
+   ✓ LeadsDirectoryPage > lets an administrator record re-consent from the newer verified message
+   ✓ LeadsDirectoryPage > shows granted automated-contact evidence independently of qualification
+   ✓ LeadsDirectoryPage > lets a Team Member edit assigned details without offering imports, exports or reassignment
+   ✓ LeadsDirectoryPage > carries explicit Offer scope through selection, filters and export
+   ✓ LeadsDirectoryPage > edits shared identity without resubmitting unscoped evidence when Offers exist
+   ✓ LeadsDirectoryPage > ignores directory results arriving after a newer Offer selection
+   ✓ LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {}
+   ✓ LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {"offer_id":"9"}
+   ✓ LeadsDirectoryPage > discards a late directory response from the previous account
+   × LeadsDirectoryPage > enables a new Offer export before an obsolete export resolve and preserves the newer operation 27ms
+     → expected true to be false // Object.is equality
+   × LeadsDirectoryPage > enables a new Offer export before an obsolete export reject and preserves the newer operation 27ms
+     → expected true to be false // Object.is equality
+   ✓ LeadsDirectoryPage > keeps a newer account export busy when the previous account export finishes
+   × LeadsDirectoryPage > enables new Offer re-consent before the old request resolve and preserves the newer operation 19ms
+     → expected true to be false // Object.is equality
+   × LeadsDirectoryPage > enables new Offer re-consent before the old request reject and preserves the newer operation 16ms
+     → expected true to be false // Object.is equality
+   ✓ LeadsDirectoryPage > handles import and export controls
+   ✓ LeadsDirectoryPage > renders empty and error states
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > enables a new Offer export before an obsolete export resolve and preserves the newer operation
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > enables a new Offer export before an obsolete export reject and preserves the newer operation
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:767:47
+    765|       await wrapper.get('[data-testid="lead-offer-select"]').setValue(…
+    766|       await flushPromises();
+    767|       expect(exportButton().element.disabled).toBe(false);
+       |                                               ^
+    768|       await exportButton().trigger('click');
+    769|       expect(LeadsAPI.exportLeads).toHaveBeenLastCalledWith(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > enables new Offer re-consent before the old request resolve and preserves the newer operation
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > enables new Offer re-consent before the old request reject and preserves the newer operation
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:872:78
+    870|     await wrapper.get('[data-testid="lead-offer-select"]').setValue('1…
+    871|     await flushPromises();
+    872|     expect(wrapper.get('[data-testid="record-reconsent"]').element.dis…
+       |                                                                              ^
+    873|     await wrapper.get('[data-testid="record-reconsent"]').trigger('cli…
+    874|     expect(LeadsAPI.reconsent).toHaveBeenCalledTimes(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 17 passed (21)
+   Start at  06:31:51
+   Duration  3.94s (transform 1.91s, setup 184ms, collect 1.97s, tests 530ms, environment 578ms, prepare 72ms)
+
+JSON report written to /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/offer-switch-busy-red-results.json

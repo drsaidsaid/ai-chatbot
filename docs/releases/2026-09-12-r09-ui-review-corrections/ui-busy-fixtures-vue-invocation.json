@@ -1,0 +1,19 @@
+[
+  "corepack",
+  "pnpm",
+  "exec",
+  "vitest",
+  "run",
+  "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js",
+  "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+  "app/javascript/dashboard/components/qualification/specs",
+  "app/javascript/dashboard/routes/dashboard/conversation/specs/AIEmployeeControlPanel.spec.js",
+  "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OwnedSettingsLayout.spec.js",
+  "app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js",
+  "app/javascript/dashboard/components-next/sidebar/specs/aiLeadEmployeeNavigation.spec.js",
+  "--maxWorkers=1",
+  "--minWorkers=1",
+  "--reporter=default",
+  "--reporter=json",
+  "--outputFile=tmp/r09/ui-busy-fixtures-vue-results.json"
+]

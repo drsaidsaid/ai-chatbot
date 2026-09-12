@@ -1,0 +1,9 @@
+{
+  "source_tree": "e82a6c0c200e0dc9d2dc8c8de0e58a7a9b199648",
+  "total_tree_blobs": 9685,
+  "non_release_paths": 8962,
+  "release_blobs": 723,
+  "exact_non_release_path_set": true,
+  "delivery-checkpoint_changed_runtime_test_paths": 20,
+  "accepted-base_changed_runtime_test_paths": 103
+}

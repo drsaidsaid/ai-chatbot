@@ -1,0 +1,11 @@
+{
+  "tree": "6dc26262b85405794c89d54decdb36fe6c382bb7",
+  "ref": "refs/r09/evidence-lifecycle-20260911",
+  "base": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "source_count": 44,
+  "final_green_runs": [
+    69,
+    91
+  ],
+  "note": "External metadata after freeze. Full R09 incomplete; prior evidence directories retained."
+}

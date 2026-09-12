@@ -10,11 +10,6 @@ class Conversations::ControlService
 
   def self.invalidate_pending_ai!(conversation:, reason:)
     Whatsapp::OutboundDelivery.cancel_automation!(conversation: conversation, reason: reason)
-    conversation.ai_orchestration_intents
-                .where(state: %i[pending processing])
-                .find_each do |intent|
-      intent.update!(state: :blocked, blocked_reason: reason, blocked_at: Time.current)
-    end
   end
 
   def initialize(conversation:)

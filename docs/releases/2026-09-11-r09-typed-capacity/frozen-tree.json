@@ -1,0 +1,16 @@
+{
+  "tree": "3fdf11c83b419f8a78b162ebc62a304e6ba875ff",
+  "ref": "refs/r09/typed-capacity-20260911",
+  "base": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "source_count": 36,
+  "green_runs": [
+    52,
+    49,
+    6
+  ],
+  "known_incomplete_lifecycle_run": {
+    "examples": 13,
+    "failures": 2
+  },
+  "note": "External metadata after freeze; all earlier R09 release evidence directories retained."
+}

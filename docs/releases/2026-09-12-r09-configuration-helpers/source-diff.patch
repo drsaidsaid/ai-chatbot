@@ -1,0 +1,125 @@
+diff --git a/app/services/ai_lead_employee/offer_configuration_writer.rb b/app/services/ai_lead_employee/offer_configuration_writer.rb
+index dd0e8b3..42327e8 100644
+--- a/app/services/ai_lead_employee/offer_configuration_writer.rb
++++ b/app/services/ai_lead_employee/offer_configuration_writer.rb
+@@ -3,6 +3,9 @@
+ class AiLeadEmployee::OfferConfigurationWriter
+   class Conflict < StandardError; end
+ 
++  REQUIRED_QUESTION_FIELDS = %w[key meaning prompt].freeze
++  QUESTION_TYPES = %w[text boolean number money choice].freeze
++
+   def initialize(offer:, attributes:)
+     @offer = offer
+     @attributes = attributes.deep_stringify_keys
+@@ -15,20 +18,34 @@ class AiLeadEmployee::OfferConfigurationWriter
+ 
+       configuration = normalized_configuration
+       validate_used_definitions!(configuration)
+-      offer.assign_attributes(attributes.slice('name', 'currency', 'enabled'))
+-      offer.configuration = configuration
+-      offer.configuration_version += 1 if offer.persisted?
+-      offer.save!
+-      offer.configuration_revisions.create!(account: offer.account, version: offer.configuration_version, snapshot: offer.payload)
+-      offer.lead_qualifications.where(stale_at: nil).update_all(stale_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
++      persist_configuration!(configuration)
+       offer
+     end
+   end
+ 
++  def self.field_definition(question, currency)
++    question.slice('key', 'meaning', 'answer_type', 'period', 'options').tap do |definition|
++      definition['currency'] = currency if question['answer_type'] == 'money'
++    end
++  end
++
+   private
+ 
+   attr_reader :offer, :attributes
+ 
++  def persist_configuration!(configuration)
++    offer.assign_attributes(attributes.slice('name', 'currency', 'enabled'))
++    offer.configuration = configuration
++    offer.configuration_version += 1 if offer.persisted?
++    offer.save!
++    record_configuration_revision!
++    offer.lead_qualifications.where(stale_at: nil).update_all(stale_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
++  end
++
++  def record_configuration_revision!
++    offer.configuration_revisions.create!(account: offer.account, version: offer.configuration_version, snapshot: offer.payload)
++  end
++
+   def normalized_configuration
+     currency = attributes.fetch('currency')
+     raise ArgumentError, 'Unsupported currency' unless AiLeadEmployee::OfferMoney::PRECISION.key?(currency)
+@@ -47,23 +64,28 @@ class AiLeadEmployee::OfferConfigurationWriter
+     raise ArgumentError, 'Questions must be a list' unless questions.is_a?(Array)
+     raise ArgumentError, 'Question keys must be unique' unless questions.pluck('key').uniq.length == questions.length
+ 
+-    questions.each do |question|
+-      raise ArgumentError, 'A question needs a stable key, meaning and prompt' if %w[key meaning prompt].any? { |key| question[key].blank? }
+-      raise ArgumentError, 'Unsupported field type' unless %w[text boolean number money choice].include?(question['answer_type'])
++    questions.each { |question| validate_question!(question) }
++    questions.map { |question| question.slice('key', 'meaning', 'answer_type', 'prompt', 'position', 'enabled', 'required', 'options', 'period') }
++  end
++
++  def validate_question!(question)
++    validate_question_definition!(question)
++    validate_choices!(question['options']) if question['answer_type'] == 'choice'
++    raise ArgumentError, 'Invalid question position' unless question['position'].is_a?(Integer) && question['position'] >= 0
++  end
+ 
+-      builtin_type = AiLeadEmployee::OfferRules::BUILTIN_TYPES[question['key']]
+-      raise ArgumentError, 'Built-in field meaning and type are reserved' if builtin_type && builtin_type != question['answer_type']
++  def validate_question_definition!(question)
++    raise ArgumentError, 'A question needs a stable key, meaning and prompt' if REQUIRED_QUESTION_FIELDS.any? { |key| question[key].blank? }
++    raise ArgumentError, 'Unsupported field type' unless QUESTION_TYPES.include?(question['answer_type'])
+ 
+-      if question['answer_type'] == 'choice'
+-        options = question['options']
+-        raise ArgumentError,
+-              'Choices must be unique nonempty text values' unless options.is_a?(Array) && options.any? && options.uniq == options && options.all? { |option|
+-                                                                     option.is_a?(String) && option.present?
+-                                                                   }
+-      end
+-      raise ArgumentError, 'Invalid question position' unless question['position'].is_a?(Integer) && question['position'] >= 0
+-    end
+-    questions.map { |question| question.slice('key', 'meaning', 'answer_type', 'prompt', 'position', 'enabled', 'required', 'options', 'period') }
++    builtin_type = AiLeadEmployee::OfferRules::BUILTIN_TYPES[question['key']]
++    raise ArgumentError, 'Built-in field meaning and type are reserved' if builtin_type && builtin_type != question['answer_type']
++  end
++
++  def validate_choices!(options)
++    return if options.is_a?(Array) && options.any? && options.uniq == options && options.all? { |option| option.is_a?(String) && option.present? }
++
++    raise ArgumentError, 'Choices must be unique nonempty text values'
+   end
+ 
+   def normalize_range(range, currency)
+@@ -93,12 +115,6 @@ class AiLeadEmployee::OfferConfigurationWriter
+     end
+   end
+ 
+-  def self.field_definition(question, currency)
+-    question.slice('key', 'meaning', 'answer_type', 'period', 'options').tap do |definition|
+-      definition['currency'] = currency if question['answer_type'] == 'money'
+-    end
+-  end
+-
+   def normalized_weights
+     weights = attributes.fetch('score_weights', {})
+     fields = AiLeadEmployee::OfferRules::BUILTIN_TYPES.keys + normalized_questions.pluck('key')
+@@ -112,9 +128,10 @@ class AiLeadEmployee::OfferConfigurationWriter
+   def normalized_thresholds
+     thresholds = attributes.fetch('score_thresholds', { 'qualified' => 60, 'highly_qualified' => 80 })
+     values = thresholds.values_at('qualified', 'highly_qualified')
+-    raise ArgumentError, 'Thresholds must be ordered nonnegative integers' unless values.all? { |value|
++    valid_values = values.all? do |value|
+       value.is_a?(Integer) && value >= 0
+-    } && values.last >= values.first
++    end
++    raise ArgumentError, 'Thresholds must be ordered nonnegative integers' unless valid_values && values.last >= values.first
+ 
+     thresholds.slice('qualified', 'highly_qualified')
+   end

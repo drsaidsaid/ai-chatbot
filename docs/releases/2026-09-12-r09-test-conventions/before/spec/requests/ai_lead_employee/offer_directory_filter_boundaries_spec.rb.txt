@@ -1,0 +1,83 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Offer directory booking filters and effective sorting', type: :request do
+  include_context 'Offer qualification requests'
+
+  def prepare_offer_pair_with_booking(status: :confirmed)
+    first = r09_create_offer
+    second = r09_create_offer(r09_configuration(name: 'Sales training'))
+    first_conversation = r09_conversation(offer: first)
+    second_conversation = r09_conversation(offer: second)
+    r09_receive(first_conversation, 'My budget is TZS 600000.')
+    r09_receive(second_conversation, 'My budget is TZS 987654.')
+    booking = create(:booking, account: account, contact: r09_lead, conversation: second_conversation,
+                               lead_qualification: r09_qualification(second), status: status)
+    [first, second, booking, first_conversation]
+  end
+
+  { booked: :confirmed, canceled: :canceled, completed: :completed }.each do |filter, status|
+    it "filters #{filter} bookings by the selected Offer of the same Lead" do
+      first, second, booking, = prepare_offer_pair_with_booking(status: status)
+
+      get "/api/v1/accounts/#{account.id}/leads", headers: r09_headers,
+                                                  params: { offer_id: first.fetch('id'), booking_status: filter }
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body.fetch('leads')).to be_empty
+      expect(response.parsed_body.dig('meta', 'total_count')).to eq(0)
+
+      get "/api/v1/accounts/#{account.id}/leads", headers: r09_headers,
+                                                  params: { offer_id: second.fetch('id'), booking_status: filter }
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body.fetch('leads').map { |lead| lead.fetch('id') }).to eq([r09_lead.id])
+      expect(response.parsed_body.dig('leads', 0, 'booking', 'id')).to eq(booking.id)
+      expect(response.parsed_body.dig('leads', 0, 'booking', 'status')).to eq(status.to_s)
+    end
+  end
+
+  it 'keeps a Lead with only another Offer booking in the selected Offer no-booking results' do
+    first, second, = prepare_offer_pair_with_booking
+
+    get "/api/v1/accounts/#{account.id}/leads", headers: r09_headers,
+                                                params: { offer_id: first.fetch('id'), booking_status: 'no_booking' }
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.fetch('leads').map { |lead| lead.fetch('id') }).to eq([r09_lead.id])
+    expect(response.parsed_body.dig('leads', 0, 'booking', 'status')).to eq('no_booking')
+
+    get "/api/v1/accounts/#{account.id}/leads", headers: r09_headers,
+                                                params: { offer_id: second.fetch('id'), booking_status: 'no_booking' }
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.fetch('leads')).to be_empty
+  end
+
+  %w[booked no_booking canceled completed].each do |filter|
+    it "ignores the #{filter} booking filter until an Offer is selected" do
+      prepare_offer_pair_with_booking
+      other_lead = create(:contact, account: account, name: 'Unbooked Lead', phone_number: '+255700111232')
+      r09_conversation(contact: other_lead)
+
+      get "/api/v1/accounts/#{account.id}/leads", headers: r09_headers, params: { booking_status: filter }
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body.fetch('selection_required')).to be(true)
+      expect(response.parsed_body.fetch('leads').map { |lead| lead.fetch('id') }).to contain_exactly(r09_lead.id, other_lead.id)
+      expect(response.parsed_body.fetch('leads').map { |lead| lead.dig('booking', 'status') }).to eq(%w[no_booking no_booking])
+      expect(response.parsed_body.dig('meta', 'total_count')).to eq(2)
+    end
+  end
+
+  %w[quality score].each do |sort|
+    it "reports the actual last-contact order when an unselected #{sort} sort falls back" do
+      _first, _second, _booking, older = prepare_offer_pair_with_booking
+      other_lead = create(:contact, account: account, name: 'Recent Lead', phone_number: '+255700111232')
+      newer = r09_conversation(contact: other_lead)
+      r09_lead.conversations.update_all(last_activity_at: 2.hours.ago)
+      newer.update!(last_activity_at: 1.hour.ago)
+
+      get "/api/v1/accounts/#{account.id}/leads", headers: r09_headers, params: { sort: sort, direction: 'desc' }
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body.fetch('leads').map { |lead| lead.fetch('id') }).to eq([other_lead.id, older.contact_id])
+      expect(response.parsed_body.fetch('meta')).to include('sort' => 'last_contact', 'direction' => 'desc')
+    end
+  end
+end

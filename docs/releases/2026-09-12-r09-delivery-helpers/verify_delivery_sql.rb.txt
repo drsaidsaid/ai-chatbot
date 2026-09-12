@@ -1,0 +1,19 @@
+require 'parser/current'
+require 'json'
+require 'digest'
+def sql_literals(node)
+  return [] unless node.is_a?(Parser::AST::Node)
+  literal = node.children.first if node.type == :str
+  if node.type == :dstr && node.children.all? { |child| child.is_a?(Parser::AST::Node) && child.type == :str }
+    literal = node.children.map { |child| child.children.first }.join
+  end
+  return [literal] if literal && literal.include?('whatsapp_outbound_deliveries.conversation_id IN')
+  node.children.flat_map { |child| sql_literals(child) }
+end
+path = 'app/services/ai_lead_employee/automation_cancellation.rb'
+old = sql_literals(Parser::CurrentRuby.parse(File.read("tmp/r09/delivery-helpers-before/#{path}")))
+current = sql_literals(Parser::CurrentRuby.parse(File.read(path)))
+raise 'Changed cancellation SQL' unless old.one? && old == current
+report = { path: path, identical_sql_literals: true, sql_sha256: Digest::SHA256.hexdigest(old.first) }
+File.write('tmp/r09/delivery-helpers-sql-proof.json', JSON.pretty_generate(report) + "\n")
+puts JSON.generate(report)

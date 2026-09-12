@@ -276,6 +276,22 @@ for the exact `324ee6df` source review, lock order and public verification cases
 
 ### Offer and Qualification Configuration
 
+R09's physical schema and compatibility decisions are defined by
+[ADR 0014](docs/adr/0014-offer-scoped-qualification.md), superseding the draft
+names below where they differ. Reuse `ai_lead_employee_offers`, CE `account_id`
+and `contact_id`. Questions, budget ranges and rules belong to an Offer;
+Qualification uniqueness is `(account_id, contact_id, offer_id)`. Historical
+account-wide records retain an unscoped legacy meaning, never an arbitrary Offer.
+Persist Conversation Offer selection and stamp evaluated/queued work with Offer
+identity and configuration revision. Reject stale qualification-dependent work
+at final authorization without weakening provider, consent or control fences.
+
+Typed field identity and meaning remain stable after evidence is recorded.
+Configuration revisions retain immutable snapshots. Major-unit decimal strings
+cross the settings API; exact integer minor units are persisted. No implicit
+currency conversion, prompt-based field relabeling, or cross-Offer buying-fact
+reuse is permitted. An explicit empty/disabled question configuration stays empty.
+
 #### `offers`
 
 - `business_account_id`, `name`, `description`, `currency`, approved price range, `active`.
@@ -604,6 +620,52 @@ WhatsApp and team controls; AI & testing contains the admin-only Test Center.
 Legacy supported links redirect to their canonical destination with context intact.
 See `docs/releases/2026-09-09-r02/visual-reference.md` for the first responsive path.
 
+### Offer settings and scoped dashboard readers
+
+The existing Offers and qualification tab edits the Offer aggregate through
+`qualification_offers`. Money remains a labeled decimal string in the Vue draft
+and HTTP payload; revisions are retained on save and conflicts require explicit
+reload. Question positions are normalized after edits without changing keys.
+Leads filtering and export carry explicit `offer_id`; identity editing omits
+legacy evidence when Offers exist. A separate qualification component augments
+the Conversation panel without changing control actions or event handling.
+The scoped reader exposes typed field labels and source paths only for accessible
+Conversations. Detail and directory requests discard obsolete responses;
+selection transitions clear earlier qualification content while loading.
+
+### Accepted frozen Offer delivery context
+
+ADR0015 governs Conversation.offer_selection_version and frozen context containing
+account/contact/origin Conversation, Offer, selection/configuration versions,
+qualification and immutable decision ids, and next question key. Result supplies
+the context written under evaluation locks; Message/event/handoff copies retain
+it. Final dispatch locks Channel → owned Conversations → Offers → required domain
+authority → Delivery → Message → Outbox for non-follow-up work, with HTTP outside
+the transaction. Follow-up Attempt/Artifact ranks and all lifecycle callers are
+the second implementation increment. Existing metered provider and consent gates
+remain conjunctive. Complete automatic source snapshots accompany each review.
+
+The second-increment candidate adds `lead_follow_up_attempts` and frozen context,
+question keys and predecessor/successor links on `lead_follow_ups`. Scheduler
+locks the union of current, saved-artifact and Result-context Offers once; existing
+Attempts lock by ID before creation of missing budget rows. FK parents needed
+for new Attempt/Artifact rows are owned before that suffix.
+
+`Whatsapp::DeliveryLifecycle` resolves the original Artifact from its Message,
+then owns all A, all F, all D, all M and all E in ascending ID order. It never
+follows an Attempt pointer to send a successor. `OutboundDelivery.with_lifecycle`
+adds C/existing unknown-review R before that suffix where outcome recovery needs
+it. Canonical admission writes A.admitted_at/state and D.dispatching atomically;
+publication only projects M/E. Accept/unknown/fail/preparation/recovery/retry and
+post-send repair use explicit owners. Eligibility consumes only prefix-owned
+provider/member records, including absence, retaining existing provider checks.
+
+`AutomationCancellation` batches control/provider/consent invalidation; direct
+OptOut creation obtains the same C/O prefix before its row insert, while consent
+passes its already-owned batch. LeadQualification after-commit cancellation
+restarts at ordered Conversations. Provider status synchronizes aliases before
+M-only projection. ADR0015 remains the contract; frozen full-suite verification
+and source review are required before accepting this candidate.
 
 ## Managed configurable service extension
 

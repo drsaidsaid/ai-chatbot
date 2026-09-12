@@ -1,0 +1,125 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Offer follow-up canonical delivery outcomes', type: :request do
+  include_context 'Offer qualification requests'
+
+  let(:provider_url) { %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages} }
+
+  before do
+    @offer = r09_create_offer
+    @conversation = r09_conversation(offer: @offer)
+    create(:message, account: account, inbox: @conversation.inbox, conversation: @conversation,
+                     message_type: :incoming, sender: @conversation.contact, provider_created_at: Time.current)
+    result = AiLeadEmployee::QualificationService.new(conversation: @conversation).perform
+    @follow_up = AiLeadEmployee::FollowUpScheduler.new(conversation: @conversation, qualification_result: result).perform.first
+    @follow_up.update!(scheduled_at: 1.minute.ago)
+    AiLeadEmployee::FollowUpDeliveryService.new(follow_up: @follow_up).perform
+    @message = @follow_up.reload.message
+    @delivery = @message.whatsapp_outbound_delivery
+    @attempt = @follow_up.follow_up_attempt
+  end
+
+  it 'records admission atomically before HTTP and projects provider acceptance onto the original attempt' do
+    observed = nil
+    request = stub_request(:post, provider_url).to_return do
+      observed = [@attempt.reload.admission_state, @attempt.admitted_at, @delivery.reload.state, @delivery.dispatch_started_at]
+      { status: 200, body: '{"messages":[{"id":"wamid.R09.FOLLOWUP.ACCEPTED"}]}', headers: { 'Content-Type' => 'application/json' } }
+    end
+    2.times { SendReplyJob.perform_now(@message.id) }
+
+    expect(observed).to match(['admitted', be_present, 'dispatching', be_present])
+    expect(observed[1]).to eq(observed[3])
+    expect(@attempt.reload).to be_accepted
+    expect(@attempt.admitted_at).to eq(observed[1])
+    expect(@follow_up.reload).to be_sent
+    expect(request).to have_been_requested.once
+  end
+
+  it 'keeps unknown acceptance consumed across retries and Offer revisions' do
+    request = stub_request(:post, provider_url).to_timeout
+    2.times { SendReplyJob.perform_now(@message.id) }
+    r09_update_offer(@offer, name: 'Revision after timeout')
+    result = AiLeadEmployee::QualificationService.new(conversation: @conversation).perform
+
+    expect(AiLeadEmployee::FollowUpScheduler.new(conversation: @conversation, qualification_result: result).perform).to be_empty
+    expect(@attempt.reload).to be_unknown
+    expect(@attempt.admitted_at).to be_present
+    expect(HumanReviewRequest.where(lead_message: @message, reason: :delivery_unknown).count).to eq(1)
+    expect(request).to have_been_requested.once
+  end
+
+  it 'consumes a definite provider rejection and denies the operator retry endpoint for that attempt' do
+    stub_request(:post, provider_url).to_return(status: 400, body: '{"error":{"code":100,"message":"Invalid parameter"}}',
+                                                headers: { 'Content-Type' => 'application/json' })
+    SendReplyJob.perform_now(@message.id)
+
+    expect(@delivery.reload).to be_failed
+    expect(@attempt.reload).to be_failed
+    expect(@attempt.admitted_at).to be_present
+    expect(@follow_up.reload).to be_failed
+    expect(@delivery.retry_for?(r09_admin)).to be(false)
+    expect(@delivery.reload).to be_failed
+  end
+
+  it 'consumes preparation failure before admission without granting replacement entitlement' do
+    expect(@delivery.fail_preparation!).to be(true)
+    r09_update_offer(@offer, name: 'Changed after preparation failure')
+    result = AiLeadEmployee::QualificationService.new(conversation: @conversation).perform
+
+    expect(@attempt.reload).to be_failed
+    expect(@attempt.admitted_at).to be_nil
+    expect(@follow_up.reload).to be_failed
+    expect(AiLeadEmployee::FollowUpScheduler.new(conversation: @conversation, qualification_result: result).perform).to be_empty
+  end
+
+  it 'makes publication projection-only and repairs accepted domain state through its ordered owner' do
+    @delivery.update!(state: :accepted, accepted_at: Time.current, dispatch_started_at: 1.minute.ago)
+    @delivery.publish!
+    expect(@follow_up.reload).to be_pending
+    expect(@attempt.reload).to be_unadmitted
+
+    @delivery.reconcile!
+
+    expect(@follow_up.reload).to be_sent
+    expect(@attempt.reload).to be_accepted
+    expect(@attempt.admitted_at).to eq(@delivery.dispatch_started_at)
+    expect(OutboxEvent.find_by!(aggregate: @message)).to be_delivered
+  end
+
+  it 'consumes exhausted abandoned claims without an admission timestamp or replacement' do
+    @delivery.update!(state: :claimed, owner_token: 'expired', attempts: 3, lease_expires_at: 1.minute.ago)
+    expect(@delivery.recover!).to be(false)
+
+    expect(@delivery.reload).to be_failed
+    expect(@attempt.reload).to be_failed
+    expect(@attempt.admitted_at).to be_nil
+    expect(@follow_up.reload).to be_failed
+  end
+
+  it 'recovers an expired dispatch as unknown without returning its attempt to pending' do
+    admitted_at = 2.minutes.ago
+    @attempt.update!(admission_state: :admitted, admitted_at: admitted_at)
+    @delivery.update!(state: :dispatching, dispatch_started_at: admitted_at, lease_expires_at: 1.minute.ago)
+    2.times { expect(@delivery.recover!).to be(false) }
+
+    expect(@attempt.reload).to be_unknown
+    expect(@attempt.admitted_at).to be_within(0.001).of(admitted_at)
+    expect(HumanReviewRequest.where(lead_message: @message, reason: :delivery_unknown).count).to eq(1)
+  end
+
+  it 'does not recover or send the predecessor after replacing a claimed never-admitted artifact' do
+    @delivery.update!(state: :claimed, owner_token: 'old-owner', lease_expires_at: 1.minute.ago)
+    r09_update_offer(@offer, name: 'Changed before admission')
+    result = AiLeadEmployee::QualificationService.new(conversation: @conversation).perform
+    successor = AiLeadEmployee::FollowUpScheduler.new(conversation: @conversation, qualification_result: result).perform.first
+
+    expect(successor.replaces_follow_up_id).to eq(@follow_up.id)
+    expect(@delivery.reload).to have_attributes(state: 'canceled', owner_token: nil, lease_expires_at: nil)
+    expect(@delivery.recover!).to be(false)
+    SendReplyJob.perform_now(@message.id)
+    expect(successor.reload.message_id).to be_nil
+    expect(WebMock).not_to have_requested(:post, provider_url)
+  end
+end

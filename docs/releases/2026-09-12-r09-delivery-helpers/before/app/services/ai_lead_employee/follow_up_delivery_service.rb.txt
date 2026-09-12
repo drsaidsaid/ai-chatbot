@@ -1,0 +1,114 @@
+# frozen_string_literal: true
+
+class AiLeadEmployee::FollowUpDeliveryService
+  OUTBOX_EVENT_TYPE = 'ai_employee.follow_up_recorded'
+
+  def initialize(follow_up:)
+    @follow_up = follow_up
+  end
+
+  def perform
+    outbox_event_id = nil
+
+    conversation.reload.with_lock('FOR NO KEY UPDATE') do
+      context = AiLeadEmployee::OfferDeliveryContext.new(conversation: conversation, context: follow_up.qualification_context,
+                                                         required: follow_up.lead_qualification.offer_id.present?)
+      context.lock_offers!
+      Whatsapp::DeliveryLifecycle.with(follow_ups: LeadFollowUp.where(id: follow_up.id)) do |owner|
+        @follow_up = owner.follow_ups.fetch(follow_up.id)
+        return unless follow_up.pending? && owner.current?(follow_up)
+        return unless owner.attempts.fetch(follow_up.follow_up_attempt_id).replaceable?
+
+        reason = if opted_out?
+                   'follow_up_opted_out'
+                 elsif internal_note?
+                   'internal_note'
+                 elsif !compatible_conversation_state?
+                   'incompatible_control_state'
+                 else
+                   context.failure_code
+                 end
+        if reason
+          owner.cancel_artifact!(follow_up, reason: reason)
+          return
+        end
+        outbox_event_id = record_follow_up!
+      end
+    end
+
+    AiLeadEmployee::OutboxDispatchJob.perform_later(outbox_event_id) if outbox_event_id.present?
+  end
+
+  private
+
+  attr_reader :follow_up
+
+  def record_follow_up!
+    return reschedule_delivery! if follow_up.scheduled_at.future?
+
+    message = follow_up.message || create_follow_up_message!
+    follow_up.update!(message: message) unless follow_up.message_id
+    create_outbox_event!(message).id
+  end
+
+  def create_outbox_event!(message)
+    OutboxEvent.find_or_create_by!(account: follow_up.account, idempotency_key: "ai-follow-up/#{follow_up.id}") do |event|
+      event.aggregate = message
+      event.event_type = OUTBOX_EVENT_TYPE
+      event.payload = {
+        message_id: message.id,
+        conversation_id: conversation.id,
+        follow_up_id: follow_up.id,
+        channel: 'whatsapp',
+        qualification_context: follow_up.qualification_context
+      }
+    end
+  end
+
+  def create_follow_up_message!
+    conversation.messages.create!(
+      account: follow_up.account,
+      inbox: conversation.inbox,
+      message_type: :outgoing,
+      content_type: :text,
+      content: follow_up.content,
+      private: false,
+      additional_attributes: follow_up_message_attributes
+    )
+  end
+
+  def reschedule_delivery!
+    AiLeadEmployee::FollowUpDeliveryJob.set(wait_until: follow_up.scheduled_at).perform_later(follow_up)
+    nil
+  end
+
+  def follow_up_message_attributes
+    {
+      ai_lead_employee: {
+        delivery_boundary: 'outbox',
+        follow_up_id: follow_up.id,
+        qualification_context: follow_up.qualification_context,
+        delivery_type: 'qualification_follow_up'
+      }
+    }
+  end
+
+  def compatible_conversation_state?
+    conversation.ai_active? &&
+      conversation.open? &&
+      conversation.assignee_id.blank? &&
+      conversation.control_version == follow_up.control_version
+  end
+
+  def opted_out?
+    LeadFollowUpOptOut.exists?(account: follow_up.account, contact: follow_up.contact)
+  end
+
+  def internal_note?
+    follow_up.message&.private?
+  end
+
+  def conversation
+    follow_up.conversation
+  end
+end

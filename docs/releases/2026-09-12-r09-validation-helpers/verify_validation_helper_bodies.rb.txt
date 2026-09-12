@@ -1,0 +1,56 @@
+require 'parser/current'
+require 'json'
+require 'digest'
+HELPERS = %i[validate_attempt_scope validate_admission_progress validate_offer_and_contact_scope lock_offer_selection!].freeze
+DROP = Object.new
+
+def definitions(node, result = {})
+  return result unless node.is_a?(Parser::AST::Node)
+  result[node.children[0]] = node if node.type == :def
+  node.children.each { |child| definitions(child, result) }
+  result
+end
+
+def expanded(node, helpers, drop_private: false)
+  return node unless node.is_a?(Parser::AST::Node)
+  return DROP if node.type == :def && helpers.key?(node.children[0])
+  if drop_private && node.type == :send && node.children == [nil, :private]
+    return DROP
+  end
+  if node.type == :send && node.children[0].nil? && helpers.key?(node.children[1])
+    raise 'Unexpected helper args' unless node.children.length == 2
+    return expanded(helpers.fetch(node.children[1]).children[2], {}, drop_private: false)
+  end
+  if node.type == :lvasgn && node.children[0] == :selected && node.children[1].is_a?(Parser::AST::Node) &&
+     node.children[1].type == :send && node.children[1].children[1] == :lock_offer_selection!
+    call = node.children[1]
+    raise 'Changed selection argument' unless call.children == [nil, :lock_offer_selection!, Parser::AST::Node.new(:lvar, [:selected_id])]
+    body = helpers.fetch(:lock_offer_selection!).children[2]
+    raise 'Changed selection return' unless body.type == :begin && body.children.last == Parser::AST::Node.new(:lvar, [:selected])
+    return body.updated(nil, body.children[0...-1])
+  end
+  children = node.children.map { |child| expanded(child, helpers, drop_private: drop_private) }
+  children = children.reject { |child| child.equal?(DROP) }
+  children = children.flat_map { |child| child.is_a?(Parser::AST::Node) && child.type == :begin ? child.children : [child] } if node.type == :begin
+  node.updated(nil, children)
+end
+
+def plain(node)
+  return plain(node.children.first) if node.is_a?(Parser::AST::Node) && node.type == :begin && node.children.one?
+
+  node.is_a?(Parser::AST::Node) ? [node.type, *node.children.map { |child| plain(child) }] : node
+end
+
+plan = JSON.parse(File.read('tmp/r09/validation-helpers-plan.json'))
+results = plan.fetch('paths').map do |path|
+  original = Parser::CurrentRuby.parse(File.read("tmp/r09/validation-helpers-before/#{path}"))
+  current = Parser::CurrentRuby.parse(File.read(path))
+  helpers = definitions(current).slice(*HELPERS)
+  expanded_current = expanded(current, helpers, drop_private: path.include?('/conversations/qualification_offers_controller.rb'))
+  { path: path, original_methods: definitions(original).keys, extracted_helpers: helpers.keys,
+    expanded_ast_equal: plain(original) == plain(expanded_current),
+    before_ast_sha256: Digest::SHA256.hexdigest(JSON.generate(plain(original))),
+    expanded_ast_sha256: Digest::SHA256.hexdigest(JSON.generate(plain(expanded_current))) }
+end
+File.write('tmp/r09/validation-helpers-expanded-ast-proof.json', JSON.pretty_generate(results) + "\n")
+puts JSON.generate(files: results.length, original_methods: results.sum { |item| item[:original_methods].length }, mismatches: results.reject { |item| item[:expanded_ast_equal] })

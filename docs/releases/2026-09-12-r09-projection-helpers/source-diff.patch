@@ -1,0 +1,141 @@
+diff --git a/app/models/account.rb b/app/models/account.rb
+index 56c6951..f89ca30 100644
+--- a/app/models/account.rb
++++ b/app/models/account.rb
+@@ -148,10 +148,7 @@ class Account < ApplicationRecord
+   end
+ 
+   def webhook_data
+-    {
+-      id: id,
+-      name: name
+-    }
++    { id: id, name: name }
+   end
+ 
+   def suspension_history
+diff --git a/app/services/ai_lead_employee/leads_directory_service.rb b/app/services/ai_lead_employee/leads_directory_service.rb
+index 047daaa..c3b8e7d 100644
+--- a/app/services/ai_lead_employee/leads_directory_service.rb
++++ b/app/services/ai_lead_employee/leads_directory_service.rb
+@@ -489,8 +489,7 @@ class AiLeadEmployee::LeadsDirectoryService
+ 
+   def preload_context_for(contacts)
+     ids = contacts.map(&:id)
+-    @qualification_by_contact = qualification_scope.where(contact_id: ids).index_by(&:contact_id)
+-    @legacy_qualification_by_contact = read_context.offers_configured? ? read_context.legacy_qualifications.where(contact_id: ids).index_by(&:contact_id) : {}
++    preload_qualification_context(ids)
+     @conversation_by_contact = latest_conversation_by_contact(ids)
+     @conversations_by_contact = conversations_by_contact(ids)
+     @bookings_by_contact = bookings_by_contact(ids)
+@@ -506,6 +505,15 @@ class AiLeadEmployee::LeadsDirectoryService
+                              .count
+   end
+ 
++  def preload_qualification_context(ids)
++    @qualification_by_contact = qualification_scope.where(contact_id: ids).index_by(&:contact_id)
++    @legacy_qualification_by_contact = if read_context.offers_configured?
++                                         read_context.legacy_qualifications.where(contact_id: ids).index_by(&:contact_id)
++                                       else
++                                         {}
++                                       end
++  end
++
+   def preload_consent_context(contact_ids)
+     @active_stop_by_contact = LeadFollowUpOptOut.where(account: account, contact_id: contact_ids)
+                                                 .includes(:consent_event)
+diff --git a/app/views/api/v1/conversations/partials/_conversation.json.jbuilder b/app/views/api/v1/conversations/partials/_conversation.json.jbuilder
+index 06c133d..a3d0229 100644
+--- a/app/views/api/v1/conversations/partials/_conversation.json.jbuilder
++++ b/app/views/api/v1/conversations/partials/_conversation.json.jbuilder
+@@ -1,7 +1,6 @@
+ # TODO: Move this into models jbuilder
+ # Currently the file there is used only for search endpoint.
+ # Everywhere else we use conversation builder in partials folder
+-include_cockpit = local_assigns.fetch(:include_cockpit, false)
+ 
+ json.meta do
+   json.sender do
+@@ -77,17 +76,7 @@ if qualification.present? || qualification_context.offers_configured?
+     json.legacy_qualification qualification_context.legacy_payload(qualification_context.legacy_qualifications.find_by(contact: conversation.contact))
+     json.next_question qualification_context.next_question(qualification)
+     json.evidence_records qualification_context.evidence_records(conversation.contact) do |evidence|
+-      json.id evidence.id
+-      json.signal evidence.signal
+-      json.field_key evidence.field_key
+-      json.offer_id evidence.offer_id
+-      json.normalized_value evidence.value
+-      json.value evidence.value['value']
+-      json.source evidence.source
+-      json.source_reference AiLeadEmployee::QualificationEvidenceSnapshot.source_reference_for(evidence)
+-      json.source_path qualification_context.evidence_source_path(evidence)
+-      json.observed_at evidence.observed_at&.iso8601
+-      json.superseded evidence.superseded_at.present?
++      json.partial! 'api/v1/conversations/partials/qualification_evidence', evidence: evidence, qualification_context: qualification_context
+     end
+     json.handoffs access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5) do |handoff|
+       json.id handoff.id
+@@ -99,17 +88,7 @@ if qualification.present? || qualification_context.offers_configured?
+       json.alert_deliveries handoff.alert_deliveries
+     end
+     json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
+-      json.id follow_up.id
+-      json.status follow_up.status
+-      json.stage follow_up.stage
+-      json.attempt_number follow_up.attempt_number
+-      json.question_text follow_up.question_text
+-      json.scheduled_at follow_up.scheduled_at&.iso8601
+-      json.sent_at follow_up.sent_at&.iso8601
+-      json.cancelled_at follow_up.cancelled_at&.iso8601
+-      json.failed_at follow_up.failed_at&.iso8601
+-      json.cancellation_reason follow_up.cancellation_reason
+-      json.failure_reason follow_up.failure_reason
++      json.partial! 'api/v1/conversations/partials/qualification_follow_up', follow_up: follow_up
+     end
+   end
+ end
+@@ -138,9 +117,7 @@ if local_assigns[:include_control_events]
+     json.created_at event.created_at.to_i
+   end
+ end
+-if local_assigns[:include_cockpit]
+-  json.cockpit AiLeadEmployee::ConversationCockpitPresenter.new(conversation: conversation).to_h
+-end
++json.cockpit AiLeadEmployee::ConversationCockpitPresenter.new(conversation: conversation).to_h if local_assigns[:include_cockpit]
+ json.created_at conversation.created_at.to_i
+ json.updated_at conversation.updated_at.to_f
+ json.timestamp conversation.last_activity_at.to_i
+diff --git a/app/views/api/v1/conversations/partials/_qualification_evidence.json.jbuilder b/app/views/api/v1/conversations/partials/_qualification_evidence.json.jbuilder
+new file mode 100644
+index 0000000..32d9a9f
+--- /dev/null
++++ b/app/views/api/v1/conversations/partials/_qualification_evidence.json.jbuilder
+@@ -0,0 +1,11 @@
++json.id evidence.id
++json.signal evidence.signal
++json.field_key evidence.field_key
++json.offer_id evidence.offer_id
++json.normalized_value evidence.value
++json.value evidence.value['value']
++json.source evidence.source
++json.source_reference AiLeadEmployee::QualificationEvidenceSnapshot.source_reference_for(evidence)
++json.source_path qualification_context.evidence_source_path(evidence)
++json.observed_at evidence.observed_at&.iso8601
++json.superseded evidence.superseded_at.present?
+diff --git a/app/views/api/v1/conversations/partials/_qualification_follow_up.json.jbuilder b/app/views/api/v1/conversations/partials/_qualification_follow_up.json.jbuilder
+new file mode 100644
+index 0000000..6d96783
+--- /dev/null
++++ b/app/views/api/v1/conversations/partials/_qualification_follow_up.json.jbuilder
+@@ -0,0 +1,11 @@
++json.id follow_up.id
++json.status follow_up.status
++json.stage follow_up.stage
++json.attempt_number follow_up.attempt_number
++json.question_text follow_up.question_text
++json.scheduled_at follow_up.scheduled_at&.iso8601
++json.sent_at follow_up.sent_at&.iso8601
++json.cancelled_at follow_up.cancelled_at&.iso8601
++json.failed_at follow_up.failed_at&.iso8601
++json.cancellation_reason follow_up.cancellation_reason
++json.failure_reason follow_up.failure_reason

@@ -1,0 +1,94 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Typed Offer answer boundaries', type: :request do
+  include_context 'with Offer qualification requests'
+
+  [
+    ['TZS 1200000 if my contract is signed', 'money', {}],
+    ['TZS 1200000 or maybe TZS 900000', 'money', {}],
+    ['TZS 1200000 but only if sales improve', 'money', {}],
+    ['12 or 15', 'number', {}],
+    ['Hello', 'text', {}],
+    ['Can you explain that?', 'text', {}]
+  ].each do |answer, type, options|
+    it "does not turn an ambiguous answer #{answer.inspect} into a positive custom fact" do
+      question = r09_question('custom_field', answer_type: type, prompt: 'Please provide the current value.', **options)
+      offer = r09_create_offer(r09_configuration(questions: [question]))
+      conversation = r09_conversation(offer: offer)
+      r09_receive(conversation, 'Hello')
+
+      r09_receive(conversation, answer)
+
+      expect(r09_qualification(offer).evidence_snapshot.dig('custom_field', 'polarity')).not_to eq('positive')
+    end
+  end
+
+  it 'uses only the configured custom fit and score instead of universal buying fields' do
+    question = r09_question('team_size', answer_type: 'number', prompt: 'How many people work in your team?')
+    offer = r09_create_offer(r09_configuration(questions: [question], score_weights: { team_size: 100 }, legacy_contract: false))
+    conversation = r09_conversation(offer: offer)
+    r09_receive(conversation, 'My budget is TZS 600000.')
+
+    r09_receive(conversation, '12')
+
+    expect(r09_qualification(offer).quality).to eq('highly_qualified')
+    expect(r09_qualification(offer).missing_signals).to be_empty
+  end
+
+  it 'matches an explicit false boolean with a saved equality rule without positive presence points' do
+    question = r09_question('uses_crm', answer_type: 'boolean', prompt: 'Do you use a CRM?')
+    rule = { kind: 'score_rule', field: 'uses_crm', operator: 'eq', value: false, score_delta: 15, priority: 0, enabled: true }
+    offer = r09_create_offer(r09_configuration(questions: [question], rules: [rule], score_weights: { uses_crm: 50 }))
+    conversation = r09_conversation(offer: offer)
+    r09_receive(conversation, 'Hello')
+
+    r09_receive(conversation, 'Hapana')
+
+    expect(r09_qualification(offer).score).to eq(15)
+  end
+
+  it 'round-trips choice membership and money rules through public settings and applies them to their own answers' do
+    questions = [r09_question('customer_type', answer_type: 'choice', prompt: 'B2B or B2C?', options: %w[B2B B2C]),
+                 r09_question('revenue', answer_type: 'money', prompt: 'What is your revenue?', position: 1)]
+    rules = [{ kind: 'score_rule', field: 'customer_type', operator: 'in', value: ['B2B'], score_delta: 5, priority: 0, enabled: true },
+             { kind: 'score_rule', field: 'revenue', operator: 'gte', value: { amount: '1000000.00', currency: 'TZS' },
+               score_delta: 15, priority: 1, enabled: true }]
+    offer = r09_create_offer(r09_configuration(questions: questions, rules: rules))
+    expect(offer.fetch('rules').map { |rule| rule.fetch('value') }).to eq([['B2B'], { 'amount' => '1000000.00', 'currency' => 'TZS' }])
+    conversation = r09_conversation(offer: offer)
+    r09_receive(conversation, 'Hello')
+    r09_receive(conversation, 'B2B')
+    r09_receive(conversation, 'TZS 1200000')
+
+    expect(r09_qualification(offer).score).to eq(20)
+    expect(r09_qualification(offer).evidence_snapshot).not_to have_key('budget')
+  end
+
+  it 'does not match unknown evidence to a numeric rule' do
+    question = r09_question('team_size', answer_type: 'number', prompt: 'How many people work in your team?')
+    rule = { kind: 'hard_rule', field: 'team_size', operator: 'lt', value: 5, forced_outcome: 'unqualified', priority: 0, enabled: true }
+    offer = r09_create_offer(r09_configuration(questions: [question], rules: [rule]))
+    conversation = r09_conversation(offer: offer)
+    r09_receive(conversation, 'Hello')
+    r09_receive(conversation, 'Sijui')
+
+    expect(r09_qualification(offer)).to have_attributes(score: 0, quality: 'unknown')
+  end
+
+  [
+    { score_weights: { team_size: -5 } },
+    { score_weights: { missing_field: 5 } },
+    { score_thresholds: { qualified: 80, highly_qualified: 60 } },
+    { score_thresholds: { qualified: 'sixty', highly_qualified: 80 } }
+  ].each do |invalid|
+    it "rejects malformed scoring #{invalid.inspect} atomically" do
+      question = r09_question('team_size', answer_type: 'number', prompt: 'How many people work in your team?')
+      post r09_offers_url, headers: r09_headers, params: { offer: r09_configuration(questions: [question], **invalid) }, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(account.qualification_offers).to be_empty
+    end
+  end
+end

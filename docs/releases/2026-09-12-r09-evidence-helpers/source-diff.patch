@@ -1,0 +1,296 @@
+diff --git a/app/services/ai_lead_employee/offer_evidence_recorder.rb b/app/services/ai_lead_employee/offer_evidence_recorder.rb
+new file mode 100644
+index 0000000..4feb827
+--- /dev/null
++++ b/app/services/ai_lead_employee/offer_evidence_recorder.rb
+@@ -0,0 +1,85 @@
++# frozen_string_literal: true
++
++# Called inside the qualification owner's Conversation, Offer and Contact locks.
++class AiLeadEmployee::OfferEvidenceRecorder
++  def initialize(conversation:, offer:, incoming_message:)
++    @conversation = conversation
++    @offer = offer
++    @incoming_message = incoming_message
++  end
++
++  def perform
++    return [] unless processable_message?
++    return [] unless incoming_message.account_id == account.id && incoming_message.conversation_id == conversation.id
++
++    observations.filter_map { |signal, value| record_observation!(signal, value) }
++  end
++
++  private
++
++  attr_reader :conversation, :offer, :incoming_message
++
++  delegate :account, :contact, to: :conversation
++
++  def processable_message?
++    incoming_message&.persisted? && incoming_message.incoming? && !incoming_message.private?
++  end
++
++  def observations
++    question = answered_question
++    key = question&.fetch('key')
++    builtin = QualificationQuestion::SIGNALS.key?(key&.to_sym)
++    observations = AiLeadEmployee::QualificationEvidenceExtractor.new(incoming_message.content, answered_signal: builtin ? key : nil).observations
++    add_typed_answer(observations, question, key) if observations.empty? && question && !builtin
++    observations
++  end
++
++  def add_typed_answer(observations, question, key)
++    answer = AiLeadEmployee::OfferTypedAnswer.new(question: question, content: incoming_message.content, currency: offer.currency).observation
++    observations[key] = answer if answer
++  end
++
++  def record_observation!(signal, value)
++    value = value_with_definition(signal, value)
++    scope = QualificationEvidence.where(account: account, contact: contact, offer: offer, field_key: signal)
++    return if scope.current.human.exists? || scope.exists?(message: incoming_message, value: value)
++    return if scope.current.exists?(['observed_at > ?', incoming_message.created_at])
++
++    evidence = create_observation!(scope, signal, value)
++    scope.current.where.not(id: evidence.id).find_each do |previous|
++      previous.update!(superseded_at: Time.current, superseded_by: evidence)
++    end
++    evidence
++  end
++
++  def value_with_definition(signal, value)
++    definition = offer.configuration.fetch('questions').find { |candidate| candidate['key'] == signal }
++    return value unless definition
++
++    value.merge('field_definition' => AiLeadEmployee::OfferConfigurationWriter.field_definition(definition, offer.currency))
++  end
++
++  def create_observation!(scope, signal, value)
++    scope.create!(signal: QualificationQuestion::SIGNALS.key?(signal.to_sym) ? signal : nil,
++                  conversation: conversation, message: incoming_message, source: :extracted,
++                  value: value, observed_at: incoming_message.created_at)
++  end
++
++  def answered_question
++    previous = conversation.messages.where(private: false).where('id < ?', incoming_message.id).reorder(id: :desc).first
++    return unless previous&.outgoing?
++
++    metadata = previous.additional_attributes.dig('ai_lead_employee', 'qualification') || {}
++    return unless metadata['offer_id'] == offer.id && metadata['configuration_version'] == offer.configuration_version
++
++    matches = matching_questions(previous, metadata)
++    matches.first if matches.one?
++  end
++
++  def matching_questions(previous, metadata)
++    offer.questions.select do |question|
++      previous.content.to_s.end_with?(question['prompt']) && metadata['next_question'] == question['prompt'] &&
++        metadata['next_question_key'] == question['key']
++    end
++  end
++end
+diff --git a/app/services/ai_lead_employee/offer_human_evidence_writer.rb b/app/services/ai_lead_employee/offer_human_evidence_writer.rb
+index 41efa7b..8949872 100644
+--- a/app/services/ai_lead_employee/offer_human_evidence_writer.rb
++++ b/app/services/ai_lead_employee/offer_human_evidence_writer.rb
+@@ -36,6 +36,15 @@ class AiLeadEmployee::OfferHumanEvidenceWriter
+     builtin = QualificationQuestion::SIGNALS.key?(field_key.to_sym)
+     raise ArgumentError, 'Unknown Offer field' unless question || builtin
+ 
++    normalized = normalized_answer(question, builtin)
++    evidence = create_evidence!(normalized, builtin)
++    AiLeadEmployee::QualificationEvidenceAudit.new(contact: conversation.contact, conversation: conversation, user: user, offer_id: offer.id)
++                                              .record!(signal: field_key, value: value)
++    AiLeadEmployee::OfferQualificationService.new(conversation: conversation).perform
++    evidence
++  end
++
++  def normalized_answer(question, builtin)
+     normalized = if builtin
+                    AiLeadEmployee::QualificationEvidenceExtractor.normalize(signal: field_key, value: value)
+                  else
+@@ -44,13 +53,14 @@ class AiLeadEmployee::OfferHumanEvidenceWriter
+     raise ArgumentError, 'Enter an explicit typed answer or unknown' unless normalized
+ 
+     normalized['field_definition'] = AiLeadEmployee::OfferConfigurationWriter.field_definition(question, offer.currency) if question
++    normalized
++  end
++
++  def create_evidence!(normalized, builtin)
+     scope = QualificationEvidence.where(account: conversation.account, contact: conversation.contact, offer: offer, field_key: field_key)
+     evidence = scope.create!(conversation: conversation, user: user, source: :human, signal: builtin ? field_key : nil,
+                              value: normalized, observed_at: Time.current)
+     scope.current.where.not(id: evidence.id).find_each { |previous| previous.update!(superseded_at: Time.current, superseded_by: evidence) }
+-    AiLeadEmployee::QualificationEvidenceAudit.record!(contact: conversation.contact, conversation: conversation, user: user,
+-                                                       signal: field_key, value: value, offer_id: offer.id)
+-    AiLeadEmployee::OfferQualificationService.new(conversation: conversation).perform
+     evidence
+   end
+ end
+diff --git a/app/services/ai_lead_employee/offer_qualification_service.rb b/app/services/ai_lead_employee/offer_qualification_service.rb
+index 21e81e8..7782e65 100644
+--- a/app/services/ai_lead_employee/offer_qualification_service.rb
++++ b/app/services/ai_lead_employee/offer_qualification_service.rb
+@@ -64,56 +64,12 @@ class AiLeadEmployee::OfferQualificationService
+   end
+ 
+   def record_incoming_evidence!
+-    return [] unless incoming_message&.persisted? && incoming_message.incoming? && !incoming_message.private?
+-    return [] unless incoming_message.account_id == account.id && incoming_message.conversation_id == conversation.id
+-
+-    question = answered_question
+-    key = question&.fetch('key')
+-    builtin = QualificationQuestion::SIGNALS.key?(key&.to_sym)
+-    observations = AiLeadEmployee::QualificationEvidenceExtractor.new(incoming_message.content, answered_signal: builtin ? key : nil).observations
+-    if observations.empty? && question && !builtin
+-      answer = AiLeadEmployee::OfferTypedAnswer.new(question: question, content: incoming_message.content, currency: offer.currency).observation
+-      observations[key] = answer if answer
+-    end
+-    observations.filter_map do |signal, value|
+-      definition = offer.configuration.fetch('questions').find { |candidate| candidate['key'] == signal }
+-      value = value.merge('field_definition' => AiLeadEmployee::OfferConfigurationWriter.field_definition(definition, offer.currency)) if definition
+-      scope = QualificationEvidence.where(account: account, contact: contact, offer: offer, field_key: signal)
+-      next if scope.current.human.exists? || scope.exists?(message: incoming_message, value: value)
+-      next if scope.current.where('observed_at > ?', incoming_message.created_at).exists?
+-
+-      evidence = scope.create!(signal: QualificationQuestion::SIGNALS.key?(signal.to_sym) ? signal : nil, conversation: conversation, message: incoming_message, source: :extracted,
+-                               value: value, observed_at: incoming_message.created_at)
+-      scope.current.where.not(id: evidence.id).find_each do |previous|
+-        previous.update!(superseded_at: Time.current, superseded_by: evidence)
+-      end
+-      evidence
+-    end
+-  end
+-
+-  def answered_question
+-    previous = conversation.messages.where(private: false).where('id < ?', incoming_message.id).reorder(id: :desc).first
+-    return unless previous&.outgoing?
+-
+-    metadata = previous.additional_attributes.dig('ai_lead_employee', 'qualification') || {}
+-    return unless metadata['offer_id'] == offer.id && metadata['configuration_version'] == offer.configuration_version
+-
+-    matches = offer.questions.select { |question|
+-      previous.content.to_s.end_with?(question['prompt']) && metadata['next_question'] == question['prompt'] &&
+-        metadata['next_question_key'] == question['key']
+-    }
+-    matches.first if matches.one?
++    AiLeadEmployee::OfferEvidenceRecorder.new(conversation: conversation, offer: offer, incoming_message: incoming_message).perform
+   end
+ 
+   def evaluate!
+     snapshot = evidence_snapshot
+-    positive = positive_signals(snapshot)
+-    missing = (AiLeadEmployee::QualificationService::REQUIRED_HIGHLY_QUALIFIED_SIGNALS +
+-               offer.questions.select { |question| question['required'] }.map { |question| question['key'] }).uniq - positive
+-    weights = AiLeadEmployee::QualificationService::SIGNAL_WEIGHTS.merge(offer.configuration.fetch('score_weights', {}))
+-    rules = AiLeadEmployee::OfferRules.new(offer: offer, snapshot: snapshot)
+-    score = positive.sum { |signal| weights.fetch(signal, 0) } + rules.score_delta
+-    quality = rules.excluded? ? :unqualified : quality_for(snapshot, positive, missing, score)
++    quality, score, missing, rules = assess(snapshot)
+     qualification = LeadQualification.find_or_initialize_by(account: account, contact: contact, offer: offer)
+     qualification.assign_attributes(
+       quality: quality, score: score, evidence_snapshot: snapshot, missing_signals: missing,
+@@ -125,6 +81,17 @@ class AiLeadEmployee::OfferQualificationService
+     qualification
+   end
+ 
++  def assess(snapshot)
++    positive = positive_signals(snapshot)
++    missing = (AiLeadEmployee::QualificationService::REQUIRED_HIGHLY_QUALIFIED_SIGNALS +
++               offer.questions.select { |question| question['required'] }.pluck('key')).uniq - positive
++    weights = AiLeadEmployee::QualificationService::SIGNAL_WEIGHTS.merge(offer.configuration.fetch('score_weights', {}))
++    rules = AiLeadEmployee::OfferRules.new(offer: offer, snapshot: snapshot)
++    score = positive.sum { |signal| weights.fetch(signal, 0) } + rules.score_delta
++    quality = rules.excluded? ? :unqualified : quality_for(snapshot, positive, missing, score)
++    [quality, score, missing, rules]
++  end
++
+   def evidence_snapshot
+     QualificationEvidence.current.where(account: account, contact: contact, offer: offer)
+                          .where('observed_at >= ?', AiLeadEmployee::QualificationEvidenceSnapshot.fresh_after(account))
+@@ -149,20 +116,32 @@ class AiLeadEmployee::OfferQualificationService
+   end
+ 
+   def budget_assessment(fact)
+-    return :unknown unless fact && fact['polarity'] == 'positive' && fact['currency'] == offer.currency && fact['amount_minor'].is_a?(Integer)
++    return :unknown unless valid_budget_fact?(fact)
+     return :unknown if offer.budget_ranges.empty?
+ 
+     matches = offer.budget_ranges.any? do |range|
+-      (!range['minimum_minor'] || fact['amount_minor'] >= range['minimum_minor']) &&
+-        (!range['maximum_minor'] || fact['amount_minor'] <= range['maximum_minor'])
++      budget_in_range?(fact, range)
+     end
+     matches && fact['amount_minor'].positive? ? :sufficient : :insufficient
+   end
+ 
++  def valid_budget_fact?(fact)
++    fact && fact['polarity'] == 'positive' && fact['currency'] == offer.currency && fact['amount_minor'].is_a?(Integer)
++  end
++
++  def budget_in_range?(fact, range)
++    (!range['minimum_minor'] || fact['amount_minor'] >= range['minimum_minor']) &&
++      (!range['maximum_minor'] || fact['amount_minor'] <= range['maximum_minor'])
++  end
++
+   def quality_for(snapshot, positive, missing, score)
+     return :unqualified if snapshot.dig('business_type', 'polarity') == 'negative' || budget_assessment(snapshot['budget']) == :insufficient
+     return :unknown if snapshot.empty? || snapshot.values.all? { |fact| fact['polarity'] == 'unknown' }
+ 
++    quality_from_thresholds(positive, missing, score)
++  end
++
++  def quality_from_thresholds(positive, missing, score)
+     thresholds = offer.configuration.fetch('score_thresholds')
+     required = AiLeadEmployee::QualificationService::REQUIRED_HIGHLY_QUALIFIED_SIGNALS
+     return :highly_qualified if (required - positive).empty? && missing.empty? && score >= thresholds.fetch('highly_qualified')
+diff --git a/app/services/ai_lead_employee/qualification_evidence_audit.rb b/app/services/ai_lead_employee/qualification_evidence_audit.rb
+index 341e98a..c940067 100644
+--- a/app/services/ai_lead_employee/qualification_evidence_audit.rb
++++ b/app/services/ai_lead_employee/qualification_evidence_audit.rb
+@@ -1,7 +1,14 @@
+ # frozen_string_literal: true
+ 
+ class AiLeadEmployee::QualificationEvidenceAudit
+-  def self.record!(contact:, conversation:, user:, signal:, value:, offer_id: nil)
++  def initialize(contact:, conversation:, user:, offer_id: nil)
++    @contact = contact
++    @conversation = conversation
++    @user = user
++    @offer_id = offer_id
++  end
++
++  def record!(signal:, value:)
+     Audited::Audit.create!(
+       auditable: contact,
+       associated: contact.account,
+@@ -18,4 +25,8 @@ class AiLeadEmployee::QualificationEvidenceAudit
+       created_at: Time.current
+     )
+   end
++
++  private
++
++  attr_reader :contact, :conversation, :user, :offer_id
+ end
+diff --git a/app/services/ai_lead_employee/qualification_service.rb b/app/services/ai_lead_employee/qualification_service.rb
+index 80de595..fbb0320 100644
+--- a/app/services/ai_lead_employee/qualification_service.rb
++++ b/app/services/ai_lead_employee/qualification_service.rb
+@@ -56,13 +56,9 @@ class AiLeadEmployee::QualificationService
+     ActiveRecord::Base.transaction do
+       evidence = create_human_evidence!(contact: contact, conversation: conversation, user: user, signal: signal, value: value)
+       supersede_current_evidence!(contact: contact, signal: signal, replacement: evidence)
+-      AiLeadEmployee::QualificationEvidenceAudit.record!(
+-        contact: contact,
+-        conversation: conversation,
+-        user: user,
+-        signal: signal,
+-        value: value
+-      )
++      AiLeadEmployee::QualificationEvidenceAudit.new(
++        contact: contact, conversation: conversation, user: user
++      ).record!(signal: signal, value: value)
+     end
+ 
+     evidence

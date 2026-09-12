@@ -1,0 +1,13 @@
+[
+  "corepack",
+  "pnpm",
+  "exec",
+  "vitest",
+  "run",
+  "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js",
+  "--maxWorkers=1",
+  "--minWorkers=1",
+  "--reporter=default",
+  "--reporter=json",
+  "--outputFile=tmp/r09/ui-currency-red-vue-results.json"
+]

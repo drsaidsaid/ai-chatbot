@@ -1,0 +1,19 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/requests/ai_lead_employee/offer_selection_authority_spec.rb",
+  "spec/policies/conversation_policy_offer_selection_spec.rb",
+  "spec/requests/ai_lead_employee/offer_evidence_edit_boundaries_spec.rb",
+  "spec/requests/ai_lead_employee/offer_evidence_lifecycle_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_lineage_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+  "spec/requests/ai_lead_employee/offer_qualification_spec.rb",
+  "spec/services/ai_lead_employee/follow_up_delivery_service_transactions_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/validation-helpers-green-results.json"
+]

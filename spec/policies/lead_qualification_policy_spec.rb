@@ -19,8 +19,14 @@ RSpec.describe LeadQualificationPolicy, type: :policy do
       expect(policy).to permit(admin_context, qualification)
     end
 
-    it 'allows a team member to use a Lead Qualification inside the resolved Business Account' do
+    it 'allows a team member to use a Lead Qualification with fully assigned Conversations' do
+      create(:conversation, account: account, contact: qualification.contact, assignee: team_member)
       expect(policy).to permit(team_member_context, qualification)
+    end
+
+    it 'denies a team member when the Lead has an unassigned Conversation' do
+      create(:conversation, account: account, contact: qualification.contact, assignee: nil)
+      expect(policy).not_to permit(team_member_context, qualification)
     end
 
     it 'denies an admin when the Lead Qualification belongs to another Business Account' do
@@ -42,13 +48,21 @@ RSpec.describe LeadQualificationPolicy, type: :policy do
       expect(resolved).to contain_exactly(qualification)
     end
 
-    it 'returns only Lead Qualifications inside the team members resolved Business Account' do
-      qualification
+    it 'returns only Lead Qualifications whose Conversations are fully assigned to the team member' do
+      create(:conversation, account: account, contact: qualification.contact, assignee: team_member)
       other_qualification
 
       resolved = described_class.new(team_member_context, LeadQualification).resolve
 
       expect(resolved).to contain_exactly(qualification)
+    end
+
+    it 'withholds combined qualification evidence when only some Conversations are assigned' do
+      create(:conversation, account: account, contact: qualification.contact, assignee: team_member)
+      create(:conversation, account: account, contact: qualification.contact, assignee: nil)
+      resolved = described_class.new(team_member_context, LeadQualification).resolve
+
+      expect(resolved).to be_empty
     end
 
     it 'returns no Lead Qualifications when there is no Business Account membership' do

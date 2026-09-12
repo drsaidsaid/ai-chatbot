@@ -1,0 +1,14 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/services/ai_lead_employee/add_follow_up_attempt_lineage_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_lineage_spec.rb",
+  "spec/requests/ai_lead_employee/offer_qualification_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/migration-helpers-green-results.json"
+]

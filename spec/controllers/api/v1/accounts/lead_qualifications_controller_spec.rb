@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe 'Lead Qualifications API', type: :request do
   let(:account) { create(:account) }
   let(:agent) { create(:user, account: account, role: :agent) }
-  let(:conversation) { create(:conversation, account: account) }
+  let(:conversation) { create(:conversation, account: account, assignee: agent) }
 
   it 'lets an authorized Human Operator correct evidence and re-evaluates the Lead' do
     create(:qualification_evidence, account: account, contact: conversation.contact, signal: :budget, value: { 'value' => '$50' })

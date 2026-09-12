@@ -1,0 +1,19 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/services/ai_lead_employee/follow_up_delivery_service_transactions_spec.rb",
+  "spec/services/ai_lead_employee/follow_up_delivery_service_spec.rb",
+  "spec/services/ai_lead_employee/follow_up_scheduler_spec.rb",
+  "spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+  "spec/requests/ai_lead_employee/offer_follow_up_lineage_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/delivery-helpers-green-results.json"
+]

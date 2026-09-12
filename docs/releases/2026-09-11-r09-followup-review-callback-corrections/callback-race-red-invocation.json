@@ -1,0 +1,27 @@
+{
+  "launcher": "python3 tmp/r09/run.py callback-race-red",
+  "arguments": [
+    "env",
+    "-u",
+    "BUNDLE_PATH",
+    "-u",
+    "BUNDLE_GEMFILE",
+    "-u",
+    "GEM_HOME",
+    "-u",
+    "GEM_PATH",
+    "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+    "exec",
+    "rspec",
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+    "--example",
+    "qualification callback",
+    "--format",
+    "progress",
+    "--format",
+    "json",
+    "--out",
+    "tmp/r09/callback-race-red-results.json"
+  ],
+  "environment": "Existing isolated synthetic test runtime from tmp/r09/environment.json; secret values excluded."
+}

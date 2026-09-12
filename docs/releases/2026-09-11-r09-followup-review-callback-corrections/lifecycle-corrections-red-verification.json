@@ -1,0 +1,21 @@
+{
+  "source_tree": "8d044743307e907e67ac96494caa11147a36cd46",
+  "before_files": 9633,
+  "after_files": 9633,
+  "all_source_blobs_equal": true,
+  "exit_code": 1,
+  "invocation": [
+    "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+    "exec",
+    "rspec",
+    "spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+    "spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb:303",
+    "spec/requests/whatsapp_alert_authority_spec.rb:102",
+    "--format",
+    "progress",
+    "--format",
+    "json",
+    "--out",
+    "/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/lifecycle-corrections-red-results.json"
+  ]
+}

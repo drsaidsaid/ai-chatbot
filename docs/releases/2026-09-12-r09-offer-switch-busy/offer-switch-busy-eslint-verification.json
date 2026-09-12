@@ -1,0 +1,19 @@
+{
+  "source_tree": "feffb5b897661246d16d361b76be52b09813a7e7",
+  "before": "feffb5b897661246d16d361b76be52b09813a7e7",
+  "after": "feffb5b897661246d16d361b76be52b09813a7e7",
+  "whole_tree_equal": true,
+  "exit_code": 0,
+  "invocation": [
+    "corepack",
+    "pnpm",
+    "exec",
+    "eslint",
+    "app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue",
+    "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+    "--format",
+    "json",
+    "--output-file",
+    "tmp/r09/offer-switch-busy-eslint-results.json"
+  ]
+}

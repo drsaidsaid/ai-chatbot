@@ -79,9 +79,11 @@ class AiLeadEmployee::AutomatedContactConsent
       next Result.new(event: existing_event, stopped: true) if existing_event
 
       conversations = owned_conversations.lock('FOR NO KEY UPDATE').order(:id).to_a
+      cancellation = AiLeadEmployee::AutomationCancellation.new(conversations: conversations)
+      cancellation.lock_offers!
       event = record_withdrawal_event!
-      permission_changed = apply_current_permission!
-      invalidate_automation!(conversations) if permission_changed
+      permission_changed = apply_current_permission!(cancellation)
+      invalidate_automation!(conversations, cancellation) if permission_changed
 
       Result.new(event: event, stopped: true)
     end
@@ -95,20 +97,26 @@ class AiLeadEmployee::AutomatedContactConsent
     ApplicationRecord.transaction do
       channel.lock!
       conversations = owned_conversations.lock('FOR NO KEY UPDATE').order(:id).to_a
+      cancellation = AiLeadEmployee::AutomationCancellation.new(conversations: conversations)
+      cancellation.lock_offers!
       active_stop = LeadFollowUpOptOut.lock.find_by(account: account, contact: contact)
-      raise ActiveRecord::RecordNotFound, 'No active automated-contact withdrawal' if active_stop.blank?
-
-      raise ArgumentError, 'The active withdrawal changed; reload and try again' unless expected_withdrawal_matches?(active_stop, expected_event_id)
-      raise ArgumentError, 'Re-consent evidence must be newer than the withdrawal' unless newer_than?(active_stop)
+      validate_withdrawal!(active_stop, expected_event_id)
 
       event = record_grant_event!(contact: contact, actor: actor)
       active_stop.destroy!
-      invalidate_automation!(conversations)
+      invalidate_automation!(conversations, cancellation)
       Result.new(event: event, stopped: false)
     end
   end
 
   private
+
+  def validate_withdrawal!(active_stop, expected_event_id)
+    raise ActiveRecord::RecordNotFound, 'No active automated-contact withdrawal' if active_stop.blank?
+
+    raise ArgumentError, 'The active withdrawal changed; reload and try again' unless expected_withdrawal_matches?(active_stop, expected_event_id)
+    raise ArgumentError, 'Re-consent evidence must be newer than the withdrawal' unless newer_than?(active_stop)
+  end
 
   attr_reader :message, :webhook_event
 
@@ -152,7 +160,7 @@ class AiLeadEmployee::AutomatedContactConsent
     )
   end
 
-  def apply_current_permission!
+  def apply_current_permission!(cancellation)
     latest_event = LeadConsentEvent.where(account: account, contact: contact, purpose: PURPOSE)
                                    .order(occurred_at: :desc, id: :desc)
                                    .first
@@ -161,6 +169,7 @@ class AiLeadEmployee::AutomatedContactConsent
     stop = LeadFollowUpOptOut.find_or_initialize_by(account: account, contact: contact)
     return false if stop.consent_event_id == latest_event.id
 
+    stop.automation_cancellation_owner = cancellation
     stop.update!(
       conversation: latest_event.conversation,
       message: latest_event.message,
@@ -171,11 +180,11 @@ class AiLeadEmployee::AutomatedContactConsent
     true
   end
 
-  def invalidate_automation!(conversations)
+  def invalidate_automation!(conversations, cancellation)
     conversations.each do |conversation|
       conversation.update!(control_version: conversation.control_version + 1)
-      Conversations::ControlService.invalidate_pending_ai!(conversation: conversation, reason: 'opted_out')
     end
+    cancellation.cancel!(reason: 'opted_out')
   end
 
   def active_stop?

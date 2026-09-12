@@ -1,0 +1,12 @@
+{
+  "source_tree": "0c80abb1014de56c51a486669e8da491979e391e",
+  "runs": [
+    {
+      "name": "vue",
+      "before": "0c80abb1014de56c51a486669e8da491979e391e",
+      "after": "0c80abb1014de56c51a486669e8da491979e391e",
+      "whole_tree_equal": true,
+      "exit_code": 1
+    }
+  ]
+}

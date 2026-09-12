@@ -1,0 +1,73 @@
+# frozen_string_literal: true
+
+require 'spec_helper'
+require 'active_support/all'
+require 'uri'
+
+module AiLeadEmployee; end
+require_relative '../../../app/services/ai_lead_employee/qualification_amount_parser'
+require_relative '../../../app/services/ai_lead_employee/qualification_budget_evidence_extractor'
+require_relative '../../../app/services/ai_lead_employee/qualification_evidence_extractor'
+
+# Purchase capacity with an adversative continuation.
+RSpec.describe AiLeadEmployee::QualificationEvidenceExtractor do
+  [
+    'I can spend $2500, but only if my loan is approved.',
+    'I can spend $2500, but my loan must be approved.',
+    'I can spend $2500, but this money is only for groceries.',
+    'I can spend $2500. But, only if my loan is approved.',
+    'Ninaweza kutumia TZS 600000, lakini mkopo wangu lazima uidhinishwe.',
+    'Ninaweza kutumia TZS 600000, lakini pesa hizi ni za chakula tu.',
+    'Ninaweza kutumia TZS 600000. Lakini, tu kama mkopo wangu utaidhinishwa.',
+    'I can spend $2500, but only on groceries.',
+    'I can spend $2500. But only if my loan is approved.',
+    'I can spend $2500, but I cannot spend that now.',
+    'Ninaweza kutumia TZS 600000, lakini tu kama mkopo wangu utaidhinishwa.',
+    'Ninaweza kutumia TZS 600000, lakini kwa chakula tu.',
+    'Ninaweza kutumia TZS 600000. Lakini kwa chakula tu.',
+    'Ninaweza kutumia TZS 600000, lakini siwezi kutumia pesa hizo sasa.'
+  ].each do |statement|
+    it "does not strip the restriction from #{statement.inspect}" do
+      budget = described_class.new(statement).observations['budget']
+
+      expect(budget&.fetch('polarity', nil)).not_to eq('positive')
+    end
+  end
+
+  [
+    ['I can spend $2500, but my budget is $1000.', 100_000, 'USD'],
+    ['Ninaweza kutumia TZS 600000, lakini bajeti yangu ni TZS 400000.', 40_000_000, 'TZS'],
+    ['I cannot spend $2500, but I can spend $1000.', 100_000, 'USD']
+  ].each do |statement, amount_minor, currency|
+    it "preserves the independent budget correction in #{statement.inspect}" do
+      budget = described_class.new(statement).observations.fetch('budget')
+
+      expect(budget).to include('polarity' => 'positive', 'amount_minor' => amount_minor, 'currency' => currency)
+    end
+  end
+
+  it 'retains an independent authority denial without discarding an unconditional budget' do
+    facts = described_class.new('I can spend $2500, but I am not the decision maker.').observations
+
+    expect(facts.fetch('budget')).to include('polarity' => 'positive', 'amount_minor' => 250_000)
+    expect(facts.fetch('decision_authority')).to include('polarity' => 'negative')
+  end
+
+  it 'retains an unconditional Swahili purchase-capacity assertion' do
+    budget = described_class.new('Ninaweza kutumia TZS 600000 kwa huduma hii.').observations.fetch('budget')
+
+    expect(budget).to include('polarity' => 'positive', 'basis' => 'capacity', 'amount_minor' => 60_000_000, 'currency' => 'TZS')
+  end
+
+  [
+    ['I can spend $2500, but I am not sure who decides.', 'decision_authority'],
+    ['I can spend $2500, but I am not sure what problem I have.', 'problem']
+  ].each do |statement, other_signal|
+    it "does not apply independent #{other_signal} uncertainty to the budget" do
+      facts = described_class.new(statement).observations
+
+      expect(facts.fetch('budget')).to include('polarity' => 'positive', 'amount_minor' => 250_000)
+      expect(facts.fetch(other_signal)).to include('polarity' => 'unknown')
+    end
+  end
+end

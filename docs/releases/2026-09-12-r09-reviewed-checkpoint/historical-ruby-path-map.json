@@ -1,0 +1,527 @@
+{
+  "reviewed_evidence_tree": "68f0e3fd1e483ad17134e89405ac7e14feb065a5",
+  "mapping": [
+    {
+      "original": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/independent-red-source/qualification_budget_clauses.rb",
+      "packaged": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/independent-red-source/qualification_budget_clauses.rb.txt",
+      "sha256": "a825714fbca55513763ca5905eb15b02d954ee8ca12ce5e82afedc087890b5f3"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/independent-red-source/qualification_budget_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/independent-red-source/qualification_budget_evidence_extractor.rb.txt",
+      "sha256": "bb20a27d1c4837db169767e6ceb13e282a2e796a9877edf9d056099fc4c60edc"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/independent-red-source/qualification_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/independent-red-source/qualification_evidence_extractor.rb.txt",
+      "sha256": "31a73c210bcdfa27be632012e3e4f6a071a9dac9755cc587314558daa4da0aab"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/initial-red-specs/offer_capacity_continuations_spec.rb",
+      "packaged": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/initial-red-specs/offer_capacity_continuations_spec.rb.txt",
+      "sha256": "7058e0cd5ad05cdadf0cd0a2ed57d2042327d791938bbd6ec5e65f3c89aac9c9"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/initial-red-specs/purchase_capacity_continuations_spec.rb",
+      "packaged": "docs/releases/2026-09-11-r09-capacity-continuations/evidence/initial-red-specs/purchase_capacity_continuations_spec.rb.txt",
+      "sha256": "44c512a1c00388ca7eac744d982a1d5fe7d71bd5349b74805ae8b6c258466ca6"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-delivery-increment1/evidence/partial-handoff-red-source.rb",
+      "packaged": "docs/releases/2026-09-11-r09-delivery-increment1/evidence/partial-handoff-red-source.rb.txt",
+      "sha256": "4c3b76143b44cb8a60b3a9ba10cbf4d4e3140d77abd4ebbfc86c8ee1951afd0c"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-directory-boundaries-red/evidence/initial-fixture-spec.rb",
+      "packaged": "docs/releases/2026-09-11-r09-directory-boundaries-red/evidence/initial-fixture-spec.rb.txt",
+      "sha256": "a3bbc61dba6c1d235d186b6f272941614f5435dc91d0bb3cf42d68e2b59575f1"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/builtin-dependent-review-red-source/qualification_budget_clauses.rb",
+      "packaged": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/builtin-dependent-review-red-source/qualification_budget_clauses.rb.txt",
+      "sha256": "c8eaad06c83fbf46342d8a41df680994f8bf3b4b52b30517cb1c6cb466ca6899"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/builtin-dependent-review-red-source/qualification_budget_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/builtin-dependent-review-red-source/qualification_budget_evidence_extractor.rb.txt",
+      "sha256": "9e2ee1d7d409da20a030ae9b37e8cee0eb6d529007c91de59fc3b67286752952"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/builtin-dependent-review-red-source/qualification_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/builtin-dependent-review-red-source/qualification_evidence_extractor.rb.txt",
+      "sha256": "f8e3b533125ef4993dc650ffd602f5140bd6f351e7acc8a698544a01e5347480"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/human-false-red-source/lead_qualifications_controller.rb",
+      "packaged": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/human-false-red-source/lead_qualifications_controller.rb.txt",
+      "sha256": "ae15ebed9815333b807fc218dda8731e62c85af0473f5c53f216cbada4162807"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/human-false-red-source/offer_typed_answer.rb",
+      "packaged": "docs/releases/2026-09-11-r09-evidence-lifecycle/evidence/human-false-red-source/offer_typed_answer.rb.txt",
+      "sha256": "88d693f1049f50c1c0dffd64e6ec30566b253b4278c814bc64e1ef0d3cb25e2b"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-purchase-capacity/evidence/red-source/qualification_budget_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-purchase-capacity/evidence/red-source/qualification_budget_evidence_extractor.rb.txt",
+      "sha256": "9eb2b7ee22e595e810837d40ad2843026858430a9cf5205107437d4d0f75ef21"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-purchase-capacity/evidence/red-source/qualification_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-purchase-capacity/evidence/red-source/qualification_evidence_extractor.rb.txt",
+      "sha256": "69bea2b6a038c5e267d807bbc3c3f479fe4974b36f40b731d0d13a5e71397f2c"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-review-corrections/evidence/concurrency-red-spec.rb",
+      "packaged": "docs/releases/2026-09-11-r09-review-corrections/evidence/concurrency-red-spec.rb.txt",
+      "sha256": "a020d27322adb2754521b91bc2ae1eae65a7f4c1aab78f1356b1ab96dada4668"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-shared-readers/evidence/reader-boundaries-red-source/leads_directory_service.rb",
+      "packaged": "docs/releases/2026-09-11-r09-shared-readers/evidence/reader-boundaries-red-source/leads_directory_service.rb.txt",
+      "sha256": "136c85317a7fb7fcb86303a1f1da4be8e6248f49f5e88fff1c8dc84a3d8092c2"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-shared-readers/evidence/reader-boundaries-red-source/offer_qualification_read_context.rb",
+      "packaged": "docs/releases/2026-09-11-r09-shared-readers/evidence/reader-boundaries-red-source/offer_qualification_read_context.rb.txt",
+      "sha256": "abf8082f52a414362835c2b037a3dfc2facabcae1c23dc218c90fec6021abd3c"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-shared-readers/evidence/reader-boundaries-red-source/offer_shared_readers_spec.rb",
+      "packaged": "docs/releases/2026-09-11-r09-shared-readers/evidence/reader-boundaries-red-source/offer_shared_readers_spec.rb.txt",
+      "sha256": "1b89685d554fb06f8822b229c083ab4ab1697f4220c51b19db3de7394c838fd0"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_configuration_writer.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_configuration_writer.rb.txt",
+      "sha256": "b2b3a8919baab84302a03fde8f709bd306bdfd9509acb1d2ac4f62c8cfd33716"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_qualification_service.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_qualification_service.rb.txt",
+      "sha256": "263fc33f0440c6da841f11f3c3efe0dc9bc047f31f934a6af1aa5f49d212525b"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_rules.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_rules.rb.txt",
+      "sha256": "f92f63eef17a7a1423ac9352f10dcb44b229e32ea118d886958a4adc8aee3e0d"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_typed_answer.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/offer_typed_answer.rb.txt",
+      "sha256": "88d693f1049f50c1c0dffd64e6ec30566b253b4278c814bc64e1ef0d3cb25e2b"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/qualification_budget_clauses.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/qualification_budget_clauses.rb.txt",
+      "sha256": "eb9aa0afc68a576828679082bcdee4a234ca89e4ae8d2fe61bef1d14c5b23578"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/qualification_budget_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/qualification_budget_evidence_extractor.rb.txt",
+      "sha256": "5b730df996d26bdc06c4e848094045abeff2c5350c0a5976b47f5cf279484482"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/qualification_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/pre-second-continuation-source/qualification_evidence_extractor.rb.txt",
+      "sha256": "31a73c210bcdfa27be632012e3e4f6a071a9dac9755cc587314558daa4da0aab"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_configuration_writer.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_configuration_writer.rb.txt",
+      "sha256": "b2b3a8919baab84302a03fde8f709bd306bdfd9509acb1d2ac4f62c8cfd33716"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_qualification_service.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_qualification_service.rb.txt",
+      "sha256": "2e0cfa85650a713747af2b49008bcaf0460c822caf0f4e9d50e803922553deb2"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_rules.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_rules.rb.txt",
+      "sha256": "f92f63eef17a7a1423ac9352f10dcb44b229e32ea118d886958a4adc8aee3e0d"
+    },
+    {
+      "original": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_typed_answer.rb",
+      "packaged": "docs/releases/2026-09-11-r09-typed-capacity/evidence/typed-boundaries-red-source/offer_typed_answer.rb.txt",
+      "sha256": "c04225b490361ae37481e72ca89a5beb10d88093b98b11971b54add0d338bc8a"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-authority-helpers/before/app/models/whatsapp/outbound_delivery.rb",
+      "packaged": "docs/releases/2026-09-12-r09-authority-helpers/before/app/models/whatsapp/outbound_delivery.rb.txt",
+      "sha256": "34d7cfe9f6c89f0f00e875005782b3e563f0444b62a952eefb6aabbc53ef0f73"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-authority-helpers/before/app/services/ai_lead_employee/automated_contact_consent.rb",
+      "packaged": "docs/releases/2026-09-12-r09-authority-helpers/before/app/services/ai_lead_employee/automated_contact_consent.rb.txt",
+      "sha256": "8f9c6fb5639381c6a16be05dbcd9fde889eb3524f7439b757715f0d92a703008"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-authority-helpers/before/app/services/ai_lead_employee/highly_qualified_handoff_service.rb",
+      "packaged": "docs/releases/2026-09-12-r09-authority-helpers/before/app/services/ai_lead_employee/highly_qualified_handoff_service.rb.txt",
+      "sha256": "be75861436008fca81b99a04bdb9f48972759765e43663c953b237db53788b0f"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-authority-helpers/before/app/services/ai_lead_employee/offer_delivery_context.rb",
+      "packaged": "docs/releases/2026-09-12-r09-authority-helpers/before/app/services/ai_lead_employee/offer_delivery_context.rb.txt",
+      "sha256": "9eea5825704c04e370feabad56a87cc90e6616e32b78f2a807415bda9f1b5d1b"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-authority-helpers/verify_authority_helper_bodies.rb",
+      "packaged": "docs/releases/2026-09-12-r09-authority-helpers/verify_authority_helper_bodies.rb.txt",
+      "sha256": "f8621d59566685759dc7040891f3d98c6670de2354ac176d2a537bc9aec8d859"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-configuration-helpers/before/app/services/ai_lead_employee/offer_configuration_writer.rb",
+      "packaged": "docs/releases/2026-09-12-r09-configuration-helpers/before/app/services/ai_lead_employee/offer_configuration_writer.rb.txt",
+      "sha256": "d56e25bdb5f2ddc650523d50fc95da822d9b394a4aca5ff6b44af56f3562839a"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-delivery-helpers/before/app/services/ai_lead_employee/automation_cancellation.rb",
+      "packaged": "docs/releases/2026-09-12-r09-delivery-helpers/before/app/services/ai_lead_employee/automation_cancellation.rb.txt",
+      "sha256": "a66161c07d43183b12aae07922bfa29f04dea2e819e1b2d1df604a3b32a03e10"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-delivery-helpers/before/app/services/ai_lead_employee/follow_up_delivery_service.rb",
+      "packaged": "docs/releases/2026-09-12-r09-delivery-helpers/before/app/services/ai_lead_employee/follow_up_delivery_service.rb.txt",
+      "sha256": "6899559696ca17cefd0324636e57bb0593ec21b275bef22bd05ba32a726dfd30"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-delivery-helpers/verify_delivery_sql.rb",
+      "packaged": "docs/releases/2026-09-12-r09-delivery-helpers/verify_delivery_sql.rb.txt",
+      "sha256": "f00d0d1bb37c71999593d755d318931e87d82ace64a07d25e7636f111c4ecac4"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/offer_human_evidence_writer.rb",
+      "packaged": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/offer_human_evidence_writer.rb.txt",
+      "sha256": "d97dcfc3419f6b242dc0d01439d69c6977874849a0b4908a569857e668c35405"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/offer_qualification_service.rb",
+      "packaged": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/offer_qualification_service.rb.txt",
+      "sha256": "913b31d966da278c775a2bf3e66e52858fb106235be1f4d8146c7169e6040236"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/qualification_evidence_audit.rb",
+      "packaged": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/qualification_evidence_audit.rb.txt",
+      "sha256": "9d2401c03c53268ea8277eb8bc58968b5f2a637aa65471f2c7a8ccbcb69e2da3"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/qualification_service.rb",
+      "packaged": "docs/releases/2026-09-12-r09-evidence-helpers/before/app/services/ai_lead_employee/qualification_service.rb.txt",
+      "sha256": "703b531c9c588d0712ea7adb8ecfe934fadea284e39815c5bc922ad6e641dab2"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb.txt",
+      "sha256": "576312f232771e0c673b2156fe00d57d4ed66ab1300c0f18e0fec16985b6e4f1"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb.txt",
+      "sha256": "98ae2b9ff2716d8311c3adc61a28cf5fa3b145f982868a1c55e196faa8609adf"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb.txt",
+      "sha256": "208326a622670dda3b8b1e518ce99ddd6f646561998f69ee6c6c15bbc0b021ec"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb.txt",
+      "sha256": "fa7035925352ca98e4c813ecddef121610c3089189f33767ea20f00b75978654"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/normalized_ruby_ast.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/normalized_ruby_ast.rb.txt",
+      "sha256": "8bcc140e47732d48432e9b87877e5fd5ef5ecfe4b0ae9c5d3d700eb1330ccfeb"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/outcomes-fixtures-before.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/outcomes-fixtures-before.rb.txt",
+      "sha256": "4ea3641190343a5363f30005f4a31a435261a8164235762650bfbbf132528eb2"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/outcomes-fixtures-inverted.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/outcomes-fixtures-inverted.rb.txt",
+      "sha256": "680f896fde7c6955334f9a7ebc749cd0184bff6d42473b0e75f31278f57505e6"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-before/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-before/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb.txt",
+      "sha256": "38ca0002f446e526e2e4726ba7dc0bba87ac3467eecde4f36a8046073dde4bda"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-before/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-before/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb.txt",
+      "sha256": "45e7892eccde270e5d604f44d7a364e0949d14930ba9cb041aead9e718ce7544"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-before/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-before/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb.txt",
+      "sha256": "735e88184da95c3731ccbe49aeae502c438222bf5a87c192ef347dd9e5e169f8"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-inverted/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-inverted/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb.txt",
+      "sha256": "576312f232771e0c673b2156fe00d57d4ed66ab1300c0f18e0fec16985b6e4f1"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-inverted/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-inverted/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb.txt",
+      "sha256": "96018ec284827704a104bb9f8bcb1eddd2ece9d976cbdcabdcb4f508de4a548e"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-inverted/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-fixture-state-cleanup/race-fixtures-inverted/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb.txt",
+      "sha256": "fa7035925352ca98e4c813ecddef121610c3089189f33767ea20f00b75978654"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-layout-only/normalized_ruby_ast.rb",
+      "packaged": "docs/releases/2026-09-12-r09-layout-only/normalized_ruby_ast.rb.txt",
+      "sha256": "8bcc140e47732d48432e9b87877e5fd5ef5ecfe4b0ae9c5d3d700eb1330ccfeb"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-migration-helpers/before/db/migrate/20260911001400_add_offer_scoped_qualification.rb",
+      "packaged": "docs/releases/2026-09-12-r09-migration-helpers/before/db/migrate/20260911001400_add_offer_scoped_qualification.rb.txt",
+      "sha256": "019bb7d49dc34780d1f2e1bfa6d9a4f8c8bd7fb13ea9d96edff97505c29f47d9"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-migration-helpers/before/db/migrate/20260911001500_add_qualification_evidence_field_keys.rb",
+      "packaged": "docs/releases/2026-09-12-r09-migration-helpers/before/db/migrate/20260911001500_add_qualification_evidence_field_keys.rb.txt",
+      "sha256": "3f12ce90f6b2a15e29f8d131c78da00412f9c5ef0bb552062293334f151e9c83"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-migration-helpers/before/db/migrate/20260911001700_add_follow_up_attempt_lineage.rb",
+      "packaged": "docs/releases/2026-09-12-r09-migration-helpers/before/db/migrate/20260911001700_add_follow_up_attempt_lineage.rb.txt",
+      "sha256": "e1af6548027aee8321c81be03d262bc7a5eae7cfbf18272e715eda8d864960a0"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-migration-helpers/migration_helpers_equivalence.rb",
+      "packaged": "docs/releases/2026-09-12-r09-migration-helpers/migration_helpers_equivalence.rb.txt",
+      "sha256": "330457b23269ce2e824d78c1853fd5f10e8d50381c7bf265bbe44161eef3321d"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-projection-helpers/before/app/models/account.rb",
+      "packaged": "docs/releases/2026-09-12-r09-projection-helpers/before/app/models/account.rb.txt",
+      "sha256": "848e92de0104001dd65da1fcbc5ac3c710bb31024de20790fea48686b06d0cd3"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-projection-helpers/before/app/services/ai_lead_employee/leads_directory_service.rb",
+      "packaged": "docs/releases/2026-09-12-r09-projection-helpers/before/app/services/ai_lead_employee/leads_directory_service.rb.txt",
+      "sha256": "d2d18d0bd96d0a1be5f6691d7e687ed64c7c9628dbb1e85e0e38cb81e4ec1e9e"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-projection-helpers/verify_projection_fields.rb",
+      "packaged": "docs/releases/2026-09-12-r09-projection-helpers/verify_projection_fields.rb.txt",
+      "sha256": "5bf96fd924b246ff7017f92736ce859968848e36844eba8d9879680d0996eb5c"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-spoken-helpers/before/app/services/ai_lead_employee/qualification_budget_clauses.rb",
+      "packaged": "docs/releases/2026-09-12-r09-spoken-helpers/before/app/services/ai_lead_employee/qualification_budget_clauses.rb.txt",
+      "sha256": "c8eaad06c83fbf46342d8a41df680994f8bf3b4b52b30517cb1c6cb466ca6899"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-spoken-helpers/before/app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-12-r09-spoken-helpers/before/app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb.txt",
+      "sha256": "d61a014c4b9f6aa24f4d296974e20d40921d14d450e0d3d5fabd551af82d9681"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-spoken-helpers/before/app/services/ai_lead_employee/qualification_evidence_extractor.rb",
+      "packaged": "docs/releases/2026-09-12-r09-spoken-helpers/before/app/services/ai_lead_employee/qualification_evidence_extractor.rb.txt",
+      "sha256": "6dbfd415ae8761be89e73f8ccc68d52382af7c951e27622331ad3608a5cad592"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-spoken-helpers/spoken_helpers_equivalence.rb",
+      "packaged": "docs/releases/2026-09-12-r09-spoken-helpers/spoken_helpers_equivalence.rb.txt",
+      "sha256": "b8a9f0c4f1a0b378b08750bfad1e3e8eedd3b40051901a4f8541e1e33dca397e"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/audit_test_assertions_parser.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/audit_test_assertions_parser.rb.txt",
+      "sha256": "2a185d3a6a671b233ff34583aa37eefc67dfcfd814ae2fa6d21fef5dd7f2d329"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/factories/lead_follow_ups.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/factories/lead_follow_ups.rb.txt",
+      "sha256": "e1d322d136e2872b7021342e2d67fa8659876e447d00d76e8d6eebe65d6b9c91"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/policies/offer_selection_policy_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/policies/offer_selection_policy_spec.rb.txt",
+      "sha256": "0b761bda1eded893316bce11d06c449fe0e1df441b206c82cbebd72b4cc5c584"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_builtin_typed_rules_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_builtin_typed_rules_spec.rb.txt",
+      "sha256": "2e9bb53d5ec378877bde8c5274ba1536b38795389ec01a4e30ade24f1b434006"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_capacity_continuations_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_capacity_continuations_spec.rb.txt",
+      "sha256": "56184d942b6f62e5b0dd54a73cd99adbda4f1e1beec40c3aa61ab6b55a18337d"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_delivery_admission_races_spec.rb.txt",
+      "sha256": "79f03a552dd5854299ee157969e988e77fc5007c7d47467480d86a23579f996a"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_delivery_revision_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_delivery_revision_spec.rb.txt",
+      "sha256": "d4f11a455d597ba0a717bc6968c3edc01251a67524d6a0b963905298184bba6c"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_dependent_fact_tails_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_dependent_fact_tails_spec.rb.txt",
+      "sha256": "dc457ee6d6eaef50c3e4ed7341b7148500fff7d7d0b6d1fbc152d8454ed7a02c"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_directory_filter_boundaries_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_directory_filter_boundaries_spec.rb.txt",
+      "sha256": "0ade6e44ff95ac5dc40bab487eb19d5155aaeea06083bc65d1c886ab4a65456e"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_evidence_edit_boundaries_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_evidence_edit_boundaries_spec.rb.txt",
+      "sha256": "3055e6658b02bcf8d3d12f8b1ac96c42bff10b939153f78e535e4a0b659f1af5"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_evidence_lifecycle_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_evidence_lifecycle_spec.rb.txt",
+      "sha256": "50acc13671ecc42e9c20aac27c352c52a875a4ba37179896fe493c795170f146"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_lifecycle_races_spec.rb.txt",
+      "sha256": "18ca4db1307eff2fea79f6ca9e363fd4d31f575e783a98c965a8c36123471fcc"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_lineage_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_lineage_spec.rb.txt",
+      "sha256": "46be0087c0693ae30a6d97b123fa87236e83139e9f3e9c80da59f02bdc097824"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb.txt",
+      "sha256": "c464a7609aec8e3925ab5d6b2e294227676bd79d07512c3877e3f6f750f740ec"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb.txt",
+      "sha256": "a55fe0f1312022ebde43a33b841ea5d2371f1e0727787e8ec99009eadb602da7"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_independent_builtin_tails_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_independent_builtin_tails_spec.rb.txt",
+      "sha256": "cdbc6fd5f426da93c680132200d80eaba69b4b83020b8a34e08cc01bca8c1bd7"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_legacy_lead_edit_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_legacy_lead_edit_spec.rb.txt",
+      "sha256": "6eba4a10cca82e835d0743657a24452e1d0e56577845ee6ee0dbf06a67cb092c"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_reply_context_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_reply_context_spec.rb.txt",
+      "sha256": "25176f18349b4533ea9cb9e5cd9921a3371c791adccad9c12a2fdb41665204d7"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_selection_authority_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_selection_authority_spec.rb.txt",
+      "sha256": "1ba05e2e12a50426b35333631a3acb36cd0e7cd7d823adcbea397ed4e9dfe278"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_shared_readers_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_shared_readers_spec.rb.txt",
+      "sha256": "162bb1fed1cbbdced011e90a6bed94b0770e46ee01f5eadbdd30113522e36d3d"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_typed_answer_boundaries_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_typed_answer_boundaries_spec.rb.txt",
+      "sha256": "7bf8ab46cf1c324bc1b3c7eadf21c764ced3d1a89649370c37ac2187d5d9c6ce"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_typed_field_rules_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/requests/ai_lead_employee/offer_typed_field_rules_spec.rb.txt",
+      "sha256": "b9608ea5b2dd7ee7622c4119fd45779d1288a8d12e60442fbb59c607cf709ac2"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/follow_up_migration_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/follow_up_migration_spec.rb.txt",
+      "sha256": "d418c33aab9e3ecaadec934894b44562f434473b9dce0ecdeda1961bbbfff31e"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/follow_up_scheduler_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/follow_up_scheduler_spec.rb.txt",
+      "sha256": "b7ba9356bf581e5c145fd72626cd0edb3c8698524ad6e4e9552470bec28cc4d6"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/offer_configuration_concurrency_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/offer_configuration_concurrency_spec.rb.txt",
+      "sha256": "de4e9d9a9769329efa8eeaf957d040793be9825dc0acc662218166784936561a"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb.txt",
+      "sha256": "926d8903298536c67631cd3f33bbf99713900c71416b634a15cd04784498b4fa"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/purchase_capacity_continuations_spec.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/services/ai_lead_employee/purchase_capacity_continuations_spec.rb.txt",
+      "sha256": "160ef7af6b24646594b1c5853a69959c8634399f4140d1a53b96f0806576b0dd"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-test-conventions/before/spec/support/offer_qualification_requests.rb",
+      "packaged": "docs/releases/2026-09-12-r09-test-conventions/before/spec/support/offer_qualification_requests.rb.txt",
+      "sha256": "fd8127109bbaaa3ebe7e92c962d4959fca9df4be0ca2e52d45d1234e7d29236c"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-typed-helpers/before/app/services/ai_lead_employee/offer_rules.rb",
+      "packaged": "docs/releases/2026-09-12-r09-typed-helpers/before/app/services/ai_lead_employee/offer_rules.rb.txt",
+      "sha256": "ab78b7227571fd5291dd89b632ad03a05c4872263b14b002f5f899f6c2c01902"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-typed-helpers/before/app/services/ai_lead_employee/offer_typed_answer.rb",
+      "packaged": "docs/releases/2026-09-12-r09-typed-helpers/before/app/services/ai_lead_employee/offer_typed_answer.rb.txt",
+      "sha256": "8107b2c654fe7917dfbf6452410ab51b0afd7cb254ae7e201dc7778d0a9e42b8"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-typed-helpers/typed_helpers_equivalence.rb",
+      "packaged": "docs/releases/2026-09-12-r09-typed-helpers/typed_helpers_equivalence.rb.txt",
+      "sha256": "4a444acc1bd3ab6a760b606d029989324397202f4e93259b782a5229346eb845"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-validation-helpers/before/app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb",
+      "packaged": "docs/releases/2026-09-12-r09-validation-helpers/before/app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb.txt",
+      "sha256": "18ea089b52527d1b153af78266c5826c513cc82d2bde458276e4fff19c87735b"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-validation-helpers/before/app/controllers/api/v1/accounts/qualification_offers_controller.rb",
+      "packaged": "docs/releases/2026-09-12-r09-validation-helpers/before/app/controllers/api/v1/accounts/qualification_offers_controller.rb.txt",
+      "sha256": "02f6b6d3188ef073c800c1a4a6ab89a499e987a0a76c6dde9ff9eb2a99c20d42"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-validation-helpers/before/app/models/lead_follow_up.rb",
+      "packaged": "docs/releases/2026-09-12-r09-validation-helpers/before/app/models/lead_follow_up.rb.txt",
+      "sha256": "0ff9bec4f990647bc105850dc94fd31b8cb8d8dbaee7a431acf7a39948743cc9"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-validation-helpers/before/app/models/lead_follow_up_attempt.rb",
+      "packaged": "docs/releases/2026-09-12-r09-validation-helpers/before/app/models/lead_follow_up_attempt.rb.txt",
+      "sha256": "fa874ff9ef423afae8ed8fa1da8a2d665e6ff49518816f1507cacf3222083127"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-validation-helpers/before/app/models/qualification_evidence.rb",
+      "packaged": "docs/releases/2026-09-12-r09-validation-helpers/before/app/models/qualification_evidence.rb.txt",
+      "sha256": "0404ff9801ccbd0c8b3c1750206e0002006e63e0a3cfaba3d05b65aebd20c3d2"
+    },
+    {
+      "original": "docs/releases/2026-09-12-r09-validation-helpers/verify_validation_helper_bodies.rb",
+      "packaged": "docs/releases/2026-09-12-r09-validation-helpers/verify_validation_helper_bodies.rb.txt",
+      "sha256": "8309de69bbe7a0d5b6a583d7584f436d0cc5774dc735be8a113e7ae16ca7f90a"
+    }
+  ],
+  "unintended_private_generated_enterprise_paths": [],
+  "intended_changed_paths": 1067
+}

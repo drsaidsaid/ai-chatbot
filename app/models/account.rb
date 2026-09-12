@@ -93,6 +93,7 @@ class Account < ApplicationRecord
   has_many :lead_handoffs, dependent: :destroy_async
   has_many :lead_qualification_decisions, dependent: :destroy_async
   has_many :lead_qualifications, dependent: :destroy_async
+  has_many :qualification_offers, class_name: 'AiLeadEmployee::Offer', dependent: :restrict_with_exception
   has_many :labels, dependent: :destroy_async
   has_many :line_channels, dependent: :destroy_async, class_name: '::Channel::Line'
   has_many :mentions, dependent: :destroy_async
@@ -147,10 +148,7 @@ class Account < ApplicationRecord
   end
 
   def webhook_data
-    {
-      id: id,
-      name: name
-    }
+    { id: id, name: name }
   end
 
   def suspension_history

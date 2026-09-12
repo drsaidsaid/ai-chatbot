@@ -1,0 +1,90 @@
+{
+  "app/models/whatsapp/outbound_delivery.rb": [
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 15,
+      "message": "Cyclomatic complexity for `recover!` is too high. [9/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 15,
+      "message": "Perceived complexity for `recover!` is too high. [10/8]"
+    },
+    {
+      "cop": "Style/SoleNestedConditional",
+      "line": 18,
+      "message": "Consider merging nested conditions into outer `if` conditions."
+    },
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 54,
+      "message": "Assignment Branch Condition size for retry_for? is too high. [<2, 36, 9> 37.16/26]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 54,
+      "message": "Cyclomatic complexity for `retry_for?` is too high. [9/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 54,
+      "message": "Perceived complexity for `retry_for?` is too high. [9/8]"
+    },
+    {
+      "cop": "Layout/LineLength",
+      "line": 110,
+      "message": "Line is too long. [158/150]"
+    }
+  ],
+  "app/services/ai_lead_employee/automated_contact_consent.rb": [
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 92,
+      "message": "Assignment Branch Condition size for grant! is too high. [<5, 26, 5> 26.94/26]"
+    }
+  ],
+  "app/services/ai_lead_employee/highly_qualified_handoff_service.rb": [
+    {
+      "cop": "Metrics/ClassLength",
+      "line": 3,
+      "message": "Class has too many lines. [184/175]"
+    },
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 18,
+      "message": "Assignment Branch Condition size for perform is too high. [<9, 55, 14> 57.46/26]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 18,
+      "message": "Cyclomatic complexity for `perform` is too high. [15/7]"
+    },
+    {
+      "cop": "Metrics/MethodLength",
+      "line": 18,
+      "message": "Method has too many lines. [32/19]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 18,
+      "message": "Perceived complexity for `perform` is too high. [15/8]"
+    }
+  ],
+  "app/services/ai_lead_employee/offer_delivery_context.rb": [
+    {
+      "cop": "Metrics/AbcSize",
+      "line": 30,
+      "message": "Assignment Branch Condition size for failure_code is too high. [<3, 48, 23> 53.31/26]"
+    },
+    {
+      "cop": "Metrics/CyclomaticComplexity",
+      "line": 30,
+      "message": "Cyclomatic complexity for `failure_code` is too high. [16/7]"
+    },
+    {
+      "cop": "Metrics/PerceivedComplexity",
+      "line": 30,
+      "message": "Perceived complexity for `failure_code` is too high. [16/8]"
+    }
+  ]
+}

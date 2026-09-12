@@ -1,0 +1,11 @@
+{
+  "before_tree": "437315ccb262051c8c576e88614f96f1d01d9aec",
+  "paths": [
+    "app/services/ai_lead_employee/leads_directory_service.rb",
+    "app/views/api/v1/conversations/partials/_conversation.json.jbuilder",
+    "app/models/account.rb",
+    "app/views/api/v1/conversations/partials/_qualification_evidence.json.jbuilder",
+    "app/views/api/v1/conversations/partials/_qualification_follow_up.json.jbuilder"
+  ],
+  "account_full_ast_equal": true
+}

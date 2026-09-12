@@ -1,0 +1,32 @@
+[
+  {
+    "name": "shell_syntax",
+    "exit_code": 0,
+    "invocation": [
+      "sh",
+      "-n",
+      ".husky/pre-commit"
+    ]
+  },
+  {
+    "name": "ruby_syntax",
+    "exit_code": 0,
+    "invocation": [
+      "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/ruby",
+      "-c"
+    ]
+  },
+  {
+    "name": "inline_ruby_lint",
+    "exit_code": 0,
+    "invocation": [
+      "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+      "exec",
+      "rubocop",
+      "--stdin",
+      "script/pre_commit_hook.rb",
+      "--format",
+      "json"
+    ]
+  }
+]

@@ -1,0 +1,199 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Frozen Offer context for normal replies and handoffs', type: :request do
+  include_context 'Offer qualification requests'
+
+  let(:provider_url) { %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages} }
+
+  def reply_scenario
+    offer = r09_create_offer
+    conversation = r09_conversation(offer: offer)
+    incoming, intent = r09_receive(conversation, 'Hello')
+    incoming.update!(provider_created_at: Time.current)
+    [offer, conversation, intent.outbound_message]
+  end
+
+  def select_offer(conversation, offer_id)
+    patch "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/qualification_offer",
+          headers: r09_headers, params: { offer_id: offer_id }, as: :json
+    expect(response).to have_http_status(:success)
+  end
+
+  def provider_stub(message)
+    stub_request(:post, provider_url).to_return(status: 200, body: '{"messages":[{"id":"wamid.CONTEXT.ACCEPTED"}]}',
+                                                headers: { 'Content-Type' => 'application/json' })
+    stub_request(:post, provider_url).with { |request| JSON.parse(request.body).dig('text', 'body') == message.content }
+                                     .to_return(status: 200, body: '{"messages":[{"id":"wamid.CONTEXT.REPLY"}]}',
+                                                headers: { 'Content-Type' => 'application/json' })
+  end
+
+  it 'copies one exact decision and selection context to Message and event without rewriting it after correction' do
+    offer, conversation, message = reply_scenario
+    qualification = r09_qualification(offer)
+    decision = qualification.lead_qualification_decisions.order(:id).last
+    context = message.additional_attributes.fetch('ai_lead_employee').fetch('qualification_context')
+    expect(context).to include('scope' => 'offer', 'account_id' => account.id, 'contact_id' => r09_lead.id,
+                               'origin_conversation_id' => conversation.id, 'offer_id' => offer.fetch('id'),
+                               'selection_version' => conversation.reload.offer_selection_version,
+                               'configuration_version' => offer.fetch('version'), 'qualification_id' => qualification.id,
+                               'decision_id' => decision.id, 'next_question_key' => 'budget')
+    event = OutboxEvent.find_by!(aggregate: message)
+    expect(event.payload.fetch('qualification_context')).to eq(context)
+    r09_receive(conversation, 'My budget is TZS 600000.')
+    expect(message.reload.additional_attributes.dig('ai_lead_employee', 'qualification_context')).to eq(context)
+    expect(event.reload.payload.fetch('qualification_context')).to eq(context)
+  end
+
+  it 'does not revive a queued reply after selecting A then B then A' do
+    offer, conversation, message = reply_scenario
+    other = r09_create_offer(r09_configuration(name: 'Other Offer'))
+    request = provider_stub(message)
+    select_offer(conversation, other.fetch('id'))
+    select_offer(conversation, offer.fetch('id'))
+    2.times { AiLeadEmployee::OutboxDispatchJob.perform_now }
+    expect(message.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'offer_selection_changed')
+    expect(request).not_to have_been_requested
+  end
+
+  it 'does not advance selection authority on an idempotent selection' do
+    offer, conversation, message = reply_scenario
+    version = conversation.reload.offer_selection_version
+    request = provider_stub(message)
+    2.times { select_offer(conversation, offer.fetch('id')) }
+    expect(conversation.reload.offer_selection_version).to eq(version)
+    2.times { AiLeadEmployee::OutboxDispatchJob.perform_now }
+    expect(message.reload.whatsapp_outbound_delivery).to be_accepted
+    expect(request).to have_been_requested.once
+  end
+
+  it 'increments automatic selection and prevents an old reply after selection removal' do
+    offer = r09_create_offer
+    conversation = r09_conversation
+    incoming, intent = r09_receive(conversation, 'Hello')
+    incoming.update!(provider_created_at: Time.current)
+    expect(conversation.reload).to have_attributes(offer_id: offer.fetch('id'), offer_selection_version: 1)
+    message = intent.outbound_message
+    request = provider_stub(message)
+    select_offer(conversation, nil)
+    expect(conversation.reload).to have_attributes(offer_id: nil, offer_selection_version: 2)
+    AiLeadEmployee::OutboxDispatchJob.perform_now
+    expect(message.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'offer_selection_changed')
+    expect(request).not_to have_been_requested
+  end
+
+  it 'cancels an old reply after its selected Offer is disabled' do
+    offer, _conversation, message = reply_scenario
+    request = provider_stub(message)
+    r09_update_offer(offer, enabled: false)
+    expect(response).to have_http_status(:success)
+    AiLeadEmployee::OutboxDispatchJob.perform_now
+    expect(message.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'offer_configuration_changed')
+    expect(request).not_to have_been_requested
+  end
+
+  def handoff_scenario
+    offer = r09_create_offer(r09_configuration(currency: 'USD', minimum: '1000.00'))
+    conversation = r09_conversation(offer: offer)
+    account.update!(settings: account.settings.deep_merge('ai_lead_employee' => {
+                                                            'alert_routes' => { AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE => [{
+                                                              'type' => 'whatsapp', 'recipient' => '255700000094'
+}] }
+                                                          }))
+    incoming = create(:message, account: account, inbox: conversation.inbox, conversation: conversation,
+                                sender: conversation.contact, message_type: :incoming,
+                                content: 'I need more leads now. I am the owner of the agency and can spend $2500.')
+    result = AiLeadEmployee::QualificationService.new(conversation: conversation, incoming_message: incoming).perform
+    [offer, conversation, result]
+  end
+
+  def make_handoff(conversation, result)
+    AiLeadEmployee::HighlyQualifiedHandoffService.new(conversation: conversation, qualification: result.qualification,
+                                                      qualification_context: result.qualification_context, defer_alert_delivery: true).perform
+  end
+
+  it 'rejects the original handoff decision after a same-configuration human correction' do
+    offer, conversation, result = handoff_scenario
+    post "/api/v1/accounts/#{account.id}/lead_qualifications/#{r09_lead.id}/evidence", headers: r09_headers,
+                                                                                       params: { offer_id: offer.fetch('id'), conversation_id: conversation.display_id, signal: 'budget', value: 'USD 100' }, as: :json
+    expect(response).to have_http_status(:success)
+    expect(make_handoff(conversation, result).handoff).to be_nil
+    expect(conversation.reload).to have_attributes(control_state: 'ai_active', assignee_id: nil)
+  end
+
+  %w[configuration evidence].each do |change|
+    it "cancels a queued handoff alert after origin #{change} changes" do
+      offer, conversation, result = handoff_scenario
+      handoff = make_handoff(conversation, result).handoff
+      expect(handoff).to be_present
+      message = Message.find(handoff.alert_deliveries.sole.fetch('message_id'))
+      expect(message.additional_attributes.dig('ai_lead_employee', 'qualification_context')).to eq(result.qualification_context)
+      expect(handoff.qualification_snapshot.fetch('qualification_context')).to eq(result.qualification_context)
+      create(:message, account: account, inbox: conversation.inbox, conversation: message.conversation,
+                       message_type: :incoming, provider_created_at: Time.current)
+      request = provider_stub(message)
+      if change == 'configuration'
+        r09_update_offer(offer, name: 'Edited after handoff')
+      else
+        post "/api/v1/accounts/#{account.id}/lead_qualifications/#{r09_lead.id}/evidence", headers: r09_headers,
+                                                                                           params: { offer_id: offer.fetch('id'), conversation_id: conversation.display_id, signal: 'budget', value: 'USD 100' }, as: :json
+      end
+      expect(response).to have_http_status(:success)
+      2.times { SendReplyJob.perform_now(message.id) }
+      reason = change == 'configuration' ? 'offer_configuration_changed' : 'qualification_decision_changed'
+      expect(message.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: reason)
+      expect(request).not_to have_been_requested
+    end
+  end
+
+  it 'accepts a current handoff alert exactly once using the originating Lead context' do
+    _offer, conversation, result = handoff_scenario
+    handoff = make_handoff(conversation, result).handoff
+    message = Message.find(handoff.alert_deliveries.sole.fetch('message_id'))
+    create(:message, account: account, inbox: conversation.inbox, conversation: message.conversation,
+                     message_type: :incoming, provider_created_at: Time.current)
+    request = provider_stub(message)
+    2.times { SendReplyJob.perform_now(message.id) }
+    expect(message.reload.whatsapp_outbound_delivery).to be_accepted
+    expect(request).to have_been_requested.once
+  end
+
+  it 'rejects a handoff supplied a different Offer qualification from its frozen context' do
+    _offer, conversation, highly_qualified_result = handoff_scenario
+    other = r09_create_offer(r09_configuration(name: 'Unevaluated alternative'))
+    select_offer(conversation, other.fetch('id'))
+    current_result = AiLeadEmployee::QualificationService.new(conversation: conversation).perform
+    expect(current_result.qualification).not_to be_highly_qualified
+    result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation, qualification: highly_qualified_result.qualification,
+      qualification_context: current_result.qualification_context, defer_alert_delivery: true
+    ).perform
+    expect(result.handoff).to be_nil
+    expect(conversation.reload).to have_attributes(control_state: 'ai_active', assignee_id: nil)
+  end
+
+  it 'keeps unknown acceptance terminal after a later Offer edit and repeated jobs' do
+    offer, _conversation, message = reply_scenario
+    request = stub_request(:post, provider_url).to_timeout
+    SendReplyJob.perform_now(message.id)
+    expect(message.reload.whatsapp_outbound_delivery).to be_unknown
+    r09_update_offer(offer, name: 'Updated after unknown outcome')
+    expect(response).to have_http_status(:success)
+    2.times { SendReplyJob.perform_now(message.id) }
+    expect(message.reload.whatsapp_outbound_delivery).to be_unknown
+    expect(HumanReviewRequest.where(lead_message: message, reason: :delivery_unknown).count).to eq(1)
+    expect(request).to have_been_requested.once
+  end
+
+  it 'cancels missing frozen context instead of adopting the current Offer decision' do
+    _offer, _conversation, message = reply_scenario
+    attributes = message.additional_attributes.deep_dup
+    attributes.fetch('ai_lead_employee').delete('qualification_context')
+    message.update!(additional_attributes: attributes)
+    request = provider_stub(message)
+    SendReplyJob.perform_now(message.id)
+    expect(message.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'qualification_context_missing')
+    expect(request).not_to have_been_requested
+  end
+end

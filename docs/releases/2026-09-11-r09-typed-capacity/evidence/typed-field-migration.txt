@@ -1,0 +1,14 @@
+== 20260911001500 AddQualificationEvidenceFieldKeys: migrating ================
+-- add_column(:qualification_evidences, :field_key, :string)
+   -> 0.0023s
+-- execute("UPDATE qualification_evidences SET field_key = CASE signal\n  WHEN 0 THEN 'business_type' WHEN 1 THEN 'problem' WHEN 2 THEN 'lead_volume'\n  WHEN 3 THEN 'urgency' WHEN 4 THEN 'budget' WHEN 5 THEN 'decision_authority'\n  WHEN 6 THEN 'contact_details' WHEN 7 THEN 'name' END\n")
+   -> 0.0022s
+-- change_column_null(:qualification_evidences, :field_key, false)
+   -> 0.0038s
+-- change_column_null(:qualification_evidences, :signal, true)
+   -> 0.0024s
+-- add_index(:qualification_evidences, [:account_id, :contact_id, :offer_id, :field_key, :superseded_at], {name: "idx_qualification_evidence_offer_field"})
+   -> 0.0019s
+== 20260911001500 AddQualificationEvidenceFieldKeys: migrated (0.0129s) =======
+
+Loading Installation config

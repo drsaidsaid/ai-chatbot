@@ -1,0 +1,82 @@
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (20 tests | 3 failed) 1686ms
+   ✓ LeadsDirectoryPage > renders filter chips, dense rows, selected detail, and long text truncation 309ms
+   ✓ LeadsDirectoryPage > applies quality chips, dropdown filters, sorting, pagination, and row selection through query-backed API calls
+   ✓ LeadsDirectoryPage > debounces search and requests matching server data
+   ✓ LeadsDirectoryPage > dismisses an unsaved Lead edit with Escape so the workspace is usable again
+   ✓ LeadsDirectoryPage > validates and saves the edit form
+   ✓ LeadsDirectoryPage > lets an administrator record re-consent from the newer verified message
+   ✓ LeadsDirectoryPage > shows granted automated-contact evidence independently of qualification
+   ✓ LeadsDirectoryPage > lets a Team Member edit assigned details without offering imports, exports or reassignment
+   ✓ LeadsDirectoryPage > carries explicit Offer scope through selection, filters and export
+   ✓ LeadsDirectoryPage > edits shared identity without resubmitting unscoped evidence when Offers exist
+   ✓ LeadsDirectoryPage > ignores directory results arriving after a newer Offer selection
+   ✓ LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {}
+   ✓ LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {"offer_id":"9"}
+   ✓ LeadsDirectoryPage > discards a late directory response from the previous account
+   × LeadsDirectoryPage > releases an obsolete export after an Offer switch and resolve 73ms
+     → expected true to be false // Object.is equality
+   × LeadsDirectoryPage > releases an obsolete export after an Offer switch and reject 59ms
+     → expected true to be false // Object.is equality
+   ✓ LeadsDirectoryPage > keeps a newer account export busy when the previous account export finishes
+   × LeadsDirectoryPage > releases obsolete re-consent after switching Offers without applying the old Lead response 110ms
+     → expected true to be false // Object.is equality
+   ✓ LeadsDirectoryPage > handles import and export controls
+   ✓ LeadsDirectoryPage > renders empty and error states
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > releases an obsolete export after an Offer switch and resolve
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > releases an obsolete export after an Offer switch and reject
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:751:45
+    749|     settle(outcome === 'resolve' ? { data: new Blob(['old export']) } …
+    750|     await flushPromises();
+    751|     expect(exportButton().element.disabled).toBe(false);
+       |                                             ^
+    752|     expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    753|     expect(wrapper.text()).not.toContain('Old export error');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > releases obsolete re-consent after switching Offers without applying the old Lead response
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:794:78
+    792|     resolveOld({ data: { ...stoppedLead, name: 'Obsolete consent Lead'…
+    793|     await flushPromises();
+    794|     expect(wrapper.get('[data-testid="record-reconsent"]').element.dis…
+       |                                                                              ^
+    795|     expect(wrapper.text()).not.toContain('Obsolete consent Lead');
+    796|     wrapper.unmount();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 17 passed (20)
+   Start at  04:55:02
+   Duration  11.84s (transform 5.42s, setup 602ms, collect 5.51s, tests 1.69s, environment 1.58s, prepare 200ms)
+
+JSON report written to /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/ui-busy-red-vue-results.json

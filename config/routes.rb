@@ -202,6 +202,7 @@ Rails.application.routes.draw do
           end
           resource :ai_provider_connection, only: [:show]
           resource :qualification_configuration, only: [:show, :update]
+          resources :qualification_offers, only: [:index, :show, :create, :update]
           resource :whatsapp_connection, only: [:show, :update] do
             post :health_check
             post :retry_receiving
@@ -226,6 +227,7 @@ Rails.application.routes.draw do
               post :filter
             end
             scope module: :conversations do
+              resource :qualification_offer, only: [:update]
               resources :messages, only: [:index, :create, :destroy, :update] do
                 member do
                   post :translate

@@ -1,0 +1,10 @@
+[
+  {
+    "row": "evidence_records",
+    "field_write_ast_equal": true
+  },
+  {
+    "row": "follow_ups",
+    "field_write_ast_equal": true
+  }
+]

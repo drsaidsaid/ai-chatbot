@@ -1,0 +1,16 @@
+[
+  "/Users/ghalyasaid/.rbenv/versions/3.4.4/bin/bundle",
+  "exec",
+  "rspec",
+  "spec/controllers/api/v1/accounts/lead_qualifications_controller_spec.rb",
+  "spec/policies/lead_qualification_policy_spec.rb",
+  "spec/jobs/ai_lead_employee/outbox_dispatch_job_spec.rb",
+  "spec/requests/ai_lead_employee/offer_qualification_spec.rb",
+  "spec/requests/ai_lead_employee/offer_shared_readers_spec.rb",
+  "--format",
+  "progress",
+  "--format",
+  "json",
+  "--out",
+  "tmp/r09/ui-affected-final-rails-results.json"
+]

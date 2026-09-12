@@ -1,0 +1,12 @@
+{
+  "before_tree": "edc76a4a4bf6874acbe183365325fd05eaf41654",
+  "paths": [
+    "app/services/ai_lead_employee/qualification_evidence_extractor.rb",
+    "app/services/ai_lead_employee/qualification_budget_evidence_extractor.rb",
+    "app/services/ai_lead_employee/qualification_budget_clauses.rb",
+    "app/services/ai_lead_employee/qualification_budget_tail.rb",
+    "app/services/ai_lead_employee/qualification_observation.rb",
+    "app/services/ai_lead_employee/qualification_urgency_extractor.rb",
+    "app/services/ai_lead_employee/qualification_contact_extractor.rb"
+  ]
+}

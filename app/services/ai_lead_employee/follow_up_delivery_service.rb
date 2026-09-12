@@ -8,24 +8,13 @@ class AiLeadEmployee::FollowUpDeliveryService
   end
 
   def perform
-    outbox_event_id = nil
-
-    follow_up.with_lock do
-      return unless follow_up.pending?
-
-      if opted_out?
-        follow_up.cancel!('follow_up_opted_out')
-        return
+    outbox_event_id = conversation.reload.with_lock('FOR NO KEY UPDATE') do
+      context = AiLeadEmployee::OfferDeliveryContext.new(conversation: conversation, context: follow_up.qualification_context,
+                                                         required: follow_up.lead_qualification.offer_id.present?)
+      context.lock_offers!
+      Whatsapp::DeliveryLifecycle.with(follow_ups: LeadFollowUp.where(id: follow_up.id)) do |owner|
+        materialize_current_follow_up!(owner, context)
       end
-
-      return cancel_internal_note! if internal_note?
-
-      unless compatible_conversation?
-        follow_up.cancel!('incompatible_control_state')
-        return
-      end
-
-      outbox_event_id = record_follow_up!
     end
 
     AiLeadEmployee::OutboxDispatchJob.perform_later(outbox_event_id) if outbox_event_id.present?
@@ -35,19 +24,33 @@ class AiLeadEmployee::FollowUpDeliveryService
 
   attr_reader :follow_up
 
-  def record_follow_up!
-    conversation.with_lock do
-      unless compatible_conversation_state?
-        follow_up.cancel!('incompatible_control_state')
-        return
-      end
+  def materialize_current_follow_up!(owner, context)
+    @follow_up = owner.follow_ups.fetch(follow_up.id)
+    return unless follow_up.pending? && owner.current?(follow_up)
+    return unless owner.attempts.fetch(follow_up.follow_up_attempt_id).replaceable?
 
-      return reschedule_delivery! if follow_up.scheduled_at.future?
-
-      message = follow_up.message || create_follow_up_message!
-      follow_up.update!(message: message)
-      create_outbox_event!(message).id
+    reason = cancellation_reason(context)
+    if reason
+      owner.cancel_artifact!(follow_up, reason: reason)
+      return
     end
+    record_follow_up!
+  end
+
+  def cancellation_reason(context)
+    return 'follow_up_opted_out' if opted_out?
+    return 'internal_note' if internal_note?
+    return 'incompatible_control_state' unless compatible_conversation_state?
+
+    context.failure_code
+  end
+
+  def record_follow_up!
+    return reschedule_delivery! if follow_up.scheduled_at.future?
+
+    message = follow_up.message || create_follow_up_message!
+    follow_up.update!(message: message) unless follow_up.message_id
+    create_outbox_event!(message).id
   end
 
   def create_outbox_event!(message)
@@ -58,7 +61,8 @@ class AiLeadEmployee::FollowUpDeliveryService
         message_id: message.id,
         conversation_id: conversation.id,
         follow_up_id: follow_up.id,
-        channel: 'whatsapp'
+        channel: 'whatsapp',
+        qualification_context: follow_up.qualification_context
       }
     end
   end
@@ -85,14 +89,10 @@ class AiLeadEmployee::FollowUpDeliveryService
       ai_lead_employee: {
         delivery_boundary: 'outbox',
         follow_up_id: follow_up.id,
+        qualification_context: follow_up.qualification_context,
         delivery_type: 'qualification_follow_up'
       }
     }
-  end
-
-  def compatible_conversation?
-    conversation.reload
-    compatible_conversation_state?
   end
 
   def compatible_conversation_state?
@@ -108,10 +108,6 @@ class AiLeadEmployee::FollowUpDeliveryService
 
   def internal_note?
     follow_up.message&.private?
-  end
-
-  def cancel_internal_note!
-    follow_up.cancel!('internal_note')
   end
 
   def conversation

@@ -1,0 +1,16 @@
+{
+  "comparisons": {
+    "offer_up": {
+      "equal": true
+    },
+    "offer_reverse": {
+      "equal": true
+    },
+    "lineage": {
+      "equal": true
+    }
+  },
+  "field_signal_rows": 8,
+  "lineage_history_rows": 72,
+  "remaining_comparison_schemas": []
+}

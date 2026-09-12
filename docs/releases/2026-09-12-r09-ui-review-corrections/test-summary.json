@@ -1,0 +1,45 @@
+{
+  "ui-required-vue": {
+    "numTotalTests": 47,
+    "numPassedTests": 47,
+    "numFailedTests": 0
+  },
+  "ui-required-rails": {
+    "duration": 278.530761,
+    "example_count": 447,
+    "failure_count": 7,
+    "pending_count": 0,
+    "errors_outside_of_examples_count": 0
+  },
+  "ui-busy-fixtures-vue": {
+    "numTotalTests": 51,
+    "numPassedTests": 51,
+    "numFailedTests": 0
+  },
+  "ui-busy-fixtures-rails": {
+    "duration": 49.765403,
+    "example_count": 39,
+    "failure_count": 1,
+    "pending_count": 0,
+    "errors_outside_of_examples_count": 0
+  },
+  "ui-affected-final-rails": {
+    "duration": 21.17565,
+    "example_count": 39,
+    "failure_count": 0,
+    "pending_count": 0,
+    "errors_outside_of_examples_count": 0
+  },
+  "r09-verified-vue": {
+    "numTotalTests": 51,
+    "numPassedTests": 51,
+    "numFailedTests": 0
+  },
+  "r09-verified-rails": {
+    "duration": 1789.680043,
+    "example_count": 449,
+    "failure_count": 0,
+    "pending_count": 0,
+    "errors_outside_of_examples_count": 0
+  }
+}

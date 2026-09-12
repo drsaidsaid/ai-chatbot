@@ -1,0 +1,36 @@
+require 'parser/current'
+require 'json'
+require 'digest'
+def normalized(node)
+  return node unless node.is_a?(Parser::AST::Node)
+  [node.type, *node.children.map { |child| normalized(child) }]
+end
+def collect(node, assertions, scenarios)
+  return unless node.is_a?(Parser::AST::Node)
+  if node.type == :send && [:to, :not_to, :to_not].include?(node.children[1]) && node.children[0].inspect.include?(':expect')
+    assertions << Digest::SHA256.hexdigest(JSON.generate(normalized(node)))
+    return
+  end
+  scenarios << normalized(node) if node.type == :send && node.children[1] == :it
+  node.children.each { |child| collect(child, assertions, scenarios) }
+end
+plan = JSON.parse(File.read('tmp/r09/test-conventions-plan.json'))
+identity = JSON.parse(File.read('tmp/r09/test-conventions-identity.json'))
+reverse = plan['renames'].invert
+report = identity['changed_paths'].filter_map do |path|
+  next unless File.file?(path)
+  original = reverse.fetch(path, path)
+  old = File.read(File.join(plan['backup'], original))
+  current = File.read(path).gsub('change(QualificationEvidence, :count)', 'change { QualificationEvidence.count }')
+  pairs = [old, current].map do |source|
+    parsed = Parser::CurrentRuby.parse(source)
+    abort "Cannot parse #{path}" unless parsed
+    assertions = []; scenarios = []
+    collect(parsed, assertions, scenarios)
+    [assertions.sort, scenarios]
+  end
+  { path: path, original_path: original, assertion_count: pairs[0][0].length,
+    assertions_equal: pairs[0][0] == pairs[1][0], scenario_declarations_equal: pairs[0][1] == pairs[1][1] }
+end
+File.write('tmp/r09/test-conventions-parser-assertion-proof.json', JSON.pretty_generate(report) + "\n")
+puts JSON.generate(files: report.length, assertion_expressions: report.sum { |entry| entry[:assertion_count] }, mismatches: report.reject { |entry| entry[:assertions_equal] && entry[:scenario_declarations_equal] })

@@ -1,0 +1,19 @@
+Inspecting 1 file
+C
+
+Offenses:
+
+spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb:17:35: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+    delivery_records[:follow_up] = 
+                                  ^
+spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb:17:151: C: [Corrected] Layout/LineLength: Line is too long. [163/150]
+    delivery_records[:follow_up] = AiLeadEmployee::FollowUpScheduler.new(conversation: delivery_records[:conversation], qualification_result: result).perform.first
+                                                                                                                                                      ^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb:28:151: C: [Corrected] Layout/LineLength: Line is too long. [199/150]
+      observed = [delivery_records[:attempt].reload.admission_state, delivery_records[:attempt].admitted_at, delivery_records[:delivery].reload.state, delivery_records[:delivery].dispatch_started_at]
+                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb:29:109: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+      observed = [delivery_records[:attempt].reload.admission_state, delivery_records[:attempt].admitted_at, 
+                                                                                                            ^
+
+1 file inspected, 4 offenses detected, 4 offenses corrected

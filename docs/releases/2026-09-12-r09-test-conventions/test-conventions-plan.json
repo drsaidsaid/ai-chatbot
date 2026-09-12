@@ -1,0 +1,11 @@
+{
+  "before_tree": "c026a0319697e95b2b00770067bcce4b9b445542",
+  "renames": {
+    "spec/policies/offer_selection_policy_spec.rb": "spec/policies/conversation_policy_offer_selection_spec.rb",
+    "spec/services/ai_lead_employee/offer_configuration_concurrency_spec.rb": "spec/services/ai_lead_employee/offer_configuration_writer_concurrency_spec.rb",
+    "spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb": "spec/services/ai_lead_employee/qualification_evidence_extractor_purchase_budget_capacity_spec.rb",
+    "spec/services/ai_lead_employee/purchase_capacity_continuations_spec.rb": "spec/services/ai_lead_employee/qualification_evidence_extractor_purchase_capacity_continuations_spec.rb",
+    "spec/services/ai_lead_employee/follow_up_migration_spec.rb": "spec/services/ai_lead_employee/add_follow_up_attempt_lineage_spec.rb"
+  },
+  "backup": "/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/test-conventions-before"
+}

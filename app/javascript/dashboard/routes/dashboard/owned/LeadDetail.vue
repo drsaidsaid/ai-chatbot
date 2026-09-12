@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import Icon from 'next/icon/Icon.vue';
+import OfferQualificationReader from 'dashboard/components/qualification/OfferQualificationReader.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -23,6 +24,9 @@ defineEmits(['edit', 'reconsent']);
 
 const businessLocation = computed(() =>
   [props.lead.business_name, props.lead.location].filter(Boolean).join(' / ')
+);
+const hasOffers = computed(() =>
+  Boolean(props.lead.detail?.qualification?.offers?.length)
 );
 
 const contactChannels = computed(
@@ -208,7 +212,13 @@ const channelIcon = kind => {
       </div>
     </section>
 
-    <section class="border-b border-n-weak py-4">
+    <section v-if="hasOffers" class="border-b border-n-weak py-4">
+      <OfferQualificationReader
+        :contact-id="lead.id"
+        :offer-id="lead.detail.qualification.offer_id"
+      />
+    </section>
+    <section v-else class="border-b border-n-weak py-4">
       <h3 class="text-sm font-semibold text-n-slate-12">
         {{ t('AI_LEAD_EMPLOYEE.LEADS.DETAIL.QUALIFICATION') }}
       </h3>
@@ -239,7 +249,7 @@ const channelIcon = kind => {
       </div>
     </section>
 
-    <section class="border-b border-n-weak py-4">
+    <section v-if="!hasOffers" class="border-b border-n-weak py-4">
       <h3 class="text-sm font-semibold text-n-slate-12">
         {{ t('AI_LEAD_EMPLOYEE.LEADS.DETAIL.WHY') }}
       </h3>
@@ -252,7 +262,7 @@ const channelIcon = kind => {
       </p>
     </section>
 
-    <section class="border-b border-n-weak py-4">
+    <section v-if="!hasOffers" class="border-b border-n-weak py-4">
       <h3 class="text-sm font-semibold text-n-slate-12">
         {{ t('AI_LEAD_EMPLOYEE.LEADS.DETAIL.EVIDENCE') }}
       </h3>
@@ -281,7 +291,7 @@ const channelIcon = kind => {
       </div>
     </section>
 
-    <section class="border-b border-n-weak py-4">
+    <section v-if="!hasOffers" class="border-b border-n-weak py-4">
       <h3 class="text-sm font-semibold text-n-slate-12">
         {{ t('AI_LEAD_EMPLOYEE.LEADS.DETAIL.MISSING') }}
       </h3>

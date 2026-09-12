@@ -1,0 +1,13 @@
+[
+  "corepack",
+  "pnpm",
+  "exec",
+  "vitest",
+  "run",
+  "app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js",
+  "--maxWorkers=1",
+  "--minWorkers=1",
+  "--reporter=default",
+  "--reporter=json",
+  "--outputFile=tmp/r09/offer-switch-busy-red-results.json"
+]

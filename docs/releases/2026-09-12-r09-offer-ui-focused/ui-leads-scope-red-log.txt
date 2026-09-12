@@ -1,0 +1,58 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (11 tests | 1 failed) 248ms
+   ✓ LeadsDirectoryPage > renders filter chips, dense rows, selected detail, and long text truncation
+   ✓ LeadsDirectoryPage > applies quality chips, dropdown filters, sorting, pagination, and row selection through query-backed API calls
+   ✓ LeadsDirectoryPage > debounces search and requests matching server data
+   ✓ LeadsDirectoryPage > dismisses an unsaved Lead edit with Escape so the workspace is usable again
+   ✓ LeadsDirectoryPage > validates and saves the edit form
+   ✓ LeadsDirectoryPage > lets an administrator record re-consent from the newer verified message
+   ✓ LeadsDirectoryPage > shows granted automated-contact evidence independently of qualification
+   ✓ LeadsDirectoryPage > lets a Team Member edit assigned details without offering imports, exports or reassignment
+   × LeadsDirectoryPage > carries explicit Offer scope through selection, filters and export 12ms
+     → expected last "spy" call to have been called with [ ObjectContaining {"offer_id": "9"} ]
+   ✓ LeadsDirectoryPage > handles import and export controls
+   ✓ LeadsDirectoryPage > renders empty and error states
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > carries explicit Offer scope through selection, filters and export
+AssertionError: expected last "spy" call to have been called with [ ObjectContaining {"offer_id": "9"} ]
+
+- Expected
++ Received
+
+  [
+-   ObjectContaining {
+-     "offer_id": "9",
++   {
++     "direction": "desc",
++     "page": 1,
++     "per_page": 25,
++     "sort": "last_contact",
+    },
+  ]
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:560:26
+    558|     LeadsAPI.exportLeads.mockResolvedValue({ data: new Blob(['id,name'…
+    559|     const { wrapper, router } = await mountPage({ response, query: { o…
+    560|     expect(LeadsAPI.get).toHaveBeenLastCalledWith(expect.objectContain…
+       |                          ^
+    561|     await wrapper.get('[data-testid="lead-offer-select"]').setValue('1…
+    562|     await flushPromises();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  03:44:11
+   Duration  2.59s (transform 1.35s, setup 126ms, collect 1.41s, tests 248ms, environment 566ms, prepare 59ms)
+

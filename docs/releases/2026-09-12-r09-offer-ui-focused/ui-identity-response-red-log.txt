@@ -1,0 +1,126 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (13 tests | 2 failed) 808ms
+   ✓ LeadsDirectoryPage > renders filter chips, dense rows, selected detail, and long text truncation
+   ✓ LeadsDirectoryPage > applies quality chips, dropdown filters, sorting, pagination, and row selection through query-backed API calls
+   ✓ LeadsDirectoryPage > debounces search and requests matching server data
+   ✓ LeadsDirectoryPage > dismisses an unsaved Lead edit with Escape so the workspace is usable again
+   ✓ LeadsDirectoryPage > validates and saves the edit form
+   ✓ LeadsDirectoryPage > lets an administrator record re-consent from the newer verified message
+   ✓ LeadsDirectoryPage > shows granted automated-contact evidence independently of qualification
+   ✓ LeadsDirectoryPage > lets a Team Member edit assigned details without offering imports, exports or reassignment
+   ✓ LeadsDirectoryPage > carries explicit Offer scope through selection, filters and export
+   × LeadsDirectoryPage > edits shared identity without resubmitting unscoped evidence when Offers exist 78ms
+     → expected "spy" to be called with arguments: [ 2, ObjectContaining{…} ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    2,
+-   ObjectContaining {
+-     "lead": ObjectContaining {
++   {
++     "lead": {
++       "assignee_id": 4,
++       "business_name": "Nuru Boutique",
++       "city": "Arusha",
++       "country": "TZ",
++       "email": "jane@example.com",
++       "evidence": {
++         "budget": "$500",
++         "decision_authority": "",
++         "problem": "book demos automatically",
++         "urgency": "",
++       },
+        "name": "Updated identity",
++       "phone_number": "+255713456789",
+      },
+-     "offer_id": "9",
+    },
+  ]
+
+
+Number of calls: 1
+
+   × LeadsDirectoryPage > ignores directory results arriving after a newer Offer selection 82ms
+     → expected 'LeadsSearch leads by name, phone, or …' to contain 'Training Lead'
+   ✓ LeadsDirectoryPage > handles import and export controls
+   ✓ LeadsDirectoryPage > renders empty and error states
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > edits shared identity without resubmitting unscoped evidence when Offers exist
+AssertionError: expected "spy" to be called with arguments: [ 2, ObjectContaining{…} ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    2,
+-   ObjectContaining {
+-     "lead": ObjectContaining {
++   {
++     "lead": {
++       "assignee_id": 4,
++       "business_name": "Nuru Boutique",
++       "city": "Arusha",
++       "country": "TZ",
++       "email": "jane@example.com",
++       "evidence": {
++         "budget": "$500",
++         "decision_authority": "",
++         "problem": "book demos automatically",
++         "urgency": "",
++       },
+        "name": "Updated identity",
++       "phone_number": "+255713456789",
+      },
+-     "offer_id": "9",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:579:29
+    577|     await wrapper.find('form').trigger('submit.prevent');
+    578|     await flushPromises();
+    579|     expect(LeadsAPI.update).toHaveBeenCalledWith(2, expect.objectConta…
+       |                             ^
+    580|     expect(LeadsAPI.update.mock.calls[0][1].lead).not.toHaveProperty('…
+    581|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > ignores directory results arriving after a newer Offer selection
+AssertionError: expected 'LeadsSearch leads by name, phone, or …' to contain 'Training Lead'
+
+Expected: "Training Lead"
+Received: "LeadsSearch leads by name, phone, or businessImportExportAI_LEAD_EMPLOYEE.OFFERS.SELECT AI_LEAD_EMPLOYEE.OFFERS.CHOOSESupportTrainingAll100Highly Qualified12Qualified28Low Qualified34Unqualified18Unknown8AssigneeMineUnassignedJohnSourceWhatsApp salesFollow-up stateNurtureHuman ReviewBooking statusBookedNo Booking More filtersLead Business Lead Quality Score SourceAssigneeLast contact Next actionBookingJNObsolete Support Lead+255713456789Nuru Boutique With A Very Long Business NameArusha, TZQualified78WhatsApp salesJJohn11:35 AMAug 27Send proposalAug 27, 1:00 PMDemoAug 27, 5:30 PMJNObsolete Support LeadNuru Boutique With A Very Long Business NameQualifiedAI_LEAD_EMPLOYEE.LEADS.SCORE_VALUESend proposalWhatsApp salesDemoShowing 1-25 of 100 leads1JNObsolete Support Lead+255713456789Nuru Boutique With A Very Long Business Name / Arusha, TZContact channelsPhone+255713456789Emailjane@example.comSourceWhatsApp salesQualificationLead QualityQualifiedScoreAI_LEAD_EMPLOYEE.LEADS.DETAIL.SCORE_OUT_OF_100Why this lead mattersBoutique owner wants to automate lead capture on WhatsApp.Strongest evidenceAI_LEAD_EMPLOYEE.LEADS.DETAIL.EVIDENCE_ITEMMissing signalsTeam SizeConversation summaryAI_LEAD_EMPLOYEE.LEADS.DETAIL.LAST_MESSAGE_WITH_TIMEYes, I would like to see a demo tomorrow afternoon.AI_LEAD_EMPLOYEE.LEADS.DETAIL.TOTAL_MESSAGES_COUNTConversation statusOpenAI control stateAI ActiveOwner & follow-upAssigneeJohnFollow-up stateNurtureNext actionSend proposalDueAug 27, 1:00 PMRelatedAI_LEAD_EMPLOYEE.LEADS.DETAIL.CONVERSATION_NUMBERAug 27, 11:35 AMBookingsBooking #5Confirmed - Aug 27, 5:30 PMActions Open conversation Edit lead"
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:595:28
+    593|     resolveOld(defaultResponse({ offers, leads: [{ ...leadPayload, nam…
+    594|     await flushPromises();
+    595|     expect(wrapper.text()).toContain('Training Lead');
+       |                            ^
+    596|     expect(wrapper.text()).not.toContain('Obsolete Support Lead');
+    597|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 passed (13)
+   Start at  03:53:24
+   Duration  4.53s (transform 2.89s, setup 123ms, collect 2.99s, tests 808ms, environment 401ms, prepare 50ms)
+

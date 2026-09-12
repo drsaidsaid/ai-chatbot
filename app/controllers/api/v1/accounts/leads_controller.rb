@@ -88,7 +88,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def lead_directory_params
     params.permit(
-      :q, :quality, :follow_up_state, :assignee_id, :source_id,
+      :q, :quality, :follow_up_state, :assignee_id, :source_id, :offer_id,
       :booking_status, :page, :per_page, :sort, :direction, :lead_id
     )
   end

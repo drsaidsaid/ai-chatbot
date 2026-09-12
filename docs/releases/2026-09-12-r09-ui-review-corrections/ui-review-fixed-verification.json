@@ -1,0 +1,33 @@
+{
+  "source_tree": "59422982af15617ac85f0556fd2757db360ab8f8",
+  "runs": [
+    {
+      "name": "vue",
+      "before": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "after": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    },
+    {
+      "name": "rails",
+      "before": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "after": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    },
+    {
+      "name": "rubocop",
+      "before": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "after": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "whole_tree_equal": true,
+      "exit_code": 1
+    },
+    {
+      "name": "eslint",
+      "before": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "after": "59422982af15617ac85f0556fd2757db360ab8f8",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    }
+  ]
+}

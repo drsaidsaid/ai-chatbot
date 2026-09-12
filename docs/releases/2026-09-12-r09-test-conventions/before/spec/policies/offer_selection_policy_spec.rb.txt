@@ -1,0 +1,15 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Conversation Offer selection policy' do
+  it 'does not grant Offer mutation to a bot that can read the Conversation' do
+    account = create(:account)
+    bot = create(:agent_bot, account: account)
+    conversation = create(:conversation, account: account)
+    policy = ConversationPolicy.new({ user: bot, account: account, account_user: nil }, conversation)
+
+    expect(policy.show?).to be(true)
+    expect(policy.select_offer?).to be(false)
+  end
+end

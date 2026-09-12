@@ -23,6 +23,12 @@ class ConversationPolicy < ApplicationPolicy
     user.is_a?(User) && show?
   end
 
+  def select_offer?
+    return false unless user.is_a?(User) && record.account_id == account&.id
+
+    ActiveRecord::Base.uncached { access.conversations.exists?(id: record.id) }
+  end
+
   private
 
   def administrator?

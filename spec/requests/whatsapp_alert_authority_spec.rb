@@ -52,8 +52,11 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
   end
 
   def approve_launch!
+    connection = @channel.account.ai_provider_connection || create(:ai_provider_connection, account: @channel.account)
     AiLeadEmployee::Evaluation::ScenarioCatalog.required_keys.each do |key|
-      create(:ai_lead_employee_evaluation_run, :reviewed_pass, account: @channel.account, user: @admin, scenario_key: key)
+      create(:ai_lead_employee_evaluation_run, :reviewed_pass, account: @channel.account, user: @admin, scenario_key: key,
+                                                               provider_snapshot: { 'provider' => connection.provider, 'model' => connection.model,
+                                                                                    'configuration_version' => connection.configuration_version })
     end
     evaluator = AiLeadEmployee::Evaluation::LaunchGateEvaluator.new(account: @channel.account)
     evaluator.update!(team_roleplay_completed: true, pilot_conversations_reviewed_count: 3)
@@ -94,6 +97,45 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
         sleep 0.01
       end
     end
+  end
+
+  it 'does not discover a newly committed origin review after the authority prefix recorded absence' do
+    inserted = Queue.new
+    creator = start_worker('r09-late-review-creator') do
+      HumanReviewRequest.transaction do
+        review = HumanReviewRequest.create!(account: @channel.account, conversation: @conversation, lead_message: @review.lead_message,
+                                            reason: :unsupported_media, question: 'Synthetic future origin authority')
+        inserted << review.id
+        @release.pop
+      end
+    end
+    new_review_id = Timeout.timeout(10) { inserted.pop }
+    attributes = @alert.additional_attributes.deep_dup
+    attributes.fetch('ai_lead_employee')['review_request_id'] = new_review_id
+    @alert.update!(additional_attributes: attributes)
+    entered = Queue.new
+    prefix_release = Queue.new
+    gated = false
+    allow(Whatsapp::DeliveryLifecycle).to receive(:with).and_wrap_original do |original, **arguments, &block|
+      unless gated
+        gated = true
+        entered << true
+        prefix_release.pop
+      end
+      original.call(**arguments, &block)
+    end
+    sender = start_worker('r09-late-review-sender') { SendReplyJob.perform_now(@alert.id) }
+    Timeout.timeout(10) { entered.pop }
+    @release << true
+    creator.value
+    prefix_release << true
+    sender.value
+
+    expect(@alert.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: 'alert_authority_unavailable')
+    expect(@provider_request).not_to have_been_requested
+  ensure
+    @release << true
+    prefix_release << true if prefix_release
   end
 
   it 'cancels an alert when the actual rejection API wins before dispatch authorization' do

@@ -1,0 +1,183 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+require 'timeout'
+
+RSpec.describe 'Offer authority at the real provider admission transaction', type: :request do
+  self.use_transactional_tests = false
+  include_context 'Offer qualification requests'
+
+
+  let(:workers) { [] }
+  let(:release) { Queue.new }
+  let(:provider_url) { %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages} }
+
+  prepend_before { clean_committed_fixtures }
+  before do
+    @offer_payload = r09_create_offer
+    @conversation = r09_conversation(offer: @offer_payload)
+    incoming, intent = r09_receive(@conversation, 'Hello')
+    incoming.update!(provider_created_at: Time.current)
+    @message = intent.outbound_message
+    @request = stub_request(:post, provider_url).to_return(status: 200,
+                                                                             body: '{"messages":[{"id":"wamid.R09.ADMITTED"}]}', headers: { 'Content-Type' => 'application/json' })
+  end
+
+  after do
+    4.times { release << true }
+    ActiveRecord::Base.connection.execute('SELECT pg_advisory_unlock_all()')
+    workers.each { |worker| worker.join(20) || worker.kill.join }
+    ActiveRecord::Base.connection.execute('DROP TRIGGER IF EXISTS r09_pause_offer_admission ON whatsapp_outbound_deliveries')
+    ActiveRecord::Base.connection.execute('DROP FUNCTION IF EXISTS r09_pause_offer_admission()')
+    clean_committed_fixtures
+  end
+
+  %w[configuration evidence].each do |change|
+    it "sends zero times when #{change} commits before the waiting final authorization" do
+      changed = Queue.new
+      writer, writer_pid = start_worker do
+        ApplicationRecord.transaction do
+          change == 'configuration' ? edit_offer : correct_evidence
+          changed << true
+          release.pop
+        end
+      end
+      Timeout.timeout(15) { changed.pop }
+      sender, sender_pid = start_worker { SendReplyJob.perform_now(@message.id) }
+      wait_until { !sender.alive? || blocked_by?(sender_pid, writer_pid) }
+      waited = blocked_by?(sender_pid, writer_pid)
+      release << true
+      writer.value
+      sender.value
+      expect(waited).to be(true)
+      reason = change == 'configuration' ? 'offer_configuration_changed' : 'qualification_decision_changed'
+      expect(@message.reload.whatsapp_outbound_delivery).to have_attributes(state: 'canceled', failure_code: reason)
+      expect(@request).not_to have_been_requested
+    end
+  end
+
+  it 'holds Offer authority through dispatching commit while a later edit waits, then sends once' do
+    database = ActiveRecord::Base.connection
+    database.execute('SELECT pg_advisory_lock(95091)')
+    database.execute(<<~SQL)
+      CREATE FUNCTION r09_pause_offer_admission() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN IF NEW.state = 'dispatching' THEN PERFORM pg_advisory_xact_lock(95091); END IF; RETURN NEW; END $$;
+      CREATE TRIGGER r09_pause_offer_admission BEFORE UPDATE ON whatsapp_outbound_deliveries
+      FOR EACH ROW EXECUTE FUNCTION r09_pause_offer_admission();
+    SQL
+    sender, sender_pid = start_worker { SendReplyJob.perform_now(@message.id) }
+    wait_until { blocked_by?(sender_pid, database.raw_connection.backend_pid) || !sender.alive? }
+    writer, writer_pid = start_worker { edit_offer }
+    wait_until { blocked_by?(writer_pid, sender_pid) || !writer.alive? }
+    waited = blocked_by?(writer_pid, sender_pid)
+    expect(@request).not_to have_been_requested
+    database.execute('SELECT pg_advisory_unlock(95091)')
+    sender.value
+    writer.value
+    expect(waited).to be(true)
+    expect(@message.reload.whatsapp_outbound_delivery).to be_accepted
+    SendReplyJob.perform_now(@message.id)
+    expect(@request).to have_been_requested.once
+  end
+
+  it 'allows an admitted request to complete after an edit during HTTP without holding authority locks' do
+    entered = Queue.new
+    @request = stub_request(:post, provider_url).to_return do
+      entered << true
+      release.pop
+      { status: 200, body: '{"messages":[{"id":"wamid.R09.AFTER.EDIT"}]}', headers: { 'Content-Type' => 'application/json' } }
+    end
+    sender, = start_worker { SendReplyJob.perform_now(@message.id) }
+    Timeout.timeout(15) { entered.pop }
+    writer, = start_worker { edit_offer }
+    expect(writer.join(10)).to be_present
+    writer.value
+    release << true
+    sender.value
+    SendReplyJob.perform_now(@message.id)
+    expect(@message.reload.whatsapp_outbound_delivery).to be_accepted
+    expect(@request).to have_been_requested.once
+  end
+
+  %w[configuration evidence].each do |change|
+    it "does not assign a handoff after a #{change} writer wins the origin authority lock" do
+      incoming = create(:message, account: account, inbox: @conversation.inbox, conversation: @conversation,
+                                  sender: @conversation.contact, message_type: :incoming,
+                                  content: 'I need more leads now. I am the owner of the agency and can spend TZS 600000.')
+      result = AiLeadEmployee::QualificationService.new(conversation: @conversation, incoming_message: incoming).perform
+      expect(result.qualification).to be_highly_qualified
+      changed = Queue.new
+      writer, writer_pid = start_worker do
+        ApplicationRecord.transaction do
+          change == 'configuration' ? edit_offer : correct_evidence
+          changed << true
+          release.pop
+        end
+      end
+      Timeout.timeout(15) { changed.pop }
+      handoff, handoff_pid = start_worker do
+        AiLeadEmployee::HighlyQualifiedHandoffService.new(
+          conversation: Conversation.find(@conversation.id), qualification: LeadQualification.find(result.qualification.id),
+          qualification_context: result.qualification_context, defer_alert_delivery: true
+        ).perform
+      end
+      wait_until { !handoff.alive? || blocked_by?(handoff_pid, writer_pid) }
+      waited = blocked_by?(handoff_pid, writer_pid)
+      release << true
+      writer.value
+      outcome = handoff.value
+      expect(waited).to be(true)
+      expect(outcome.handoff).to be_nil
+      expect(@conversation.reload).to have_attributes(control_state: 'ai_active', assignee_id: nil)
+      expect(@request).not_to have_been_requested
+    end
+  end
+
+  def edit_offer
+    offer = AiLeadEmployee::Offer.find(@offer_payload.fetch('id'))
+    AiLeadEmployee::OfferConfigurationWriter.new(offer: offer, attributes: offer.payload.merge('name' => 'Changed at admission')).perform
+  end
+
+  def correct_evidence
+    AiLeadEmployee::OfferHumanEvidenceWriter.new(conversation: Conversation.find(@conversation.id),
+                                                 offer: AiLeadEmployee::Offer.find(@offer_payload.fetch('id')), user: User.find(r09_admin.id),
+                                                 field_key: 'budget', value: 'TZS 600000').perform
+  end
+
+  def start_worker
+    ready = Queue.new
+    worker = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do |connection|
+        connection.execute("SET lock_timeout = '15s'")
+        connection.execute("SET statement_timeout = '20s'")
+        ready << connection.raw_connection.backend_pid
+        yield
+      ensure
+        connection.execute('RESET lock_timeout')
+        connection.execute('RESET statement_timeout')
+      end
+    end
+    worker.report_on_exception = false
+    workers << worker
+    [worker, Timeout.timeout(15) { ready.pop }]
+  end
+
+  def blocked_by?(waiting_pid, holding_pid)
+    ActiveRecord::Base.uncached do
+      ActiveRecord::Base.connection.select_value("SELECT #{Integer(holding_pid)} = ANY(pg_blocking_pids(#{Integer(waiting_pid)}))")
+    end
+  end
+
+  def wait_until
+    Timeout.timeout(15) { sleep(0.01) until yield }
+  end
+
+  def clean_committed_fixtures
+    database = ActiveRecord::Base.connection
+    raise 'Disposable spec database required' unless Rails.env.test? && database.pool.db_config.database.end_with?('_spec', '_test')
+
+    tables = database.tables - %w[schema_migrations ar_internal_metadata installation_configs]
+    database.execute("TRUNCATE #{tables.map { |table| database.quote_table_name(table) }.join(', ')} CASCADE")
+    clear_enqueued_jobs
+  end
+end

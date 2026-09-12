@@ -1,0 +1,116 @@
+diff --git a/app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb b/app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb
+index 0135a75..94ce3a7 100644
+--- a/app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb
++++ b/app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb
+@@ -5,14 +5,22 @@ class Api::V1::Accounts::Conversations::QualificationOffersController < Api::V1:
+     conversation.with_lock('FOR NO KEY UPDATE') do
+       authorize conversation, :select_offer?
+       selected_id = params[:offer_id].presence
+-      selected = Current.account.qualification_offers.find(selected_id) if selected_id
+-      Current.account.qualification_offers.where(id: [conversation.offer_id, selected_id].compact)
+-             .order(:id).lock('FOR NO KEY UPDATE').load
+-      raise ActiveRecord::RecordNotFound if selected && !selected.reload.enabled?
++      selected = lock_offer_selection!(selected_id)
+ 
+       conversation.update!(offer: selected)
+       render json: { offer_id: selected&.id, offer_name: selected&.name, version: selected&.configuration_version,
+                      selection_version: conversation.offer_selection_version }
+     end
+   end
++
++  private
++
++  def lock_offer_selection!(selected_id)
++    selected = Current.account.qualification_offers.find(selected_id) if selected_id
++    Current.account.qualification_offers.where(id: [conversation.offer_id, selected_id].compact)
++           .order(:id).lock('FOR NO KEY UPDATE').load
++    raise ActiveRecord::RecordNotFound if selected && !selected.reload.enabled?
++
++    selected
++  end
+ end
+diff --git a/app/controllers/api/v1/accounts/qualification_offers_controller.rb b/app/controllers/api/v1/accounts/qualification_offers_controller.rb
+index 81550fd..60f8486 100644
+--- a/app/controllers/api/v1/accounts/qualification_offers_controller.rb
++++ b/app/controllers/api/v1/accounts/qualification_offers_controller.rb
+@@ -36,7 +36,9 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
+ 
+   def offer_params
+     permitted = params.require(:offer).permit(:name, :currency, :enabled, :version,
+-                                              questions: [:key, :meaning, :answer_type, :prompt, :position, :enabled, :required, :period, { options: [] }],
++                                              questions: [
++                                                :key, :meaning, :answer_type, :prompt, :position, :enabled, :required, :period, { options: [] }
++                                              ],
+                                               budget_ranges: [:label, :minimum, :maximum, :position, :enabled],
+                                               score_weights: {}, score_thresholds: [:qualified, :highly_qualified]).to_h
+     permitted.merge('rules' => rule_params)
+diff --git a/app/models/lead_follow_up.rb b/app/models/lead_follow_up.rb
+index dd49f38..033a688 100644
+--- a/app/models/lead_follow_up.rb
++++ b/app/models/lead_follow_up.rb
+@@ -99,13 +99,17 @@ class LeadFollowUp < ApplicationRecord
+   def validate_lineage
+     return unless follow_up_attempt
+ 
++    validate_attempt_scope
++    [replaces_follow_up, replaced_by_follow_up].compact.each do |relative|
++      errors.add(:follow_up_attempt, 'must match lineage') unless relative.follow_up_attempt_id == follow_up_attempt_id
++    end
++  end
++
++  def validate_attempt_scope
+     expected = [account_id, contact_id, lead_qualification&.offer_id, stage, attempt_number]
+     actual = [follow_up_attempt.account_id, follow_up_attempt.contact_id, follow_up_attempt.offer_id, follow_up_attempt.stage,
+               follow_up_attempt.attempt_number]
+     errors.add(:follow_up_attempt, 'must match artifact scope and budget') unless expected == actual
+-    [replaces_follow_up, replaced_by_follow_up].compact.each do |relative|
+-      errors.add(:follow_up_attempt, 'must match lineage') unless relative.follow_up_attempt_id == follow_up_attempt_id
+-    end
+   end
+ 
+   def validate_account_scope
+diff --git a/app/models/lead_follow_up_attempt.rb b/app/models/lead_follow_up_attempt.rb
+index a66e6b9..34496cb 100644
+--- a/app/models/lead_follow_up_attempt.rb
++++ b/app/models/lead_follow_up_attempt.rb
+@@ -23,14 +23,18 @@ class LeadFollowUpAttempt < ApplicationRecord
+   def preserve_admission
+     return unless persisted?
+ 
+-    errors.add(:admission_state, 'cannot return to unadmitted') if unadmitted? && admission_state_in_database != 'unadmitted'
+-    errors.add(:admission_state, 'cannot lower accepted delivery') if admission_state_in_database == 'accepted' && !accepted?
++    validate_admission_progress
+     errors.add(:admitted_at, 'cannot change recorded admission') if admitted_at_in_database.present? && will_save_change_to_admitted_at?
+     %w[account_id contact_id offer_id stage attempt_number].each do |attribute|
+       errors.add(attribute, 'is immutable') if will_save_change_to_attribute?(attribute)
+     end
+   end
+ 
++  def validate_admission_progress
++    errors.add(:admission_state, 'cannot return to unadmitted') if unadmitted? && admission_state_in_database != 'unadmitted'
++    errors.add(:admission_state, 'cannot lower accepted delivery') if admission_state_in_database == 'accepted' && !accepted?
++  end
++
+   def validate_scope
+     errors.add(:contact, 'must belong to account') if contact && contact.account_id != account_id
+     errors.add(:offer, 'must belong to account') if offer && offer.account_id != account_id
+diff --git a/app/models/qualification_evidence.rb b/app/models/qualification_evidence.rb
+index 0ad4e74..f60a2fc 100644
+--- a/app/models/qualification_evidence.rb
++++ b/app/models/qualification_evidence.rb
+@@ -64,9 +64,13 @@ class QualificationEvidence < ApplicationRecord
+   end
+ 
+   def validate_account_scope
+-    errors.add(:offer, 'must belong to the same account') if offer.present? && offer.account_id != account_id
+-    errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id
++    validate_offer_and_contact_scope
+     errors.add(:conversation, 'must belong to the same account') if conversation.present? && conversation.account_id != account_id
+     errors.add(:message, 'must belong to the same account') if message.present? && message.account_id != account_id
+   end
++
++  def validate_offer_and_contact_scope
++    errors.add(:offer, 'must belong to the same account') if offer.present? && offer.account_id != account_id
++    errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id
++  end
+ end

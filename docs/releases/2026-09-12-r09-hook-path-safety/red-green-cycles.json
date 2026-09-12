@@ -1,0 +1,110 @@
+[
+  {
+    "behavior": "hook-path-coverage",
+    "evidence": {
+      "red": {
+        "source_tree": "f3ad80d8e0a90e751a3946c5d0a0ea8b45204103",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 0.918155,
+          "example_count": 1,
+          "failure_count": 1,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      },
+      "green": {
+        "source_tree": "54d56c6db63a4e3b778c40ba426fdb5411e04b82",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 2.186694,
+          "example_count": 1,
+          "failure_count": 0,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      }
+    }
+  },
+  {
+    "behavior": "hook-check-failure",
+    "evidence": {
+      "red": {
+        "source_tree": "12f9fa785faa88dd1ce43a7576b6dd64804b84c4",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 3.205028,
+          "example_count": 2,
+          "failure_count": 1,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      },
+      "green": {
+        "source_tree": "c0dafde3aef63c2402f4bebbc5c34cb2e454eb21",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 3.485527,
+          "example_count": 2,
+          "failure_count": 0,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      }
+    }
+  },
+  {
+    "behavior": "hook-staging-failure",
+    "evidence": {
+      "red": {
+        "source_tree": "54d27d4cb026817c42872a30389ae86221e747b0",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 4.90245,
+          "example_count": 3,
+          "failure_count": 1,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      },
+      "green": {
+        "source_tree": "1c6afd1b19467e8b7be5d904082de85726137a87",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 4.889382,
+          "example_count": 3,
+          "failure_count": 0,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      }
+    }
+  },
+  {
+    "behavior": "hook-enumeration-failure",
+    "evidence": {
+      "red": {
+        "source_tree": "2a7df32f9a0c8009f51c58a676e29f5ef467ca37",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 5.408533,
+          "example_count": 4,
+          "failure_count": 1,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      },
+      "green": {
+        "source_tree": "7d0d7dcb571d5d8097f5ba70128fde49a822639b",
+        "whole_tree_equal": true,
+        "summary": {
+          "duration": 5.363354,
+          "example_count": 4,
+          "failure_count": 0,
+          "pending_count": 0,
+          "errors_outside_of_examples_count": 0
+        }
+      }
+    }
+  }
+]

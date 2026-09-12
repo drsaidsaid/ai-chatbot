@@ -115,6 +115,10 @@ class Conversation < ApplicationRecord
   }
 
   belongs_to :account
+  belongs_to :offer, class_name: 'AiLeadEmployee::Offer', optional: true
+  validate do
+    errors.add(:offer, 'must belong to the same account') if offer.present? && offer.account_id != account_id
+  end
   belongs_to :inbox
   belongs_to :assignee, class_name: 'User', optional: true, inverse_of: :assigned_conversations
   belongs_to :assignee_agent_bot, class_name: 'AgentBot', optional: true
@@ -139,6 +143,7 @@ class Conversation < ApplicationRecord
   has_many :lead_follow_ups, dependent: :destroy_async
   has_many :qualification_evidences, dependent: :nullify
 
+  before_save :advance_offer_selection_version, if: :will_save_change_to_offer_id?
   before_save :ensure_snooze_until_reset
   before_save :set_status_changed_at
   before_create :determine_conversation_status
@@ -153,6 +158,12 @@ class Conversation < ApplicationRecord
   after_destroy_commit :notify_conversation_deletion
 
   delegate :auto_resolve_after, to: :account
+
+  # Selection writers hold the Conversation lock; this also covers automatic
+  # selection and explicit removal without changing AI/Human control authority.
+  def advance_offer_selection_version
+    self.offer_selection_version = offer_selection_version_in_database.to_i + 1
+  end
 
   def can_reply?
     Conversations::MessageWindowService.new(self).can_reply?

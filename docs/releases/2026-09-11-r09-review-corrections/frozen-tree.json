@@ -1,0 +1,9 @@
+{
+  "tree": "609cd43b74bfd59e4f80fbc93e4adf489ab9d566",
+  "ref": "refs/r09/review-corrections-20260911",
+  "base": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "source_count": 25,
+  "examples": 16,
+  "failures": 0,
+  "note": "Intermediate uncommitted correction; unexecuted next-semantics specs excluded."
+}

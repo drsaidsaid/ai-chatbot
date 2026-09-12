@@ -19,6 +19,7 @@ class AiLeadEmployee::LeadUpdateService
     raise Pundit::NotAuthorizedError if attributes.key?(:assignee_id) && !access.administrator?
 
     ActiveRecord::Base.transaction do
+      reject_unscoped_offer_evidence!
       update_contact!
       update_assignee!
       record_evidence!
@@ -32,6 +33,13 @@ class AiLeadEmployee::LeadUpdateService
   private
 
   attr_reader :account, :user, :contact, :attributes, :conversation_scope, :changed_fields, :changed_evidence_signals
+
+  def reject_unscoped_offer_evidence!
+    return unless attributes[:evidence].present? && account.qualification_offers.exists?
+
+    contact.errors.add(:base, 'Choose an Offer and Conversation and use the Offer evidence editor for this correction')
+    raise ActiveRecord::RecordInvalid, contact
+  end
 
   def update_contact!
     validate_required_fields!

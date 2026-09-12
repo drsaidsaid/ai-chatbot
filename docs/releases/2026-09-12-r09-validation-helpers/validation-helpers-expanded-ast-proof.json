@@ -1,0 +1,73 @@
+[
+  {
+    "path": "app/models/lead_follow_up.rb",
+    "original_methods": [
+      "cancel!",
+      "preserve_artifact",
+      "validate_lineage",
+      "validate_account_scope"
+    ],
+    "extracted_helpers": [
+      "validate_attempt_scope"
+    ],
+    "expanded_ast_equal": true,
+    "before_ast_sha256": "afff3c3ce3eac8906334dd7246fb5b2f224edffc060477a3b26f311170301d53",
+    "expanded_ast_sha256": "afff3c3ce3eac8906334dd7246fb5b2f224edffc060477a3b26f311170301d53"
+  },
+  {
+    "path": "app/models/lead_follow_up_attempt.rb",
+    "original_methods": [
+      "replaceable?",
+      "preserve_admission",
+      "validate_scope"
+    ],
+    "extracted_helpers": [
+      "validate_admission_progress"
+    ],
+    "expanded_ast_equal": true,
+    "before_ast_sha256": "7138500178b07a0a984d8c2ddbcf8b8a9d633adf8f151061ab9b46f2c4d8ff49",
+    "expanded_ast_sha256": "7138500178b07a0a984d8c2ddbcf8b8a9d633adf8f151061ab9b46f2c4d8ff49"
+  },
+  {
+    "path": "app/models/qualification_evidence.rb",
+    "original_methods": [
+      "assign_legacy_field_key",
+      "validate_account_scope"
+    ],
+    "extracted_helpers": [
+      "validate_offer_and_contact_scope"
+    ],
+    "expanded_ast_equal": true,
+    "before_ast_sha256": "779fb7ec8d3ff5d249999416f2019168ca66cf91c56e5da068997756b103188f",
+    "expanded_ast_sha256": "779fb7ec8d3ff5d249999416f2019168ca66cf91c56e5da068997756b103188f"
+  },
+  {
+    "path": "app/controllers/api/v1/accounts/conversations/qualification_offers_controller.rb",
+    "original_methods": [
+      "update"
+    ],
+    "extracted_helpers": [
+      "lock_offer_selection!"
+    ],
+    "expanded_ast_equal": true,
+    "before_ast_sha256": "77eba0ec9580677fcba5f54038d6b95020f576cc945365234cf64a40c71e15cd",
+    "expanded_ast_sha256": "77eba0ec9580677fcba5f54038d6b95020f576cc945365234cf64a40c71e15cd"
+  },
+  {
+    "path": "app/controllers/api/v1/accounts/qualification_offers_controller.rb",
+    "original_methods": [
+      "index",
+      "show",
+      "create",
+      "update",
+      "offer",
+      "save_offer",
+      "offer_params",
+      "rule_params"
+    ],
+    "extracted_helpers": [],
+    "expanded_ast_equal": true,
+    "before_ast_sha256": "f12968b433b21210fbe528fccf2ba680d84ce9e181dc8baf5b6db05661609a3c",
+    "expanded_ast_sha256": "f12968b433b21210fbe528fccf2ba680d84ce9e181dc8baf5b6db05661609a3c"
+  }
+]

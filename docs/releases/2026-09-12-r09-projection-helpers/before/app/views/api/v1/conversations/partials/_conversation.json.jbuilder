@@ -1,0 +1,155 @@
+# TODO: Move this into models jbuilder
+# Currently the file there is used only for search endpoint.
+# Everywhere else we use conversation builder in partials folder
+include_cockpit = local_assigns.fetch(:include_cockpit, false)
+
+json.meta do
+  json.sender do
+    json.partial! 'api/v1/models/contact', formats: [:json], resource: conversation.contact
+  end
+  json.channel conversation.inbox.try(:channel_type)
+  if conversation.assigned_entity.is_a?(AgentBot)
+    json.assignee do
+      json.partial! 'api/v1/models/agent_bot_slim', formats: [:json], resource: conversation.assigned_entity
+    end
+    json.assignee_type 'AgentBot'
+  elsif conversation.assigned_entity&.account
+    json.assignee do
+      json.partial! 'api/v1/models/agent', formats: [:json], resource: conversation.assigned_entity
+    end
+    json.assignee_type 'User'
+  end
+  if conversation.team.present?
+    json.team do
+      json.partial! 'api/v1/models/team', formats: [:json], resource: conversation.team
+    end
+  end
+  json.hmac_verified conversation.contact_inbox&.hmac_verified
+end
+
+json.id conversation.display_id
+if conversation.messages.where(account_id: conversation.account_id).last.blank?
+  json.messages []
+else
+  json.messages [
+    conversation.messages.where(account_id: conversation.account_id)
+                .includes([{ attachments: [{ file_attachment: [:blob] }] }]).last.try(:push_event_data)
+  ]
+end
+
+json.account_id conversation.account_id
+json.uuid conversation.uuid
+json.additional_attributes conversation.additional_attributes
+json.agent_last_seen_at conversation.agent_last_seen_at.to_i
+json.assignee_last_seen_at conversation.assignee_last_seen_at.to_i
+json.can_reply conversation.can_reply?
+json.contact_last_seen_at conversation.contact_last_seen_at.to_i
+json.custom_attributes conversation.custom_attributes
+json.inbox_id conversation.inbox_id
+json.labels conversation.cached_label_list_array
+json.muted conversation.muted?
+json.snoozed_until conversation.snoozed_until
+json.status conversation.status
+json.control_state conversation.control_state
+json.control_version conversation.control_version
+json.ai_employee_decision conversation.additional_attributes&.dig('ai_employee_last_decision')
+access = AiLeadEmployee::AccessScope.new(account: conversation.account, user: Current.user)
+json.automated_contact_consent AiLeadEmployee::AutomatedContactConsentPresenter.new(
+  account: conversation.account,
+  user: Current.user,
+  contact: conversation.contact,
+  preloaded: @automated_contact_consent_by_contact&.fetch(conversation.contact_id, nil)
+).payload
+qualification_context = AiLeadEmployee::OfferQualificationReadContext.new(
+  account: conversation.account, user: Current.user, offer_id: conversation.offer_id
+)
+qualification = qualification_context.qualification(conversation.contact)
+if qualification.present? || qualification_context.offers_configured?
+  qualification ||= LeadQualification.new(account: conversation.account, contact: conversation.contact, offer: qualification_context.offer)
+  json.lead_qualification do
+    json.quality qualification.quality
+    json.follow_up_state qualification.follow_up_state
+    json.score qualification.score
+    json.reasons qualification.reasons
+    json.missing_signals qualification.missing_signals
+    json.evidence qualification.evidence_snapshot
+    json.merge! qualification_context.qualification_metadata(qualification)
+    json.legacy_qualification qualification_context.legacy_payload(qualification_context.legacy_qualifications.find_by(contact: conversation.contact))
+    json.next_question qualification_context.next_question(qualification)
+    json.evidence_records qualification_context.evidence_records(conversation.contact) do |evidence|
+      json.id evidence.id
+      json.signal evidence.signal
+      json.field_key evidence.field_key
+      json.offer_id evidence.offer_id
+      json.normalized_value evidence.value
+      json.value evidence.value['value']
+      json.source evidence.source
+      json.source_reference AiLeadEmployee::QualificationEvidenceSnapshot.source_reference_for(evidence)
+      json.source_path qualification_context.evidence_source_path(evidence)
+      json.observed_at evidence.observed_at&.iso8601
+      json.superseded evidence.superseded_at.present?
+    end
+    json.handoffs access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5) do |handoff|
+      json.id handoff.id
+      json.status handoff.status
+      json.alert_type handoff.alert_type
+      json.assignee_id handoff.assignee_id
+      json.handed_off_at handoff.handed_off_at&.iso8601
+      json.alert_recipients handoff.alert_recipients
+      json.alert_deliveries handoff.alert_deliveries
+    end
+    json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
+      json.id follow_up.id
+      json.status follow_up.status
+      json.stage follow_up.stage
+      json.attempt_number follow_up.attempt_number
+      json.question_text follow_up.question_text
+      json.scheduled_at follow_up.scheduled_at&.iso8601
+      json.sent_at follow_up.sent_at&.iso8601
+      json.cancelled_at follow_up.cancelled_at&.iso8601
+      json.failed_at follow_up.failed_at&.iso8601
+      json.cancellation_reason follow_up.cancellation_reason
+      json.failure_reason follow_up.failure_reason
+    end
+  end
+end
+json.meta_whatsapp_events conversation.meta_whatsapp_webhook_events.order(created_at: :desc).limit(10) do |event|
+  json.id event.id
+  json.event_kind event.event_kind
+  json.provider_event_id event.provider_event_id
+  json.processed_at event.processed_at&.to_i
+  json.created_at event.created_at.to_i
+end
+if local_assigns[:include_control_events]
+  json.control_events Audited::Audit.where(auditable: conversation)
+                                    .where("audited_changes ? 'ai_lead_employee_action' OR audited_changes ? 'control_state'")
+                                    .order(created_at: :desc)
+                                    .limit(10) do |event|
+    changes = event.audited_changes || {}
+    control_state_change = changes['control_state'] || []
+    assignee_change = changes['assignee_id'] || []
+    json.id event.id
+    json.action changes['ai_lead_employee_action'] || event.action
+    json.from control_state_change.first
+    json.to control_state_change.last
+    json.assignee_id assignee_change.last
+    json.actor_id event.user_id
+    json.actor_name event.user&.try(:name)
+    json.created_at event.created_at.to_i
+  end
+end
+if local_assigns[:include_cockpit]
+  json.cockpit AiLeadEmployee::ConversationCockpitPresenter.new(conversation: conversation).to_h
+end
+json.created_at conversation.created_at.to_i
+json.updated_at conversation.updated_at.to_f
+json.timestamp conversation.last_activity_at.to_i
+json.first_reply_created_at conversation.first_reply_created_at.to_i
+json.unread_count conversation.unread_incoming_messages.count
+json.last_non_activity_message conversation.messages.where(account_id: conversation.account_id).non_activity_messages.first.try(:push_event_data)
+json.last_activity_at conversation.last_activity_at.to_i
+json.priority conversation.priority
+json.waiting_since conversation.waiting_since.to_i.to_i
+sla_applicable = conversation.account.feature_enabled?('sla') && (!conversation.respond_to?(:sla_applicable?) || conversation.sla_applicable?)
+json.sla_policy_id sla_applicable ? conversation.sla_policy_id : nil
+json.partial! 'enterprise/api/v1/conversations/partials/conversation', conversation: conversation if ChatwootApp.enterprise?

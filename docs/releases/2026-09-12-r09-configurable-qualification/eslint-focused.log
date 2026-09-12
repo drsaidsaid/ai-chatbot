@@ -1,0 +1,6 @@
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue
+  37:22  warning  '`AI_LEAD_EMPLOYEE.OFFERS.${key}`' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
+
+✖ 1 problem (0 errors, 1 warning)
+

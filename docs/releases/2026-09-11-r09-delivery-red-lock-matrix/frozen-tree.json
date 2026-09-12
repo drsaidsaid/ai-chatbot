@@ -1,0 +1,13 @@
+{
+  "tree": "374fca9fb372f30a6e7f04eba39228723b734774",
+  "ref": "refs/r09/delivery-red-lock-matrix-20260911",
+  "runtime_tree": "bd6e54aae5a7e6d2b3405d29528e63488879380d",
+  "base": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "source_count": 55,
+  "red_run": {
+    "examples": 9,
+    "failures": 7,
+    "controls_passed": 2
+  },
+  "note": "No implementation; proposed lock matrix. External metadata after freeze."
+}

@@ -1,35 +1,32 @@
 # frozen_string_literal: true
 
-class AiLeadEmployee::HighlyQualifiedHandoffService
+class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/ClassLength
   ALERT_TYPE = 'highly_qualified_sales_handoff'
+  SALES_CALL_AGREEMENT_FIELD = 'sales_call_agreement'
+  SALES_CALL_DIMENSIONS = %w[fit readiness action_eligibility].freeze
   DEFAULT_UNQUALIFIED_HUMAN_REQUEST_EXPLANATION =
     'I need to confirm a few details first so the right Human Operator can help you.'
 
   Result = Struct.new(:handoff, :created, :assignee, :alert_message_ids, keyword_init: true)
 
-  def initialize(conversation:, qualification:, defer_alert_delivery: false)
+  def initialize(conversation:, qualification:, qualification_context: nil, defer_alert_delivery: false)
     @conversation = conversation
     @qualification = qualification
+    @qualification_context = qualification_context
     @account = conversation.account
     @defer_alert_delivery = defer_alert_delivery
   end
 
   def perform
-    existing_handoff = existing_handoff_record
-    return retry_existing_handoff_if_allowed(existing_handoff) if existing_handoff.present?
-    return Result.new unless automatic_handoff_allowed?
-
-    handoff, created = find_or_create_handoff!
-    assign_operator!(handoff) if created
-    alert_message_ids = deliver_alerts!(handoff)
-    Result.new(handoff: handoff.reload, created: created, assignee: handoff.assignee, alert_message_ids: alert_message_ids)
+    result = conversation.reload.with_lock('FOR NO KEY UPDATE') do
+      perform_handoff_locked
+    end
+    deliver_result_alerts(result)
   rescue ActiveRecord::RecordNotUnique
-    handoff = account.lead_handoffs.find_by!(
-      conversation: conversation,
-      lead_qualification: qualification,
-      alert_type: ALERT_TYPE
-    )
-    retry_existing_handoff_if_allowed(handoff)
+    result = conversation.reload.with_lock('FOR NO KEY UPDATE') do
+      recover_existing_handoff_locked
+    end
+    deliver_result_alerts(result)
   end
 
   def self.unqualified_human_request_explanation(account)
@@ -39,7 +36,54 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
 
   private
 
-  attr_reader :account, :conversation, :qualification, :defer_alert_delivery
+  def perform_handoff_locked
+    existing_handoff = existing_handoff_record
+    context = existing_handoff ? existing_handoff.qualification_snapshot['qualification_context'] : qualification_context
+    authority = AiLeadEmployee::OfferDeliveryContext.new(
+      conversation: conversation, context: context, required: qualification&.offer_id.present?
+    )
+    authority.lock_offers!
+    if existing_handoff
+      return Result.new if authority.failure_code || !existing_handoff_retry_allowed?(existing_handoff)
+
+      return Result.new(handoff: existing_handoff, created: false, assignee: existing_handoff.assignee)
+    end
+    create_handoff_result(authority)
+  end
+
+  def create_handoff_result(authority)
+    return Result.new unless context_matches_qualification?
+    return Result.new if authority.failure_code
+
+    qualification&.reload
+    return Result.new unless automatic_handoff_allowed?
+
+    handoff, created = find_or_create_handoff!
+    assign_operator!(handoff) if created
+    Result.new(handoff: handoff, created: created, assignee: handoff.assignee)
+  end
+
+  def recover_existing_handoff_locked
+    handoff = account.lead_handoffs.find_by!(conversation: conversation, lead_qualification: qualification, alert_type: ALERT_TYPE)
+    authority = AiLeadEmployee::OfferDeliveryContext.new(
+      conversation: conversation, context: handoff.qualification_snapshot['qualification_context'],
+      required: qualification&.offer_id.present?
+    )
+    authority.lock_offers!
+    return Result.new if authority.failure_code || !existing_handoff_retry_allowed?(handoff)
+
+    Result.new(handoff: handoff, created: false, assignee: handoff.assignee)
+  end
+
+  attr_reader :account, :conversation, :qualification, :qualification_context, :defer_alert_delivery
+
+  def deliver_result_alerts(result)
+    return result unless result.handoff
+
+    result.alert_message_ids = deliver_alerts!(result.handoff)
+    result.handoff.reload
+    result
+  end
 
   def existing_handoff_record
     return if qualification.blank?
@@ -51,15 +95,11 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
     )
   end
 
-  def retry_existing_handoff_if_allowed(handoff)
-    return Result.new unless existing_handoff_retry_allowed?(handoff)
+  def context_matches_qualification?
+    return qualification&.offer_id.nil? if qualification_context.blank?
 
-    retry_existing_handoff(handoff)
-  end
-
-  def retry_existing_handoff(handoff)
-    alert_message_ids = deliver_alerts!(handoff)
-    Result.new(handoff: handoff.reload, created: false, assignee: handoff.assignee, alert_message_ids: alert_message_ids)
+    qualification && qualification_context['qualification_id'] == qualification.id &&
+      qualification_context['offer_id'] == qualification.offer_id
   end
 
   def existing_handoff_retry_allowed?(handoff)
@@ -67,16 +107,63 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
       qualification.contact_id == conversation.contact_id &&
       handoff.account_id == account.id &&
       handoff.conversation_id == conversation.id &&
+      handoff.open? &&
       conversation.human_active? &&
       conversation.open?
   end
 
   def automatic_handoff_allowed?
-    qualification&.highly_qualified? &&
+    qualification.present? &&
       qualification.account_id == account.id &&
       qualification.contact_id == conversation.contact_id &&
       conversation.ai_active? &&
       conversation.assignee_id.blank? &&
+      qualification_action_allowed?
+  end
+
+  def qualification_action_allowed?
+    return legacy_highly_qualified? unless qualification.offer
+    return false unless qualification.offer.next_step['kind'] == 'sales_call'
+    return false if qualification.unqualified?
+
+    valid_sales_call_assessment? && explicit_sales_call_agreement?
+  end
+
+  def valid_sales_call_assessment?
+    assessment = qualification.assessment
+    assessment.is_a?(Hash) && SALES_CALL_DIMENSIONS.all? do |dimension|
+      dimension_assessment = assessment[dimension]
+      dimension_assessment.is_a?(Hash) && dimension_assessment['status'] == expected_dimension_status(dimension) &&
+        dimension_assessment['missing_fields'] == [] && dimension_assessment['reasons'] == []
+    end
+  end
+
+  def expected_dimension_status(dimension)
+    sales_call_dimension_configured?(dimension) ? 'met' : 'not_required'
+  end
+
+  def sales_call_dimension_configured?(dimension)
+    configured_required_question?(dimension) || qualification.offer.configuration.fetch('rules', []).any? do |rule|
+      rule['enabled'] && rule['kind'] == 'requirement' && rule['dimension'] == dimension
+    end
+  end
+
+  def configured_required_question?(dimension)
+    qualification.offer.questions.any? do |question|
+      question['enabled'] && question['required'] && question.fetch('purpose', 'fit') == dimension
+    end
+  end
+
+  def explicit_sales_call_agreement?
+    question = qualification.offer.questions.find { |candidate| candidate['key'] == SALES_CALL_AGREEMENT_FIELD }
+    return false unless question&.[]('answer_type') == 'boolean'
+
+    agreement = qualification.evidence_snapshot[SALES_CALL_AGREEMENT_FIELD]
+    agreement.is_a?(Hash) && agreement['typed_value'] == true && agreement['polarity'] == 'positive'
+  end
+
+  def legacy_highly_qualified?
+    qualification.highly_qualified? &&
       (AiLeadEmployee::QualificationService::REQUIRED_HIGHLY_QUALIFIED_SIGNALS - qualification.evidence_snapshot.keys).empty?
   end
 
@@ -131,11 +218,7 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
   end
 
   def alert_recipients(assignee)
-    alert_routes.filter_map { |route| recipient_for(route, assignee) }.flatten.filter_map { |recipient| normalized_recipient(recipient) }.uniq
-  end
-
-  def alert_routes
-    Array(account.settings&.dig('ai_lead_employee', 'alert_routes', ALERT_TYPE))
+    AiLeadEmployee::HandoffAlertRecipients.new(account: account, alert_type: ALERT_TYPE).for(assignee)
   end
 
   def alert_template_params
@@ -145,27 +228,6 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
       qualification: qualification,
       alert_type: ALERT_TYPE
     ).to_h
-  end
-
-  def recipient_for(route, assignee)
-    case route.to_h['type']
-    when 'assignee'
-      whatsapp_alert_phone_for(assignee)
-    when 'admin'
-      account.administrators.map { |admin| whatsapp_alert_phone_for(admin) }
-    else
-      route.to_h['recipient']
-    end
-  end
-
-  def normalized_recipient(recipient)
-    Whatsapp::RecipientIdentifier.normalize(recipient)
-  end
-
-  def whatsapp_alert_phone_for(user)
-    return if user.blank?
-
-    user.custom_attributes&.dig('whatsapp_alert_phone').presence
   end
 
   def configured_operator
@@ -179,8 +241,10 @@ class AiLeadEmployee::HighlyQualifiedHandoffService
       'score' => qualification.score,
       'reasons' => qualification.reasons,
       'missing_signals' => qualification.missing_signals,
+      'assessment' => qualification.assessment,
       'evidence' => qualification.evidence_snapshot,
-      'configuration_version' => qualification.configuration_version
+      'configuration_version' => qualification.configuration_version,
+      'qualification_context' => qualification_context
     }
   end
 

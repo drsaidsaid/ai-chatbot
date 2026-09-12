@@ -1,0 +1,19 @@
+F
+
+Failures:
+
+  1) Pre-commit staged-file checks checks and stages every eligible path including spaces, newlines and long paths
+     Failure/Error: expect(checked_paths(directory)).to match_array(paths), output
+
+       xargs: command line cannot be assembled, too long
+       xargs: command line cannot be assembled, too long
+     # ./spec/hooks/pre_commit_spec.rb:57:in 'block (3 levels) in <top (required)>'
+     # ./spec/hooks/pre_commit_spec.rb:52:in 'block (2 levels) in <top (required)>'
+
+Finished in 0.91816 seconds (files took 0.49609 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/hooks/pre_commit_spec.rb:51 # Pre-commit staged-file checks checks and stages every eligible path including spaces, newlines and long paths
+

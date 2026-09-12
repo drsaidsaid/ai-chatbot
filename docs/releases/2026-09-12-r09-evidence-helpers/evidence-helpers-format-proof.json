@@ -1,0 +1,6 @@
+{
+  "tested_source": "288dc0e9652ac62dd21e1da4629ef67bfc4f61b8",
+  "source_tree": "e71a73e3799a48846f068757eab57c712fc3e832",
+  "path": "app/services/ai_lead_employee/offer_evidence_recorder.rb",
+  "parsed_ast_equal": true
+}

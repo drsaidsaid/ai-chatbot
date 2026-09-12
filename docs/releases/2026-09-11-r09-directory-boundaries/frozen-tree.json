@@ -1,0 +1,11 @@
+{
+  "tree": "33cf9e35c28b6eb9a3380b0db96edf950e7bafa6",
+  "ref": "refs/r09/directory-boundaries-20260911",
+  "source_tree": "e7601952e2fc3cc8ebeac8d666f95a58e4ac14ea",
+  "source_ref": "refs/r09/directory-boundaries-source-20260911",
+  "examples": 59,
+  "failures": 0,
+  "whole_tree_equal_before_after": true,
+  "source_count": 8936,
+  "runtime_test_changed_count": 52
+}

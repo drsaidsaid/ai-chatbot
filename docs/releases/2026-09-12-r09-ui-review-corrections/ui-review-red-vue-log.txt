@@ -1,0 +1,55 @@
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (16 tests | 2 failed) 271ms
+   ✓ LeadsDirectoryPage > renders filter chips, dense rows, selected detail, and long text truncation
+   ✓ LeadsDirectoryPage > applies quality chips, dropdown filters, sorting, pagination, and row selection through query-backed API calls
+   ✓ LeadsDirectoryPage > debounces search and requests matching server data
+   ✓ LeadsDirectoryPage > dismisses an unsaved Lead edit with Escape so the workspace is usable again
+   ✓ LeadsDirectoryPage > validates and saves the edit form
+   ✓ LeadsDirectoryPage > lets an administrator record re-consent from the newer verified message
+   ✓ LeadsDirectoryPage > shows granted automated-contact evidence independently of qualification
+   ✓ LeadsDirectoryPage > lets a Team Member edit assigned details without offering imports, exports or reassignment
+   ✓ LeadsDirectoryPage > carries explicit Offer scope through selection, filters and export
+   ✓ LeadsDirectoryPage > edits shared identity without resubmitting unscoped evidence when Offers exist
+   ✓ LeadsDirectoryPage > ignores directory results arriving after a newer Offer selection
+   × LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {} 15ms
+     → expected 'LeadsSearch leads by name, phone, or …' not to contain 'Jane Nkosi'
+   × LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {"offer_id":"9"} 9ms
+     → expected 'LeadsSearch leads by name, phone, or …' not to contain 'Jane Nkosi'
+   ✓ LeadsDirectoryPage > discards a late directory response from the previous account
+   ✓ LeadsDirectoryPage > handles import and export controls
+   ✓ LeadsDirectoryPage > renders empty and error states
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {}
+ FAIL  app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js > LeadsDirectoryPage > clears tenant data on an account switch with unchanged query {"offer_id":"9"}
+AssertionError: expected 'LeadsSearch leads by name, phone, or …' not to contain 'Jane Nkosi'
+
+Expected: "Jane Nkosi"
+Received: "LeadsSearch leads by name, phone, or businessImportExportAI_LEAD_EMPLOYEE.OFFERS.SELECT AI_LEAD_EMPLOYEE.OFFERS.CHOOSEPrivate first-account Offer (AI_LEAD_EMPLOYEE.OFFERS.DISABLED)AI_LEAD_EMPLOYEE.OFFERS.SELECT_HELPAll100Highly Qualified12Qualified28Low Qualified34Unqualified18Unknown8AssigneeMineUnassignedJohnSourceWhatsApp salesFollow-up stateNurtureHuman ReviewBooking statusBookedNo Booking More filtersLead Business Lead Quality Score SourceAssigneeLast contact Next actionBookingLoading leadsLoading leadsShowing 1-25 of 100 leads1JNJane Nkosi+255713456789Nuru Boutique With A Very Long Business Name / Arusha, TZContact channelsPhone+255713456789Emailjane@example.comSourceWhatsApp salesQualificationLead QualityQualifiedScoreAI_LEAD_EMPLOYEE.LEADS.DETAIL.SCORE_OUT_OF_100Why this lead mattersBoutique owner wants to automate lead capture on WhatsApp.Strongest evidenceAI_LEAD_EMPLOYEE.LEADS.DETAIL.EVIDENCE_ITEMMissing signalsTeam SizeConversation summaryAI_LEAD_EMPLOYEE.LEADS.DETAIL.LAST_MESSAGE_WITH_TIMEYes, I would like to see a demo tomorrow afternoon.AI_LEAD_EMPLOYEE.LEADS.DETAIL.TOTAL_MESSAGES_COUNTConversation statusOpenAI control stateAI ActiveOwner & follow-upAssigneeJohnFollow-up stateNurtureNext actionSend proposalDueAug 27, 1:00 PMRelatedAI_LEAD_EMPLOYEE.LEADS.DETAIL.CONVERSATION_NUMBERAug 27, 11:35 AMBookingsBooking #5Confirmed - Aug 27, 5:30 PMActions Open conversation Edit leadEdit LeadName Phone Email Business City Country Assignee UnassignedJohnCancelSave changes"
+
+ ❯ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js:666:32
+    664|     await router.replace({ name: 'owned_leads_index', params: { accoun…
+    665|     await flushPromises();
+    666|     expect(wrapper.text()).not.toContain('Jane Nkosi');
+       |                                ^
+    667|     expect(wrapper.text()).not.toContain('Private first-account Offer'…
+    668|     expect(wrapper.text()).not.toContain('John');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 14 passed (16)
+   Start at  04:17:16
+   Duration  2.48s (transform 1.18s, setup 112ms, collect 1.21s, tests 271ms, environment 400ms, prepare 49ms)
+
+JSON report written to /Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/ui-review-red-vue-results.json

@@ -1,6 +1,10 @@
 # R09 — Configure an Offer and qualify a Lead from supported evidence
 
-Status: Approved for implementation; blocked by the issues below.
+Status: In progress from accepted base `9a834e756347822d4ae5af15f268a5e8751fc852`; R02/R03/R05/R06 blockers accepted by the coordinator on 2026-09-11. No R09 implementation acceptance claimed.
+
+Implementation decision and first red-test plan:
+[R09 preparation](r09-implementation-decision.md),
+[ADR 0014](../../adr/0014-offer-scoped-qualification.md).
 
 ## Parent
 

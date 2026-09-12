@@ -109,6 +109,18 @@ _Avoid_: Lead status, classification
 A normalized fact supporting or contradicting a qualification signal, linked to the message or human edit that supplied it.
 _Avoid_: Extracted field, AI guess
 
+**Qualification Field**:
+A stable meaning and answer type within an Offer, independent of the question's wording or order. Purchasing budget, revenue and inquiry volume are distinct fields.
+_Avoid_: Prompt, label
+
+**Purchase Budget Capacity**:
+The amount a Lead explicitly says they can spend on the contemplated purchase. It is evidence of spending capacity, not proof of payment or committed funds; income and revenue alone do not establish it.
+_Avoid_: Revenue, salary, payment commitment
+
+**Offer Selection**:
+The explicit Offer currently discussed in a Conversation. A sole enabled Offer can be selected automatically; several available Offers require selection before applying their qualification rules.
+_Avoid_: Campaign eligibility, inferred fit
+
 **Lead Quality**:
 The qualification outcome: Unknown, Unqualified, Low Qualified, Qualified, or Highly Qualified.
 _Avoid_: Status, stage, temperature
@@ -142,6 +154,10 @@ _Avoid_: OpenRouter settings, browser API key, account settings secret
 **Handoff**:
 The controlled transfer of a Conversation from the AI Employee to a Human Operator.
 _Avoid_: Escalation, assignment
+
+**Sales Call Agreement**:
+Current explicit boolean Qualification Evidence that the Lead wants the configured sales call. It is recorded under the stable `sales_call_agreement` field for that Offer and does not follow from contact details, general interest, automated-contact consent, or a request for basic human help.
+_Avoid_: Implied consent, contactability, human-help request
 
 **Knowledge Item**:
 An approved, versioned answer or rule that the AI Employee may use when responding.
@@ -180,6 +196,21 @@ _Avoid_: Lead-only inbox, dashboard qualification list
 The owned inbox's operational state: pending, open, snoozed, or resolved. It must never be used as Lead Quality.
 _Avoid_: Status
 
+## Offer delivery authority
+
+ADR0015 is accepted. Queued qualification-dependent work carries its originating
+Offer selection revision and immutable qualification decision. Dispatch admission
+checks that context alongside existing provider, consent and control authority.
+First increment covers normal replies and handoffs; logical follow-up attempts
+and immutable replacement are a separately reviewed second increment.
+
+Increment2 is an accepted development checkpoint at
+`1ede019dfa15f62b6d2ac3da4ffb106f642ac42d`: per-Offer logical attempts,
+immutable follow-up artifacts, narrowly permitted never-admitted replacement,
+and shared ordered lifecycle ownership. This does not establish full R09
+acceptance. The remaining slice connects the existing Offers and qualification
+settings, explicit Offer selection and scoped Lead/Conversation presentation.
+See `docs/issues/v1-completion-20260909/r09-offer-ui-completion.md`.
 
 ## Managed service terms (ADR 0016)
 

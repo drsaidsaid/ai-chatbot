@@ -1,10 +1,12 @@
 class Whatsapp::OutboundEligibility
-  def initialize(delivery:, channel:, recipient:, template: nil)
+  def initialize(delivery:, channel:, recipient:, authority_records:, template: nil, alert_authority: nil) # rubocop:disable Metrics/ParameterLists
+    @authority_records = authority_records
     @delivery = delivery
     @message = delivery.message.reload
     @conversation = delivery.conversation
     @channel = channel.reload
     @recipient = recipient
+    @alert_authority = alert_authority
     @template = template
   end
 
@@ -73,7 +75,7 @@ class Whatsapp::OutboundEligibility
   end
 
   def sender_allowed?
-    membership = AccountUser.lock.find_by(account_id: @delivery.account_id, user_id: @message.sender_id)
+    membership = @authority_records[:membership]
     membership && (membership.administrator? || @conversation.assignee_id == @message.sender_id)
   end
 
@@ -86,23 +88,39 @@ class Whatsapp::OutboundEligibility
     follow_up&.pending? && follow_up.control_version == @conversation.control_version && follow_up.scheduled_at <= Time.current
   end
 
-  def automation_failure
+  def automation_failure # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     return 'control_changed' unless @conversation.open? && @conversation.control_version == @delivery.observed_control_version
     return 'launch_not_approved' unless AiLeadEmployee::LaunchGate.live_ai_enabled?(@delivery.account)
 
-    alert = Whatsapp::OutboundAlertAuthority.new(@message)
-    return alert.failure_code if alert.alert?
+    alert = alert_authority
+    return alert.failure_code || qualification_failure(alert) if alert.alert?
 
     lead_failure = lead_automation_failure
     return lead_failure if lead_failure
-    return unless provider_control_required?
+    return qualification_failure(alert) unless provider_control_required?
 
     attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
-    AiLeadEmployee::AiProvider::RuntimeControl.failure_code(
-      account: @delivery.account,
+    AiLeadEmployee::AiProvider::RuntimeControl.failure_code_locked(
+      connection: @authority_records[:provider_connection],
       configuration_version: attributes['provider_configuration_version'],
       usage_period_on: attributes['provider_usage_period_on']
-    )
+    ) || qualification_failure(alert)
+  end
+
+  def qualification_failure(alert)
+    attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
+    dependent = attributes.key?('qualification') || attributes['qualification_context'].present? ||
+                attributes['alert_type'] == AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE ||
+                attributes['delivery_type'] == 'qualification_follow_up'
+    return unless dependent
+
+    origin = alert.alert? ? Conversation.find_by(account_id: @delivery.account_id, id: alert.origin_id) : @conversation
+    return 'qualification_context_invalid' unless origin
+
+    AiLeadEmployee::OfferDeliveryContext.new(
+      conversation: origin, context: attributes['qualification_context'],
+      required: attributes.dig('qualification', 'offer_id').present?
+    ).failure_code
   end
 
   def provider_control_required?
@@ -119,5 +137,9 @@ class Whatsapp::OutboundEligibility
     return 'human_activity' if @conversation.messages.where('id > ?', @message.id).exists?(sender_type: 'User', message_type: :outgoing)
 
     nil
+  end
+
+  def alert_authority
+    @alert_authority ||= Whatsapp::OutboundAlertAuthority.new(@message)
   end
 end

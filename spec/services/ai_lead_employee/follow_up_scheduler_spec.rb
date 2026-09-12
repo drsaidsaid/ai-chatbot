@@ -90,7 +90,7 @@ RSpec.describe AiLeadEmployee::FollowUpScheduler do
     expect(LeadFollowUp.where(account: account, contact: conversation.contact, stage: :incomplete_qualification).count).to eq(1)
   end
 
-  it 'updates a pending follow-up when the last unanswered useful question changes' do
+  it 'preserves and cancels obsolete legacy content without inventing Offer replacement entitlement' do
     next_question = create(:qualification_question, account: account, signal: :contact_details, prompt: 'What is the best phone number?', position: 2)
     qualification = create(
       :lead_qualification,
@@ -106,6 +106,7 @@ RSpec.describe AiLeadEmployee::FollowUpScheduler do
     ).perform
     follow_up = LeadFollowUp.last
 
+    original_content = follow_up.content
     expect do
       described_class.new(
         conversation: conversation,
@@ -114,12 +115,12 @@ RSpec.describe AiLeadEmployee::FollowUpScheduler do
           next_question: next_question.prompt
         )
       ).perform
-    end.to have_enqueued_job(AiLeadEmployee::FollowUpDeliveryJob)
+    end.not_to have_enqueued_job(AiLeadEmployee::FollowUpDeliveryJob)
 
-    expect(LeadFollowUp.pending.count).to eq(1)
-    expect(follow_up.reload.question_text).to eq(next_question.prompt)
-    expect(follow_up.qualification_question).to eq(next_question)
-    expect(follow_up.content).to include(next_question.prompt)
+    expect(LeadFollowUp.pending.count).to eq(0)
+    verify_preserved_legacy_content(follow_up, original_content)
+    AiLeadEmployee::FollowUpDeliveryService.new(follow_up: follow_up).perform
+    expect(follow_up.reload.message_id).to be_nil
   end
 
   it 'cancels pending follow-ups when the conversation is resolved' do
@@ -185,5 +186,13 @@ RSpec.describe AiLeadEmployee::FollowUpScheduler do
 
     expect(follow_up.reload).to be_cancelled
     expect(follow_up.cancellation_reason).to eq('follow_up_state_call_booked')
+  end
+
+  def verify_preserved_legacy_content(follow_up, original_content)
+    expect(follow_up.reload.question_text).to eq(question.prompt)
+    expect(follow_up.qualification_question).to eq(question)
+    expect(follow_up.content).to eq(original_content)
+    expect(follow_up.cancellation_reason).to eq('legacy_question_changed')
+    expect(follow_up.follow_up_attempt).to be_blocked
   end
 end

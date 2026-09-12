@@ -1,0 +1,9 @@
+> Checkpoint packaging: saved Ruby evidence is now `.rb.txt` with unchanged bytes. Other SHA manifests in this historical package describe original paths/content and must be checked in a restored scratch copy, not directly here. `packaged-files.sha256` describes the current packaged files. See [the path map and restoration instructions](../2026-09-12-r09-reviewed-checkpoint/README.md). Proof scripts are not run in place.
+
+# R09 configuration writer helper extraction
+
+Source `5ed1a212844f991dfe7dafafe140530de6bb1234`, before `db928d2cedf62f8afe638aa98cc6384f92a4cfcd`. Only OfferConfigurationWriter changes in this source diff. The bounded one-file plan was recorded before edits.
+
+Existing persistence/revision statements and question definition/choice validation are extracted into helpers. Conflict checking, Offer locking, repeated normalization, used-definition checks, attributes/save, revision creation and stale invalidation remain in their original order and transaction. The existing public field_definition class method moves before the instance-private boundary; it remains public. No change to lifecycle locking, callbacks, schemas or exception messages.
+
+48 existing affected Rails scenarios pass across qualification, built-in/custom typed rules, evidence lifecycle and configuration concurrency, with exact source identity before/after. The full Ruby inventory and exact-source proof are included. The preliminary one-file lint showed two findings before the final extraction; final authoritative lint belongs to the source above. Accepted baseline findings remain separately documented in prior UI evidence. No new lint suppression. Source manifests cover every blob and every changed runtime/test path. Development work remains uncommitted pending coordinator review and browser acceptance.

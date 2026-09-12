@@ -1,0 +1,50 @@
+{
+  "source_tree": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+  "runs": [
+    {
+      "started_at": "2026-09-12T05:03:51.734134+00:00",
+      "finished_at": "2026-09-12T05:07:51.727657+00:00",
+      "name": "rails",
+      "before": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "after": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    },
+    {
+      "started_at": "2026-09-12T05:07:52.751062+00:00",
+      "finished_at": "2026-09-12T05:08:01.927963+00:00",
+      "name": "vue",
+      "before": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "after": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    },
+    {
+      "started_at": "2026-09-12T05:08:03.037338+00:00",
+      "finished_at": "2026-09-12T05:08:06.061793+00:00",
+      "name": "rubocop",
+      "before": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "after": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    },
+    {
+      "started_at": "2026-09-12T05:08:07.048107+00:00",
+      "finished_at": "2026-09-12T05:08:10.054767+00:00",
+      "name": "eslint",
+      "before": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "after": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    },
+    {
+      "started_at": "2026-09-12T05:08:11.046458+00:00",
+      "finished_at": "2026-09-12T05:09:04.858778+00:00",
+      "name": "build",
+      "before": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "after": "ee1f82ed55bd2a8878ceedc6ddef0f89b3030984",
+      "whole_tree_equal": true,
+      "exit_code": 0
+    }
+  ]
+}

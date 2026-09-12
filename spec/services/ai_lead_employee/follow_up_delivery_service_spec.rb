@@ -123,4 +123,22 @@ RSpec.describe AiLeadEmployee::FollowUpDeliveryService do
     expect(follow_up.reload).to be_pending
     expect(Message.outgoing.where(conversation: conversation)).to be_empty
   end
+
+  it 'delivers unchanged unscoped legacy content once and consumes its original attempt' do
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
+    create(:message, account: account, inbox: channel.inbox, conversation: conversation,
+                     message_type: :incoming, provider_created_at: Time.current)
+    request = stub_request(:post, %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages})
+              .to_return(status: 200, body: '{"messages":[{"id":"wamid.R09.LEGACY.FOLLOWUP"}]}',
+                         headers: { 'Content-Type' => 'application/json' })
+    described_class.new(follow_up: follow_up).perform
+    2.times { SendReplyJob.perform_now(follow_up.reload.message_id) }
+
+    expect(follow_up.reload).to be_sent
+    expect(follow_up.message.content).to eq('Can you share your budget?')
+    expect(follow_up.follow_up_attempt).to be_accepted
+    expect(follow_up.follow_up_attempt.offer_id).to be_nil
+    expect(follow_up.qualification_context).to eq({})
+    expect(request).to have_been_requested.once
+  end
 end

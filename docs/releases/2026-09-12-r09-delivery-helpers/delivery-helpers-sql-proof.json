@@ -1,0 +1,5 @@
+{
+  "path": "app/services/ai_lead_employee/automation_cancellation.rb",
+  "identical_sql_literals": true,
+  "sql_sha256": "352e90c5786c77427b965696d9f7d191071c2e6e3459855bc2a06e547831a4c6"
+}

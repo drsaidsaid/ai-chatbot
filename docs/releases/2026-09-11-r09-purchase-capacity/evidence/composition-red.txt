@@ -1,0 +1,35 @@
+.........FF.
+
+Failures:
+
+  1) Purchase budget capacity evidence retains positive purchase capacity when a separate contact clause offers a choice of contact methods
+     Failure/Error: expect(budget).to include('basis' => 'capacity', 'polarity' => 'positive', 'amount_minor' => 250_000)
+
+       expected {"polarity" => "unknown", "value" => "unknown"} to include {"basis" => "capacity", "polarity" => "positive", "amount_minor" => 250000}
+       Diff:
+       @@ -1,4 +1,3 @@
+       -"amount_minor" => 250000,
+       -"basis" => "capacity",
+       -"polarity" => "positive",
+       +"polarity" => "unknown",
+       +"value" => "unknown",
+     # ./spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb:48:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+  2) Purchase budget capacity evidence retains a funding condition after a separate contact clause
+     Failure/Error: budget = AiLeadEmployee::QualificationEvidenceExtractor.new(statement).observations.fetch('budget')
+
+     KeyError:
+       key not found: "budget"
+     # ./spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb:53:in 'Hash#fetch'
+     # ./spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb:53:in 'block (2 levels) in <top (required)>'
+     # /private/tmp/ale-r01-gems.HdwFNm/ruby/3.4.0/gems/webmock-3.23.1/lib/webmock/rspec.rb:39:in 'block (2 levels) in <top (required)>'
+
+Finished in 0.01406 seconds (files took 0.96932 seconds to load)
+12 examples, 2 failures
+
+Failed examples:
+
+rspec ./spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb:44 # Purchase budget capacity evidence retains positive purchase capacity when a separate contact clause offers a choice of contact methods
+rspec ./spec/services/ai_lead_employee/purchase_budget_capacity_spec.rb:51 # Purchase budget capacity evidence retains a funding condition after a separate contact clause
+

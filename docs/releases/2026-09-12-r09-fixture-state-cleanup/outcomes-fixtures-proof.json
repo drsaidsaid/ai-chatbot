@@ -1,0 +1,35 @@
+{
+  "before_tree": "bf8a11c29e4af347d613baf6dc74d442b2555785",
+  "path": "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb",
+  "storage_replacements": {
+    "attempt": 19,
+    "conversation": 12,
+    "delivery": 19,
+    "follow_up": 12,
+    "message": 9,
+    "offer": 5
+  },
+  "added_lazy_helper": "delivery_records: empty per-example Hash only; no fixture construction moved",
+  "scenario_names_before": [
+    "records admission atomically before HTTP and projects provider acceptance onto the original attempt",
+    "keeps unknown acceptance consumed across retries and Offer revisions",
+    "consumes a definite provider rejection and denies the operator retry endpoint for that attempt",
+    "consumes preparation failure before admission without granting replacement entitlement",
+    "makes publication projection-only and repairs accepted domain state through its ordered owner",
+    "consumes exhausted abandoned claims without an admission timestamp or replacement",
+    "recovers an expired dispatch as unknown without returning its attempt to pending",
+    "does not recover or send the predecessor after replacing a claimed never-admitted artifact"
+  ],
+  "expect_count_before": 42,
+  "source_tree": "181c65fa323920c2e9a6056d7810e973f343bff1",
+  "inverted_ast_sha256": {
+    "/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/outcomes-fixtures-before.rb": "9c5a919ecffdf82543c4fececd1c00dac69a7febc9d1b14f452e6e0a0299c26a",
+    "/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/tmp/r09/outcomes-fixtures-inverted.rb": "9c5a919ecffdf82543c4fececd1c00dac69a7febc9d1b14f452e6e0a0299c26a"
+  },
+  "inverted_ast_equal": true,
+  "scenario_names_equal": true,
+  "expect_count_equal": true,
+  "changed_paths": [
+    "spec/requests/ai_lead_employee/offer_follow_up_outcomes_spec.rb"
+  ]
+}

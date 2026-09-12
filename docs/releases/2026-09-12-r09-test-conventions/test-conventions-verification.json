@@ -1,0 +1,23 @@
+{
+  "source_tree": "361864f94f7ee90b51b4f3ef0ee26f3e387f946e",
+  "runs": [
+    {
+      "name": "rails",
+      "before": "361864f94f7ee90b51b4f3ef0ee26f3e387f946e",
+      "after": "361864f94f7ee90b51b4f3ef0ee26f3e387f946e",
+      "whole_tree_equal": true,
+      "started_at": "2026-09-12T03:25:17.240768+00:00",
+      "finished_at": "2026-09-12T03:31:03.327253+00:00",
+      "exit_code": 0
+    },
+    {
+      "name": "rubocop",
+      "before": "361864f94f7ee90b51b4f3ef0ee26f3e387f946e",
+      "after": "361864f94f7ee90b51b4f3ef0ee26f3e387f946e",
+      "whole_tree_equal": true,
+      "started_at": "2026-09-12T03:31:05.378942+00:00",
+      "finished_at": "2026-09-12T03:31:09.945344+00:00",
+      "exit_code": 1
+    }
+  ]
+}

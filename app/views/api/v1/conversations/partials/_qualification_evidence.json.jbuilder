@@ -1,0 +1,11 @@
+json.id evidence.id
+json.signal evidence.signal
+json.field_key evidence.field_key
+json.offer_id evidence.offer_id
+json.normalized_value evidence.value
+json.value evidence.value['value']
+json.source evidence.source
+json.source_reference AiLeadEmployee::QualificationEvidenceSnapshot.source_reference_for(evidence)
+json.source_path qualification_context.evidence_source_path(evidence)
+json.observed_at evidence.observed_at&.iso8601
+json.superseded evidence.superseded_at.present?

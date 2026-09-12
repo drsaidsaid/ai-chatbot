@@ -1,0 +1,7 @@
+[
+  "corepack",
+  "pnpm",
+  "exec",
+  "vite",
+  "build"
+]

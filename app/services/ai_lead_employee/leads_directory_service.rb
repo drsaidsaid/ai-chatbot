@@ -33,7 +33,7 @@ class AiLeadEmployee::LeadsDirectoryService
       counts: quality_counts,
       filter_options: filter_options,
       meta: pagination_payload(page_scope, page)
-    }
+    }.merge(read_context.metadata)
   end
 
   def each_export_row(batch_size: EXPORT_BATCH_SIZE, &block)
@@ -59,6 +59,14 @@ class AiLeadEmployee::LeadsDirectoryService
   private
 
   attr_reader :account, :user, :params
+
+  def read_context
+    @read_context ||= AiLeadEmployee::OfferQualificationReadContext.new(account: account, user: user, offer_id: params[:offer_id])
+  end
+
+  def qualification_scope
+    read_context.qualifications
+  end
 
   def access
     AiLeadEmployee::AccessScope.new(account: account, user: user)
@@ -118,23 +126,27 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def apply_quality_filter(scope)
+    return scope if read_context.selection_required?
+
     quality = params[:quality].to_s
     return scope if quality.blank? || quality == 'all'
     return unknown_quality_scope(scope) if quality == 'unknown'
     return scope unless LeadQualification.qualities.key?(quality)
 
-    scope.where(id: access.qualifications.where(quality: quality).select(:contact_id))
+    scope.where(id: qualification_scope.where(quality: quality).select(:contact_id))
   end
 
   def unknown_quality_scope(scope)
-    scope.where.not(id: access.qualifications.where.not(quality: :unknown).select(:contact_id))
+    scope.where.not(id: qualification_scope.where.not(quality: :unknown).select(:contact_id))
   end
 
   def apply_follow_up_filter(scope)
+    return scope if read_context.selection_required?
+
     follow_up_state = params[:follow_up_state].to_s
     return scope if follow_up_state.blank? || LeadQualification.follow_up_states.exclude?(follow_up_state)
 
-    scope.where(id: access.qualifications.where(follow_up_state: follow_up_state).select(:contact_id))
+    scope.where(id: qualification_scope.where(follow_up_state: follow_up_state).select(:contact_id))
   end
 
   def apply_assignee_filter(scope)
@@ -152,29 +164,37 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def apply_booking_filter(scope)
+    return scope if read_context.selection_required?
+
     case params[:booking_status].to_s
     when 'booked'
       scope.where(id: booked_contact_ids)
     when 'no_booking'
       scope.where.not(id: booked_contact_ids)
     when 'canceled', 'completed'
-      scope.where(id: access.related(Booking).where(status: params[:booking_status]).select(:contact_id))
+      scope.where(id: read_context.related_to_qualification(Booking).where(status: params[:booking_status]).select(:contact_id))
     else
       scope
     end
   end
 
-  def apply_sort(scope)
+  def effective_sort
     sort = SORT_COLUMNS.include?(params[:sort].to_s) ? params[:sort].to_s : 'last_contact'
+    return 'last_contact' if read_context.selection_required? && %w[quality score].include?(sort)
+
+    sort
+  end
+
+  def apply_sort(scope)
     direction = params[:direction].to_s.downcase == 'asc' ? 'ASC' : 'DESC'
 
-    case sort
+    case effective_sort
     when 'name'
       scope.order(Arel.sql("LOWER(contacts.name) #{direction} NULLS LAST"), id: :asc)
     when 'business'
       scope.order(Arel.sql("LOWER(contacts.additional_attributes->>'company_name') #{direction} NULLS LAST"), id: :asc)
     when 'quality', 'score'
-      sort_qualification(scope, sort, direction)
+      sort_qualification(scope, effective_sort, direction)
     else
       activity = visible_conversations.where('conversations.contact_id = contacts.id').select('MAX(last_activity_at)')
       scope.order(Arel.sql("(#{activity.to_sql}) #{direction} NULLS LAST"), id: :desc)
@@ -182,7 +202,7 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def sort_qualification(scope, field, direction)
-    values = access.qualifications.where('lead_qualifications.contact_id = contacts.id').select(field)
+    values = qualification_scope.where('lead_qualifications.contact_id = contacts.id').select(field)
     scope.order(Arel.sql("(#{values.to_sql}) #{direction} NULLS LAST"), id: :asc)
   end
 
@@ -239,7 +259,7 @@ class AiLeadEmployee::LeadsDirectoryService
 
     row_payload(contact, context).merge(
       detail: detail_payload(contact, context)
-    )
+    ).merge(read_context.qualification_metadata(context[:qualification]))
   end
 
   def lead_context_for(contact)
@@ -294,6 +314,7 @@ class AiLeadEmployee::LeadsDirectoryService
     {
       contact_channels: contact_channels_for(contact, context[:conversation]),
       qualification: qualification_detail_payload(context[:qualification]),
+      legacy_qualification: read_context.legacy_payload(@legacy_qualification_by_contact[contact.id]),
       why_this_lead_matters: why_this_lead_matters(context[:qualification]),
       strongest_evidence: context[:evidence].first(4).map { |item| evidence_payload(item) },
       missing_signals: context[:qualification]&.missing_signals || [],
@@ -313,7 +334,7 @@ class AiLeadEmployee::LeadsDirectoryService
       reasons: qualification&.reasons || [],
       follow_up_state: qualification&.follow_up_state || 'no_follow_up',
       last_evaluated_at: qualification&.last_evaluated_at
-    }
+    }.merge(read_context.qualification_metadata(qualification))
   end
 
   def automated_contact_consent_payload(contact, context)
@@ -337,6 +358,10 @@ class AiLeadEmployee::LeadsDirectoryService
     {
       id: evidence.id,
       signal: evidence.signal,
+      field_key: evidence.field_key,
+      offer_id: evidence.offer_id,
+      normalized_value: evidence.value,
+      source_reference: AiLeadEmployee::QualificationEvidenceSnapshot.source_reference_for(evidence),
       value: evidence.value&.fetch('value', nil),
       source: evidence.source,
       observed_at: evidence.observed_at
@@ -452,7 +477,7 @@ class AiLeadEmployee::LeadsDirectoryService
       per_page: per_page,
       total_count: scope.count,
       total_pages: page.total_pages,
-      sort: SORT_COLUMNS.include?(params[:sort].to_s) ? params[:sort].to_s : 'last_contact',
+      sort: effective_sort,
       direction: params[:direction].to_s.downcase == 'asc' ? 'asc' : 'desc',
       visibility: administrator? ? 'admin' : 'operator'
     }
@@ -473,7 +498,7 @@ class AiLeadEmployee::LeadsDirectoryService
   def apply_quality_count(scope, quality)
     return unknown_quality_scope(scope).count if quality == 'unknown'
 
-    scope.where(id: access.qualifications.where(quality: quality).select(:contact_id)).count
+    scope.where(id: qualification_scope.where(quality: quality).select(:contact_id)).count
   end
 
   def filter_options
@@ -514,12 +539,12 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def booked_contact_ids
-    access.related(Booking).where(status: :confirmed).select(:contact_id)
+    read_context.related_to_qualification(Booking).where(status: :confirmed).select(:contact_id)
   end
 
   def preload_context_for(contacts)
     ids = contacts.map(&:id)
-    @qualification_by_contact = access.qualifications.where(contact_id: ids).index_by(&:contact_id)
+    preload_qualification_context(ids)
     @conversation_by_contact = latest_conversation_by_contact(ids)
     @conversations_by_contact = conversations_by_contact(ids)
     @bookings_by_contact = bookings_by_contact(ids)
@@ -533,6 +558,15 @@ class AiLeadEmployee::LeadsDirectoryService
                              .unscope(:order)
                              .group(:conversation_id)
                              .count
+  end
+
+  def preload_qualification_context(ids)
+    @qualification_by_contact = qualification_scope.where(contact_id: ids).index_by(&:contact_id)
+    @legacy_qualification_by_contact = if read_context.offers_configured?
+                                         read_context.legacy_qualifications.where(contact_id: ids).index_by(&:contact_id)
+                                       else
+                                         {}
+                                       end
   end
 
   def preload_consent_context(contact_ids)
@@ -595,24 +629,24 @@ class AiLeadEmployee::LeadsDirectoryService
   end
 
   def bookings_by_contact(contact_ids)
-    access.related(Booking).where(contact_id: contact_ids)
-          .includes(:assignee)
-          .order(starts_at: :desc, id: :desc)
-          .group_by(&:contact_id)
+    read_context.related_to_qualification(Booking).where(contact_id: contact_ids)
+                .includes(:assignee)
+                .order(starts_at: :desc, id: :desc)
+                .group_by(&:contact_id)
   end
 
   def follow_ups_by_contact(contact_ids)
-    access.related(LeadFollowUp).pending
-          .where(contact_id: contact_ids)
-          .order(scheduled_at: :asc, id: :asc)
-          .group_by(&:contact_id)
+    read_context.related_to_qualification(LeadFollowUp).pending
+                .where(contact_id: contact_ids)
+                .order(scheduled_at: :asc, id: :asc)
+                .group_by(&:contact_id)
   end
 
   def evidence_by_contact(contact_ids)
-    access.related(QualificationEvidence).current
-          .where(contact_id: contact_ids)
-          .order(observed_at: :desc, id: :desc)
-          .group_by(&:contact_id)
+    read_context.evidence.current
+                .where(contact_id: contact_ids)
+                .order(observed_at: :desc, id: :desc)
+                .group_by(&:contact_id)
   end
 
   def messages_by_position(conversation_ids, position)

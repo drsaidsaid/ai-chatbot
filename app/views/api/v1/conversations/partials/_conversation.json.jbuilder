@@ -1,7 +1,6 @@
 # TODO: Move this into models jbuilder
 # Currently the file there is used only for search endpoint.
 # Everywhere else we use conversation builder in partials folder
-include_cockpit = local_assigns.fetch(:include_cockpit, false)
 
 json.meta do
   json.sender do
@@ -60,52 +59,40 @@ json.automated_contact_consent AiLeadEmployee::AutomatedContactConsentPresenter.
   contact: conversation.contact,
   preloaded: @automated_contact_consent_by_contact&.fetch(conversation.contact_id, nil)
 ).payload
-qualification = access.qualification(conversation.contact)
-if qualification.present?
+qualification_context = AiLeadEmployee::OfferQualificationReadContext.new(
+  account: conversation.account, user: Current.user, offer_id: conversation.offer_id
+)
+qualification = qualification_context.qualification(conversation.contact)
+if qualification.present? || qualification_context.offers_configured?
   json.lead_qualification do
-    json.quality qualification.quality
-    json.follow_up_state qualification.follow_up_state
-    json.score qualification.score
-    json.reasons qualification.reasons
-    json.missing_signals qualification.missing_signals
-    json.evidence qualification.evidence_snapshot
-    json.configuration_version qualification.configuration_version
-    json.next_question AiLeadEmployee::QualificationService.next_question_for(
-      account: conversation.account,
-      evidence_snapshot: qualification.evidence_snapshot
-    )
-    json.evidence_records access.related(QualificationEvidence).where(contact: conversation.contact)
-                                               .order(observed_at: :desc, id: :desc)
-                                               .limit(20) do |evidence|
-      json.id evidence.id
-      json.signal evidence.signal
-      json.value evidence.value['value']
-      json.source evidence.source
-      json.source_reference AiLeadEmployee::QualificationEvidenceSnapshot.source_reference_for(evidence)
-      json.observed_at evidence.observed_at&.iso8601
-      json.superseded evidence.superseded_at.present?
+    json.quality qualification&.quality
+    json.follow_up_state qualification&.follow_up_state
+    json.score qualification&.score
+    json.reasons qualification&.reasons || []
+    json.missing_signals qualification&.missing_signals || []
+    json.evidence qualification&.evidence_snapshot || {}
+    json.merge! qualification_context.qualification_metadata(qualification)
+    json.legacy_qualification qualification_context.legacy_payload(qualification_context.legacy_qualifications.find_by(contact: conversation.contact))
+    json.next_question qualification_context.next_question(qualification)
+    json.evidence_records qualification_context.evidence_records(conversation.contact) do |evidence|
+      json.partial! 'api/v1/conversations/partials/qualification_evidence', evidence: evidence, qualification_context: qualification_context
     end
-    json.handoffs access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5) do |handoff|
-      json.id handoff.id
-      json.status handoff.status
-      json.alert_type handoff.alert_type
-      json.assignee_id handoff.assignee_id
-      json.handed_off_at handoff.handed_off_at&.iso8601
-      json.alert_recipients handoff.alert_recipients
-      json.alert_deliveries handoff.alert_deliveries
-    end
-    json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
-      json.id follow_up.id
-      json.status follow_up.status
-      json.stage follow_up.stage
-      json.attempt_number follow_up.attempt_number
-      json.question_text follow_up.question_text
-      json.scheduled_at follow_up.scheduled_at&.iso8601
-      json.sent_at follow_up.sent_at&.iso8601
-      json.cancelled_at follow_up.cancelled_at&.iso8601
-      json.failed_at follow_up.failed_at&.iso8601
-      json.cancellation_reason follow_up.cancellation_reason
-      json.failure_reason follow_up.failure_reason
+    if qualification
+      json.handoffs access.related(qualification.lead_handoffs).order(created_at: :desc).limit(5) do |handoff|
+        json.id handoff.id
+        json.status handoff.status
+        json.alert_type handoff.alert_type
+        json.assignee_id handoff.assignee_id
+        json.handed_off_at handoff.handed_off_at&.iso8601
+        json.alert_recipients handoff.alert_recipients
+        json.alert_deliveries handoff.alert_deliveries
+      end
+      json.follow_ups access.related(qualification.lead_follow_ups).order(created_at: :desc).limit(5) do |follow_up|
+        json.partial! 'api/v1/conversations/partials/qualification_follow_up', follow_up: follow_up
+      end
+    else
+      json.handoffs []
+      json.follow_ups []
     end
   end
 end
@@ -134,9 +121,7 @@ if local_assigns[:include_control_events]
     json.created_at event.created_at.to_i
   end
 end
-if local_assigns[:include_cockpit]
-  json.cockpit AiLeadEmployee::ConversationCockpitPresenter.new(conversation: conversation).to_h
-end
+json.cockpit AiLeadEmployee::ConversationCockpitPresenter.new(conversation: conversation).to_h if local_assigns[:include_cockpit]
 json.created_at conversation.created_at.to_i
 json.updated_at conversation.updated_at.to_f
 json.timestamp conversation.last_activity_at.to_i

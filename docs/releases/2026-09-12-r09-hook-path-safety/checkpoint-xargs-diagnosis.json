@@ -1,0 +1,9 @@
+{
+  "path": "docs/releases/2026-09-12-r09-fixture-state-cleanup/fixtures-final-inverted/spec/requests/ai_lead_employee/offer_follow_up_terminal_invalidation_spec.rb.txt",
+  "path_characters": 155,
+  "existing_hook_command_exit": 1,
+  "existing_hook_error": "xargs: command line cannot be assembled, too long",
+  "argument_based_command_exit": 0,
+  "argument_based_roundtrip_equal": true,
+  "index_or_source_changes": false
+}

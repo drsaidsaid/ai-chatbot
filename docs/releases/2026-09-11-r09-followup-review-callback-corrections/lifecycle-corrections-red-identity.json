@@ -1,0 +1,13 @@
+{
+  "source_tree": "8d044743307e907e67ac96494caa11147a36cd46",
+  "source_ref": "refs/r09/followup-review-corrections-red-source-20260911",
+  "previous_candidate": "96f72249b432d02004b940e974622c3d2c49e487",
+  "restored_paths": [
+    "app/services/ai_lead_employee/follow_up_cancellation.rb",
+    "app/services/ai_lead_employee/follow_up_scheduler.rb",
+    "app/services/whatsapp/delivery_lifecycle.rb",
+    "app/services/whatsapp/outbound_alert_authority.rb",
+    "app/services/whatsapp/outbound_dispatch.rb",
+    "app/services/whatsapp/outbound_eligibility.rb"
+  ]
+}

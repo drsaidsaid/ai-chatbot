@@ -1,0 +1,22 @@
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/components/qualification/ConversationOfferQualification.vue
+  12:22  warning  '`AI_LEAD_EMPLOYEE.OFFERS.${key}`' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/components/qualification/OfferQualificationSummary.vue
+   10:22  warning  '`AI_LEAD_EMPLOYEE.OFFERS.${key}`' dynamic key is used'  @intlify/vue-i18n/no-dynamic-keys
+   74:48  warning  raw text ' · ' is used                                   @intlify/vue-i18n/no-raw-text
+  169:67  warning  raw text ' ·
+        ' is used                           @intlify/vue-i18n/no-raw-text
+
+/Users/ghalyasaid/.codex/worktrees/f529/r09-offer-qualification/app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue
+   37:22  warning  '`AI_LEAD_EMPLOYEE.OFFERS.${key}`' dynamic key is used'                 @intlify/vue-i18n/no-dynamic-keys
+  248:55  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  327:61  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  331:61  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  447:59  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  520:56  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+  611:59  warning  Expected no line breaks before closing bracket, but 1 line break found  vue/html-closing-bracket-newline
+
+✖ 11 problems (0 errors, 11 warnings)
+  0 errors and 6 warnings potentially fixable with the `--fix` option.
+

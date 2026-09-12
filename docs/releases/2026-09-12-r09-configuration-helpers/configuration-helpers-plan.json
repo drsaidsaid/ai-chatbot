@@ -1,0 +1,7 @@
+{
+  "before_tree": "db928d2cedf62f8afe638aa98cc6384f92a4cfcd",
+  "paths": [
+    "app/services/ai_lead_employee/offer_configuration_writer.rb"
+  ],
+  "plan_path": "docs/issues/v1-completion-20260909/r09-production-cleanup-plan.md"
+}

@@ -25,7 +25,7 @@ class AiLeadEmployee::OutboxDispatchJob < ApplicationJob
 
     SendReplyJob.perform_now(message.id)
     delivery = message.whatsapp_outbound_delivery.reload
-    delivery.with_lock { delivery.publish! }
+    delivery.reconcile!
   rescue ActiveRecord::RecordNotFound, KeyError
     event.update!(state: :failed, failure_class: 'InvalidDelivery', failed_at: Time.current)
   rescue StandardError

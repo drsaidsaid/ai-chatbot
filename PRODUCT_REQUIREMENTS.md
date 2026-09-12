@@ -213,7 +213,7 @@ Keep business fit, readiness to speak/buy, action eligibility, Follow-up State a
 
 Qualification is explicitly not configured, disabled or enabled per Offer. With absent rules the agent may answer approved information, but cannot invent questions or qualification. An owner chooses the appropriate next step; purchase links and enquiries need not require calls.
 
-Owners write requirements naturally or import documents. A readable preview identifies fields, types, required evidence, rules, unknowns and next steps; only publication activates them. Ask at most one useful question when appropriate, skip known information and accept corrections. No default lead-volume interview, business-existence rejection or universal budget bands. Strictness means explicit approved evidence and readiness requirements. Human feedback can propose changes, never silently publish them.
+ Owners write requirements naturally or import documents. A readable preview identifies fields, types, required evidence, rules, unknowns and next steps; only publication activates them. Ask at most one useful question when appropriate, skip known information and accept corrections. No default lead-volume interview, business-existence rejection or universal budget bands. Strictness means explicit approved evidence and readiness requirements. Human feedback can propose changes, never silently publish them.
 
 ## 8. Conversation Behavior
 
@@ -623,6 +623,21 @@ The detailed owned-product boundary, runtime services, status mappings, and draf
 
 The AI's purpose is not to maximize conversation length. Its purpose is to help the lead, determine fit, and move only genuinely ready buyers to the right human with enough context for that human to act immediately.
 
+### Offer context at delivery
+
+A queued qualification reply or handoff cannot use an obsolete Offer selection,
+configuration or qualification decision. Switching A → B → A does not revive old
+work. Human corrections invalidate old output even without a configuration edit.
+An edit before dispatch admission prevents sending; an already admitted request
+may finish once. Unknown outcomes cannot retry automatically through a revision.
+ADR0015 defines the accepted authority and follow-up attempt rules.
+
+Follow-up revisions preserve the same bounded account/Lead/Offer/stage attempt.
+A never-admitted context mismatch can create a linked successor without rewriting
+its predecessor. Admission, uncertainty, failure, consent/control cancellation
+and operator cancellation never grant another attempt. Legacy unscoped content
+is also immutable: unchanged work and timing-only rescheduling remain supported;
+a changed legacy question is canceled without inventing Offer replacement rights.
 
 ## 12 September scope extension
 

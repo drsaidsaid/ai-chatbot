@@ -1,0 +1,11 @@
+json.id follow_up.id
+json.status follow_up.status
+json.stage follow_up.stage
+json.attempt_number follow_up.attempt_number
+json.question_text follow_up.question_text
+json.scheduled_at follow_up.scheduled_at&.iso8601
+json.sent_at follow_up.sent_at&.iso8601
+json.cancelled_at follow_up.cancelled_at&.iso8601
+json.failed_at follow_up.failed_at&.iso8601
+json.cancellation_reason follow_up.cancellation_reason
+json.failure_reason follow_up.failure_reason
