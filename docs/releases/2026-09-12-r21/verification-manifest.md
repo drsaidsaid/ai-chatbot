@@ -41,9 +41,16 @@ branch tip. It also records the production Vite manifest hash.
   records 90 examples and one failure after unrelated legacy WhatsApp recovery
   specs were added to the R21 set. The independently retained
   [`rails-whatsapp-concurrency-example.log`](evidence/raw/rails-whatsapp-concurrency-example.log)
-  reproduces that pre-existing test-fixture failure: the legacy test does not
-  create the provider connection now required by `ReportBuilder`. These files
-  are outside the R21-changed spec set and were not used as acceptance evidence.
+  reproduces the same failure. Source comparison establishes the causal path:
+  the legacy example creates reviewed evaluation runs but no AI provider
+  connection, while `ReportBuilder#latest_reviewed_run_for` (introduced before
+  R21 in `4c8423ad`) intentionally returns no run without that connection; the
+  failure is therefore outside the R21-changed files. A baseline execution of
+  this legacy example was not rerun in this evidence window, so its
+  pre-change status remains unverified rather than asserted as proven. These
+  files are outside the R21-changed spec set and were not used as acceptance
+  evidence. The detailed comparison is retained in
+  [`baseline-causality.md`](evidence/baseline-causality.md).
 - [`browser-fixture.log`](evidence/raw/browser-fixture.log) records a discarded
   setup attempt where unqualified `dropdb` and `createdb` were unavailable and
   the shell continued. `browser-fixture-corrected.log` used absolute PostgreSQL

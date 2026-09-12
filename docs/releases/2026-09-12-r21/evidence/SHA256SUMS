@@ -1,4 +1,5 @@
 bdfa018a92ef3241183e06d9386a4b4280d1b4239d779b238070c9eb96f10483  ./acceptance.md
+6aafe4abe579438c656262147aaeb5899119c43c559a95855241ed388a740458  ./evidence/baseline-causality.md
 6255b3dda1f57115016935ab629301628343fd5d722e7829f01e32899d729233  ./evidence/browser-observations.json
 4beb30081e78b7048c870d1afeffc2729b2fd861e536371eebddc7c807e9f8d2  ./evidence/raw/browser-fixture-corrected.log
 3654f2297db802bacb29e9b1b8519767b4c2ede58b6237e220d890b983d913c9  ./evidence/raw/browser-fixture.log
@@ -12,4 +13,4 @@ b9fc903f5d4d437091e5db8c54b1f4bc3e9b6b6cf2b5caf24a54c01a534d23e2  ./evidence/raw
 50fbcf23d4825d02ac9cbfdb4769430d18238de0ad6d8ac79ff07e05a3e7c947  ./evidence/raw/redis.log
 cb5138852b2e2a856b548b01311e45787f3ffcf625b940f65e4bca59f726ae69  ./evidence/raw/source-equivalence.log
 e85d0ba3da8ce45398786224d69068c534c71092006b5dcfb0290adc417e1706  ./provider-authority-migration.md
-1b7c65bb74f7a560cd50ccb5364ac64b9b74a2edf01c1380b50246150d3bddac  ./verification-manifest.md
+352c35da680a6debfd86e5887e6e1786d6e0888c420e1e2023c0ecf8e79d7480  ./verification-manifest.md
