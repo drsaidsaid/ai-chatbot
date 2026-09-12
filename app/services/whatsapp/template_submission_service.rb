@@ -12,7 +12,7 @@ class Whatsapp::TemplateSubmissionService
     return unless claim_submission!
 
     response = HTTParty.post(submission_endpoint, headers: headers, body: submission_body.to_json, timeout: 10)
-    return unknown! unless response.success?
+    return submission_failed!(response) unless response.success?
 
     provider_id = response_payload(response)['id'].presence || edit_target_id
     return unknown! if provider_id.blank?
@@ -40,7 +40,16 @@ class Whatsapp::TemplateSubmissionService
   end
 
   def unknown!
-    @revision.update!(status: :unknown, status_synced_at: Time.current) unless @revision.unknown?
+    @revision.update!(status: :unknown, status_synced_at: Time.current)
+  end
+
+  def submission_failed!(response)
+    return unknown! unless response.code.to_i.between?(400, 499)
+
+    error = response_payload(response)['error'].to_h
+    reason = error['message'].presence || "Provider rejected template submission (HTTP #{response.code})"
+    reason = "#{reason} (code #{error['code']})" if error['code'].present?
+    @revision.update!(status: :rejected, rejection_reason: reason, status_synced_at: Time.current)
   end
 
   def claim_submission!
@@ -58,9 +67,16 @@ class Whatsapp::TemplateSubmissionService
   end
 
   def provider_matches_revision?(provider)
-    provider['name'] == @revision.whatsapp_template.name &&
+    provider_identity_matches?(provider) &&
+      provider['name'] == @revision.whatsapp_template.name &&
       provider['language'] == @revision.language &&
+      provider['category'] == @revision.category &&
       semantic_components(provider['components']) == semantic_components(request_body[:components])
+  end
+
+  def provider_identity_matches?(provider)
+    expected_id = @revision.provider_template_id.presence || edit_target_id
+    expected_id.blank? || provider['id'] == expected_id
   end
 
   def semantic_components(components)

@@ -104,13 +104,13 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
     status_request = stub_request(:get, "#{endpoint}?name=order_update").to_return(
       {
         status: 200,
-        body: { data: [{ id: 'meta-approved', name: 'order_update', language: 'en_US', status: 'APPROVED',
+        body: { data: [{ id: 'meta-approved', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'APPROVED',
                          components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
         headers: { 'Content-Type' => 'application/json' }
       },
       {
         status: 200,
-        body: { data: [{ id: 'meta-approved', name: 'order_update', language: 'en_US', status: 'APPROVED',
+        body: { data: [{ id: 'meta-approved', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'APPROVED',
                          components: [{ type: 'BODY', text: 'Updated order' }] }] }.to_json,
         headers: { 'Content-Type' => 'application/json' }
       }
@@ -133,7 +133,7 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
   it 'reconciles an uncertain timeout without repeating Meta creation' do
     create_request = stub_request(:post, endpoint).to_timeout
     status_request = stub_request(:get, "#{endpoint}?name=order_update")
-                     .to_return(status: 200, body: { data: [{ id: 'meta-2', name: 'order_update', language: 'en_US',
+                     .to_return(status: 200, body: { data: [{ id: 'meta-2', name: 'order_update', language: 'en_US', category: 'UTILITY',
                                                               status: 'APPROVED',
                                                               components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                                 headers: { 'Content-Type' => 'application/json' })
@@ -151,11 +151,11 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
     status_request = stub_request(:get, "#{endpoint}?name=order_update")
                      .to_return(status: 200, body: {
                        data: [
-                         { id: 'meta-old', name: 'order_update', language: 'en_US', status: 'APPROVED',
+                         { id: 'meta-old', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'APPROVED',
                            components: [{ type: 'BODY', text: 'Old content' }] },
-                         { id: 'meta-wrong-language', name: 'order_update', language: 'sw', status: 'APPROVED',
+                         { id: 'meta-wrong-language', name: 'order_update', language: 'sw', category: 'UTILITY', status: 'APPROVED',
                            components: [{ type: 'BODY', text: 'Order ready' }] },
-                         { id: 'meta-current', name: 'order_update', language: 'en_US', status: 'REJECTED',
+                         { id: 'meta-current', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'REJECTED',
                            rejected_reason: 'INVALID_FORMAT', components: [{ type: 'BODY', text: 'Order ready' }] }
                        ]
                      }.to_json, headers: { 'Content-Type' => 'application/json' })
@@ -168,17 +168,78 @@ RSpec.describe Whatsapp::TemplateSubmissionService do
                                                rejection_reason: 'INVALID_FORMAT')
   end
 
+  it 'does not inherit approval from the old category during a category-only edit' do
+    revision.update!(status: :approved, provider_template_id: 'meta-approved')
+    category_edit = WhatsappTemplateRevision.create!(
+      whatsapp_template: template, account: account, channel: channel, revision_number: 2,
+      language: 'en_US', category: 'MARKETING', body: 'Order ready', submission_key: 'submission-category-edit',
+      content_digest: 'category-edit-digest', status: :unknown, submitted_at: Time.current, submitted_by: admin
+    )
+    status_request = stub_request(:get, "#{endpoint}?name=order_update").to_return(
+      status: 200,
+      body: { data: [{ id: 'meta-approved', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'APPROVED',
+                       components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
+      headers: { 'Content-Type' => 'application/json' }
+    )
+
+    described_class.new(revision: category_edit).perform(reconcile: true)
+
+    expect(status_request).to have_been_requested.once
+    expect(category_edit.reload).to have_attributes(status: 'unknown', provider_template_id: nil)
+    expect(revision.reload).not_to be_sendable
+  end
+
+  it 'does not bind a different provider ID to a revision that already has a known provider identity' do
+    revision.update!(status: :unknown, provider_template_id: 'meta-expected')
+    status_request = stub_request(:get, "#{endpoint}?name=order_update").to_return(
+      status: 200,
+      body: { data: [{ id: 'meta-other', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'APPROVED',
+                       components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
+      headers: { 'Content-Type' => 'application/json' }
+    )
+
+    described_class.new(revision: revision).perform(reconcile: true)
+
+    expect(status_request).to have_been_requested.once
+    expect(revision.reload).to have_attributes(status: 'unknown', provider_template_id: 'meta-expected')
+  end
+
+  it 'records a definitive provider rejection instead of losing a 4xx response as unknown' do
+    provider_request = stub_request(:post, endpoint).to_return(
+      status: 400,
+      body: { error: { message: 'Invalid template category', code: 100 } }.to_json,
+      headers: { 'Content-Type' => 'application/json' }
+    )
+
+    described_class.new(revision: revision).perform
+
+    expect(provider_request).to have_been_requested.once
+    expect(revision.reload).to have_attributes(status: 'rejected', rejection_reason: 'Invalid template category (code 100)')
+  end
+
+  it 'timestamps every unresolved reconciliation attempt even when the state remains unknown' do
+    previous_sync = 2.hours.ago.change(usec: 0)
+    revision.update!(status: :unknown, status_synced_at: previous_sync)
+    status_request = stub_request(:get, "#{endpoint}?name=order_update").to_return(status: 503)
+    current_sync = Time.zone.parse('2026-09-12 20:45:00')
+
+    travel_to(current_sync) { described_class.new(revision: revision).perform(reconcile: true) }
+
+    expect(status_request).to have_been_requested.once
+    expect(revision.reload).to have_attributes(status: 'unknown', status_synced_at: current_sync)
+  end
+
   it 'records rejection details and later paused or disabled provider states' do
     status_request = stub_request(:get, "#{endpoint}?name=order_update")
                      .to_return(
-                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', status: 'REJECTED',
+                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'REJECTED',
                                                        rejected_reason: 'INVALID_FORMAT',
                                                        components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                          headers: { 'Content-Type' => 'application/json' } },
-                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', status: 'PAUSED',
+                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'PAUSED',
                                                        components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                          headers: { 'Content-Type' => 'application/json' } },
-                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', status: 'DISABLED',
+                       { status: 200, body: { data: [{ id: 'meta-3', name: 'order_update', language: 'en_US', category: 'UTILITY', status: 'DISABLED',
                                                        components: [{ type: 'BODY', text: 'Order ready' }] }] }.to_json,
                          headers: { 'Content-Type' => 'application/json' } }
                      )
