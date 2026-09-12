@@ -1,0 +1,11 @@
+$ RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=6144 /opt/homebrew/bin/pnpm exec vite build
+
+vite v6.4.2 building for production...
+✓ 5080 modules transformed.
+rendering chunks...
+computing gzip size...
+
+(!) Some chunks are larger than 500 kB after minification.
+✓ built in 58.19s
+
+The chunk-size warning is the existing Vite advisory and did not fail the build.

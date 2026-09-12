@@ -9,11 +9,34 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
 
   after_update_commit :reconcile_ai_reply_usage, if: :saved_change_to_state?
 
+  validate :tenant_scope
+
   MAX_CLAIM_ATTEMPTS = 3
 
   scope :recoverable, lambda {
     where(state: 'pending').or(where(state: %w[claimed dispatching]).where('lease_expires_at IS NULL OR lease_expires_at <= ?', Time.current))
   }
+  scope :retryable_subscription_alerts, lambda {
+    joins(:message).where(state: 'failed', attempts: ...MAX_CLAIM_ATTEMPTS)
+                   .where("messages.additional_attributes #>> '{ai_lead_employee,alert_type}' = ?",
+                          AiLeadEmployee::SubscriptionAlertDeliveryService::ALERT_TYPE)
+  }
+
+  private
+
+  def tenant_scope
+    return if account_id.blank?
+
+    validate_association_account(:conversation, conversation)
+    validate_association_account(:message, message)
+    validate_association_account(:ai_reply_usage, ai_reply_usage) if ai_reply_usage
+  end
+
+  def validate_association_account(name, record)
+    errors.add(name, 'must belong to the same Business Account') if record&.account_id != account_id
+  end
+
+  public
 
   def recover!
     conversation.with_lock do
@@ -59,6 +82,26 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
       return false unless operator_allowed?(user)
       return false unless failed? && message.reload.source_id.blank?
       return false unless AiLeadEmployee::ReplyAllowance.rereserve_for_delivery!(self)
+
+      update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
+      message.update!(status: :sent, external_error: nil)
+      publish!
+      true
+    end
+  end
+
+  def retry_subscription_alert!
+    with_lock do
+      return false unless state.in?(%w[failed canceled]) && message.reload.source_id.blank?
+      return false unless message.additional_attributes.dig('ai_lead_employee', 'alert_type') ==
+                          AiLeadEmployee::SubscriptionAlertDeliveryService::ALERT_TYPE
+
+      authority_failure = Whatsapp::OutboundAlertAuthority.new(message).failure_code
+      if authority_failure
+        update!(state: :canceled, failure_code: authority_failure)
+        publish!
+        return false
+      end
 
       update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
       message.update!(status: :sent, external_error: nil)

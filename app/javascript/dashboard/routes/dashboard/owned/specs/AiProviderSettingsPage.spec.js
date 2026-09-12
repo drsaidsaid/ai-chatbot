@@ -1,7 +1,8 @@
-import { flushPromises, shallowMount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import AiProviderSettingsPage from '../AiProviderSettingsPage.vue';
 import aiProviderConnectionAPI from 'dashboard/api/aiProviderConnection';
 import aiSubscriptionAPI from 'dashboard/api/aiSubscription';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
@@ -63,7 +64,7 @@ describe('AiProviderSettingsPage', () => {
   });
 
   it('shows managed service readiness and account usage without provider controls', async () => {
-    const wrapper = shallowMount(AiProviderSettingsPage);
+    const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
 
     expect(wrapper.text()).toContain(
@@ -83,20 +84,25 @@ describe('AiProviderSettingsPage', () => {
   });
 
   it('shows logical reply usage, renewal and separately billed Meta costs', async () => {
-    const wrapper = shallowMount(AiProviderSettingsPage);
+    const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
 
     expect(wrapper.text()).toContain('Growth');
-    expect(wrapper.text()).toContain('800 AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.USED');
-    expect(wrapper.text()).toContain('2199 AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.REMAINING');
-    expect(wrapper.text()).toContain('26.7%');
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.USAGE_SUMMARY 800 2199'
+    );
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.USAGE_PERCENTAGE 26.7'
+    );
     expect(wrapper.text()).toContain('2026-10-12T08:00:00Z');
     expect(wrapper.text()).toContain('Billed directly by Meta');
-    expect(wrapper.text()).toContain('Billed separately by the advertising platform');
+    expect(wrapper.text()).toContain(
+      'Billed separately by the advertising platform'
+    );
   });
 
   it('uses a phone-safe fluid usage meter without a fixed minimum width', async () => {
-    const wrapper = shallowMount(AiProviderSettingsPage);
+    const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
 
     const meter = wrapper.get('[role="meter"]');
@@ -127,10 +133,10 @@ describe('AiProviderSettingsPage', () => {
       },
     });
     aiSubscriptionAPI.createRequest.mockResolvedValue({ data: { id: 12 } });
-    const wrapper = shallowMount(AiProviderSettingsPage);
+    const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
 
-    await wrapper.get('button').trigger('click');
+    await wrapper.getComponent(Button).trigger('click');
     await flushPromises();
 
     expect(aiSubscriptionAPI.createRequest).toHaveBeenCalledWith({
@@ -154,7 +160,7 @@ describe('AiProviderSettingsPage', () => {
       },
     });
 
-    const wrapper = shallowMount(AiProviderSettingsPage);
+    const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
 
     expect(wrapper.text()).toContain(
@@ -178,7 +184,7 @@ describe('AiProviderSettingsPage', () => {
       },
     });
 
-    const wrapper = shallowMount(AiProviderSettingsPage);
+    const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
 
     expect(wrapper.text()).toContain('3 / 3');
@@ -216,15 +222,15 @@ describe('AiProviderSettingsPage', () => {
       },
     });
     aiSubscriptionAPI.createRequest.mockResolvedValue({ data: { id: 13 } });
-    const wrapper = shallowMount(AiProviderSettingsPage);
+    const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
 
     expect(wrapper.text()).toContain(
       'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.OWNER_ALERT'
     );
     const topUpButton = wrapper
-      .findAll('button')
-      .find(button => button.text().includes('REQUEST_TOP_UP'));
+      .findAllComponents(Button)
+      .find(button => button.props('label').includes('REQUEST_TOP_UP'));
     await topUpButton.trigger('click');
     await flushPromises();
 
@@ -232,5 +238,61 @@ describe('AiProviderSettingsPage', () => {
       ai_service_plan_id: 4,
       purpose: 'top_up',
     });
+  });
+
+  it('shows only same-currency upgrades that increase allowance and price', async () => {
+    aiSubscriptionAPI.get.mockResolvedValue({
+      data: {
+        subscription: {
+          status: 'active',
+          plan_id: 4,
+          plan_name: 'Starter',
+          included_ai_replies: 100,
+          remaining_ai_replies: 20,
+          usage_percentage: 80,
+          automation_allowed: true,
+        },
+        available_plans: [
+          {
+            id: 4,
+            name: 'Starter',
+            currency: 'TZS',
+            monthly_price: '100000',
+            included_ai_replies: 100,
+          },
+          {
+            id: 5,
+            name: 'Valid Growth',
+            currency: 'TZS',
+            monthly_price: '200000',
+            included_ai_replies: 200,
+          },
+          {
+            id: 6,
+            name: 'Cheap Large',
+            currency: 'TZS',
+            monthly_price: '90000',
+            included_ai_replies: 300,
+          },
+          {
+            id: 7,
+            name: 'USD Large',
+            currency: 'USD',
+            monthly_price: '300',
+            included_ai_replies: 400,
+          },
+        ],
+        alerts: [],
+        pending_requests: [],
+        separate_charges: {},
+      },
+    });
+
+    const wrapper = mount(AiProviderSettingsPage);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Valid Growth');
+    expect(wrapper.text()).not.toContain('Cheap Large');
+    expect(wrapper.text()).not.toContain('USD Large');
   });
 });

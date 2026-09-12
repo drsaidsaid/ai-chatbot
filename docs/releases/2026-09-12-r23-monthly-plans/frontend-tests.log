@@ -1,0 +1,18 @@
+$ /opt/homebrew/bin/pnpm --version
+10.2.0
+
+$ /opt/homebrew/bin/pnpm install --frozen-lockfile
+Done
+
+Husky install completed and .husky/_/husky.sh is present.
+pnpm-lock.yaml is unchanged from the committed candidate.
+
+$ /opt/homebrew/bin/pnpm exec eslint app/javascript/dashboard/routes/dashboard/owned/AiProviderSettingsPage.vue app/javascript/dashboard/routes/dashboard/owned/AiSubscriptionSection.vue app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js
+
+$ /opt/homebrew/bin/pnpm exec vitest run app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js
+
+✓ app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js (8 tests) 79ms
+
+Test Files  1 passed (1)
+Tests       8 passed (8)
+Duration    2.66s

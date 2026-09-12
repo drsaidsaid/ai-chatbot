@@ -778,6 +778,8 @@
         "DESCRIPTION": "One credit is used only after one logical AI reply is confirmed sent. Internal model work, retries, split bubbles and static templates do not add extra credits.",
         "USED": "used",
         "REMAINING": "remaining",
+        "USAGE_SUMMARY": "{used} used · {remaining} remaining",
+        "USAGE_PERCENTAGE": "{value}%",
         "RENEWS": "Included credits renew on {date}",
         "EXHAUSTED": "AI replies are paused because no credits remain. Incoming messages and human replies are still available. Request a top-up or upgrade to resume AI work.",
         "OWNER_ALERT": "Action required: this Business Account has reached its AI reply limit or renewal boundary. Choose an approved top-up, upgrade, or renewal below.",

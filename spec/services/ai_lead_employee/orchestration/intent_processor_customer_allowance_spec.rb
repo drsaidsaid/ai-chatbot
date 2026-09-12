@@ -22,6 +22,6 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'customer_allowance_exhausted')
     expect(inbound.reload).to be_persisted
     expect(conversation.messages.outgoing).to be_empty
-    expect(subscription.reload.exhaustion_alerted_at).to be_present
+    expect(subscription.reload.action_required_alerted_at).to be_present
   end
 end

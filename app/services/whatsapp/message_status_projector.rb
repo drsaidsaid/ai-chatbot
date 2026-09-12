@@ -11,14 +11,22 @@ class Whatsapp::MessageStatusProjector
   def perform
     return unless STATUSES.include?(@status['status'])
 
+    projected = false
     @message.with_lock do
       next unless may_advance?
 
       @message.update!(status: @status['status'], content_attributes: projected_attributes)
+      projected = true
     end
+    reconcile_ai_reply_usage if projected
   end
 
   private
+
+  def reconcile_ai_reply_usage
+    delivery = @message.whatsapp_outbound_delivery
+    AiLeadEmployee::ReplyAllowance.reconcile_delivery!(delivery) if delivery&.ai_reply_usage_id
+  end
 
   def parse_provider_time
     Time.at(Integer(@status['timestamp'])).utc

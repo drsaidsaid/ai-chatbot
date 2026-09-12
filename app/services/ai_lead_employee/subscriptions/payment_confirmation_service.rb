@@ -2,6 +2,10 @@
 
 class AiLeadEmployee::Subscriptions::PaymentConfirmationService
   InvalidConfirmation = Class.new(StandardError)
+  PURPOSE_APPLIERS = { 'new_subscription' => :activate_subscription!, 'renewal' => :renew_subscription!,
+                       'upgrade' => :upgrade_subscription!, 'top_up' => :add_top_up! }.freeze
+  CURRENT_PLAN_VALIDATORS = { 'upgrade' => :validate_upgrade_state!, 'renewal' => :validate_current_plan_request!,
+                              'top_up' => :validate_current_plan_request! }.freeze
 
   def initialize(account:, request:, platform_app:, attributes:)
     @account = account
@@ -46,6 +50,7 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
 
   def validate_confirmation!
     raise InvalidConfirmation, 'Payment reference is required' if payment_reference.blank?
+    raise InvalidConfirmation, 'Confirmation time cannot be in the future' if confirmed_at.future?
     raise InvalidConfirmation, 'Subscription request belongs to another Business Account' unless request.account_id == account.id
     raise InvalidConfirmation, 'Subscription request is no longer pending' unless request.pending?
 
@@ -62,8 +67,8 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
 
     validate_subscription_snapshot!(subscription)
 
-    validate_upgrade_state!(subscription) if request.purpose == 'upgrade'
-    validate_current_plan_request!(subscription) if request.purpose.in?(%w[renewal top_up])
+    validator = CURRENT_PLAN_VALIDATORS[request.purpose]
+    send(validator, subscription) if validator
   end
 
   def validate_new_subscription!(subscription)
@@ -122,12 +127,7 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
   end
 
   def apply_entitlement!
-    case request.purpose
-    when 'new_subscription' then activate_subscription!
-    when 'renewal' then renew_subscription!
-    when 'upgrade' then upgrade_subscription!
-    when 'top_up' then add_top_up!
-    end
+    send(PURPOSE_APPLIERS.fetch(request.purpose))
   end
 
   def activate_subscription!
@@ -167,7 +167,7 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     subscription.update!(
       ai_service_plan: request.ai_service_plan, status: :active, period_started_at: period_start.utc,
       renews_at: period_end.utc, paid_through_at: period_end.utc, renewal_anchor_day: period_start.day,
-      included_ai_replies: request.ai_service_plan.included_ai_replies, exhaustion_alerted_at: nil
+      included_ai_replies: request.ai_service_plan.included_ai_replies, action_required_alerted_at: nil
     )
     subscription.resolve_alerts!
   end
@@ -176,7 +176,7 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     subscription = required_subscription!
     subscription.with_lock do
       subscription.update!(ai_service_plan: request.ai_service_plan,
-                           included_ai_replies: request.ai_service_plan.included_ai_replies, exhaustion_alerted_at: nil)
+                           included_ai_replies: request.ai_service_plan.included_ai_replies, action_required_alerted_at: nil)
       rebalance_current_period_top_ups!(subscription)
       subscription.resolve_alerts!
     end
@@ -186,7 +186,7 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     subscription = required_subscription!
     subscription.with_lock do
       subscription.update!(top_up_ai_replies: subscription.top_up_ai_replies + confirmed_units,
-                           exhaustion_alerted_at: nil)
+                           action_required_alerted_at: nil)
       subscription.resolve_alerts!
     end
   end

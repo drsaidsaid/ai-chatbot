@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_12_000300) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -177,6 +177,25 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
     t.index ["user_id"], name: "index_agent_sessions_on_user_id"
   end
 
+  create_table "ai_account_cost_allocations", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "recorded_by_platform_app_id", null: false
+    t.string "category", null: false
+    t.decimal "amount", precision: 18, scale: 2, null: false
+    t.string "currency", null: false
+    t.date "period_started_on", null: false
+    t.date "period_ended_on", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "category", "currency", "period_started_on", "period_ended_on"], name: "idx_ai_cost_allocations_unique_period", unique: true
+    t.index ["account_id"], name: "index_ai_account_cost_allocations_on_account_id"
+    t.index ["recorded_by_platform_app_id"], name: "idx_on_recorded_by_platform_app_id_fb2d37397d"
+    t.check_constraint "amount >= 0::numeric", name: "ai_cost_allocations_nonnegative_amount"
+    t.check_constraint "category::text = ANY (ARRAY['hosting'::character varying::text, 'payment_processing'::character varying::text, 'support'::character varying::text])", name: "ai_cost_allocations_category"
+    t.check_constraint "period_ended_on >= period_started_on", name: "ai_cost_allocations_period"
+    t.exclusion_constraint "account_id WITH =, category WITH =, currency WITH =, daterange(period_started_on, period_ended_on, '[]'::text) WITH &&", using: :gist, name: "ai_cost_allocations_no_overlap"
+  end
+
   create_table "ai_lead_employee_evaluation_runs", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "user_id", null: false
@@ -341,28 +360,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
     t.index ["ai_orchestration_intent_id"], name: "index_ai_reply_usages_on_ai_orchestration_intent_id", unique: true
     t.index ["ai_subscription_id"], name: "index_ai_reply_usages_on_ai_subscription_id"
     t.index ["reconciled_by_platform_app_id"], name: "index_ai_reply_usages_on_reconciled_by_platform_app_id"
-    t.check_constraint "allowance_source::text = ANY (ARRAY['included'::character varying, 'top_up'::character varying]::text[])", name: "ai_reply_usages_source"
+    t.check_constraint "allowance_source::text = ANY (ARRAY['included'::character varying::text, 'top_up'::character varying::text])", name: "ai_reply_usages_source"
     t.check_constraint "expected_delivery_parts > 0", name: "ai_reply_usages_positive_parts"
     t.check_constraint "period_ends_at > period_started_at", name: "ai_reply_usages_forward_period"
-    t.check_constraint "status::text = ANY (ARRAY['reserved'::character varying, 'settled'::character varying, 'released'::character varying]::text[])", name: "ai_reply_usages_status"
-  end
-
-  create_table "ai_subscription_alerts", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.bigint "ai_subscription_id", null: false
-    t.string "kind", null: false
-    t.string "status", default: "open", null: false
-    t.datetime "period_started_at", null: false
-    t.datetime "resolved_at"
-    t.jsonb "alert_recipients", default: [], null: false
-    t.jsonb "alert_deliveries", default: [], null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_ai_subscription_alerts_on_account_id"
-    t.index ["ai_subscription_id", "period_started_at", "kind"], name: "idx_ai_subscription_alerts_period_kind", unique: true
-    t.index ["ai_subscription_id"], name: "index_ai_subscription_alerts_on_ai_subscription_id"
-    t.check_constraint "kind::text = ANY (ARRAY['allowance_exhausted'::character varying, 'subscription_renewal_due'::character varying]::text[])", name: "ai_subscription_alerts_kind"
-    t.check_constraint "status::text = ANY (ARRAY['open'::character varying, 'resolved'::character varying]::text[])", name: "ai_subscription_alerts_status"
+    t.check_constraint "status::text = ANY (ARRAY['reserved'::character varying::text, 'settled'::character varying::text, 'released'::character varying::text])", name: "ai_reply_usages_status"
   end
 
   create_table "ai_service_plans", force: :cascade do |t|
@@ -381,12 +382,30 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
     t.datetime "updated_at", null: false
     t.index ["code", "version"], name: "index_ai_service_plans_on_code_and_version", unique: true
     t.index ["code"], name: "idx_ai_service_plans_one_published_code", unique: true, where: "((status)::text = 'published'::text)"
+    t.check_constraint "(top_up_price IS NULL) = (top_up_ai_replies IS NULL)", name: "ai_service_plans_complete_top_up_terms"
     t.check_constraint "included_ai_replies > 0", name: "ai_service_plans_positive_allowance"
     t.check_constraint "monthly_price > 0::numeric", name: "ai_service_plans_positive_price"
-    t.check_constraint "(top_up_price IS NULL) = (top_up_ai_replies IS NULL)", name: "ai_service_plans_complete_top_up_terms"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'published'::character varying::text, 'archived'::character varying::text])", name: "ai_service_plans_status"
     t.check_constraint "top_up_ai_replies IS NULL OR top_up_ai_replies > 0", name: "ai_service_plans_positive_top_up_allowance"
     t.check_constraint "top_up_price IS NULL OR top_up_price > 0::numeric", name: "ai_service_plans_positive_top_up_price"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying, 'archived'::character varying]::text[])", name: "ai_service_plans_status"
+  end
+
+  create_table "ai_subscription_alerts", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "ai_subscription_id", null: false
+    t.string "kind", null: false
+    t.string "status", default: "open", null: false
+    t.datetime "period_started_at", null: false
+    t.datetime "resolved_at"
+    t.jsonb "alert_recipients", default: [], null: false
+    t.jsonb "alert_deliveries", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_ai_subscription_alerts_on_account_id"
+    t.index ["ai_subscription_id", "period_started_at", "kind"], name: "idx_ai_subscription_alerts_period_kind", unique: true
+    t.index ["ai_subscription_id"], name: "index_ai_subscription_alerts_on_ai_subscription_id"
+    t.check_constraint "kind::text = ANY (ARRAY['allowance_exhausted'::character varying::text, 'subscription_renewal_due'::character varying::text])", name: "ai_subscription_alerts_kind"
+    t.check_constraint "status::text = ANY (ARRAY['open'::character varying::text, 'resolved'::character varying::text])", name: "ai_subscription_alerts_status"
   end
 
   create_table "ai_subscription_requests", force: :cascade do |t|
@@ -408,8 +427,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
     t.index ["ai_service_plan_id"], name: "index_ai_subscription_requests_on_ai_service_plan_id"
     t.index ["expected_current_plan_id"], name: "index_ai_subscription_requests_on_expected_current_plan_id"
     t.index ["requested_by_id"], name: "index_ai_subscription_requests_on_requested_by_id"
-    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying, 'renewal'::character varying, 'upgrade'::character varying, 'top_up'::character varying]::text[])", name: "ai_subscription_requests_purpose"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'confirmed'::character varying, 'canceled'::character varying]::text[])", name: "ai_subscription_requests_status"
+    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying::text, 'renewal'::character varying::text, 'upgrade'::character varying::text, 'top_up'::character varying::text])", name: "ai_subscription_requests_purpose"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'confirmed'::character varying::text, 'canceled'::character varying::text])", name: "ai_subscription_requests_status"
   end
 
   create_table "ai_subscriptions", force: :cascade do |t|
@@ -423,36 +442,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
     t.integer "renewal_anchor_day", null: false
     t.integer "included_ai_replies", null: false
     t.integer "top_up_ai_replies", default: 0, null: false
-    t.datetime "exhaustion_alerted_at"
+    t.datetime "action_required_alerted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_ai_subscriptions_on_account_id", unique: true
     t.index ["ai_service_plan_id"], name: "index_ai_subscriptions_on_ai_service_plan_id"
     t.check_constraint "included_ai_replies > 0", name: "ai_subscriptions_positive_allowance"
-    t.check_constraint "renewal_anchor_day >= 1 AND renewal_anchor_day <= 31", name: "ai_subscriptions_valid_anchor_day"
     t.check_constraint "paid_through_at >= renews_at", name: "ai_subscriptions_paid_through_period"
-    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'canceled'::character varying, 'review_required'::character varying]::text[])", name: "ai_subscriptions_status"
+    t.check_constraint "renewal_anchor_day >= 1 AND renewal_anchor_day <= 31", name: "ai_subscriptions_valid_anchor_day"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'canceled'::character varying::text, 'review_required'::character varying::text])", name: "ai_subscriptions_status"
     t.check_constraint "top_up_ai_replies >= 0", name: "ai_subscriptions_nonnegative_topups"
-  end
-
-  create_table "subscription_payment_confirmations", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.bigint "ai_subscription_request_id", null: false
-    t.bigint "confirmed_by_platform_app_id", null: false
-    t.string "purpose", null: false
-    t.string "payment_reference", null: false
-    t.decimal "amount", precision: 18, scale: 2, null: false
-    t.string "currency", null: false
-    t.integer "granted_ai_replies"
-    t.datetime "confirmed_at", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id", "payment_reference"], name: "idx_subscription_payments_on_account_reference", unique: true
-    t.index ["account_id"], name: "index_subscription_payment_confirmations_on_account_id"
-    t.index ["ai_subscription_request_id"], name: "idx_subscription_payments_on_request", unique: true
-    t.index ["confirmed_by_platform_app_id"], name: "idx_subscription_payments_on_platform_app"
-    t.check_constraint "amount > 0::numeric", name: "subscription_payments_positive_amount"
-    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying, 'renewal'::character varying, 'upgrade'::character varying, 'top_up'::character varying]::text[])", name: "subscription_payments_purpose"
   end
 
   create_table "applied_slas", force: :cascade do |t|
@@ -2100,6 +2099,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
     t.index ["account_id"], name: "index_sla_policies_on_account_id"
   end
 
+  create_table "subscription_payment_confirmations", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "ai_subscription_request_id", null: false
+    t.bigint "confirmed_by_platform_app_id", null: false
+    t.string "purpose", null: false
+    t.string "payment_reference", null: false
+    t.decimal "amount", precision: 18, scale: 2, null: false
+    t.string "currency", null: false
+    t.integer "granted_ai_replies"
+    t.datetime "confirmed_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "payment_reference"], name: "idx_subscription_payments_on_account_reference", unique: true
+    t.index ["account_id"], name: "index_subscription_payment_confirmations_on_account_id"
+    t.index ["ai_subscription_request_id"], name: "idx_subscription_payments_on_request", unique: true
+    t.index ["confirmed_by_platform_app_id"], name: "idx_subscription_payments_on_platform_app"
+    t.check_constraint "amount > 0::numeric", name: "subscription_payments_positive_amount"
+    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying::text, 'renewal'::character varying::text, 'upgrade'::character varying::text, 'top_up'::character varying::text])", name: "subscription_payments_purpose"
+  end
+
   create_table "taggings", id: :serial, force: :cascade do |t|
     t.integer "tag_id"
     t.string "taggable_type"
@@ -2302,6 +2321,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000100) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_account_cost_allocations", "accounts"
+  add_foreign_key "ai_account_cost_allocations", "platform_apps", column: "recorded_by_platform_app_id"
   add_foreign_key "ai_lead_employee_evaluation_runs", "accounts"
   add_foreign_key "ai_lead_employee_evaluation_runs", "users"
   add_foreign_key "ai_lead_employee_evaluation_runs", "users", column: "reviewed_by_id"

@@ -1,0 +1,11 @@
+$ POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r23_final_2473 RAILS_ENV=test ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=<synthetic> ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=<synthetic> ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=<synthetic> bundle exec rspec spec/requests/ai_lead_employee/subscription_billing_spec.rb spec/services/ai_lead_employee/reply_allowance_spec.rb spec/services/ai_lead_employee/subscriptions/payment_confirmation_service_spec.rb spec/services/ai_lead_employee/orchestration/intent_processor_customer_allowance_spec.rb spec/services/ai_lead_employee/subscription_alert_delivery_service_spec.rb spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb spec/requests/whatsapp_outbound_delivery_spec.rb
+
+Finished in 1 minute 16.06 seconds (files took 3.05 seconds to load)
+101 examples, 0 failures
+
+$ bundle exec rubocop <26 final R23 Ruby files>
+
+Inspecting 26 files
+..........................
+
+26 files inspected, no offenses detected

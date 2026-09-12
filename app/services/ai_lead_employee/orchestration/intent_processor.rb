@@ -72,6 +72,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
                                                    lead_message: triggering_message, reason: :provider_failed) do |request|
       request.question = 'AI processing could not complete after recovery. A Human Operator should review this Lead message.'
     end
+    release_reply_allowance!('claim_recovery_exhausted')
     intent.update!(state: :failed, failure_class: 'claim_recovery_exhausted', review_request: review, completed_at: Time.current)
     false
   end

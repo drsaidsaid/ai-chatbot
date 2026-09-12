@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::ReplyUsageReconciler
+  CONFIRMED_PROVIDER_STATUSES = %w[sent delivered read].freeze
+
   class << self
     def register_deliveries!(usage:, messages:, at: Time.current)
       raise ArgumentError, 'A logical reply must include at least one delivery part' if messages.empty?
@@ -48,14 +50,13 @@ class AiLeadEmployee::ReplyUsageReconciler
     end
 
     def manual_release!(usage, platform_app, reason)
+      raise ArgumentError, 'Confirmed sent evidence prevents allowance release' if confirmed_sent_deliveries(usage).any?
+
       AiLeadEmployee::ReplyAllowance.release!(usage: usage, reason: reason, platform_app: platform_app)
     end
 
     def delivery_usage(delivery)
-      return delivery.ai_reply_usage if delivery.ai_reply_usage
-
-      usage_id = delivery.message.additional_attributes.dig('ai_lead_employee', 'ai_reply_usage_id')
-      AiLeadEmployee::AiReplyUsage.find_by(id: usage_id, account_id: delivery.account_id)
+      AiLeadEmployee::AiReplyUsage.for_delivery(delivery)
     end
 
     def reconcile_registered_delivery!(usage, delivery)
@@ -75,15 +76,24 @@ class AiLeadEmployee::ReplyUsageReconciler
 
     def reconciliation_outcome(usage, deliveries)
       return :incomplete if deliveries.size < usage.expected_delivery_parts
-      return :settled if deliveries.all?(&:accepted?)
-      return :indeterminate if indeterminate?(deliveries)
-      return :released unless deliveries.any?(&:accepted?)
+      return :settled if deliveries.all? { |delivery| confirmed_sent?(delivery) }
+
+      return indeterminate_outcome(usage, deliveries) if indeterminate?(deliveries)
+      return :released unless deliveries.any? { |delivery| confirmed_sent?(delivery) }
 
       :partial
     end
 
+    def indeterminate_outcome(usage, deliveries)
+      usage.update!(reconciliation_reason: 'acceptance_unknown') if deliveries.any?(&:unknown?)
+      :indeterminate
+    end
+
     def indeterminate?(deliveries)
-      deliveries.any? { |item| item.state.in?(%w[pending claimed dispatching unknown]) }
+      deliveries.any? do |delivery|
+        delivery.state.in?(%w[pending claimed dispatching unknown]) ||
+          (delivery.accepted? && provider_status(delivery).blank?)
+      end
     end
 
     def settle_logical_reply!(usage, deliveries)
@@ -105,10 +115,30 @@ class AiLeadEmployee::ReplyUsageReconciler
       attributes = { reconciliation_reason: reason, reconciled_by_platform_app: platform_app }
       case outcome.to_s
       when 'confirmed_sent'
+        raise ArgumentError, 'Canonical delivery acceptance is required before settlement' unless canonical_deliveries_confirmed?(usage)
+
         usage.update!(attributes.merge(status: :settled, settled_at: Time.current))
       else
         raise ArgumentError, 'Outcome must be confirmed_sent or confirmed_not_sent'
       end
+    end
+
+    def canonical_deliveries_confirmed?(usage)
+      deliveries = usage.whatsapp_outbound_deliveries.reload
+      usage.deliveries_registered_at.present? && deliveries.size == usage.expected_delivery_parts &&
+        deliveries.all? { |delivery| confirmed_sent?(delivery) }
+    end
+
+    def confirmed_sent_deliveries(usage)
+      usage.whatsapp_outbound_deliveries.reload.select { |delivery| confirmed_sent?(delivery) }
+    end
+
+    def confirmed_sent?(delivery)
+      delivery.accepted? && provider_status(delivery).in?(CONFIRMED_PROVIDER_STATUSES)
+    end
+
+    def provider_status(delivery)
+      delivery.message.content_attributes['whatsapp_provider_status']
     end
   end
 end

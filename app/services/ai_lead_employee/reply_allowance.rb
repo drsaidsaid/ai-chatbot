@@ -89,10 +89,7 @@ class AiLeadEmployee::ReplyAllowance
     private
 
     def delivery_usage(delivery)
-      return delivery.ai_reply_usage if delivery.ai_reply_usage
-
-      usage_id = delivery.message.additional_attributes.dig('ai_lead_employee', 'ai_reply_usage_id')
-      AiLeadEmployee::AiReplyUsage.find_by(id: usage_id, account_id: delivery.account_id)
+      AiLeadEmployee::AiReplyUsage.for_delivery(delivery)
     end
 
     def with_active_subscription(account)
@@ -170,7 +167,7 @@ class AiLeadEmployee::ReplyAllowance
         top_up_ai_replies_remaining: counts[:top_up_remaining], usage_percentage: usage_percentage(counts[:settled], total_capacity),
         automation_allowed: counts[:remaining].positive?,
         automation_paused_reason: counts[:remaining].zero? ? 'customer_allowance_exhausted' : nil,
-        exhaustion_alerted_at: subscription.exhaustion_alerted_at
+        action_required_alerted_at: subscription.action_required_alerted_at
       }
     end
 
@@ -203,7 +200,7 @@ class AiLeadEmployee::ReplyAllowance
         included_ai_replies: subscription.included_ai_replies, used_ai_replies: 0, reserved_ai_replies: 0,
         remaining_ai_replies: 0, top_up_ai_replies_remaining: 0, usage_percentage: 100.0,
         automation_allowed: false, automation_paused_reason: 'subscription_renewal_due',
-        exhaustion_alerted_at: subscription.exhaustion_alerted_at
+        action_required_alerted_at: subscription.action_required_alerted_at
       }
     end
   end

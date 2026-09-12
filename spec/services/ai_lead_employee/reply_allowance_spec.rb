@@ -59,7 +59,7 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     expect(outcomes.count { |outcome| outcome.is_a?(AiLeadEmployee::AiReplyUsage) }).to eq(1)
     expect(outcomes.count { |outcome| outcome.is_a?(described_class::Exhausted) }).to eq(1)
     expect(AiLeadEmployee::AiReplyUsage.where(account: account).reserved.count).to eq(1)
-    expect(subscription.reload.exhaustion_alerted_at).to be_present
+    expect(subscription.reload.action_required_alerted_at).to be_present
     expect(subscription.alerts.open.allowance_exhausted.count).to eq(1)
   end
 
@@ -121,7 +121,10 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     expect(usage.reload).to be_reserved
 
     delivery.update!(state: :accepted, accepted_at: Time.current, provider_message_id: 'wamid.confirmed')
-    delivery.update!(state: :accepted)
+    expect(usage.reload).to be_reserved
+    Whatsapp::MessageStatusProjector.new(
+      message: message.reload, status: { status: 'sent', timestamp: Time.current.to_i.to_s }
+    ).perform
     expect(usage.reload).to be_settled
 
     subscription.update!(paid_through_at: Time.zone.parse('2026-11-01 21:00:00 UTC'))
@@ -146,15 +149,45 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     first_delivery.update!(
       state: :accepted, accepted_at: Time.current, provider_message_id: 'wamid.part.1'
     )
+    Whatsapp::MessageStatusProjector.new(
+      message: messages.first.reload, status: { status: 'sent', timestamp: Time.current.to_i.to_s }
+    ).perform
     second_delivery.update!(state: :failed, failure_code: 'provider_rejected')
 
     expect(usage.reload).to have_attributes(status: 'reserved', reconciliation_reason: 'partial_delivery_requires_reconciliation')
 
+    expect do
+      described_class.reconcile!(usage: usage, outcome: 'confirmed_not_sent', platform_app: create(:platform_app),
+                                 reason: 'operator_lookup_not_found')
+    end.to raise_error(ArgumentError, 'Confirmed sent evidence prevents allowance release')
+    expect(usage.reload).to be_reserved
+
     second_delivery.update!(
       state: :accepted, accepted_at: Time.current, provider_message_id: 'wamid.part.2'
     )
+    Whatsapp::MessageStatusProjector.new(
+      message: messages.second.reload, status: { status: 'sent', timestamp: Time.current.to_i.to_s }
+    ).perform
     expect(usage.reload).to be_settled
     expect(AiLeadEmployee::AiReplyUsage.where(account: account).settled.count).to eq(1)
+  end
+
+  it 'does not bill HTTP acceptance and releases a later provider failed receipt' do
+    intent = intent_for
+    usage = described_class.reserve!(intent: intent)
+    message = create(:message, account: account, inbox: intent.conversation.inbox, conversation: intent.conversation,
+                               message_type: :outgoing,
+                               additional_attributes: { ai_lead_employee: { ai_reply_usage_id: usage.id } })
+    delivery = delivery_for(message, usage)
+    described_class.register_deliveries!(usage: usage, messages: [message])
+    delivery.update!(state: :accepted, accepted_at: Time.current, provider_message_id: 'wamid.failed.later')
+
+    expect(usage.reload).to be_reserved
+    Whatsapp::MessageStatusProjector.new(
+      message: message.reload, status: { status: 'failed', timestamp: Time.current.to_i.to_s }
+    ).perform
+
+    expect(usage.reload).to be_released
   end
 
   it 'reuses the same released unit when an authorised operator retries a confirmed failure' do
@@ -183,5 +216,20 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
     described_class.reserve!(intent: intent_for(other_account), at: Time.zone.parse('2026-09-12 08:00:00 UTC'))
 
     expect(described_class.summary(account: account, at: Time.zone.parse('2026-09-12 08:00:00 UTC'))[:remaining_ai_replies]).to eq(1)
+  end
+
+  it 'rejects a delivery association to another Business Account allowance' do
+    other_account = create(:account)
+    create(:ai_subscription, account: other_account)
+    other_usage = described_class.reserve!(intent: intent_for(other_account))
+    message = create(:message, account: account)
+    delivery = Whatsapp::OutboundDelivery.new(
+      account: account, conversation: message.conversation, message: message, ai_reply_usage: other_usage,
+      observed_control_version: message.conversation.control_version
+    )
+
+    expect(delivery).not_to be_valid
+    expect(delivery.errors[:ai_reply_usage]).to include('must belong to the same Business Account')
+    expect(AiLeadEmployee::AiReplyUsage.for_delivery(delivery)).to be_nil
   end
 end

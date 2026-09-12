@@ -45,4 +45,74 @@ RSpec.describe AiLeadEmployee::SubscriptionAlertDeliveryService do
     expect(SendReplyJob).to have_received(:perform_later).with(message.id).twice
     expect(Whatsapp::OutboundAlertAuthority.new(message.reload).failure_code).to be_nil
   end
+
+  it 'automatically returns a confirmed failed alert delivery to pending without creating another message' do
+    channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    account = channel.account
+    create(:user, account: account, role: :administrator,
+                  custom_attributes: { 'whatsapp_alert_phone' => '+255700123456' })
+    subscription = create(:ai_subscription, account: account)
+    alert = AiLeadEmployee::AiSubscriptionAlert.create!(
+      account: account, ai_subscription: subscription, kind: :allowance_exhausted,
+      period_started_at: subscription.period_started_at
+    )
+    allow(SendReplyJob).to receive(:perform_later)
+    described_class.new(alert: alert).perform
+    message = account.messages.find(alert.reload.alert_deliveries.sole.fetch('message_id'))
+    message.whatsapp_outbound_delivery.update!(state: :failed, failure_code: 'provider_rejected')
+    message.update!(status: :failed, external_error: 'Synthetic failure')
+
+    expect { Whatsapp::OutboundRecoveryJob.perform_now }.not_to change(account.messages, :count)
+
+    expect(message.whatsapp_outbound_delivery.reload).to be_pending
+    expect(message.reload).to have_attributes(status: 'sent', external_error: nil)
+    expect(SendReplyJob).to have_received(:perform_later).with(message.id).twice
+  end
+
+  it 'rejects a recipient whose administrator membership was removed after the alert was queued' do
+    channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    account = channel.account
+    admin = create(:user, account: account, role: :administrator,
+                          custom_attributes: { 'whatsapp_alert_phone' => '+255700123456' })
+    subscription = create(:ai_subscription, account: account)
+    alert = AiLeadEmployee::AiSubscriptionAlert.create!(
+      account: account, ai_subscription: subscription, kind: :allowance_exhausted,
+      period_started_at: subscription.period_started_at
+    )
+    allow(SendReplyJob).to receive(:perform_later)
+    described_class.new(alert: alert).perform
+    message = account.messages.find(alert.reload.alert_deliveries.sole.fetch('message_id'))
+    AccountUser.find_by!(account: account, user: admin).destroy!
+
+    expect(Whatsapp::OutboundAlertAuthority.new(message.reload).failure_code).to eq('alert_recipient_removed')
+  end
+
+  it 'does not let terminal canceled alerts starve a newer failed alert retry' do
+    channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    account = channel.account
+    create(:user, account: account, role: :administrator,
+                  custom_attributes: { 'whatsapp_alert_phone' => '+255700123456' })
+    subscription = create(:ai_subscription, account: account)
+    alert = AiLeadEmployee::AiSubscriptionAlert.create!(
+      account: account, ai_subscription: subscription, kind: :allowance_exhausted,
+      period_started_at: subscription.period_started_at
+    )
+    allow(SendReplyJob).to receive(:perform_later)
+    described_class.new(alert: alert).perform
+    retryable_message = account.messages.find(alert.reload.alert_deliveries.sole.fetch('message_id'))
+    retryable_message.whatsapp_outbound_delivery.update!(state: :failed, failure_code: 'provider_rejected')
+
+    101.times do
+      message = create(
+        :message, account: account, inbox: channel.inbox, message_type: :outgoing,
+                  additional_attributes: { ai_lead_employee: { alert_type: described_class::ALERT_TYPE } }
+      )
+      message.whatsapp_outbound_delivery.update!(state: :canceled, failure_code: 'alert_recipient_removed')
+    end
+
+    Whatsapp::OutboundRecoveryJob.perform_now
+
+    expect(retryable_message.whatsapp_outbound_delivery.reload).to be_pending
+    expect(SendReplyJob).to have_received(:perform_later).with(retryable_message.id).twice
+  end
 end

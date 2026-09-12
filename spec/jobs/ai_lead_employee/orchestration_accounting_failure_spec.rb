@@ -84,6 +84,24 @@ RSpec.describe 'AI orchestration after uncertain provider accounting', type: :jo
     expect(records.fetch(:connection).reload.last_health_status).to be_nil
   end
 
+  it 'releases the reserved customer unit when an expired claim exhausts recovery attempts' do
+    records = create_orchestration_records
+    usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: records.fetch(:intent))
+    records.fetch(:intent).update!(
+      state: :processing,
+      attempts: AiLeadEmployee::OrchestrationIntent::MAX_CLAIM_ATTEMPTS,
+      owner_token: 'expired-owner',
+      lease_expires_at: 1.minute.ago
+    )
+    records.fetch(:conversation).reload
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to receive(:for)
+
+    AiLeadEmployee::Orchestration::IntentProcessor.new(intent: records.fetch(:intent), enqueue_deliveries: false).perform
+
+    expect(records.fetch(:intent).reload).to have_attributes(state: 'failed', failure_class: 'claim_recovery_exhausted')
+    expect(usage.reload).to be_released
+  end
+
   private
 
   def expect_terminal_uncertainty(records, provider_request, first_error)

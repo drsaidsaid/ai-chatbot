@@ -96,7 +96,7 @@ class Whatsapp::OutboundAlertAuthority
   end
 
   def subscription_alert_recipients
-    Array(record.alert_recipients).map { |value| normalize(value) }
+    Whatsapp::SubscriptionAlertRecipientResolver.for(@message.account)
   end
 
   def routed_recipients(account)

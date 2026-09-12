@@ -51,7 +51,7 @@ class AiLeadEmployee::AiSubscription < ApplicationRecord
     alert = alerts.find_or_initialize_by(period_started_at: period_started_at, kind: kind)
     alert.assign_attributes(account: account, status: :open, resolved_at: nil)
     alert.save!
-    update!(exhaustion_alerted_at: at) if exhaustion_alerted_at.blank?
+    update!(action_required_alerted_at: at) if action_required_alerted_at.blank?
     alert
   end
 
@@ -59,7 +59,7 @@ class AiLeadEmployee::AiSubscription < ApplicationRecord
     relation = alerts.open
     relation = relation.where(kind: kind) if kind
     relation.find_each { |alert| alert.update!(status: :resolved, resolved_at: Time.current) }
-    update!(exhaustion_alerted_at: nil) unless alerts.open.exists?
+    update!(action_required_alerted_at: nil) unless alerts.open.exists?
   end
 
   private
@@ -68,7 +68,7 @@ class AiLeadEmployee::AiSubscription < ApplicationRecord
     return if period_started_at == period_start.utc && renews_at == period_end.utc
 
     resolve_alerts!
-    update!(period_started_at: period_start.utc, renews_at: period_end.utc, exhaustion_alerted_at: nil)
+    update!(period_started_at: period_start.utc, renews_at: period_end.utc, action_required_alerted_at: nil)
   end
 
   def valid_reporting_timezone

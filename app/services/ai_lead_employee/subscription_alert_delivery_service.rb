@@ -30,6 +30,7 @@ class AiLeadEmployee::SubscriptionAlertDeliveryService
   def delivery_for(recipient)
     previous = alert.alert_deliveries.find { |delivery| delivery['recipient'] == recipient }
     message = previous_message(previous) || create_alert_message!(recipient)
+    message.whatsapp_outbound_delivery&.retry_subscription_alert!
     enqueue_message_id = message.source_id.blank? ? message.id : nil
     [delivery_payload(recipient, message), enqueue_message_id]
   end
@@ -76,10 +77,7 @@ class AiLeadEmployee::SubscriptionAlertDeliveryService
   def owner_recipients
     return [] unless whatsapp_channel
 
-    account.administrators.filter_map do |admin|
-      phone = admin.custom_attributes&.dig('whatsapp_alert_phone').presence
-      Whatsapp::RecipientIdentifier.normalize(phone) if phone
-    end.uniq
+    Whatsapp::SubscriptionAlertRecipientResolver.for(account)
   end
 
   def whatsapp_channel

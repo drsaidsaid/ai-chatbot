@@ -669,7 +669,8 @@ Rails.application.routes.draw do
         resources :accounts, only: [:index, :create, :show, :update, :destroy] do
           resource :billing_summary, only: [:show]
           resources :subscription_payment_confirmations, only: [:create]
-          resources :ai_reply_usages, only: [:update]
+          resources :ai_reply_usages, only: [:index, :update]
+          resources :cost_allocations, only: [:index, :create], controller: 'account_cost_allocations'
           resource :ai_provider_connection, only: [:show, :update, :destroy] do
             post :health_check
           end

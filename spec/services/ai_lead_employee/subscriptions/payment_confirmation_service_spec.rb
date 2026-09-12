@@ -141,4 +141,18 @@ RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
     expect(AiLeadEmployee::AiSubscription.where(account: account)).to be_empty
     expect(request.reload).to be_pending
   end
+
+  it 'rejects a payment confirmation timestamp in the future' do
+    request = request_for(plan: starter, purpose: 'new_subscription')
+
+    expect do
+      described_class.new(
+        account: account, request: request, platform_app: platform_app,
+        attributes: { payment_reference: 'FUTURE', amount: 100_000, currency: request.currency,
+                      confirmed_at: 1.day.from_now.iso8601 }
+      ).perform
+    end.to raise_error(described_class::InvalidConfirmation, /cannot be in the future/)
+
+    expect(request.reload).to be_pending
+  end
 end

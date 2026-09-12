@@ -19,6 +19,14 @@ class AiLeadEmployee::AiReplyUsage < ApplicationRecord
   validate :valid_period
   validate :terminal_timestamp
 
+  def self.for_delivery(delivery)
+    associated_usage = delivery.ai_reply_usage
+    return associated_usage if associated_usage&.account_id == delivery.account_id
+
+    usage_id = delivery.message.additional_attributes.dig('ai_lead_employee', 'ai_reply_usage_id')
+    find_by(id: usage_id, account_id: delivery.account_id)
+  end
+
   private
 
   def tenant_scope
