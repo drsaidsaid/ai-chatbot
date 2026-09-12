@@ -25,4 +25,6 @@ Fresh acceptance was completed in the Codex in-app browser against the local app
 
 ## Integrity
 
+The independent final amendment review is recorded in [final-amendment-code-review.md](final-amendment-code-review.md). It found one blocking P1 contract mismatch, one hard documentation-flow violation, and two non-blocking duplication findings.
+
 SHA-256 checksums for the evidence files are recorded in [manifest.sha256](manifest.sha256). The unrelated untracked `graft/` directory was excluded.
