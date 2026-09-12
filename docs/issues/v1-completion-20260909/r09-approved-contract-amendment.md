@@ -22,11 +22,13 @@ agreement.
   eligibility. It does not require a universal Highly Qualified label, fixed
   budget/urgency/authority signals or an arbitrary answer count.
 - Every enabled requirement is conjunctive, even when several requirements use
-  the same field. Sales-call assignment also requires current met fit, readiness
-  and action eligibility, no exclusion, and explicit positive Lead agreement in
-  the stable `sales_call_agreement` boolean field. Empty, malformed and
-  `not_required` assessments fail closed. Basic human assistance is a separate
-  route and never counts as sales-call agreement.
+  the same field. Sales-call assignment requires every current configured fit,
+  readiness and action-eligibility requirement to be met, no exclusion, and
+  explicit positive Lead agreement in the stable `sales_call_agreement` boolean
+  field. A canonical `not_required` dimension is valid only when the current
+  Offer has no enabled requirement or enabled required question for it; empty or
+  malformed assessments fail closed. Basic human assistance is a separate route
+  and never counts as sales-call agreement.
 
 ## Preserved boundaries
 

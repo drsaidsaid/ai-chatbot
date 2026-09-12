@@ -65,12 +65,15 @@ enabled requirement is evaluated; rules sharing one field form an order-independ
 conjunction rather than overwriting one another.
 
 For an Offer whose next step is a sales call, automatic assignment requires
-current met fit, readiness and action eligibility, no hard-rule exclusion, and
-explicit positive boolean evidence for the stable `sales_call_agreement` field.
-Absent or malformed assessment data fails closed. The agreement field is an
-owner-configurable question, not a global script; no fixed budget, urgency,
-authority or answer count is restored. Basic human assistance remains a separate
-R14 route and does not authorize a sales call.
+every current configured fit, readiness and action-eligibility requirement to be
+met, no hard-rule exclusion, and explicit positive boolean evidence for the
+stable `sales_call_agreement` field. A dimension is canonically `not_required`
+only when the current Offer has no enabled requirement or enabled required
+question for it; that state is admissible without manufacturing a requirement.
+Absent, inconsistent or malformed assessment data fails closed. The agreement
+field is an owner-configurable question, not a global script; no fixed budget,
+urgency, authority or answer count is restored. Basic human assistance remains
+a separate R14 route and does not authorize a sales call.
 
 Currency inputs and API output use labeled major-unit decimal strings. Convert
 exactly at the persistence boundary to integer minor units; never use floating

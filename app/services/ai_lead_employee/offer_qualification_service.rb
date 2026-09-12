@@ -110,7 +110,9 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
   def assessment_for(snapshot, rules)
     AiLeadEmployee::OfferRules::REQUIREMENT_DIMENSIONS.index_with do |dimension|
       dimension_requirements = rules.requirements.select { |rule| rule['dimension'] == dimension }
-      question_fields = offer.questions.select { |question| question['required'] && question.fetch('purpose', 'fit') == dimension }.pluck('key')
+      question_fields = offer.questions.select do |question|
+        question['enabled'] && question['required'] && question.fetch('purpose', 'fit') == dimension
+      end.pluck('key')
       requirement_states = dimension_requirements.map { |rule| [rule['field'], rules.requirement_state(rule)] }
       question_states = question_fields.map { |field| [field, evidence_state(snapshot[field])] }
       states = question_states + requirement_states

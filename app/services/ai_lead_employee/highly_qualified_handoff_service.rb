@@ -133,8 +133,24 @@ class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/Cl
     assessment = qualification.assessment
     assessment.is_a?(Hash) && SALES_CALL_DIMENSIONS.all? do |dimension|
       dimension_assessment = assessment[dimension]
-      dimension_assessment.is_a?(Hash) && dimension_assessment['status'] == 'met' &&
+      dimension_assessment.is_a?(Hash) && dimension_assessment['status'] == expected_dimension_status(dimension) &&
         dimension_assessment['missing_fields'] == [] && dimension_assessment['reasons'] == []
+    end
+  end
+
+  def expected_dimension_status(dimension)
+    sales_call_dimension_configured?(dimension) ? 'met' : 'not_required'
+  end
+
+  def sales_call_dimension_configured?(dimension)
+    configured_required_question?(dimension) || qualification.offer.configuration.fetch('rules', []).any? do |rule|
+      rule['enabled'] && rule['kind'] == 'requirement' && rule['dimension'] == dimension
+    end
+  end
+
+  def configured_required_question?(dimension)
+    qualification.offer.questions.any? do |question|
+      question['enabled'] && question['required'] && question.fetch('purpose', 'fit') == dimension
     end
   end
 

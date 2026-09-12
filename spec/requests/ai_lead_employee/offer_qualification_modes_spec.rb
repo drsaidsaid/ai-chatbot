@@ -201,6 +201,63 @@ RSpec.describe 'Optional business-defined Offer qualification', type: :request d
     end
   end
 
+  it 'permits canonical not-required dimensions when the current Offer does not configure them' do
+    problem = r09_question('problem', answer_type: 'text', prompt: 'What outcome do you need?', purpose: 'fit')
+    agreement = r09_question(
+      'sales_call_agreement', answer_type: 'boolean', prompt: 'Would you like our sales team to call you?',
+                              purpose: 'action_eligibility', required: false, position: 1
+    )
+    disabled_readiness = r09_question(
+      'urgency', answer_type: 'text', prompt: 'When are you ready?', purpose: 'readiness', enabled: false, position: 2
+    )
+    offer = r09_create_offer(
+      r09_configuration(
+        name: 'Fit then agreed call', questions: [problem, agreement, disabled_readiness],
+        rules: [
+          requirement('problem', 'fit', 'positive'),
+          requirement('urgency', 'readiness', 'positive').merge(enabled: false)
+        ],
+        score_weights: {}, legacy_contract: false,
+        score_thresholds: { qualified: 0, highly_qualified: 100 }, next_step: { kind: 'sales_call' }
+      )
+    )
+    conversation = r09_conversation(offer: offer)
+    record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+    record_evidence(conversation, offer, 'sales_call_agreement', true)
+    qualification = r09_qualification(offer)
+
+    result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification,
+      qualification_context: latest_context(conversation, qualification),
+      defer_alert_delivery: true
+    ).perform
+
+    expect(qualification.assessment.values.pluck('status')).to eq(%w[met not_required not_required])
+    expect(result.handoff).to be_persisted
+  end
+
+  it 'rejects not-required assessment data when the current Offer configures that dimension' do
+    offer = r09_create_offer(enabled_configuration)
+    conversation = r09_conversation(offer: offer)
+    record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+    record_evidence(conversation, offer, 'contact_details', '+255700222333')
+    record_evidence(conversation, offer, 'urgency', 'We are ready now')
+    record_evidence(conversation, offer, 'sales_call_agreement', true)
+    qualification = r09_qualification(offer)
+    qualification.update!(assessment: qualification.assessment.deep_merge('readiness' => { 'status' => 'not_required' }))
+
+    result = AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation,
+      qualification: qualification,
+      qualification_context: latest_context(conversation, qualification),
+      defer_alert_delivery: true
+    ).perform
+
+    expect(result.handoff).to be_nil
+    expect(conversation.reload).to be_ai_active
+  end
+
   it 'does not turn unrelated evidence into a sales handoff when readiness and action prerequisites are absent' do
     problem = r09_question('problem', answer_type: 'text', prompt: 'What outcome do you need?', purpose: 'fit')
     offer = r09_create_offer(
