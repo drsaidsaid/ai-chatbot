@@ -29,3 +29,14 @@ Run on 2026-09-12 against isolated local database `ai_chatbot_r23_browser_2473`.
 - Clicking renewal created one pending manual-confirmation request showing `TZS 250000.0` and the synthetic/no-live-payment instructions.
 
 Desktop and mobile screenshots were captured with the Codex in-app browser and are retained inline in the acceptance task transcript. The responsive viewport override was reset after capture.
+
+## Terminal partial closure — final source
+
+Run on 2026-09-13 against isolated local database `ai_chatbot_r23_final_2473` at final source `e0bbd23ea109f71e73f725cacf382d398ea25acd`. Before either local server started, all HTTP(S) proxy variables were pointed at refused loopback port `127.0.0.1:9`, with only `127.0.0.1,localhost` excluded. The synthetic provider connection was disabled and no worker was started. No provider, customer, payment, Meta, or WhatsApp call was made.
+
+- Desktop before reconciliation: `R23 Synthetic`, `0 used · 2 remaining`, `33.3%`, and `1 reply credit is held while delivery reconciliation is pending. It is not billed or retried; platform review can close a proven terminal partial failure and restore the credit.`
+- The finance endpoint closed usage `40` with `confirmed_partial_failure`. Two identical calls returned HTTP `200`, `partial_failure_closed`, `settled_at: null`, and the same `released_at` value (`2026-09-12T22:17:53.443Z`), demonstrating one-time idempotent release.
+- Desktop after reconciliation: `0 used · 3 remaining`, `0%`, with no reconciliation-required copy. The desktop viewport was `1280×720`, document `scrollWidth` was `1280`, and the meter bounds were left `424`, right `1192`, width `768`.
+- The original failed message retry returned HTTP `409` with `This delivery cannot be safely retried.` Its delivery remained `failed` with `provider_rejected` evidence.
+- Database verification: `used_ai_replies: 0`, `remaining_ai_replies: 3`, `reconciliation_required_ai_replies: 0`, no settlement timestamp, no payment confirmations, and no provider-usage rows.
+- At `390×844`, document `scrollWidth` was exactly `390`; the subscription section and meter were both left `16`, right `374`, width `358`. Plan, usage, renewal, top-up, and separate-charge copy remained readable without horizontal overflow.
