@@ -1,0 +1,32 @@
+{
+  "source_base": "2d898a3d6766f9b8846f91ba90ba1056675ac56a",
+  "change": "Related booking links include the booking local start date as the Bookings workspace from parameter.",
+  "security_scope": "The destination continues to use the existing booking workspace access scope and date-range filter.",
+  "browser": {
+    "lead_context_before": "/app/accounts/3/leads?q=Alexandra&quality=highly_qualified&sort=name&direction=asc&page=1&lead_id=2",
+    "booking_destination": "/app/accounts/3/bookings?booking_id=1&from=2026-09-14",
+    "booking_observations": [
+      "Sep 14 - Sep 20, 2026",
+      "Showing 1 of 1 bookings",
+      "Selected Booking detail",
+      "Alexandra Very Long Browser Acceptance Lead Name With Important Context",
+      "Confirmed",
+      "Product Demo"
+    ],
+    "lead_context_after_close": "/app/accounts/3/leads?q=Alexandra&quality=highly_qualified&sort=name&direction=asc&page=1"
+  },
+  "tests": [
+    {
+      "command": "isolated RSpec leads_directory_service_spec",
+      "result": "7 examples, 0 failures"
+    },
+    {
+      "command": "pnpm test LeadsDirectoryPage.spec.js",
+      "result": "16 tests passed"
+    },
+    {
+      "command": "targeted RuboCop and ESLint",
+      "result": "passed"
+    }
+  ]
+}

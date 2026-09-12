@@ -124,7 +124,7 @@ RSpec.describe AiLeadEmployee::LeadsDirectoryService do
       expect(payload[:leads].first.dig(:booking, :status)).to eq('confirmed')
       expect(payload[:selected_lead].dig(:detail, :related_bookings).first).to include(
         id: booking.id,
-        path: "/app/accounts/#{account.id}/bookings?booking_id=#{booking.id}"
+        path: "/app/accounts/#{account.id}/bookings?booking_id=#{booking.id}&from=#{booking.starts_at.in_time_zone(booking.timezone).to_date.iso8601}"
       )
     end
 

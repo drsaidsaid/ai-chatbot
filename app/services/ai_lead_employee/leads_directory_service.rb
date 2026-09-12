@@ -379,7 +379,7 @@ class AiLeadEmployee::LeadsDirectoryService
       key: booking.confirmed? ? 'demo' : booking.status,
       starts_at: booking.starts_at,
       ends_at: booking.ends_at,
-      path: "/app/accounts/#{account.id}/bookings?booking_id=#{booking.id}",
+      path: "/app/accounts/#{account.id}/bookings?booking_id=#{booking.id}&from=#{booking.starts_at.in_time_zone(booking.timezone).to_date.iso8601}",
       assignee: user_payload(booking.assignee)
     }
   end

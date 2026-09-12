@@ -387,6 +387,21 @@ describe('LeadsDirectoryPage', () => {
         .findAll('a[href="/app/accounts/1/conversations/42"]')
         .some(link => link.text().includes('Open conversation'))
     ).toBe(true);
+
+    await wrapper
+      .findAll('button')
+      .find(button =>
+        button.text().includes('AI_LEAD_EMPLOYEE.LEADS.BACK_TO_LIST')
+      )
+      .trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.query).toMatchObject({
+      q: 'nuru',
+      page: '2',
+      sort: 'name',
+    });
+    expect(router.currentRoute.value.query.lead_id).toBeUndefined();
   });
 
   it('keeps phone filters collapsed and gives every filter an accessible name', async () => {

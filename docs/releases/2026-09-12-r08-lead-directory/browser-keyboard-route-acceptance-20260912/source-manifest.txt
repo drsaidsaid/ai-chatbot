@@ -1,0 +1,11 @@
+Frozen source commit: 2d898a3d6766f9b8846f91ba90ba1056675ac56a
+Frozen source tree: 2fd67a4bd519ea768b1155d62a5b586bb8ccb1a3
+Evidence base commit before this checkpoint: ef89bd09786003dacc5518f6b0f0828660d90473
+Evidence base tree before this checkpoint: 9ba6e2253df9abd076fc1afeeff86d9891a38dfa
+
+Relevant source:
+- app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue
+- app/javascript/dashboard/routes/dashboard/owned/LeadDetail.vue
+- app/javascript/dashboard/routes/dashboard/owned/BookingsPanel.vue
+- app/services/ai_lead_employee/leads_directory_service.rb
+- app/services/ai_lead_employee/bookings_workspace_service.rb

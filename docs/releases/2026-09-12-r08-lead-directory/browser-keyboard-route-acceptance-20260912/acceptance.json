@@ -1,0 +1,65 @@
+{
+  "frozen_source_commit": "2d898a3d6766f9b8846f91ba90ba1056675ac56a",
+  "frozen_source_tree": "2fd67a4bd519ea768b1155d62a5b586bb8ccb1a3",
+  "environment": {
+    "database": "ale_r08_browser",
+    "rails": "http://127.0.0.1:3000",
+    "vite": "http://127.0.0.1:3036/vite-dev/",
+    "browser": "Codex In-app Browser"
+  },
+  "fixtures": {
+    "account_id": 3,
+    "featured_contact_id": 2,
+    "featured_booking_id": 1,
+    "contacts": 112
+  },
+  "checks": [
+    {
+      "name": "desktop row Enter activation",
+      "status": "passed",
+      "action": "Focused featured desktop row and pressed Enter.",
+      "observed_url": "/app/accounts/3/leads?lead_id=2",
+      "observed_content": "Selected Lead detail for Alexandra Very Long Browser Acceptance Lead Name With Important Context."
+    },
+    {
+      "name": "desktop row Space activation",
+      "status": "passed",
+      "action": "Returned to unselected directory, focused featured desktop row, and pressed Space.",
+      "observed_url": "/app/accounts/3/leads?lead_id=2",
+      "observed_content": "Selected Lead detail for the same featured contact."
+    },
+    {
+      "name": "related conversation route",
+      "status": "passed",
+      "action": "Activated Open conversation from selected lead detail.",
+      "observed_url": "/app/accounts/3/conversations/1?queue=all",
+      "observed_content": "Featured conversation, fixture message, Human Active state, and proposed booking content."
+    },
+    {
+      "name": "conversation return via application navigation",
+      "status": "passed",
+      "action": "Activated the primary navigation Leads link.",
+      "observed_url": "/app/accounts/3/leads",
+      "observed_content": "All 112 with default filters and no selected detail."
+    },
+    {
+      "name": "related booking route",
+      "status": "failed",
+      "action": "Activated Booking #1 Confirmed - 14 Sept, 17:58 from selected lead detail.",
+      "observed_url": "/app/accounts/3/bookings?booking_id=1",
+      "observed_content": "Bookings workspace loaded default Sep 7 - Sep 13, 2026 range, then showed No calls booked yet and Showing 0 of 0 bookings.",
+      "cause": "Booking 1 is on Sep 14. The workspace filters by date range before it resolves booking_id against the filtered collection."
+    },
+    {
+      "name": "booking return via application navigation",
+      "status": "passed",
+      "action": "Activated the primary navigation Leads link.",
+      "observed_url": "/app/accounts/3/leads",
+      "observed_content": "All 112 with default filters and no selected detail."
+    }
+  ],
+  "limitations": [
+    "The booking route's URL target is valid, but its selected booking content was not rendered because of the demonstrated range-filter ordering failure.",
+    "Export bytes remain covered by backend tests; this bounded browser pass did not claim an in-app download-byte observation."
+  ]
+}
