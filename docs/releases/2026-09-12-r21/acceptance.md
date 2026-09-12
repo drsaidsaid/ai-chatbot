@@ -12,15 +12,20 @@
 ## Automated verification
 
 - Rails provider control, usage, platform authorization, delivery and
-  end-to-end request coverage: 96 examples, 0 failures. This includes a
-  focused post-review regression proving a mismatched legacy usage row cannot
-  consume another account's runtime allowance.
+  end-to-end request coverage at commit `6a1dd7e3`: 95 examples, 0 failures.
+  After the isolation patch, the complete `ai_provider_usage_controls_spec.rb`
+  file was rerun at the final source and passed: 11 examples, 0 failures. It
+  includes the regression proving a mismatched legacy usage row cannot consume
+  another account's runtime allowance; the other 84 pre-patch examples were
+  not rerun as a single final-source suite.
 - Vue managed-service page, navigation and settings layout coverage: 12 tests,
   0 failures.
 - Focused RuboCop: 16 files, no offenses.
 - Focused ESLint: no errors; warnings are pre-existing formatting warnings in
   the settings shell outside the changed label.
-- Full production Vite build: passed (5,078 modules transformed).
+- Full production Vite build at `6a1dd7e3`: passed (5,078 modules
+  transformed). The post-review patch is Ruby-only and does not change the
+  frontend artifact.
 - Route inspection and `git diff --check`: passed.
 
 ## Browser acceptance
