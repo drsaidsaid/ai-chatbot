@@ -1,0 +1,16 @@
+source=2f124cc2bd9f27e9173a4e3a5536ab8f9513ec7b
+source_tree=5e2c60a49f85df566a9eeb1bddd774651943475a
+complete_source_inventory_compare=0
+source_diff_compare=0
+source_inventory_lines=9422
+changed_paths=4
+contention_red_examples=6
+contention_red_failures=2
+encoding_red_examples=1
+encoding_red_failures=1
+focused_examples=24
+focused_failures=0
+concurrency_examples=6
+concurrency_failures=0
+rubocop_files=3
+rubocop_offenses=0

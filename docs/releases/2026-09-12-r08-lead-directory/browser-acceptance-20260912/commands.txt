@@ -1,0 +1,26 @@
+Frozen source verified: 2d898a3d6766f9b8846f91ba90ba1056675ac56a
+Prior final evidence verified: 4e58e07faa4e451032437e56f2c01f3c0a1ebae6
+
+Isolated runtime:
+- PostgreSQL 18 data directory /tmp/ale-r08-pg18.NHSrQt on port 55533
+- Redis on port 6433, database 1
+- Browser database ale_r08_browser
+- Rails server bound to 127.0.0.1:3000
+- Vite bound to 127.0.0.1:3036 with VITE_RUBY_HOST=127.0.0.1
+
+Browser coverage:
+- administrator login and Leads directory
+- desktop selected Lead detail
+- mobile 390x844 directory, selected detail, and bottom navigation
+- name search and highly-qualified filter
+- keyboard Tab navigation
+- edit validation, saved edit, and audit verification
+- ambiguous import preview with disabled apply
+- filtered export acknowledgement
+- restricted-user visibility and empty state
+
+Post-run isolated database query:
+{"contacts":112,"ambiguous_import_contacts":0,"featured_city":"Dar es Salaam","lead_edit_audits":1}
+
+Console error query:
+{"admin_errors":[],"restricted_errors":[]}

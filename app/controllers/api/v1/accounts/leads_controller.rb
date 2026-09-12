@@ -3,11 +3,6 @@
 require 'csv'
 
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
-  EXPORT_COLUMNS = %w[
-    id name phone_number email business_name quality score source assignee
-    last_contact_at next_action booking_status
-  ].freeze
-
   before_action -> { check_authorization(Contact) }
   before_action :set_contact, only: [:show, :update, :reconsent]
 
@@ -49,16 +44,39 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def import
     return render json: { error_key: 'select_csv_file' }, status: :unprocessable_entity if params[:import_file].blank?
 
-    render json: { import: import_payload }
+    result = AiLeadEmployee::LeadImportService.new(
+      account: current_account,
+      user: Current.user,
+      file: params[:import_file],
+      mode: params[:mode],
+      preview_digest: params[:preview_digest]
+    ).perform
+    render json: { import: result }
+  rescue AiLeadEmployee::LeadImportService::ImportError => e
+    render json: { error_key: e.error_key }, status: :unprocessable_entity
   end
 
   def export
-    send_data export_csv,
-              filename: "leads-#{Time.zone.today.iso8601}.csv",
-              type: 'text/csv'
+    artifact = AiLeadEmployee::LeadExportCsv.new(
+      account_id: current_account.id,
+      user_id: Current.user.id,
+      params: lead_directory_params.to_h
+    ).build
+    prepare_export_response(artifact)
   end
 
   private
+
+  def prepare_export_response(artifact)
+    request.env[Rack::RACK_TEMPFILES] ||= []
+    request.env[Rack::RACK_TEMPFILES] << artifact
+    request.env[AiLeadEmployee::LeadExportBodyMiddleware::ENV_KEY] = artifact
+    response.headers['Cache-Control'] = 'private, no-store'
+    send_file artifact.path,
+              filename: "leads-#{Time.zone.today.iso8601}.csv",
+              type: 'text/csv',
+              disposition: 'attachment'
+  end
 
   def directory_payload(extra_params = {})
     AiLeadEmployee::LeadsDirectoryService.new(
@@ -106,88 +124,5 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def administrator?
     current_account.account_users.find_by(user: Current.user)&.administrator?
-  end
-
-  def import_payload
-    result = { imported_count: 0, failures: [] }
-
-    CSV.foreach(params[:import_file].path, headers: true).with_index(2) do |row, line_number|
-      import_row(row)
-      result[:imported_count] += 1
-    rescue ActiveRecord::RecordInvalid => e
-      result[:failures] << { line: line_number, error: e.record.errors.full_messages.to_sentence }
-    end
-
-    completed_import_payload(result)
-  rescue CSV::MalformedCSVError => e
-    failed_import_payload(e.message)
-  end
-
-  def completed_import_payload(result)
-    {
-      status: result[:failures].present? ? 'partial' : 'completed',
-      imported_count: result[:imported_count],
-      failed_count: result[:failures].size,
-      failures: result[:failures]
-    }
-  end
-
-  def failed_import_payload(message)
-    {
-      status: 'failed',
-      imported_count: 0,
-      failed_count: 1,
-      failures: [{ line: nil, error: message }]
-    }
-  end
-
-  def import_row(row)
-    name = row['name'].presence || row['lead'].presence
-    phone_number = row['phone_number'].presence || row['phone'].presence
-    email = row['email'].presence
-    business_name = row['business_name'].presence || row['company_name'].presence || row['business'].presence
-    contact = import_contact_for(phone_number, email)
-    contact.assign_attributes(name: name, email: email)
-    contact.additional_attributes = (contact.additional_attributes || {}).merge('company_name' => business_name).compact
-    contact.save!
-  end
-
-  def import_contact_for(phone_number, email)
-    return current_account.contacts.find_or_initialize_by(phone_number: phone_number) if phone_number.present?
-    return current_account.contacts.find_or_initialize_by(email: email) if email.present?
-
-    current_account.contacts.new
-  end
-
-  def export_csv
-    CSV.generate(headers: true) do |csv|
-      csv << EXPORT_COLUMNS
-      export_rows.each { |row| csv << export_row(row) }
-    end
-  end
-
-  def export_rows
-    AiLeadEmployee::LeadsDirectoryService.new(
-      account: current_account,
-      user: Current.user,
-      params: lead_directory_params.merge(page: 1, per_page: 100)
-    ).export_rows
-  end
-
-  def export_row(row)
-    [
-      row[:id],
-      row[:name],
-      row[:phone_number],
-      row[:email],
-      row[:business_name],
-      row[:quality],
-      row[:score],
-      row.dig(:source, :name),
-      row.dig(:assignee, :name),
-      row[:last_contact_at],
-      row.dig(:next_action, :key),
-      row.dig(:booking, :status)
-    ]
   end
 end

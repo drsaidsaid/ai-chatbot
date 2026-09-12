@@ -19,9 +19,11 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${id}/reconsent`, data);
   }
 
-  importLeads(file) {
+  importLeads(file, { mode = 'preview', previewDigest } = {}) {
     const formData = new FormData();
     formData.append('import_file', file);
+    formData.append('mode', mode);
+    if (previewDigest) formData.append('preview_digest', previewDigest);
     return axios.post(`${this.url}/import`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });

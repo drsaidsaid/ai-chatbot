@@ -1,0 +1,12 @@
+source=fd96521bdc32fb03c5d3ad058d9abe9d0e93a004
+source_tree=69da9eb877622f46aa8369788aed2760540ff6d8
+complete_source_inventory_compare=0
+source_diff_compare=0
+source_inventory_lines=9438
+changed_paths=3
+focused_examples=25
+focused_failures=0
+concurrency_examples=7
+concurrency_failures=0
+rubocop_files=3
+rubocop_offenses=0

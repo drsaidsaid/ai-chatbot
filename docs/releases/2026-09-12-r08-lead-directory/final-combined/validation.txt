@@ -1,0 +1,10 @@
+Evidence reconstruction and comparison:
+
+cat baseline-tree-part-* | base64 --decode | gzip --decompress > /tmp/r08-baseline-tree.txt
+cat source-tree-part-* | base64 --decode | gzip --decompress > /tmp/r08-source-tree.txt
+git ls-tree -r --full-tree 9a834e756347822d4ae5af15f268a5e8751fc852 | cmp - /tmp/r08-baseline-tree.txt
+git ls-tree -r --full-tree 2d898a3d6766f9b8846f91ba90ba1056675ac56a | cmp - /tmp/r08-source-tree.txt
+cat nonrelease-complete.diff.gz.base64 | base64 --decode | gzip --decompress > /tmp/r08-nonrelease.diff
+git diff --binary --full-index 9a834e756347822d4ae5af15f268a5e8751fc852..2d898a3d6766f9b8846f91ba90ba1056675ac56a -- . ':(exclude)docs/releases/**' | cmp - /tmp/r08-nonrelease.diff
+git diff --name-status 9a834e756347822d4ae5af15f268a5e8751fc852..2d898a3d6766f9b8846f91ba90ba1056675ac56a -- . ':(exclude)docs/releases/**' | cmp - nonrelease-changed-paths.txt
+shasum -a 256 -c artifact-sha256.txt

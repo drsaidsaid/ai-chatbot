@@ -1,0 +1,31 @@
+Frozen source: 2d898a3d6766f9b8846f91ba90ba1056675ac56a
+Frozen source tree: 2fd67a4bd519ea768b1155d62a5b586bb8ccb1a3
+Baseline: 9a834e756347822d4ae5af15f268a5e8751fc852
+Baseline tree: 63204f14f911cf6acae203690274d9da4317511f
+
+PASS exit 0 — Rails selected checks
+bundle exec rspec spec/requests/api/v1/accounts/leads_spec.rb spec/requests/r08_lead_export_artifact_spec.rb spec/services/ai_lead_employee/lead_export_csv_spec.rb spec/services/ai_lead_employee/lead_import_service_concurrency_spec.rb spec/services/ai_lead_employee/leads_directory_service_spec.rb spec/requests/r06_contact_bulk_access_spec.rb spec/services/ai_lead_employee/lead_update_service_spec.rb
+Result: 48 examples, 0 failures.
+
+PASS exit 0 — changed Vue/API suites
+pnpm vitest run app/javascript/dashboard/api/specs/leads.spec.js app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js
+Result: 2 files, 22 tests passed.
+
+PASS exit 0 — all changed Ruby paths
+bundle exec rubocop --force-exclusion app/controllers/api/v1/accounts/leads_controller.rb app/services/ai_lead_employee/lead_export_body.rb app/services/ai_lead_employee/lead_export_csv.rb app/services/ai_lead_employee/lead_import_service.rb app/services/ai_lead_employee/lead_update_service.rb app/services/ai_lead_employee/leads_directory_service.rb config/application.rb lib/ai_lead_employee/lead_export_body_middleware.rb spec/requests/api/v1/accounts/leads_spec.rb spec/requests/r08_lead_export_artifact_spec.rb spec/services/ai_lead_employee/lead_export_csv_spec.rb spec/services/ai_lead_employee/lead_import_service_concurrency_spec.rb spec/services/ai_lead_employee/leads_directory_service_spec.rb
+Result: 13 files, no offenses.
+
+PASS exit 0 — all changed JavaScript/Vue paths
+pnpm exec eslint app/javascript/dashboard/api/leads.js app/javascript/dashboard/api/specs/leads.spec.js app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js
+Result: no output; direct exit 0. The changed locale JSON is compiled by the production build and is not an ESLint input.
+
+PASS exit 0 — production frontend build
+NODE_OPTIONS=--max-old-space-size=4096 RAILS_ENV=production NODE_ENV=production pnpm exec vite build --config vite.config.ts
+Result: 5,078 modules transformed; built in 50.75s. Existing chunk-size and caniuse-lite advisories only.
+
+Non-acceptance probes retained for accuracy:
+- Dependency probe before the selected Rails run found the isolated PostgreSQL and Redis processes stopped; no tests started. Both were restarted before the recorded Rails run.
+- `pnpm build` exited 254 because this repository defines no generic build script. The recorded production command above is the repository's documented Vite command and passed.
+- `pnpm eslint <paths>` expands the package script to all app JavaScript and reported 507 repository-wide warnings and zero errors. The exact-path `pnpm exec eslint <paths>` command above is the scoped check and passed.
+
+No browser, app server, integration, deployment, push, or issue closure was performed.

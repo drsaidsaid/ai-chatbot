@@ -1,0 +1,9 @@
+{
+  "baseline_commit": "9a834e756347822d4ae5af15f268a5e8751fc852",
+  "baseline_tree": "63204f14f911cf6acae203690274d9da4317511f",
+  "source_commit": "2d898a3d6766f9b8846f91ba90ba1056675ac56a",
+  "source_tree": "2fd67a4bd519ea768b1155d62a5b586bb8ccb1a3",
+  "verification_scope": "R08 changed Rails request/service/middleware/concurrency paths, R06 access/edit compatibility, changed Vue/API suites, changed Ruby/JS lint, production Vite build",
+  "browser_acceptance": "not_run_locked_mac",
+  "integration_or_closure": false
+}

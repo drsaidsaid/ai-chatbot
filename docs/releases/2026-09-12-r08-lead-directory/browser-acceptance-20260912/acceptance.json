@@ -1,0 +1,44 @@
+{
+  "source_commit": "2d898a3d6766f9b8846f91ba90ba1056675ac56a",
+  "prior_evidence_commit": "4e58e07faa4e451032437e56f2c01f3c0a1ebae6",
+  "browser": "Codex in-app browser only",
+  "runtime": {
+    "postgres": "127.0.0.1:55533 / ale_r08_browser",
+    "redis": "127.0.0.1:6433/1",
+    "rails": "127.0.0.1:3000",
+    "vite": "127.0.0.1:3036",
+    "workers": "not started"
+  },
+  "fixtures": {
+    "account_id": 3,
+    "contacts": 112,
+    "featured_contact_id": 2,
+    "conversation_id": 2,
+    "booking_id": 1,
+    "synthetic_only": true
+  },
+  "passed": [
+    "Administrator saw 112 Leads and quality counts 23, 23, 22, 22, 22.",
+    "Name search reduced the directory to the featured Lead and preserved the query in the URL.",
+    "Highly Qualified filter reduced the result set to 23 rows.",
+    "Desktop selected detail showed channels, qualification, evidence, conversation state, control state, assignee, booking, and action links.",
+    "Mobile 390x844 rendered cards, quality chips, filter control, pagination, and bottom navigation.",
+    "Keyboard Tab reached the mobile Bookings navigation link from the Leads page.",
+    "Invalid phone input displayed the E.164 validation message.",
+    "Saving a synthetic city edit displayed a success state and created one lead_edit audit record.",
+    "Ambiguous import preview reported one error, disabled Import Leads, and created no contact.",
+    "Filtered export displayed Lead export started.",
+    "Restricted operator saw exactly one assigned Lead, no Import or Export controls, and the visible empty-filter state.",
+    "No console error was captured in either browser session."
+  ],
+  "limits": [
+    "The in-app browser did not emit a supported download event after the export action, despite the visible success acknowledgement and Rails export request; this run does not claim inspection of downloaded CSV bytes.",
+    "Browser Back after router query changes returned to Inbox because the route transitions used replacement history. Context return was instead checked through the visible Back to leads control and URL state."
+  ],
+  "database_assertions": {
+    "contacts": 112,
+    "ambiguous_import_contacts": 0,
+    "featured_city": "Dar es Salaam",
+    "lead_edit_audits": 1
+  }
+}

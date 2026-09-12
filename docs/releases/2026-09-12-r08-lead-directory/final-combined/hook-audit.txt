@@ -1,0 +1,16 @@
+core.hooksPath=.husky
+
+Current .husky/pre-commit at source 2d898a3d6766f9b8846f91ba90ba1056675ac56a:
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# lint js and vue files
+npx --no-install lint-staged
+
+# lint only staged ruby files that still exist (not deleted)
+git diff --name-only --cached | xargs -I {} sh -c 'test -f "{}" && echo "{}"' | grep '\.rb$' | xargs -I {} bundle exec rubocop --force-exclusion -a "{}" || true
+
+# stage rubocop changes to files
+git diff --name-only --cached | xargs -I {} sh -c 'test -f "{}" && git add "{}"' || true
+
+Finding: the Ruby hook pipeline ends in `|| true`, so it can mask a RuboCop error. R08 acceptance therefore uses the explicit non-autocorrecting RuboCop invocation recorded in checks.txt and rubocop-changed.log, whose direct exit code was 0. The hook was not changed because the coordinator keeps the R09 fixed-hook work separate until root integration.

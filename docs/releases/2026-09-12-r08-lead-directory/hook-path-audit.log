@@ -1,0 +1,96 @@
+R08 hook path audit
+source=b690343eb2068bf394597812df8c417ec195382a
+base=9a834e756347822d4ae5af15f268a5e8751fc852
+The committed hook uses macOS xargs with || true for Ruby lint/staging.
+Changed paths:
+app/controllers/api/v1/accounts/leads_controller.rb
+app/javascript/dashboard/api/leads.js
+app/javascript/dashboard/api/specs/leads.spec.js
+app/javascript/dashboard/i18n/locale/en/aiLeadEmployee.json
+app/javascript/dashboard/routes/dashboard/owned/LeadsDirectoryPage.vue
+app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js
+app/services/ai_lead_employee/lead_import_service.rb
+app/services/ai_lead_employee/lead_update_service.rb
+app/services/ai_lead_employee/leads_directory_service.rb
+spec/requests/api/v1/accounts/leads_spec.rb
+spec/services/ai_lead_employee/leads_directory_service_spec.rb
+Ruby replay with NUL-safe enumeration:
+BEGIN app/controllers/api/v1/accounts/leads_controller.rb
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+END app/controllers/api/v1/accounts/leads_controller.rb exit=0
+BEGIN app/services/ai_lead_employee/lead_import_service.rb
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+END app/services/ai_lead_employee/lead_import_service.rb exit=0
+BEGIN app/services/ai_lead_employee/lead_update_service.rb
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+END app/services/ai_lead_employee/lead_update_service.rb exit=0
+BEGIN app/services/ai_lead_employee/leads_directory_service.rb
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+END app/services/ai_lead_employee/leads_directory_service.rb exit=0
+BEGIN spec/requests/api/v1/accounts/leads_spec.rb
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+END spec/requests/api/v1/accounts/leads_spec.rb exit=0
+BEGIN spec/services/ai_lead_employee/leads_directory_service_spec.rb
+Inspecting 1 file
+.
+
+1 file inspected, no offenses detected
+
+Tip: Based on detected gems, the following RuboCop extension libraries might be helpful:
+  * rubocop-rspec_rails (https://rubygems.org/gems/rubocop-rspec_rails)
+
+You can opt out of this message by adding the following to your config (see https://docs.rubocop.org/rubocop/extensions.html#extension-suggestions for more options):
+  AllCops:
+    SuggestExtensions: false
+END spec/services/ai_lead_employee/leads_directory_service_spec.rb exit=0
+

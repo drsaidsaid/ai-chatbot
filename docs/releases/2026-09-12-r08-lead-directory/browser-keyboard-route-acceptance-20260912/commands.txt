@@ -1,0 +1,15 @@
+Isolated runtime:
+- PostgreSQL 18 data directory: /tmp/ale-r08-pg18.NHSrQt, port 55533
+- Redis port 6433, database 1
+- POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=55533 POSTGRES_DATABASE=ale_r08_browser POSTGRES_USERNAME=ghalyasaid bundle exec rails server -b 127.0.0.1 -p 3000
+- NODE_OPTIONS=--max-old-space-size=4096 VITE_RUBY_HOST=127.0.0.1 bin/vite dev
+
+Fixture readback before browser acceptance:
+{"account_id":3,"contacts":112,"featured":2,"bookings":1}
+
+Browser route observations:
+- /app/accounts/3/leads?lead_id=2 after Enter
+- /app/accounts/3/leads?lead_id=2 after Space
+- /app/accounts/3/conversations/1?queue=all after Open conversation
+- /app/accounts/3/bookings?booking_id=1 after related booking link
+- /app/accounts/3/leads after explicit primary-navigation return from each destination

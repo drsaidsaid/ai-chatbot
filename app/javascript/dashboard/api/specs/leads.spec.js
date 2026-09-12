@@ -49,16 +49,23 @@ describe('#LeadsAPI', () => {
       });
     });
 
-    it('#importLeads sends multipart form data', () => {
+    it('#importLeads sends preview and apply controls with the file', () => {
       const file = new File(['name'], 'leads.csv', { type: 'text/csv' });
 
-      leads.importLeads(file);
+      leads.importLeads(file, {
+        mode: 'apply',
+        previewDigest: 'same-file',
+      });
 
       expect(axiosMock.post).toHaveBeenCalledWith(
         `${leads.url}/import`,
         expect.any(FormData),
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
+      const formData = axiosMock.post.mock.calls[0][1];
+      expect(formData.get('import_file')).toBe(file);
+      expect(formData.get('mode')).toBe('apply');
+      expect(formData.get('preview_digest')).toBe('same-file');
     });
 
     it('#exportLeads requests a blob response', () => {

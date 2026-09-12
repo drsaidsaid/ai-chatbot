@@ -1,0 +1,10 @@
+source=918d4af0489fc3a00d95d43465155090e29b50c1
+source_tree=41573ff875d32b2520b380d361399c226c87da28
+complete_source_inventory_compare=0
+source_diff_compare=0
+source_inventory_lines=9454
+changed_paths=7
+focused_examples=31
+focused_failures=0
+rubocop_files=7
+rubocop_offenses=0
