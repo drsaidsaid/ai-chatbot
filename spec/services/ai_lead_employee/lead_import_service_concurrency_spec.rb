@@ -35,7 +35,7 @@ RSpec.describe AiLeadEmployee::LeadImportService do
     terminate_workers(workers)
   end
 
-  it 'makes a validating Contact writer observe the identity created by an import holding the table lock' do
+  it 'documents the waiting-writer limitation after import re-resolution' do
     account = create(:account)
     admin = create(:user, account: account, role: :administrator)
     csv = "name,phone_number\nImported Lead,+255713450006\n"
@@ -77,11 +77,24 @@ RSpec.describe AiLeadEmployee::LeadImportService do
     end
 
     expect(import_worker.value).to include(status: 'completed')
-    expect(writer_result).to eq(:identity_rejected)
-    expect(Contact.where(account: account, phone_number: '+255713450006').count).to eq(1)
+    expect(writer_result).to eq(:created)
+    expect(Contact.where(account: account, phone_number: '+255713450006').count).to eq(2)
   ensure
     continue_import << true if continue_import && import_worker&.alive?
     terminate_workers([import_worker, writer_worker])
+  end
+
+  it 'refuses an apply when the competing identity is committed before import re-resolution' do
+    account = create(:account)
+    admin = create(:user, account: account, role: :administrator)
+    csv = "name,phone_number\nImported Lead,+255713450008\n"
+    token = preview_token(account, admin, csv)
+    Contact.create!(account: account, name: 'Committed Writer', phone_number: '+255713450008')
+
+    result = apply_result(account.id, admin.id, csv, token)
+
+    expect(result).to include(status: 'import_file_changed')
+    expect(Contact.where(account: account, phone_number: '+255713450008').count).to eq(1)
   end
 
   it 'times out behind a direct Contact update and leaves that update untouched' do

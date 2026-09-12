@@ -208,7 +208,7 @@ class AiLeadEmployee::LeadImportService
     @apply_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + APPLY_DEADLINE
     ActiveRecord::Base.transaction do
       configure_apply_timeouts!
-      ActiveRecord::Base.connection.execute('LOCK TABLE contacts IN ACCESS EXCLUSIVE MODE')
+      ActiveRecord::Base.connection.execute('LOCK TABLE contacts IN SHARE ROW EXCLUSIVE MODE')
       apply_statement_timeout!
       apply!(preview_payload(content)).tap { ensure_apply_deadline! }
     end

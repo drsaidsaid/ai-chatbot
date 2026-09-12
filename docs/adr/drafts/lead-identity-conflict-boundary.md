@@ -64,15 +64,24 @@ identity. The Ruby timer could also fire while `after_commit` callbacks were
 running and return `import_retry_later` for an already durable import. The
 evidence for that candidate is retained as rejected evidence.
 
-## Revised narrow R08 import-only candidate
+## Rejected broader lock revision
+
+The revision at `2f124cc2bd9f27e9173a4e3a5536ab8f9513ec7b`
+changed the lock to `ACCESS EXCLUSIVE`. That made an ordinary waiting Contact
+writer revalidate after import commit, but it globally blocked Contact reads to
+approximate a uniqueness constraint and still could not govern raw SQL or
+validation-bypassing writes. This broader lock is not accepted. Its tests and
+evidence are retained as candidate evidence.
+
+## Accepted narrow R08 import-owned boundary
 
 The deployed Compose definitions pin PostgreSQL 16. That version has
 `lock_timeout` and `statement_timeout`, but not PostgreSQL 17's
 `transaction_timeout`. A bounded V1 import could therefore:
 
 - accept at most 100 rows and return an explicit preview error above that limit;
-- start the apply transaction and make `LOCK TABLE contacts IN ACCESS EXCLUSIVE
-  MODE` its first database lock or mutation;
+- start the apply transaction and make `LOCK TABLE contacts IN SHARE ROW
+  EXCLUSIVE MODE` its first database lock or mutation;
 - set a local one-second lock timeout, then recompute identity resolution and
   verify the signed preview entirely under the table lock;
 - limit every database statement to the remaining monotonic budget and check the
@@ -81,12 +90,18 @@ The deployed Compose definitions pin PostgreSQL 16. That version has
   roll the entire transaction back. Do not asynchronously interrupt
   `after_commit` callbacks.
 
-The lock blocks the uniqueness reads and writes performed by ordinary validated
-Contact creates and updates. Once the import commits, a waiting application
-writer revalidates and rejects the imported identity. Raw SQL and callers that
-explicitly bypass Contact validation remain outside this narrow guarantee. The
-lock also pauses Contact reads and writes for every account while held, so the
-100-row and one-second lock-wait limits remain material constraints.
+The lock serializes competing imports and conflicts with Contact writes while
+allowing reads. Import re-resolves the currently committed identity state under
+that lock and refuses an ambiguous resolution or a signed preview whose action
+changed. It therefore does not overwrite ambiguous identity or create a duplicate
+that is visible when its transaction commits.
+
+This is not a system-wide uniqueness guarantee. A normal Contact writer can
+finish its uniqueness read while the import holds `SHARE ROW EXCLUSIVE`, wait at
+insert, and then insert the same phone after the import releases its lock. Raw SQL
+and callers that bypass validation are also outside the boundary. Preventing
+those cases requires the separate identity-constraint design described above,
+including legacy ambiguity and behavior for every ingress.
 The import update shape contains identity and business fields only:
 LeadUpdateService short-circuits Conversation assignment and evidence paths.
 That callback and audit assumption still requires verification before this
@@ -104,7 +119,7 @@ Authorization and file reading occur before the transaction. Within apply, local
 lock and statement timeouts are configured, and the contacts table lock is the
 first acquired database lock. Identity resolution and signed-token verification
 then run under that lock. PostgreSQL 16 has no native transaction timeout, so
-this candidate does not claim a hard five-second wall-clock bound. It bounds each
+this boundary does not claim a hard five-second wall-clock bound. It bounds each
 database statement by the remaining budget and checks elapsed time between rows
 and before commit. A callback after commit may extend response time, but cannot
 turn a committed result into `import_retry_later`.
