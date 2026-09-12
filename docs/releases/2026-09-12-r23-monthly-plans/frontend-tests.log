@@ -1,3 +1,5 @@
+Curated verification summary; not a raw console capture. Complete output is retained in the R23 acceptance task transcript.
+
 $ /opt/homebrew/bin/pnpm --version
 10.2.0
 

@@ -1,3 +1,5 @@
+Curated verification summary; not a raw console capture. Complete output is retained in the R23 acceptance task transcript.
+
 $ POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r23_final_2473 RAILS_ENV=test bundle exec rails db:migrate
 
 == 20260912000200 HardenAiSubscriptionOperations: migrating ==================
