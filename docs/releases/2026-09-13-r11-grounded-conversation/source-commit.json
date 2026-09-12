@@ -1,0 +1,16 @@
+{
+  "baseline": "fbee83c96afa58ab1610a0f480b34eb04b1e5ef8",
+  "source_commit": "dad021eb9b2cd50a894f9663a39d26696279334d",
+  "branch": "codex/r11-emergency-conversation-repair-20260910",
+  "ruby_examples": 213,
+  "ruby_failures": 0,
+  "frontend_tests": 16,
+  "frontend_failures": 0,
+  "rubocop_files": 32,
+  "rubocop_offenses": 0,
+  "eslint_errors": 0,
+  "browser_acceptance_owner": "R23",
+  "integration_review_owner": "R26",
+  "pushed": false,
+  "deployed": false
+}
