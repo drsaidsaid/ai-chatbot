@@ -28,6 +28,8 @@
 #  fk_rails_...  (account_id => accounts.id)
 #
 class KnowledgeItem < ApplicationRecord
+  AUTHORITY_METADATA_KEYS = %w[offer_ids language expires_at stale].freeze
+
   belongs_to :account
 
   enum source_kind: {
@@ -84,7 +86,8 @@ class KnowledgeItem < ApplicationRecord
       'answer' => answer,
       'source_kind' => source_kind,
       'approved_at' => now.iso8601(6),
-      'source_reference' => reference
+      'source_reference' => reference,
+      'authority_metadata' => authority_metadata
     }
     self.metadata = metadata.merge(
       'source_reference' => reference,
@@ -111,8 +114,12 @@ class KnowledgeItem < ApplicationRecord
     revision = Array(metadata['approval_revisions']).last
     return updated_at <= approved_at + 1.second if revision.blank?
 
-    revision.values_at('title', 'question', 'answer', 'source_kind', 'source_reference') ==
-      [title, question, answer, source_kind, source_reference]
+    revision.values_at('title', 'question', 'answer', 'source_kind', 'source_reference', 'authority_metadata') ==
+      [title, question, answer, source_kind, source_reference, authority_metadata]
+  end
+
+  def authority_metadata
+    metadata.slice(*AUTHORITY_METADATA_KEYS).deep_dup
   end
 
   def approval_source_reference(approved_at)

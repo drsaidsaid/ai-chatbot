@@ -3,6 +3,7 @@ import { nextTick } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import EvaluationSandboxPanel from '../EvaluationSandboxPanel.vue';
 import EvaluationSandboxAPI from 'dashboard/api/evaluationSandbox';
+import KnowledgeDocumentsAPI from 'dashboard/api/knowledgeDocuments';
 
 vi.mock('dashboard/api/evaluationSandbox', () => ({
   default: {
@@ -14,6 +15,13 @@ vi.mock('dashboard/api/evaluationSandbox', () => ({
     updateLaunchGate: vi.fn(),
     approveLaunch: vi.fn(),
     proposeKnowledge: vi.fn(),
+  },
+}));
+
+vi.mock('dashboard/api/knowledgeDocuments', () => ({
+  default: {
+    show: vi.fn(),
+    test: vi.fn(),
   },
 }));
 
@@ -91,6 +99,16 @@ vi.mock('vue-i18n', () => ({
           'AI_LEAD_EMPLOYEE.TEST_CENTER.HISTORICAL_RESULT_FILTER':
             'Historical result filter',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE': 'Knowledge',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_CONTEXT':
+            'Knowledge document context',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_CONTEXT_LOAD_ERROR':
+            'Knowledge context could not be loaded.',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_QUESTION':
+            'Knowledge test question',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_QUESTION_PLACEHOLDER':
+            'Ask a question this document should answer',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_TEST_ERROR':
+            'Knowledge test could not be run.',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_VERSION': 'Knowledge version',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.LAST_RESULT': 'Last result',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.LAST_TESTED': 'Last tested',
@@ -146,6 +164,8 @@ vi.mock('vue-i18n', () => ({
             'Reviewer grading is stored with configuration, knowledge, model, expected result, and actual result.',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.REVIEW_PATH': 'Review path: {reason}',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.RUNNING': 'Running...',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.TESTING': 'Testing...',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.TRY_THIS_ANSWER': 'Try this answer',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_AGAIN': 'Run again',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_ERROR':
             'Scenario could not be run.',
@@ -317,7 +337,7 @@ const payload = {
   },
 };
 
-const mountComponent = async () => {
+const mountComponent = async (path = '/app/accounts/1/test-center') => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -328,7 +348,7 @@ const mountComponent = async () => {
       },
     ],
   });
-  router.push('/app/accounts/1/test-center');
+  router.push(path);
   await router.isReady();
 
   const wrapper = mount(EvaluationSandboxPanel, {
@@ -371,6 +391,46 @@ describe('EvaluationSandboxPanel', () => {
         },
       },
     });
+    KnowledgeDocumentsAPI.show.mockResolvedValue({
+      data: {
+        id: 42,
+        title: 'Refund policy document',
+        status: 'published',
+      },
+    });
+    KnowledgeDocumentsAPI.test.mockResolvedValue({
+      data: {
+        answered: true,
+        answer: 'Refunds are unavailable after enrollment.',
+        refusal_reason: null,
+        sources: [{ title: 'Refund policy document' }],
+      },
+    });
+  });
+
+  it('loads and tests the knowledge document identified by the contextual shortcut', async () => {
+    const { wrapper } = await mountComponent(
+      '/app/accounts/1/test-center?tab=scenarios&knowledge_document_id=42'
+    );
+
+    expect(KnowledgeDocumentsAPI.show).toHaveBeenCalledWith('42');
+    expect(wrapper.text()).toContain('Refund policy document');
+
+    await wrapper
+      .get('input[aria-label="Knowledge test question"]')
+      .setValue('Can I get a refund?');
+    await wrapper
+      .get('[data-testid="run-knowledge-document-test"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(KnowledgeDocumentsAPI.test).toHaveBeenCalledWith(
+      '42',
+      'Can I get a refund?'
+    );
+    expect(wrapper.text()).toContain(
+      'Refunds are unavailable after enrollment.'
+    );
   });
 
   it('renders scenarios with filters and a simulation transcript', async () => {

@@ -84,6 +84,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
       block_reason = final_block_reason
       next block_intent!(block_reason) if block_reason.present?
+
+      lock_answer_sources!
       next request_review!('source_unverified') if provider_review_required?(response) || !sources_still_current?
 
       complete_grounded_answer!(response, @answer_result, @qualification_result)
@@ -100,6 +102,22 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   def sources_still_current?
     current = knowledge_answer
     !current.refused? && current.answer == @answer_result.answer && current.sources == @answer_result.sources
+  end
+
+  def lock_answer_sources!
+    sources = Array(@answer_result&.sources)
+    item_ids = source_ids(sources, 'knowledge_item')
+    document_ids = source_ids(sources, 'knowledge_document')
+
+    account.knowledge_items.where(id: item_ids).order(:id).lock.load if item_ids.present?
+    account.knowledge_documents.where(id: document_ids).order(:id).lock.load if document_ids.present?
+  end
+
+  def source_ids(sources, type)
+    sources.filter_map do |source|
+      source_type = source[:type] || source['type']
+      source[:id] || source['id'] if source_type == type
+    end.uniq.sort
   end
 
   def owns_claim?

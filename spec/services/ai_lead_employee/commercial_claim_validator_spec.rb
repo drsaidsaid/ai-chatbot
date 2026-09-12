@@ -45,4 +45,31 @@ RSpec.describe AiLeadEmployee::CommercialClaimValidator do
 
     expect(result).not_to be_valid
   end
+
+  it 'recognizes negation that follows the controlled claim term' do
+    expect(
+      described_class.new(
+        approved_content: 'Refunds are not available after enrollment.',
+        candidate_content: 'Refunds are available after enrollment.'
+      )
+    ).not_to be_valid
+    expect(
+      described_class.new(
+        approved_content: 'Eligibility is not guaranteed.',
+        candidate_content: 'Eligibility is guaranteed.'
+      )
+    ).not_to be_valid
+  end
+
+  it 'does not turn denied Swahili refund, guarantee, or eligibility claims positive' do
+    expectations = [
+      ['Marejesho hayapatikani baada ya kujiandikisha.', 'Marejesho yanapatikana baada ya kujiandikisha.'],
+      ['Matokeo hayajahakikishwa.', 'Matokeo yamehakikishwa.'],
+      ['Hustahili kujiunga.', 'Unastahili kujiunga.']
+    ]
+
+    expectations.each do |approved_content, candidate_content|
+      expect(described_class.new(approved_content: approved_content, candidate_content: candidate_content)).not_to be_valid
+    end
+  end
 end
