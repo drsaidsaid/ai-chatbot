@@ -104,6 +104,11 @@ const mountComponent = async () => {
         name: 'owned_knowledge_index',
         component: KnowledgeItemsPanel,
       },
+      {
+        path: '/app/accounts/:accountId/settings/ai-lead-employee/ai-testing/test-center',
+        name: 'owned_test_center_index',
+        component: {},
+      },
     ],
   });
   router.push('/app/accounts/1/knowledge');
@@ -167,7 +172,7 @@ describe('KnowledgeItemsPanel', () => {
     });
   });
 
-  it('renders document editor, access panel, preview, publish, archive, import, and test flows', async () => {
+  it('renders document editor, access panel, preview, publish, archive, import, and Test Center shortcut', async () => {
     const wrapper = await mountComponent();
 
     expect(wrapper.text()).toContain('Documents');
@@ -195,14 +200,14 @@ describe('KnowledgeItemsPanel', () => {
 
     await wrapper
       .findAll('button')
-      .find(button => button.text().includes('Test this document'))
+      .find(button => button.text().includes('Try this answer in Test Center'))
       .trigger('click');
     await flushPromises();
-    expect(KnowledgeDocumentsAPI.test).toHaveBeenCalledWith(
-      1,
-      'Can you explain our services?'
-    );
-    expect(wrapper.text()).toContain('CRM automation');
+    expect(wrapper.vm.$router.currentRoute.value).toMatchObject({
+      name: 'owned_test_center_index',
+      query: { tab: 'scenarios', knowledge_document_id: '1' },
+    });
+    expect(KnowledgeDocumentsAPI.test).not.toHaveBeenCalled();
 
     await wrapper
       .findAll('button')

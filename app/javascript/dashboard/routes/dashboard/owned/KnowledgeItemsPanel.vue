@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Icon from 'next/icon/Icon.vue';
@@ -10,6 +10,7 @@ import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
 import OffersAPI from 'dashboard/api/qualificationOffers';
 
 const route = useRoute();
+const router = useRouter();
 const { t } = useI18n();
 
 const tabs = computed(() => [
@@ -38,7 +39,6 @@ const selectedAnswerId = ref(null);
 const selectedReviewId = ref(null);
 const isLoading = ref(false);
 const isSaving = ref(false);
-const isTesting = ref(false);
 const documentSearch = ref('');
 const answerSearch = ref('');
 const reviewFilter = ref('all');
@@ -47,8 +47,6 @@ const showRevisionHistory = ref(false);
 const showImport = ref(false);
 const showNewAnswer = ref(false);
 const hasUnsavedDocumentChanges = ref(false);
-const testQuestion = ref(t('AI_LEAD_EMPLOYEE.KNOWLEDGE.DEFAULT_TEST_QUESTION'));
-const testResult = ref(null);
 const saveError = ref('');
 
 const documentForm = reactive({
@@ -188,7 +186,6 @@ const selectDocument = document => {
   selectedDocumentId.value = document.id;
   syncDocumentForm(document);
   showPreview.value = false;
-  testResult.value = null;
 };
 
 const ensureReviewForm = request => {
@@ -322,15 +319,16 @@ const archiveDocument = async () => {
   );
   selectDocument(data);
 };
-const runDocumentTest = async () => {
+const openDocumentTestCenter = () => {
   if (!selectedDocument.value) return;
-  isTesting.value = true;
-  const { data } = await KnowledgeDocumentsAPI.test(
-    selectedDocument.value.id,
-    testQuestion.value
-  );
-  testResult.value = data;
-  isTesting.value = false;
+  router.push({
+    name: 'owned_test_center_index',
+    params: { accountId: route.params.accountId },
+    query: {
+      tab: 'scenarios',
+      knowledge_document_id: selectedDocument.value.id,
+    },
+  });
 };
 const updateDocumentField = (key, value) => {
   documentForm[key] = value;
@@ -886,27 +884,11 @@ onMounted(loadWorkspace);
             <button
               type="button"
               class="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-n-weak px-3 py-3 text-sm font-semibold"
-              @click="runDocumentTest"
+              @click="openDocumentTestCenter"
             >
-              <Icon icon="i-lucide-flask-conical" class="size-4" />{{
-                isTesting ? 'Testing...' : 'Test this document'
-              }}
+              <Icon icon="i-lucide-flask-conical" class="size-4" />Try this
+              answer in Test Center
             </button>
-            <input
-              v-model="testQuestion"
-              class="mt-3 h-10 w-full rounded-lg border border-n-weak bg-n-background px-3 text-sm"
-              aria-label="Document test question"
-            />
-            <p
-              v-if="testResult"
-              class="mt-3 rounded-lg bg-n-background p-3 text-sm leading-6 text-n-slate-11"
-            >
-              {{
-                testResult.answered
-                  ? testResult.answer
-                  : `Needs Review: ${testResult.refusal_reason}`
-              }}
-            </p>
           </div>
         </div>
       </aside>
