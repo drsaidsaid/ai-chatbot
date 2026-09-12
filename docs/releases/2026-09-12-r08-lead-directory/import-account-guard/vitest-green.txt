@@ -1,0 +1,17 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ RUN  v3.0.5 /Users/ghalyasaid/.codex/worktrees/7391/AI Chatbot
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ app/javascript/dashboard/routes/dashboard/owned/specs/LeadsDirectoryPage.spec.js (16 tests) 276ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  09:46:19
+   Duration  2.29s (transform 1.24s, setup 102ms, collect 1.27s, tests 276ms, environment 403ms, prepare 56ms)
+
+
