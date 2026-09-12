@@ -43,7 +43,7 @@ in-app surface exposes no viewport emulation or resize capability.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| [acceptance.md](acceptance.md) | `1e8c5e9c45d91dfca0d78b56184550c5041764fc749c37f325d45034b16bf72d` (before this manifest update) |
+| [acceptance.md](acceptance.md) | `cfc9db26a8b2b2468dccd04f438dc06541f7c4721f6f23e09d3e2297ac46c47c` |
 | [provider-authority-migration.md](provider-authority-migration.md) | `e85d0ba3da8ce45398786224d69068c534c71092006b5dcfb0290adc417e1706` |
 | `public/vite/.vite/manifest.json` | `6292f4859c7952c82492b3215c93daaa423a75d8a9be3dfd293cde1e9fbdd6ba` |
 
