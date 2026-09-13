@@ -3,7 +3,8 @@
 class AiLeadEmployee::LanguageDetector
   SWAHILI_TOKENS = %w[
     asante biashara habari hali jina karibu kama kuhusu kujua kuongea lugha maelezo
-    mambo malalamiko msaada nahitaji naitwa naomba nataka ndio ndiyo nimelipa ningependa nini sawa sijui siwezi tafadhali unaongea utapeli
+    kujiunga mambo malalamiko mnakubali mnasafirisha msaada mtandaoni nahitaji naitwa naomba nataka ndio ndiyo nimelipa
+    ninaweza ningependa nini sawa sijui siwezi tafadhali unaongea utapeli
   ].freeze
 
   def self.detect(content)

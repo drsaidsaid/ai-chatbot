@@ -22,6 +22,36 @@ RSpec.describe AiLeadEmployee::SafeConversationReplyService do
     expect(reply).to eq('I can help with questions about this business and its Offers.')
   end
 
+  it 'asks a model-free clarification when Business scope is unresolved' do
+    classification = AiLeadEmployee::ConversationIntentClassifier::Result.new(
+      intent: :scope_clarification,
+      language: :english
+    )
+    reply = described_class.new(
+      message: 'Can I book a flight?',
+      refusal_reason: nil,
+      qualification_result: nil,
+      classification: classification
+    ).perform
+
+    expect(reply).to eq('Are you asking about this business or one of its Offers?')
+  end
+
+  it 'asks the scope clarification in Swahili' do
+    classification = AiLeadEmployee::ConversationIntentClassifier::Result.new(
+      intent: :scope_clarification,
+      language: :swahili
+    )
+    reply = described_class.new(
+      message: 'Je, unauliza kuhusu huduma gani?',
+      refusal_reason: nil,
+      qualification_result: nil,
+      classification: classification
+    ).perform
+
+    expect(reply).to eq('Je, unauliza kuhusu biashara hii au mojawapo ya Ofa zake?')
+  end
+
   it 'truthfully acknowledges an unknown business question without promising a callback or forcing qualification' do
     reply = described_class.new(
       message: 'Do you integrate with a system that is not documented?',

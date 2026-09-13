@@ -8,6 +8,7 @@ class AiLeadEmployee::SafeConversationReplyService
       greeting: 'Hello. How can I help with this business today?',
       acknowledgment: 'Thank you.',
       qualification_answer: 'Thanks for those details.',
+      scope_clarification: 'Are you asking about this business or one of its Offers?',
       generic_safe: 'Could you tell me what you need about this business?'
     },
     swahili: {
@@ -15,6 +16,7 @@ class AiLeadEmployee::SafeConversationReplyService
       greeting: 'Habari. Ninaweza kusaidia kuhusu biashara hii leo?',
       acknowledgment: 'Asante.',
       qualification_answer: 'Asante kwa maelezo.',
+      scope_clarification: 'Je, unauliza kuhusu biashara hii au mojawapo ya Ofa zake?',
       generic_safe: 'Unaweza kueleza unachohitaji kuhusu biashara hii?'
     }
   }.freeze

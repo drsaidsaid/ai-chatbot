@@ -29,14 +29,16 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     offer = create_offer(qualification_mode: 'enabled', questions: [question('business_type', 'What business do you run?')])
     conversation.update!(offer: offer)
 
-    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    confirmation_intent = clarify_and_confirm_scope!(offer.name)
 
-    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
-    expect(intent.review_request).to have_attributes(reason: 'no_approved_knowledge', status: 'open')
-    expect(intent.outbound_message.content).to eq(
+    expect(confirmation_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(confirmation_intent.review_request).to have_attributes(
+      reason: 'no_approved_knowledge', status: 'open', lead_message_id: triggering_message.id
+    )
+    expect(confirmation_intent.outbound_message.content).to eq(
       'I do not have an approved answer for that yet. I have recorded your question for the team to review.'
     )
-    expect(intent.outbound_message.content).not_to include('What business do you run?')
+    expect(confirmation_intent.outbound_message.content).not_to include('What business do you run?')
     expect(LeadQualification.where(contact: contact)).to be_empty
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
@@ -52,7 +54,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(LeadQualification.where(contact: contact)).to be_empty
   end
 
-  it 'treats the same external how-to question according to the approved Business scope' do
+  it 'clarifies an external how-to question when the available scope is ambiguous' do
     triggering_message.update!(content: 'How do I repair my bicycle?')
     create(:knowledge_item, account: account, question: 'How can I grow my coaching business?',
                             answer: 'Use the approved coaching programme.')
@@ -61,7 +63,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
 
     expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
-    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+    expect(intent.outbound_message.content).to eq('Are you asking about this business or one of its Offers?')
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
@@ -94,6 +96,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   it 'sets a boundary for an arbitrary informational question outside the approved Business scope' do
+    account.update!(name: 'France')
+    conversation.update!(offer: create_offer(name: 'Capital'))
     triggering_message.update!(content: 'What is the capital of France?')
     create(:knowledge_item, account: account, question: 'How can I grow my coaching business?',
                             answer: 'Use the approved coaching programme.')
@@ -107,6 +111,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   it 'does not treat a personal-preference question as Business scope merely because it says your' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
     triggering_message.update!(content: 'What is your favorite animal?')
     conversation.reload
 
@@ -116,36 +121,123 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
-  ['What is open source software?', 'Who delivered the keynote speech?'].each do |unrelated_question|
-    it "keeps an unrelated question outside Review despite an ambiguous verb: #{unrelated_question}" do
-      triggering_message.update!(content: unrelated_question)
+  {
+    'Do you accept American Express?' => [:english, 'yes'],
+    'Can I pay in installments?' => [:english, 'your programme'],
+    'Do you deliver to Zanzibar?' => [:english, 'Growth coaching'],
+    'Je, mnakubali M-Pesa?' => [:swahili, 'ndiyo'],
+    'Mnasafirisha hadi Arusha?' => [:swahili, 'Ofa hii']
+  }.each do |unknown_question, (language, confirmation)|
+    it "records Review for a plausible #{language} Business exchange: #{unknown_question}" do
+      offer = create_offer
+      conversation.update!(offer: offer)
+      triggering_message.update!(content: unknown_question)
+      conversation.reload
+
+      confirmation_intent = clarify_and_confirm_scope!(confirmation)
+
+      expect(confirmation_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+      expect(confirmation_intent.review_request).to have_attributes(
+        reason: 'no_approved_knowledge', status: 'open', lead_message_id: triggering_message.id
+      )
+      expected_copy = language == :swahili ? 'Nimeweka swali lako' : 'recorded your question'
+      expect(confirmation_intent.outbound_message.content).to include(expected_copy)
+      expect(conversation.reload.additional_attributes).not_to have_key(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+      expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+    end
+  end
+
+  it 'uses a recent trusted Offer answer to resolve an obvious follow-up without clarification' do
+    offer = create_offer(name: 'Pulse')
+    conversation.update!(offer: offer)
+    create(
+      :message,
+      account: account,
+      inbox: channel.inbox,
+      conversation: conversation,
+      message_type: :outgoing,
+      content: 'Pulse classes are available online.',
+      additional_attributes: {
+        'ai_lead_employee' => { 'offer_context' => { 'offer_id' => offer.id } }
+      }
+    )
+    triggering_message.update!(content: 'Are there weekend classes?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(intent.review_request).to have_attributes(reason: 'no_approved_knowledge', lead_message_id: triggering_message.id)
+  end
+
+  it 'sets a boundary for a named third-party commerce question' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'How much does Netflix cost?')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  [
+    'What is open source software?',
+    'Who delivered the keynote speech?',
+    'Can I pay my electricity bill in installments?',
+    'Can I book a flight?',
+    'What book should I read?',
+    'What is the train schedule?',
+    'Where do I register to vote?'
+  ].each do |ambiguous_question|
+    it "clarifies third-party commerce or general activity without creating Review: #{ambiguous_question}" do
+      triggering_message.update!(content: ambiguous_question)
       conversation.reload
 
       described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
 
       expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
-      expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+      expect(intent.outbound_message.content).to eq('Are you asking about this business or one of its Offers?')
+
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      repeated_intent = process_followup(ambiguous_question)
+
+      expect(repeated_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      expect(repeated_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+      expect(conversation.reload.additional_attributes).not_to have_key(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
     end
   end
 
-  {
-    'Do you accept American Express?' => :english,
-    'Can I pay in installments?' => :english,
-    'Do you deliver to Zanzibar?' => :english,
-    'Je, mnakubali M-Pesa?' => :swahili,
-    'Mnasafirisha hadi Arusha?' => :swahili
-  }.each do |unknown_question, language|
-    it "records Review for a plausible #{language} Business exchange: #{unknown_question}" do
-      triggering_message.update!(content: unknown_question)
-      conversation.reload
+  [
+    'How long does it take?',
+    'Are there weekend classes?',
+    'Can I attend offline?',
+    'Is parking available?',
+    'Can I join online?',
+    'Je, ninaweza kujiunga mtandaoni?'
+  ].each do |contextual_question|
+    it "records Review for an unknown within the selected Offer context: #{contextual_question}" do
+      offer = create_offer(name: 'Pulse')
+      conversation.update!(offer: offer)
+      triggering_message.update!(content: contextual_question)
 
-      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      confirmation_intent = clarify_and_confirm_scope!(offer.name)
 
-      expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
-      expect(intent.review_request).to have_attributes(reason: 'no_approved_knowledge', status: 'open')
-      expect(intent.outbound_message.content).to include('recorded your question for the team to review')
-      expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+      expect(confirmation_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+      expect(confirmation_intent.review_request).to have_attributes(
+        reason: 'no_approved_knowledge', status: 'open', lead_message_id: triggering_message.id
+      )
     end
+  end
+
+  it 'matches a configured one-word Offer name without requiring two overlapping tokens' do
+    create_offer(name: 'Pulse')
+    triggering_message.update!(content: 'Does Pulse include weekend classes?')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(intent.review_request).to have_attributes(reason: 'no_approved_knowledge', status: 'open')
   end
 
   it 'records Review for an unknown detail in the configured Offer scope' do
@@ -256,14 +348,76 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     @provider_client ||= instance_double(AiLeadEmployee::AiProvider::MeteredClient)
   end
 
+  def clarify_and_confirm_scope!(confirmation)
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+
+    process_followup(confirmation, expected_scope: triggering_message.content)
+  end
+
+  def expect_scope_clarification!
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expected = if AiLeadEmployee::LanguageDetector.detect(triggering_message.content) == :swahili
+                 'Je, unauliza kuhusu biashara hii au mojawapo ya Ofa zake?'
+               else
+                 'Are you asking about this business or one of its Offers?'
+               end
+    expect(intent.outbound_message.content).to eq(expected)
+    context = conversation.reload.additional_attributes.fetch(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+    expect(context).to include('question' => triggering_message.content, 'message_id' => triggering_message.id)
+  end
+
+  def process_followup(content, expected_scope: nil)
+    followup, followup_intent = followup_records(content)
+    expect_followup_classification!(followup, expected_scope)
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    followup_intent
+  end
+
+  def followup_records(content)
+    followup = create(
+      :message,
+      account: account,
+      inbox: channel.inbox,
+      conversation: conversation,
+      sender: contact,
+      message_type: :incoming,
+      content: content,
+      source_id: "wamid.R11.scope.#{SecureRandom.hex(6)}"
+    )
+    followup_intent = create(
+      :ai_orchestration_intent,
+      account: account,
+      conversation: conversation,
+      triggering_message: followup,
+      observed_control_version: conversation.control_version
+    )
+    [followup, followup_intent]
+  end
+
+  def expect_followup_classification!(followup, expected_scope)
+    offer = account.qualification_offers.enabled_in_order.find_by(id: conversation.offer_id)
+    classification = AiLeadEmployee::ConversationIntentClassifier.new(
+      message: followup.content,
+      account: account,
+      conversation: conversation,
+      incoming_message: followup,
+      offer: offer
+    ).perform
+    if conversation.additional_attributes.key?(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+      expect(classification.scope_clarification_consumed).to be(true)
+    end
+    expect(classification).to have_attributes(intent: :business_question, scope_question: expected_scope) if expected_scope
+  end
+
   def question(key, prompt)
     { 'key' => key, 'meaning' => key.humanize, 'answer_type' => 'text', 'prompt' => prompt, 'position' => 0,
       'enabled' => true, 'required' => true, 'purpose' => 'fit' }
   end
 
-  def create_offer(qualification_mode: 'disabled', questions: [], next_step: { 'kind' => 'answer_only' })
+  def create_offer(name: 'Growth coaching', qualification_mode: 'disabled', questions: [], next_step: { 'kind' => 'answer_only' })
     AiLeadEmployee::Offer.create!(
-      account: account, name: 'Growth coaching', currency: 'USD', enabled: true,
+      account: account, name: name, currency: 'USD', enabled: true,
       configuration: {
         'qualification_mode' => qualification_mode,
         'next_step' => next_step,

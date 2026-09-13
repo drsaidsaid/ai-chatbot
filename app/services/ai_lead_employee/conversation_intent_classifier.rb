@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/ClassLength
-  Result = Struct.new(:intent, :language, keyword_init: true) do
+  Result = Struct.new(:intent, :language, :scope_question, :scope_message_id, :scope_clarification_consumed, keyword_init: true) do
     def safe_conversation?
-      %i[greeting language_question acknowledgment qualification_answer generic_safe unrelated].include?(intent)
+      %i[greeting language_question acknowledgment qualification_answer generic_safe unrelated scope_clarification].include?(intent)
     end
 
     def risky?
@@ -55,13 +55,14 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
     /\b(?:nitengenezee|niandikie|nishauri)\b.{0,60}\b(?:mkakati|mpango|biashara|masoko|mauzo)\b/
   ].freeze
   CONTENT_INTENT_CHECKS = {
+    unrelated: :unrelated?,
     risky_question: :risky_question?,
     language_question: :language_question?,
     greeting: :greeting?,
     acknowledgment: :acknowledgment?,
-    unrelated: :unrelated?,
     personalized_strategy: :personalized_strategy?,
     qualification_answer: :qualification_answer?,
+    scope_clarification: :scope_clarification?,
     business_question: :business_question?
   }.freeze
 
@@ -74,12 +75,31 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def perform
-    Result.new(intent: intent, language: AiLeadEmployee::LanguageDetector.detect(message))
+    classified_intent = intent
+    Result.new(
+      intent: classified_intent,
+      language: classification_language(classified_intent),
+      **scope_result_attributes(classified_intent)
+    )
   end
 
   private
 
   attr_reader :account, :conversation, :incoming_message, :message, :offer
+
+  def classification_language(classified_intent)
+    resolved = business_scope_relevance&.resolved_language if classified_intent == :business_question
+    resolved || AiLeadEmployee::LanguageDetector.detect(message)
+  end
+
+  def scope_result_attributes(classified_intent)
+    resolved = classified_intent == :business_question
+    {
+      scope_question: resolved ? business_scope_relevance&.resolved_question : nil,
+      scope_message_id: resolved ? business_scope_relevance&.resolved_message_id : nil,
+      scope_clarification_consumed: business_scope_relevance&.consumes_clarification?
+    }
+  end
 
   def intent
     requested_intent || content_intent
@@ -87,6 +107,7 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
 
   def content_intent
     return :qualification_answer if pending_offer_answer?
+    return :business_question if business_scope_relevance&.resolved_question.present?
 
     CONTENT_INTENT_CHECKS.find { |_intent, predicate| send(predicate) }&.first || :generic_safe
   end
@@ -95,7 +116,19 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
     return true if UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
     return false unless account
 
-    AiLeadEmployee::BusinessScopeRelevance.new(account: account, message: message, offer: offer).clearly_outside_scope?
+    business_scope_relevance.clearly_outside_scope?
+  end
+
+  def scope_clarification?
+    account && question? && business_scope_relevance.ambiguous?
+  end
+
+  def business_scope_relevance
+    return unless account
+
+    @business_scope_relevance ||= AiLeadEmployee::BusinessScopeRelevance.new(
+      account: account, message: message, offer: offer, conversation: conversation, incoming_message: incoming_message
+    )
   end
 
   def personalized_strategy?

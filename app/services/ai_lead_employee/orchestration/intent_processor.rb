@@ -193,6 +193,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def process_grounded_answer!
+    consume_scope_clarification!
     return request_review!(classification.review_reason) if classification.review_reason.present?
     return request_review!('human_requested') if classification.intent == :human_request
     return process_conversation_reply! unless classification.requires_approved_knowledge?
@@ -222,6 +223,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     ).perform
     outbound_message = create_outbound_message!(content: content, source_references: [],
                                                 qualification_result: qualification_result, status: 'conversation_reply')
+    record_scope_clarification! if classification.intent == :scope_clarification
     create_outbox_event!(outbound_message)
     complete_intent!(outbound_message: outbound_message, provider_response: nil, source_references: [],
                      qualification_result: qualification_result, status: 'conversation_reply')
@@ -230,7 +232,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   def knowledge_answer
     AiLeadEmployee::KnowledgeAnswerService.new(
       account: account,
-      question: triggering_message.content,
+      question: business_question,
       offer: selected_offer,
       language: classification.language,
       document_scope: @knowledge_document_scope
@@ -330,7 +332,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     ).to_a
     prompt = [
       "Recent public conversation: #{context.to_json}",
-      "Lead question: #{triggering_message.content}",
+      "Lead question: #{business_question}",
       "Approved source answer: #{answer_result.answer}"
     ].join("\n")
     [
@@ -547,10 +549,41 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   def create_review_request!(reason)
     AiLeadEmployee::HumanReviewRequestService.new(
       conversation: conversation,
-      lead_message: triggering_message,
+      lead_message: review_lead_message,
       reason: reason.to_s,
       enqueue_alerts: false
     ).perform
+  end
+
+  def business_question
+    classification.scope_question.presence || triggering_message.content
+  end
+
+  def review_lead_message
+    return triggering_message if classification.scope_message_id.blank?
+
+    conversation.messages.find_by(id: classification.scope_message_id) || triggering_message
+  end
+
+  def record_scope_clarification!
+    context = {
+      'question' => triggering_message.content,
+      'message_id' => triggering_message.id,
+      'language' => classification.language.to_s,
+      'offer_id' => selected_offer&.id,
+      'expires_at' => (Time.current + AiLeadEmployee::BusinessScopeRelevance::CONTEXT_TTL).iso8601(6)
+    }
+    conversation.update!(additional_attributes: conversation.additional_attributes.merge(
+      AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY => context
+    ))
+  end
+
+  def consume_scope_clarification!
+    return unless classification.scope_clarification_consumed
+
+    conversation.update!(additional_attributes: conversation.additional_attributes.except(
+      AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY
+    ))
   end
 
   def block_intent!(reason, review_request: nil)
