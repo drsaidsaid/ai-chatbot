@@ -1,0 +1,60 @@
+R26 automated verification record
+Captured: 2026-09-12 Africa/Dar_es_Salaam
+Source: 824d8fbc1ec3428c6eb2fb5722aeaff5f81bf298
+Source tree: d1670139f87312789e73561d74e4270340bdfd1a
+
+RAILS FOCUSED CHECK
+Command:
+POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r26_55537 RAILS_ENV=test bundle exec rspec spec/requests/ai_lead_employee/whatsapp_templates_spec.rb spec/models/whatsapp_template_revision_spec.rb spec/services/whatsapp/template_submission_service_spec.rb --format progress
+Observed result:
+11 examples, 0 failures
+Notes:
+- PostgreSQL database was isolated to this task.
+- Output contained upstream enum deprecation warnings only.
+- Provider HTTP was intercepted with WebMock; no live Meta request occurred.
+- The asynchronous request example asserted that Message.count did not change.
+
+VUE FOCUSED CHECK
+Command:
+pnpm test app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/WhatsappTemplatesPage.spec.js --run
+Observed result:
+Test Files  1 passed (1)
+Tests       2 passed (2)
+Duration    23.60s
+Notes:
+- Covers variable substitution, media/button/variable draft payload, unknown
+  pricing, dated known pricing, sendability labels, and reconciliation dispatch.
+- Browserslist reported its existing outdated-data warning.
+
+LINT AND PATCH CHECKS
+Observed results:
+- Targeted RuboCop over changed Ruby implementation and spec paths: no offenses.
+- Scoped frontend ESLint: zero errors and 55 warning-only bare-string/HTML-style
+  notices.
+- The commit hook completed ESLint fix for the two staged frontend paths and
+  RuboCop for the staged Ruby paths.
+- git diff --check HEAD: exit 0.
+
+FINAL PRODUCTION BUILD
+Command:
+NODE_OPTIONS=--max-old-space-size=4096 RAILS_ENV=production NODE_ENV=production /opt/homebrew/bin/pnpm exec vite build --config vite.config.ts
+Observed result:
+vite v6.4.2 building for production...
+✓ 5080 modules transformed.
+✓ built in 5m 15s
+Exit status: 0
+Warnings:
+- Browserslist caniuse-lite data is outdated.
+- Some generated chunks exceed 500 kB after minification.
+
+GENERATED MANIFEST CHECKSUMS
+347cf7268d88cb5fb3ccb40751f215a19f0bd400e79d7e9422a179a1aa4fd672  public/vite/.vite/manifest.json
+44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a  public/vite/.vite/manifest-assets.json
+
+ATTRIBUTION NOTE
+The Rails and focused Vue checks were run on the working state subsequently
+committed as the source candidate. The pre-commit hook may have normalized the
+staged frontend files after the focused Vue run; no post-commit Vue replay was
+performed. The successful production build and final read-only browser reload
+were performed after source commit 824d8fbc and therefore cover the committed
+frontend bundle.

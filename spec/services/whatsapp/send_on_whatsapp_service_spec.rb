@@ -361,11 +361,7 @@ describe Whatsapp::SendOnWhatsappService do
         )
 
         expect { service.call }.not_to raise_error
-        name, namespace, language, processed_params = service.call
-        expect(name).to eq('non_existent_template')
-        expect(namespace).to eq('missing_namespace')
-        expect(language).to eq('en_US')
-        expect(processed_params).to be_nil
+        expect(service.call).to eq([nil, nil, nil, nil])
       end
 
       it 'handles template with blank parameter values correctly' do

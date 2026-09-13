@@ -1,0 +1,14 @@
+abort 'R26 disposable database only' unless Rails.env.test? && ActiveRecord::Base.connection_db_config.database == 'ale_release_r26_combined'
+abort 'Loopback provider required' unless ENV['WHATSAPP_CLOUD_BASE_URL'] == 'http://127.0.0.1:55548'
+require 'webmock'
+include WebMock::API
+WebMock.enable!
+WebMock.disable_net_connect!
+ActiveJob::Base.queue_adapter = :test
+channel = Channel::Whatsapp.find(1)
+channel.update_columns(message_templates: [{'id'=>'synthetic-r26-template','name'=>'r26_combined_check','language'=>'en_US','status'=>'APPROVED','category'=>'UTILITY'}])
+stub_request(:get, %r{\Ahttp://127\.0\.0\.1:55548/}).to_return(status: 200, body: {data: []}.to_json, headers: {'Content-Type'=>'application/json'})
+channel.sync_templates
+revision = WhatsappTemplateRevision.find(1)
+puts({status:revision.status, sendable:revision.sendable?, cache:channel.reload.message_templates, messages:Message.count}.to_json)
+abort 'Sync acceptance failed' unless revision.disabled? && !revision.sendable? && channel.message_templates == [] && Message.count.zero?

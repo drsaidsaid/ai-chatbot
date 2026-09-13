@@ -856,6 +856,7 @@
       "booking": "Booking hours",
       "followups": "Follow-ups",
       "whatsapp": "WhatsApp connection",
+      "whatsapp_templates": "WhatsApp templates",
       "ai": "AI & testing",
       "AI_DESCRIPTION": "Configure the AI provider, test answers safely, and review launch readiness. Test runs do not send WhatsApp messages.",
       "ai_lead_employee_settings_offers_qualification": "Offers & qualification",

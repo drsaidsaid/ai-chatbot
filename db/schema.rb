@@ -2325,6 +2325,51 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
     t.index ["state", "lease_expires_at"], name: "idx_on_state_lease_expires_at_309103bfc7"
   end
 
+  create_table "whatsapp_template_revisions", force: :cascade do |t|
+    t.bigint "whatsapp_template_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "channel_id", null: false
+    t.bigint "submitted_by_id"
+    t.integer "revision_number", null: false
+    t.string "language", null: false
+    t.string "category", null: false
+    t.text "body", null: false
+    t.jsonb "media", default: {}, null: false
+    t.jsonb "buttons", default: [], null: false
+    t.jsonb "variables", default: [], null: false
+    t.integer "status", default: 0, null: false
+    t.string "provider_template_id"
+    t.text "rejection_reason"
+    t.jsonb "submission_failure", default: {}, null: false
+    t.datetime "submitted_at"
+    t.datetime "status_synced_at"
+    t.string "submission_key", null: false
+    t.string "content_digest", null: false
+    t.jsonb "meta_charge_estimate", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_whatsapp_template_revisions_on_account_id"
+    t.index ["channel_id"], name: "index_whatsapp_template_revisions_on_channel_id"
+    t.index ["provider_template_id"], name: "index_whatsapp_template_revisions_on_provider_template_id"
+    t.index ["submission_key"], name: "index_whatsapp_template_revisions_on_submission_key", unique: true
+    t.index ["submitted_by_id"], name: "index_whatsapp_template_revisions_on_submitted_by_id"
+    t.index ["whatsapp_template_id", "revision_number"], name: "idx_whatsapp_template_revisions_number", unique: true
+    t.index ["whatsapp_template_id"], name: "idx_whatsapp_template_revisions_template"
+  end
+
+  create_table "whatsapp_templates", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "channel_id", null: false
+    t.bigint "created_by_id", null: false
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "channel_id", "name"], name: "index_whatsapp_templates_on_account_id_and_channel_id_and_name", unique: true
+    t.index ["account_id"], name: "index_whatsapp_templates_on_account_id"
+    t.index ["channel_id"], name: "index_whatsapp_templates_on_channel_id"
+    t.index ["created_by_id"], name: "index_whatsapp_templates_on_created_by_id"
+  end
+
   create_table "whatsapp_webhook_events", force: :cascade do |t|
     t.bigint "receipt_id", null: false
     t.bigint "account_id", null: false
@@ -2491,6 +2536,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
   add_foreign_key "whatsapp_outbound_deliveries", "ai_reply_usages"
   add_foreign_key "whatsapp_outbound_deliveries", "conversations"
   add_foreign_key "whatsapp_outbound_deliveries", "messages"
+  add_foreign_key "whatsapp_template_revisions", "accounts"
+  add_foreign_key "whatsapp_template_revisions", "channel_whatsapp", column: "channel_id"
+  add_foreign_key "whatsapp_template_revisions", "users", column: "submitted_by_id"
+  add_foreign_key "whatsapp_template_revisions", "whatsapp_templates"
+  add_foreign_key "whatsapp_templates", "accounts"
+  add_foreign_key "whatsapp_templates", "channel_whatsapp", column: "channel_id"
+  add_foreign_key "whatsapp_templates", "users", column: "created_by_id"
   add_foreign_key "whatsapp_webhook_events", "accounts"
   add_foreign_key "whatsapp_webhook_events", "channel_whatsapp", column: "channel_id"
   add_foreign_key "whatsapp_webhook_events", "inboxes"

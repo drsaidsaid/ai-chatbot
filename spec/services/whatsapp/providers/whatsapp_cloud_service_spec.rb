@@ -416,13 +416,66 @@ describe Whatsapp::Providers::WhatsappCloudService do
         expect(whatsapp_channel.reload.message_templates_last_updated).not_to eq(timstamp)
       end
 
-      it 'does not bump the inbox cache key when no templates are returned' do
+      it 'bumps the inbox cache key when a successful empty catalog clears stale templates' do
         stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates')
           .with(headers: { 'Authorization' => 'Bearer test_key' })
           .to_return(status: 200, headers: response_headers, body: { data: [] }.to_json)
 
-        expect(whatsapp_channel.account).not_to receive(:update_cache_key)
+        expect(whatsapp_channel.account).to receive(:update_cache_key).with('inbox').and_call_original
         subject.sync_templates
+        expect(whatsapp_channel.reload.message_templates).to eq([])
+      end
+
+      it 'clears a successful empty catalog and disables a missing approved owned revision' do
+        template = WhatsappTemplate.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, created_by: operator, name: 'owned_missing'
+        )
+        revision = template.revisions.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+          body: 'Hello', status: :approved, provider_template_id: 'meta-missing', submission_key: SecureRandom.uuid,
+          content_digest: 'missing-owned-digest', submitted_at: Time.current
+        )
+        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates').to_return(
+          status: 200, headers: response_headers, body: { data: [] }.to_json
+        )
+
+        subject.sync_templates
+
+        expect(whatsapp_channel.reload.message_templates).to eq([])
+        expect(revision.reload).to be_disabled
+        selection = {
+          name: template.name, language: revision.language, owned_revision_id: revision.id,
+          owned_content_digest: revision.content_digest, provider_template_id: revision.provider_template_id
+        }
+        expect(Whatsapp::TemplateCatalog.resolve(channel: whatsapp_channel, selection: selection)).to be_nil
+      end
+
+      it 'disables only an approved owned revision omitted from a successful nonempty catalog' do
+        present_template = WhatsappTemplate.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, created_by: operator, name: 'owned_present'
+        )
+        present_revision = present_template.revisions.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+          body: 'Present', status: :approved, provider_template_id: 'meta-present', submission_key: SecureRandom.uuid,
+          content_digest: 'present-owned-digest', submitted_at: Time.current
+        )
+        missing_template = WhatsappTemplate.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, created_by: operator, name: 'owned_missing'
+        )
+        missing_revision = missing_template.revisions.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+          body: 'Missing', status: :approved, provider_template_id: 'meta-missing', submission_key: SecureRandom.uuid,
+          content_digest: 'missing-owned-digest', submitted_at: Time.current
+        )
+        provider_template = { id: 'meta-present', name: 'owned_present', language: 'en_US', status: 'APPROVED' }
+        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates').to_return(
+          status: 200, headers: response_headers, body: { data: [provider_template] }.to_json
+        )
+
+        subject.sync_templates
+
+        expect(present_revision.reload).to be_approved
+        expect(missing_revision.reload).to be_disabled
       end
 
       it 'updates message_templates_last_updated even when template request fails' do
@@ -431,8 +484,29 @@ describe Whatsapp::Providers::WhatsappCloudService do
           .to_return(status: 401)
 
         timstamp = whatsapp_channel.reload.message_templates_last_updated
+        trusted_templates = whatsapp_channel.message_templates
         subject.sync_templates
         expect(whatsapp_channel.reload.message_templates_last_updated).not_to eq(timstamp)
+        expect(whatsapp_channel.message_templates).to eq(trusted_templates)
+      end
+
+      it 'does not promote a locally paused owned revision from the provider cache' do
+        template = WhatsappTemplate.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, created_by: operator, name: 'owned_template'
+        )
+        revision = template.revisions.create!(
+          account: whatsapp_channel.account, channel: whatsapp_channel, revision_number: 1, language: 'en_US', category: 'UTILITY',
+          body: 'Hello', status: :paused, provider_template_id: 'meta-owned', submission_key: SecureRandom.uuid,
+          content_digest: 'paused-owned-digest', submitted_at: Time.current
+        )
+        stub_request(:get, 'https://graph.facebook.com/v14.0/123456789/message_templates').to_return(
+          status: 200, headers: response_headers,
+          body: { data: [{ id: 'meta-owned', name: 'owned_template', language: 'en_US', status: 'APPROVED' }] }.to_json
+        )
+
+        subject.sync_templates
+
+        expect(revision.reload).to be_paused
       end
     end
   end

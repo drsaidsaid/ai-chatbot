@@ -1,0 +1,21 @@
+abort 'R26 disposable database only' unless Rails.env.test? && ActiveRecord::Base.connection_db_config.database == 'ale_release_r26_combined'
+abort 'Empty database required' if Account.exists? || User.exists?
+require 'webmock'
+WebMock.enable!
+WebMock.disable_net_connect!(allow_localhost: true)
+ActiveJob::Base.queue_adapter = :test
+ActionMailer::Base.delivery_method = :test
+ConfigLoader.new.process
+account = Account.create!(name: 'R26 Combined Template Check', locale: 'en')
+admin = User.new(name: 'Release Operator', email: 'release-operator@example.test', password: ENV.fetch('RELEASE_ADMIN_PASSWORD'))
+admin.skip_confirmation!
+admin.save!
+AccountUser.create!(account: account, user: admin, role: :administrator)
+channel = Channel::Whatsapp.new(account: account, phone_number: '+155500000064', provider: 'whatsapp_cloud')
+channel.define_singleton_method(:sync_templates) { nil }
+channel.save!(validate: false)
+inbox = Inbox.create!(account: account, channel: channel, name: 'Synthetic WhatsApp')
+InboxMember.create!(inbox: inbox, user: admin)
+template = WhatsappTemplate.create!(account: account, channel: channel, created_by: admin, name: 'r26_combined_check')
+revision = template.revisions.create!(account: account, channel: channel, revision_number: 1, language: 'en_US', category: 'UTILITY', body: 'Your order is ready.', status: :approved, submitted_at: Time.current, submitted_by: admin, provider_template_id: 'synthetic-r26-template', submission_key: 'r26-browser-key', content_digest: 'synthetic-r26-digest')
+puts({account_id: account.id, channel_id: channel.id, revision_id: revision.id, message_count: Message.count}.to_json)

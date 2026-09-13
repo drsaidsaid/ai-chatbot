@@ -111,6 +111,7 @@ class Account < ApplicationRecord
   has_many :web_widgets, dependent: :destroy_async, class_name: '::Channel::WebWidget'
   has_many :webhooks, dependent: :destroy_async
   has_many :whatsapp_channels, dependent: :destroy_async, class_name: '::Channel::Whatsapp'
+  has_many :whatsapp_templates, dependent: :destroy_async
   has_many :qualification_budget_ranges, dependent: :destroy_async
   has_many :qualification_evidences, dependent: :destroy_async
   has_many :qualification_questions, dependent: :destroy_async
@@ -171,9 +172,7 @@ class Account < ApplicationRecord
     }
   end
 
-  def api_and_webhooks_enabled?
-    true
-  end
+  def api_and_webhooks_enabled? = true
 
   def locale_english_name
     # the locale can also be something like pt_BR, en_US, fr_FR, etc.

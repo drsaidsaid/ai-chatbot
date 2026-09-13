@@ -16,6 +16,7 @@ it('keeps every Settings section reachable from provider deep links and restores
     'ai_lead_employee_settings_booking_business_hours',
     'ai_lead_employee_settings_follow_ups',
     'ai_lead_employee_settings_whatsapp_connection',
+    'ai_lead_employee_settings_whatsapp_templates',
     'ai_lead_employee_settings_ai_testing',
     'owned_ai_provider_settings',
     'owned_test_center_index',
@@ -40,7 +41,7 @@ it('keeps every Settings section reachable from provider deep links and restores
     global: { plugins: [router] },
     slots: { default: '<p>Provider settings</p>' },
   });
-  expect(wrapper.get('select').findAll('option')).toHaveLength(6);
+  expect(wrapper.get('select').findAll('option')).toHaveLength(7);
   expect(wrapper.get('select').element.value).toBe('ai');
   expect(wrapper.text()).toContain('Provider settings');
   await wrapper.get('select').setValue('whatsapp');
@@ -48,9 +49,15 @@ it('keeps every Settings section reachable from provider deep links and restores
   expect(router.currentRoute.value.name).toBe(
     'ai_lead_employee_settings_whatsapp_connection'
   );
+  await wrapper.get('select').setValue('whatsapp_templates');
+  await flushPromises();
+  expect(router.currentRoute.value.name).toBe(
+    'ai_lead_employee_settings_whatsapp_templates'
+  );
   router.back();
   await flushPromises();
-  expect(router.currentRoute.value.name).toBe('owned_ai_provider_settings');
-  expect(router.currentRoute.value.query).toEqual({ tab: 'connection' });
-  expect(wrapper.get('select').element.value).toBe('ai');
+  expect(router.currentRoute.value.name).toBe(
+    'ai_lead_employee_settings_whatsapp_connection'
+  );
+  expect(wrapper.get('select').element.value).toBe('whatsapp');
 });

@@ -1,6 +1,7 @@
 import { frontendURL } from 'dashboard/helper/URLHelper';
 import AiTestingPage from './AiTestingPage.vue';
 import WhatsappConnectionPage from './WhatsappConnectionPage.vue';
+import WhatsappTemplatesPage from './WhatsappTemplatesPage.vue';
 import AiLeadEmployeeSettingsShell from './AiLeadEmployeeSettingsShell.vue';
 
 const ADMIN_PERMISSIONS = ['administrator'];
@@ -17,6 +18,14 @@ const aiLeadEmployeeSettingsRoute = ({ path, name, section }) => ({
 
 export default {
   routes: [
+    {
+      path: frontendURL(
+        'accounts/:accountId/settings/ai-lead-employee/whatsapp-templates'
+      ),
+      name: 'ai_lead_employee_settings_whatsapp_templates',
+      component: WhatsappTemplatesPage,
+      meta: { permissions: ADMIN_PERMISSIONS },
+    },
     {
       path: frontendURL('accounts/:accountId/settings/ai-lead-employee'),
       name: 'ai_lead_employee_settings_index',
