@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'information_request'
+
 class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/ClassLength
   Result = Struct.new(:intent, :language, :scope_question, :scope_message_id, :scope_clarification_consumed, keyword_init: true) do
     def safe_conversation?
@@ -118,11 +120,15 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
 
   def unrelated?
     return UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) } unless account
-    return business_scope_relevance.clearly_outside_scope? if business_scope_relevance.consumes_clarification?
+    return true if business_scope_relevance.consumes_clarification? && business_scope_relevance.clearly_outside_scope?
+    return !business_scope_relevance.addressed_authoritative_scope_match? if unrelated_pattern?
     return false if business_scope_relevance.authoritative_scope_match?
-    return true if UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
 
     business_scope_relevance.clearly_outside_scope?
+  end
+
+  def unrelated_pattern?
+    UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
   end
 
   def scope_clarification?

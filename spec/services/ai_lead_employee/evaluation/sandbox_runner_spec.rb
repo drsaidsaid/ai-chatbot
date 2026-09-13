@@ -110,15 +110,16 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
 
   it 'expects an unknown safe question to receive a bounded fallback instead of silence' do # rubocop:disable RSpec/MultipleExpectations
     result = described_class.new(account: account, user: admin, scenario_key: 'unknown_safe_question').perform
-    step = result.run.steps.first
+    clarification_step, review_step = result.run.steps
 
     expect(result.run).to be_completed
-    expect(step['selected_answer']).to be_present
-    expect(step['selected_answer']).to include('I do not have an approved answer for that yet')
-    expect(step['review_request']).to include('reason' => 'no_approved_knowledge')
-    expect(step['review_request_reason']).to eq('no_approved_knowledge')
-    expect(step['blocked_reason']).to eq('no_approved_knowledge')
-    expect(step['handoff_decision']).to eq('blocked')
+    expect(clarification_step['selected_answer']).to eq('Are you asking about this business or one of its Offers?')
+    expect(clarification_step['review_request']).to be_nil
+    expect(review_step['selected_answer']).to include('I do not have an approved answer for that yet')
+    expect(review_step['review_request']).to include('reason' => 'no_approved_knowledge')
+    expect(review_step['review_request_reason']).to eq('no_approved_knowledge')
+    expect(review_step['blocked_reason']).to eq('no_approved_knowledge')
+    expect(review_step['handoff_decision']).to eq('blocked')
     expect(result.run.metrics.fetch('serious_issue_count')).to eq(0)
   end
 

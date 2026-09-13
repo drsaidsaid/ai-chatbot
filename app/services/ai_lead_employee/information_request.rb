@@ -2,6 +2,11 @@
 
 class AiLeadEmployee::InformationRequest
   GREETING_TOKENS = %w[hello hi hey habari mambo].freeze
+  POLITE_TOKENS = %w[please tafadhali].freeze
+  QUESTION_STARTERS = %w[
+    can could do does is are what how when where why which who
+    je jinsi lini nini wapi
+  ].freeze
 
   def self.call(message)
     new(message).call
@@ -12,23 +17,31 @@ class AiLeadEmployee::InformationRequest
   end
 
   def call
-    information_request? || message.include?('?') || normalized.match?(/\b(what|how|when|where|why|nini|je)\b/) ||
-      without_greeting.match?(/\A(can|do|does|is|are)\b/)
+    message.include?('?') || clauses.any? { |clause| request_clause?(clause) }
   end
 
   private
 
   attr_reader :message
 
-  def information_request?
-    normalized.match?(/\b(?:tell me (?:more )?about|(?:explain|describe) (?:your|this|the))\b/)
+  def clauses
+    message.split(/[.!;]+/).filter_map do |clause|
+      value = normalize(clause)
+      value.presence
+    end
   end
 
-  def normalized
-    @normalized ||= message.downcase.gsub(/[^[:alnum:]\s?]/, ' ').squish
+  def request_clause?(clause)
+    value = without_preamble(clause)
+    QUESTION_STARTERS.include?(value.split.first) || value.match?(/\A(?:tell me|explain|describe|niambie)\b/) ||
+      value.match?(/\Ai am interested\b.*\b(?:i am )?(?:not sure|unsure) (?:where|how|what)\b/)
   end
 
-  def without_greeting
-    normalized.split.drop_while { |token| GREETING_TOKENS.include?(token) }.join(' ')
+  def normalize(value)
+    value.downcase.gsub(/[^[:alnum:]\s?]/, ' ').squish
+  end
+
+  def without_preamble(value)
+    value.split.drop_while { |token| GREETING_TOKENS.include?(token) || POLITE_TOKENS.include?(token) }.join(' ')
   end
 end

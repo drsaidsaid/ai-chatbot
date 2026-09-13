@@ -129,6 +129,9 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     'Do you allow rescheduling?' => [:english, 'Yes, that is what I mean'],
     'Do you provide recordings?' => [:english, 'Okay?'],
     'Do you provide support?' => [:english, 'No, I mean your business'],
+    'Do you provide templates?' => [:english, 'Sure'],
+    'Do you provide coaching?' => [:english, "That's right"],
+    'Do you provide onboarding?' => [:english, 'Please do'],
     'Je, mnakubali M-Pesa?' => [:swahili, 'ndiyo'],
     'Mnasafirisha hadi Arusha?' => [:swahili, 'Ofa hii'],
     'Je, mnakubali Airtel Money?' => [:swahili, 'sawa'],
@@ -219,6 +222,64 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(denial_intent.reload).to have_attributes(state: 'completed', review_request: nil)
     expect(denial_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
     expect(conversation.reload.additional_attributes).not_to have_key(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+  end
+
+  ['No, I do not mean your business.', 'Hapana, simaanishi biashara hii.', 'No, not Pulse.'].each do |denial|
+    it "does not turn a scope-target denial into confirmation: #{denial}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      denial_intent = process_followup(denial)
+
+      expect(denial_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      expected = if AiLeadEmployee::LanguageDetector.detect(denial) == :swahili
+                   'Ninaweza kusaidia kwa maswali kuhusu biashara hii na Ofa zake.'
+                 else
+                   'I can help with questions about this business and its Offers.'
+                 end
+      expect(denial_intent.outbound_message.content).to eq(expected)
+    end
+  end
+
+  it 'classifies a new question after a denial independently' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, followup_intent = followup_records('No, I am not asking about this business. What does Pulse include?')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to be_blocked
+    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+  end
+
+  it 'evaluates a new unrelated request independently while clarification is pending' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup_intent = process_followup('Tell me a football score')
+
+    expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(followup_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  it 'repeats the original clarification for an uncertain acknowledgment' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    uncertain_intent = process_followup('I am not sure')
+
+    expect(uncertain_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(uncertain_intent.outbound_message.content).to eq('Are you asking about this business or one of its Offers?')
+    context = conversation.reload.additional_attributes.fetch(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+    expect(context).to include('question' => triggering_message.content, 'message_id' => triggering_message.id)
   end
 
   it 'classifies a substantive next question independently instead of using it as confirmation' do
@@ -406,6 +467,41 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       expect(intent.reload).to be_blocked
       expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
     end
+  end
+
+  ['Who is the instructor of Netflix?', 'What is the refund policy of Netflix?', 'What is the price of Netflix?'].each do |question|
+    it "sets a boundary for an unconfigured external subject: #{question}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: question)
+      conversation.reload
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+    end
+  end
+
+  it 'does not let a collision-prone configured name override an unrelated category' do
+    conversation.update!(offer: create_offer(name: 'Weather'))
+    triggering_message.update!(content: 'What is the weather?')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  it 'does not let a configured Offer name override an unrelated physiological question' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'What is my pulse?')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
   it 'prefers addressed Account-name context over a fixed unrelated category' do

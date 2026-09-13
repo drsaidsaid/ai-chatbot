@@ -149,6 +149,23 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
     end
   end
 
+  ['Which plan fits me', 'Who teaches the course', 'Jinsi gani huduma hii inafanya kazi',
+   'Lini kozi inaanza', 'Wapi ofisi yenu'].each do |message|
+    it "recognizes an unpunctuated English or Swahili question clause: #{message}" do
+      expect(described_class.new(message: message).perform.intent).to eq(:business_question)
+    end
+  end
+
+  ['I know how it works', 'I already explained what happened'].each do |message|
+    it "does not treat an embedded question word as a request: #{message}" do
+      expect(described_class.new(message: message).perform.intent).to eq(:generic_safe)
+    end
+  end
+
+  it 'keeps an imperative unrelated request in the unrelated path' do
+    expect(described_class.new(message: 'Tell me a football score').perform.intent).to eq(:unrelated)
+  end
+
   it 'preserves the existing explicit request to be given a human' do
     result = described_class.new(message: 'Please give me a human. My budget is $50.').perform
 

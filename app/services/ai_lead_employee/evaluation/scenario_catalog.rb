@@ -49,13 +49,26 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
     {
       key: 'unknown_safe_question',
       name: 'Unknown safe question gets a response',
-      description: 'An unknown business question receives a truthful acknowledgment and opens Review.',
+      description: 'An ambiguous question is clarified before the confirmed Business question opens Review.',
       required: true,
       messages: [
         {
           event_id: 'unknown-safe-question-1',
           type: 'text',
           body: 'I am interested but I am not sure where to start.',
+          language: 'en',
+          expected: {
+            selected_answer: 'Are you asking about this business or one of its Offers?',
+            review_request_reason: nil,
+            blocked_reason: nil,
+            handoff_decision: 'continue_ai',
+            no_real_send: true
+          }
+        },
+        {
+          event_id: 'unknown-safe-question-2',
+          type: 'text',
+          body: 'Yes, your business.',
           language: 'en',
           expected: {
             review_request_reason: 'no_approved_knowledge',
