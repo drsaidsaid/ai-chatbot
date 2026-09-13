@@ -149,9 +149,10 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
     end
   end
 
-  ['Which plan fits me', 'Who teaches the course', 'Will you deliver to Zanzibar', 'Jinsi gani huduma hii inafanya kazi',
-   'Lini kozi inaanza', 'Ni lini kozi inaanza', 'Mnasafirisha hadi Arusha', 'Wapi ofisi yenu',
-   'Ni wapi ofisi yenu'].each do |message|
+  ['Which plan fits me', 'Who teaches the course', 'Will you deliver to Zanzibar', 'May I pay by card',
+   'Jinsi gani huduma hii inafanya kazi', 'Lini kozi inaanza', 'Ni lini kozi inaanza',
+   'Mnasafirisha hadi Arusha', 'Mna huduma Zanzibar', 'Ninaweza kulipa kwa M-Pesa', 'Naweza kulipa kwa M-Pesa',
+   'Wapi ofisi yenu', 'Ni wapi ofisi yenu', 'Pulse inajumuisha nini'].each do |message|
     it "recognizes an unpunctuated English or Swahili question clause: #{message}" do
       expect(described_class.new(message: message).perform.intent).to eq(:business_question)
     end
@@ -160,6 +161,13 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
   ['I know how it works', 'I already explained what happened'].each do |message|
     it "does not treat an embedded question word as a request: #{message}" do
       expect(described_class.new(message: message).perform.intent).to eq(:generic_safe)
+    end
+  end
+
+  ['Will Smith Academy opens tomorrow', 'May Consulting closes today', 'Unavailable seats are listed',
+   'Unable customers receive support'].each do |message|
+    it "does not mistake a name or English declarative fragment for a modal question: #{message}" do
+      expect(described_class.new(message: message).perform.intent).not_to eq(:business_question)
     end
   end
 

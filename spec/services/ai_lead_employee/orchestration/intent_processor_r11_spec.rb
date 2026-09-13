@@ -275,6 +275,53 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     end
   end
 
+  it 'uses an extracted compound request for approved-knowledge retrieval' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+    create(:knowledge_item, account: account, question: 'What does Pulse include?', answer: 'Pulse includes weekly coaching.')
+    connection = create(:ai_provider_connection, account: account)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r11-compound-answer', model: connection.model, content: 'Pulse includes weekly coaching.',
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, followup_intent = followup_records('Yes, and what does Pulse include?')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(followup_intent.outbound_message.content).to eq('Pulse includes weekly coaching.')
+    expect(followup_intent.decision.dig('scope_resolution', 'message_id')).to eq(followup.id)
+  end
+
+  it 'sets the boundary from an extracted compound third-party request' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup_intent = process_followup('Yes, and what does Netflix cost?')
+
+    expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(followup_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  it 'classifies a terminal Swahili question after confirmation as a new request' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Je, mnakubali benki?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, followup_intent = followup_records('Ndiyo, na Pulse inajumuisha nini')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to be_blocked
+    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+  end
+
   it 'uses a later configured correction after rejecting the broad Business scope' do
     conversation.update!(offer: create_offer(name: 'Pulse'))
     triggering_message.update!(content: 'Can I book a flight?')
@@ -285,6 +332,30 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     expect(correction_intent.reload).to be_blocked
     expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
+  it 'accepts a configured correction with a determiner and scope noun' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    correction_intent = process_followup('I do not mean your business; I mean the Pulse offer', expected_scope: triggering_message.content)
+
+    expect(correction_intent.reload).to be_blocked
+    expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
+  it 'uses the last explicit scoped proposition when a later clause denies the configured Offer' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    denial_intent = process_followup('I mean Pulse, but actually not about Pulse')
+
+    expect(denial_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(denial_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
   it 'evaluates a new unrelated request independently while clarification is pending' do
@@ -315,7 +386,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     end
   end
 
-  ['Maybe, your business', 'Labda, biashara hii'].each do |content|
+  ['Maybe, your business', 'Labda, biashara hii', "Yes, I'm not sure", 'Okay, maybe', 'Sawa, sijui'].each do |content|
     it "re-clarifies an uncertain scope-tail acknowledgment: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')

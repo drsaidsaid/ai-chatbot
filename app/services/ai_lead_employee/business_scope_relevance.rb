@@ -20,6 +20,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   ].freeze
   EXTERNAL_SUBJECT_PATTERNS = [
     /\AHow much does\s+(?<subject>.+?)\s+cost\??\z/i,
+    /\AWhat does\s+(?<subject>.+?)\s+cost\??\z/i,
     /\AWhat is the (?:price|refund policy) of\s+(?<subject>.+?)\??\z/i,
     /\AWho is the instructor of\s+(?<subject>.+?)\??\z/i
   ].freeze
@@ -113,14 +114,31 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def resolve_pending_response(context)
-    return resolve_pending_question(context) if AiLeadEmployee::InformationRequest.substantive_followup?(message)
-    return resolve_confirmation(context) if configured_scope_correction?
-    return :unrelated if scope_denial?
+    followup = AiLeadEmployee::InformationRequest.substantive_followup(message)
+    return resolve_new_question(followup) if followup.present?
     return reclarify(context) if uncertain_acknowledgment?
+
+    explicit_resolution = resolve_explicit_scope(context)
+    return explicit_resolution if explicit_resolution
     return resolve_pending_question(context) if substantive_information_request?
     return resolve_confirmation(context) if scope_confirmation?
 
     :unrelated
+  end
+
+  def resolve_new_question(question)
+    @resolved_question = question
+    @resolved_message_id = incoming_message&.id
+    @resolved_language = AiLeadEmployee::LanguageDetector.detect(question)
+    relevance = self.class.new(
+      account: account, message: question, offer: offer, conversation: conversation, incoming_message: incoming_message
+    )
+    relevance.send(:initial_disposition)
+  end
+
+  def resolve_explicit_scope(context)
+    return resolve_confirmation(context) if scope_polarity == :confirmation
+    return :unrelated if scope_polarity == :denial
   end
 
   def substantive_information_request?
@@ -202,26 +220,33 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def uncertain_acknowledgment?
-    normalized_message.match?(/\A(?:maybe|perhaps|not sure|i am not sure|i m not sure|i think so|labda|sijui)\b/)
+    normalized_message.match?(/\b(?:maybe|perhaps|not sure|i am not sure|i m not sure|i think so|labda|sijui)\b/)
   end
 
-  def scope_denial?
-    normalized_message.in?(%w[no hapana]) ||
-      normalized_message.match?(
-        /\b(?:(?:do not|don t) mean|not asking about|not about|not referring to) (?:this |your |the )?#{scope_noun_pattern}\b/
-      ) || normalized_message.match?(/\b(?:sio|si) kuhusu #{swahili_scope_noun_pattern}\b/) ||
-      normalized_message.match?(/\bsimaanishi #{swahili_scope_noun_pattern}\b/) || configured_name_denied?
+  def scope_polarity
+    events = polarity_events(denial_patterns, :denial) + polarity_events(correction_patterns, :confirmation)
+    events << [0, :denial] if normalized_message.in?(%w[no hapana])
+    events.max_by(&:first)&.last
   end
 
-  def configured_scope_correction?
-    configured_names.any? do |name|
-      normalized_message.match?(/\b(?:i mean|namaanisha) #{Regexp.escape(normalize(name))}\b/)
+  def polarity_events(patterns, polarity)
+    patterns.flat_map do |pattern|
+      normalized_message.to_enum(:scan, pattern).map { [Regexp.last_match.begin(0), polarity] }
     end
   end
 
-  def configured_name_denied?
-    configured_names.any? do |name|
-      normalized_message.match?(/\bnot (?:about )?#{Regexp.escape(normalize(name))}\b/)
+  def denial_patterns
+    [
+      /\b(?:(?:do not|don t) mean|not asking about|not about|not referring to) (?:this |your |the )?#{scope_noun_pattern}\b/,
+      /\b(?:sio|si) kuhusu #{swahili_scope_noun_pattern}\b/,
+      /\bsimaanishi #{swahili_scope_noun_pattern}\b/,
+      *configured_names.map { |name| /\bnot (?:about )?#{Regexp.escape(normalize(name))}\b/ }
+    ]
+  end
+
+  def correction_patterns
+    configured_names.map do |name|
+      /\b(?:i mean|namaanisha) (?:the |this )?#{Regexp.escape(normalize(name))}(?: (?:offer|course|product|service|ofa|kozi|huduma))?\b/
     end
   end
 

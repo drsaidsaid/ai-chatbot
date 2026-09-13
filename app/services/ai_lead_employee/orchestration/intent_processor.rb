@@ -431,13 +431,13 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       source_references: source_references,
       selected_provider: connection&.provider,
       model: provider_response&.model || connection&.model,
-      decision: {
+      decision: intent.decision.merge(
         status: status,
         triggering_message_id: triggering_message.id,
         outbound_message_id: outbound_message.id,
         provider_response_id: provider_response&.id,
         qualification: qualification_result_payload(qualification_result)
-      },
+      ),
       completed_at: Time.current
     }
   end

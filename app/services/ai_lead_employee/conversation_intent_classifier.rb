@@ -121,7 +121,8 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def resolved_scope_question?
-    business_scope_relevance&.resolved_question.present? && !business_scope_relevance.reclarification_required?
+    business_scope_relevance&.resolved_question.present? && business_scope_relevance.relevant? &&
+      !business_scope_relevance.reclarification_required?
   end
 
   def unrelated?
