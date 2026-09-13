@@ -225,17 +225,18 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
              polarity_events(affirmation_patterns, :confirmation) +
              polarity_events([uncertainty_pattern], :uncertain)
     latest = events.max_by(&:first)
-    return :uncertain if latest&.last == :confirmation && uncertainty_governs_correction?(events)
+    return :uncertain if uncertainty_governs_resolution?(events, latest)
 
     latest&.last
   end
 
-  def uncertainty_governs_correction?(events)
-    uncertainty = last_event(events, :uncertain)
-    correction = last_event(events, :confirmation)
-    return false unless uncertainty && correction && uncertainty.first < correction.first
+  def uncertainty_governs_resolution?(events, resolution)
+    return false unless resolution && resolution.last != :uncertain
 
-    contrast_absent_between?(uncertainty.first, correction.first)
+    uncertainty = last_event(events, :uncertain)
+    return false unless uncertainty && uncertainty.first < resolution.first
+
+    contrast_absent_between?(uncertainty.first, resolution.first)
   end
 
   def last_event(events, polarity)
@@ -255,7 +256,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
 
   def denial_patterns
     [
-      /\b(?:no|hapana)\z/,
+      /\b(?:no|hapana)(?: thanks| please| asante| tafadhali)?\z/,
       /\b(?:(?:do not|don t) mean|not asking about|not about|not referring to) (?:this |your |the )?#{scope_noun_pattern}\b/,
       /\b(?:sio|si) kuhusu #{swahili_scope_noun_pattern}\b/,
       /\bsimaanishi #{swahili_scope_noun_pattern}\b/,
@@ -270,7 +271,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def affirmation_patterns
-    [/\b(?:yes|okay|sure|correct|exactly|indeed|ndiyo|ndio|sawa|naam|ndivyo)\z/]
+    [/\b(?:yes|okay|sure|correct|exactly|indeed|ndiyo|ndio|sawa|naam|ndivyo)(?: thanks| please| asante| tafadhali)?\z/]
   end
 
   def uncertainty_pattern

@@ -365,6 +365,37 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
   end
 
+  it 'retrieves Swahili-only knowledge for an extracted gani question' do
+    offer = create_offer(name: 'Pulse')
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Je, mnakubali benki?')
+    create(
+      :knowledge_item,
+      account: account,
+      question: 'Kozi inaanza siku gani',
+      answer: 'Kozi inaanza Jumatatu.',
+      metadata: { 'source_reference' => 'pulse-swahili-start-v1', 'offer_ids' => [offer.id], 'language' => 'swahili' }
+    )
+    connection = create(:ai_provider_connection, account: account)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r11-swahili-answer', model: connection.model, content: 'Kozi inaanza Jumatatu.',
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, followup_intent = followup_records('Ndiyo, na Kozi inaanza siku gani')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(followup_intent.outbound_message.content).to eq('Kozi inaanza Jumatatu.')
+    expect(followup_intent.decision.fetch('scope_resolution')).to include(
+      'question' => 'Kozi inaanza siku gani', 'message_id' => followup.id, 'language' => 'swahili'
+    )
+  end
+
   {
     'Yes what does Pulse include?' => 'Pulse',
     'Yes, and does Pulse include coaching' => 'Pulse',
@@ -434,7 +465,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(denial_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
-  ['Yes, actually no', 'I mean Pulse, but no', 'Ndiyo, lakini hapana'].each do |content|
+  ['Yes, actually no', 'Yes, actually no thanks', 'I mean Pulse, but no', 'Ndiyo, lakini hapana',
+   'Ndiyo, lakini hapana asante'].each do |content|
     it "uses a trailing bare denial as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')
@@ -453,7 +485,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     end
   end
 
-  ['No, actually yes', 'Hapana, lakini ndiyo'].each do |content|
+  ['No, actually yes', 'No, actually yes please', 'Hapana, lakini ndiyo', 'Hapana, lakini ndiyo tafadhali'].each do |content|
     it "uses a trailing bare confirmation as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')
@@ -496,7 +528,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   ['Maybe, your business', 'Labda, biashara hii', "Yes, I'm not sure", 'Okay, maybe', 'Sawa, sijui',
-   'Maybe I mean Pulse', "I'm not sure I mean Pulse"].each do |content|
+   'Maybe I mean Pulse', "I'm not sure I mean Pulse", 'Maybe not about Pulse', 'Sijui, si kuhusu Pulse'].each do |content|
     it "re-clarifies an uncertain scope-tail acknowledgment: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')

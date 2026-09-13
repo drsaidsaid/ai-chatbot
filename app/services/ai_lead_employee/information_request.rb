@@ -10,11 +10,17 @@ class AiLeadEmployee::InformationRequest
   ENGLISH_REQUEST_VERBS = %w[
     accept allow cost cover deliver have help include integrate offer provide ship start support teach work
   ].freeze
+  ENGLISH_COPULAR_PREDICATES = %w[
+    available closed eligible included open offered recorded required supported unavailable
+  ].freeze
+  NON_SUBJECT_TOKENS = (ENGLISH_AUXILIARIES + %w[expect expects intend intends plan planned plans to]).freeze
   ACKNOWLEDGMENT_TOKENS = %w[yes okay sure correct exactly indeed ndiyo ndio sawa naam ndivyo].freeze
   REPORTED_SPEECH_TOKENS = %w[
-    alieleza alisema aliuliza asked explained knew know said says told walieleza walisema waliuliza
+    asked asks explained knew know reported reports said says told
   ].freeze
+  SWAHILI_REPORTING_STEM = /(?:eleza|sema|uliza)\z/
   SWAHILI_STARTERS = %w[gani ipi je jinsi lini mna naweza ninaweza nini unaweza wapi].freeze
+  SWAHILI_LANGUAGE_TOKENS = (SWAHILI_STARTERS + %w[bei huduma inaanza inajumuisha iko kozi siku]).freeze
 
   def self.call(message)
     new(message).call
@@ -71,24 +77,26 @@ class AiLeadEmployee::InformationRequest
 
   def swahili_terminal_question?(value)
     match = value.match(
-      /\A(?<subject>(?:[[:alnum:]'-]+\s){1,4})(?:(?:ina|una|mna|wana)[[:alpha:]]+|iko|ni)\b.*\b(?:gani|ipi|nini|lini|wapi)\z/
+      /\A(?<subject>.+\s)(?:(?:ina|una|mna|wana)[[:alpha:]]+|iko|ni)\b.*\b(?:gani|ipi|nini|lini|wapi)\z/
     )
     match && significant_reported_speech_absent?(match[:subject])
   end
 
   def significant_reported_speech_absent?(subject)
-    !subject.split.intersect?(REPORTED_SPEECH_TOKENS)
+    tokens = subject.split
+    !tokens.intersect?(REPORTED_SPEECH_TOKENS) && tokens.none? { |token| token.match?(SWAHILI_REPORTING_STEM) }
   end
 
   def english_auxiliary_question?(tokens)
     return false unless ENGLISH_AUXILIARIES.include?(tokens.first)
     return true if ENGLISH_SUBJECTS.include?(tokens.second)
 
-    predicate_index = tokens.each_index.drop(2).find { |index| ENGLISH_REQUEST_VERBS.include?(tokens[index]) }
+    predicates = tokens.first.in?(%w[is are]) ? ENGLISH_COPULAR_PREDICATES : ENGLISH_REQUEST_VERBS
+    predicate_index = tokens.each_index.drop(2).find { |index| predicates.include?(tokens[index]) }
     return false unless predicate_index
 
     subject_tokens = tokens[1...predicate_index]
-    subject_tokens.present? && subject_tokens.size <= 4 && !subject_tokens.intersect?(ENGLISH_AUXILIARIES)
+    subject_tokens.present? && !subject_tokens.intersect?(NON_SUBJECT_TOKENS)
   end
 
   def compound_clauses
