@@ -55,8 +55,8 @@ non-transactional concurrency fixture are guarded by exact database-name checks
 and explicit opt-ins (`R24_DB_OPT_IN=yes` and `R24_LOCKING_FIXTURES=yes`).
 Synthetic test-only Active Record encryption values were supplied. No shared
 `chatwoot_test` database or destructive committed-fixture cleanup was used. The
-correction database is preserved locally, still behind those guards, for review
-or a subsequently allocated browser revalidation.
+same exact-name-guarded database was used for the final allocated browser pass,
+then dropped; its absence was verified against PostgreSQL's database catalogue.
 
 - Corrected focused Rails suite: **60 examples, 0 failures**. It covers exact
   preview and tenant isolation, stale signed preview, immutable payment evidence,
@@ -74,11 +74,10 @@ or a subsequently allocated browser revalidation.
   upgrade preview, intervening early renewal payment, and upgrade request.
 - Changed Ruby files: focused RuboCop checks passed with no offences.
 - Changed JavaScript/Vue files: focused ESLint checks passed with no errors.
-- The prior source candidate `8c97b7a45cc32cf134f25b775f15bec0e751acfd`
-  completed the production Vite build (**5,085 modules transformed**) and browser
-  acceptance. Those results do not attest the corrected source candidate.
-- Build and browser revalidation for `6d10530c449b203cd3603a1d68e5db9b4e8dcc89`
-  remain pending explicit allocation, as requested by the coordinator.
+- Production Vite build at exact source
+  `6d10530c449b203cd3603a1d68e5db9b4e8dcc89`: **5,085 modules transformed;
+  passed in 42.42 seconds**. Advisory output was limited to the existing stale
+  Browserslist data and large bundle chunks.
 - `git diff --check`, Ruby syntax checks and English locale JSON parsing passed.
 - The normal repository pre-commit hook passed for every source commit.
 
@@ -125,6 +124,27 @@ and the tab and both local servers were closed afterward.
   expected Vite development HMR websocket reconnect warning; no application
   runtime failure appeared.
 
-This historical browser evidence is retained for traceability but is not claimed
-for the corrected source candidate. A new browser pass has not been run while the
-corrections await coordinator review and allocation.
+That historical browser evidence is retained for traceability. After independent
+review cleared the corrected source, a targeted final in-app browser pass ran at
+exact source `6d10530c449b203cd3603a1d68e5db9b4e8dcc89`:
+
+- At the default **1280 × 720** viewport, the base Growth upgrade preview rendered
+  **TZS 150,000.00**, balance **12 → 32** (`30 monthly + 2 purchased extras`),
+  account-local renewal time, the exact price equation and computed **44.4%**
+  per-credit savings.
+- With that preview open, the fixture moved to a prepaid future cycle. Continuing
+  exercised the stale-preview request path and showed: “A future month is already
+  paid on your current plan. Upgrade after your monthly credits renew, or contact
+  platform support.” Database verification showed **zero upgrade requests, zero
+  total requests and zero confirmations**, so payment instructions were never
+  created and no entitlement changed.
+- Cancelling and selecting Growth again exercised preview-time rejection and
+  showed the same actionable message. At exactly **390 × 844**, it remained
+  readable and the page measured `390px` content width with `390px` scroll width.
+- Returning the fixture to its current-cycle state and selecting Growth again at
+  **390 × 844** restored the complete base preview and cleared the rejection
+  message, proving UI recovery.
+- Browser logs contained no errors. Warnings were limited to an initial unmatched
+  `/app/` route, existing deprecated Modal `onClose` usage and Lit development
+  mode. The viewport was reset, the tab closed, both local services stopped, and
+  their listening ports verified clear.
