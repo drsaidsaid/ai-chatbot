@@ -118,7 +118,8 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
 
   def unrelated?
     return UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) } unless account
-    return false if business_scope_relevance.relevant?
+    return business_scope_relevance.clearly_outside_scope? if business_scope_relevance.consumes_clarification?
+    return false if business_scope_relevance.authoritative_scope_match?
     return true if UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
 
     business_scope_relevance.clearly_outside_scope?
@@ -215,12 +216,7 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def question?
-    information_request? || message.include?('?') || normalized.match?(/\b(what|how|when|where|why|nini|je)\b/) ||
-      without_greeting(normalized).match?(/\A(can|do|does|is|are)\b/)
-  end
-
-  def information_request?
-    requested?(/\b(?:tell me (?:more )?about|(?:explain|describe) (?:your|this|the))\b/)
+    AiLeadEmployee::InformationRequest.call(message)
   end
 
   def token_match?(expected_tokens)

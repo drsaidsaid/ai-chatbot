@@ -13,9 +13,10 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     /\b(?:unapenda nini|maoni yako binafsi)\b/
   ].freeze
   EXTERNAL_FACT_PATTERNS = [
-    /\A(?:What|Which|Who) (?:is|are|was|were) the .+\b(?:of|in)\s+[[:upper:]][[:alnum:]'-]*/i
+    /\AWhat is the capital of\s+[[:upper:]][[:alnum:]'-]*/i
   ].freeze
   EXTERNAL_NAMED_SUBJECT_PATTERNS = [/\AHow much does\s+[[:upper:]][[:alnum:]'-]*/i].freeze
+  BUSINESS_INTEREST_PATTERNS = [/\bi am interested\b.*\b(?:start|begin)\b/].freeze
 
   def initialize(account:, message:, offer: nil, conversation: nil, incoming_message: nil)
     @account = account
@@ -35,6 +36,12 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
 
   def relevant?
     disposition == :relevant
+  end
+
+  def authoritative_scope_match?
+    return false if external_fact_question?
+
+    approved_scope_match? || configured_scope_match? || established_subject_match?
   end
 
   def consumes_clarification?
@@ -67,9 +74,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   attr_reader :account, :message, :offer, :conversation, :incoming_message
 
   def informational_question?
-    message.include?('?') || normalized_message.match?(
-      /\A(?:can|could|do|does|how|is|are|what|when|where|which|who|why|je|jinsi|lini|nini|wapi)\b/
-    )
+    AiLeadEmployee::InformationRequest.call(message)
   end
 
   def disposition
@@ -79,7 +84,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def initial_disposition
-    return :relevant unless informational_question?
+    return :relevant unless scope_evaluation_required?
     return :relevant if approved_scope_match?
     return :unrelated if external_fact_question?
     return :relevant if configured_scope_match?
@@ -89,14 +94,27 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     :ambiguous
   end
 
+  def scope_evaluation_required?
+    informational_question? && !business_interest?
+  end
+
   def resolve_pending_clarification
     context = pending_clarification
     return unless context
 
     @consumes_clarification = true
-    return resolve_pending_question(context) if informational_question?
-    return :unrelated unless scope_confirmation?
+    return :unrelated if scope_denial?
+    return resolve_pending_question(context) if substantive_information_request?
+    return resolve_confirmation(context) if scope_confirmation?
 
+    :unrelated
+  end
+
+  def substantive_information_request?
+    informational_question? && !normalized_message.match?(/\A(?:yes|okay|ndiyo|ndio|sawa)\b/)
+  end
+
+  def resolve_confirmation(context)
     restore_pending_question(context)
     return :relevant if captured_offer_current?(context)
 
@@ -150,7 +168,6 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def scope_confirmation?
-    return false if normalized_message.split.intersect?(%w[no not hapana sio si])
     return true if normalized_message.match?(/\A(?:yes|okay|ndiyo|ndio|sawa)\b/)
     return true if normalized_message.match?(
       /\b(?:your|this|the) (?:business|company|course|offer|product|program|programme|service)\b/
@@ -158,6 +175,13 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     return true if normalized_message.match?(/\b(?:biashara hii|huduma hii|kozi hii|ofa hii)\b/)
 
     configured_names.any? { |name| normalized_message.match?(/\b#{Regexp.escape(normalize(name))}\b/) }
+  end
+
+  def scope_denial?
+    normalized_message.in?(%w[no hapana]) ||
+      normalized_message.match?(
+        /\b(?:not asking about|not about) (?:this |your |the )?(?:business|company|course|offer|product|program|programme|service)\b/
+      ) || normalized_message.match?(/\b(?:sio|si) kuhusu (?:biashara|huduma|kozi|ofa) hii\b/)
   end
 
   def established_subject_match?
@@ -183,6 +207,10 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   def definitely_unrelated?
     PERSONAL_PREFERENCE_PATTERNS.any? { |pattern| normalized_message.match?(pattern) } ||
       EXTERNAL_NAMED_SUBJECT_PATTERNS.any? { |pattern| message.strip.match?(pattern) }
+  end
+
+  def business_interest?
+    BUSINESS_INTEREST_PATTERNS.any? { |pattern| normalized_message.match?(pattern) }
   end
 
   def external_fact_question?

@@ -127,10 +127,14 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     'Do you deliver to Zanzibar?' => [:english, 'Growth coaching'],
     'Do you offer certificates?' => [:english, 'okay'],
     'Do you allow rescheduling?' => [:english, 'Yes, that is what I mean'],
+    'Do you provide recordings?' => [:english, 'Okay?'],
+    'Do you provide support?' => [:english, 'No, I mean your business'],
     'Je, mnakubali M-Pesa?' => [:swahili, 'ndiyo'],
     'Mnasafirisha hadi Arusha?' => [:swahili, 'Ofa hii'],
     'Je, mnakubali Airtel Money?' => [:swahili, 'sawa'],
-    'Je, mnasafirisha Jumapili?' => [:swahili, 'Ndiyo tafadhali']
+    'Je, mnasafirisha Jumapili?' => [:swahili, 'Ndiyo tafadhali'],
+    'Je, mnakubali benki?' => [:swahili, 'Sawa?'],
+    'Je, mnafundisha wikendi?' => [:swahili, 'Hapana, ni kuhusu biashara hii']
   }.each do |unknown_question, (language, confirmation)|
     it "records Review for a plausible #{language} Business exchange: #{unknown_question}" do
       offer = create_offer
@@ -184,6 +188,16 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
+  it 'sets a boundary for an explicit unrelated category in statement form' do
+    triggering_message.update!(content: 'Tell me a football score')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
   it 'classifies named third-party questions consistently regardless of capitalization' do
     account.update!(name: 'France')
     conversation.update!(offer: create_offer(name: 'Capital'))
@@ -217,6 +231,30 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     expect(followup_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
     expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+  end
+
+  it 'classifies a declarative information request independently instead of using it as confirmation' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    followup, followup_intent = followup_records('Tell me about Pulse')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to be_blocked
+    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+  end
+
+  it 'treats a named correction containing negation as confirmation of the selected Offer' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    confirmation_intent = process_followup('No—not Netflix, Pulse', expected_scope: triggering_message.content)
+
+    expect(confirmation_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(confirmation_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
   end
 
   it 'rejects pending scope when another public prompt intervenes' do
@@ -346,6 +384,28 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     expect(intent.reload).to be_blocked
     expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
+  it 'keeps a configured Offer relevant in an external-fact sentence shape' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'What is the price of Pulse?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to be_blocked
+    expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
+  ['Who is the instructor of Pulse?', 'What is the refund policy of Pulse?'].each do |question|
+    it "keeps the selected Offer authoritative for: #{question}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: question)
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(intent.reload).to be_blocked
+      expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+    end
   end
 
   it 'prefers addressed Account-name context over a fixed unrelated category' do
