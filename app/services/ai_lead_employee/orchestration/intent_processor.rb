@@ -79,7 +79,9 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def complete_provider_answer
     response = build_provider_answer(@answer_result)
-    conversation.with_lock do
+    ApplicationRecord.transaction do
+      AiLeadEmployee::KnowledgeAuthorityLock.acquire_for_answer!(account.id)
+      conversation.lock!
       intent.lock!
       next unless owns_claim?
       next block_intent!('provider_configuration_changed') unless provider_configuration_current?(response)
@@ -87,7 +89,6 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       block_reason = final_block_reason
       next block_intent!(block_reason) if block_reason.present?
 
-      AiLeadEmployee::KnowledgeAuthorityLock.acquire!(account.id)
       lock_answer_sources!
       next request_review!('source_unverified') if provider_review_required?(response) || !sources_still_current?
 

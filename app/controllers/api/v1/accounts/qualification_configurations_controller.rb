@@ -54,17 +54,7 @@ class Api::V1::Accounts::QualificationConfigurationsController < Api::V1::Accoun
 
   def qualification_questions_payload
     questions = current_account.qualification_questions.order(:position, :id)
-    payload = questions.as_json(only: [:id, :signal, :prompt, :position, :enabled, :metadata])
-    return default_questions_payload if payload.empty?
-    return payload if payload.any? { |question| question['signal'] == 'name' }
-
-    [default_questions_payload.first, *payload]
-  end
-
-  def default_questions_payload
-    AiLeadEmployee::QualificationService::DEFAULT_QUESTIONS.each_with_index.map do |(signal, prompt), position|
-      { 'id' => nil, 'signal' => signal, 'prompt' => prompt, 'position' => position, 'enabled' => true, 'metadata' => {} }
-    end
+    questions.as_json(only: [:id, :signal, :prompt, :position, :enabled, :metadata])
   end
 
   def update_follow_up!

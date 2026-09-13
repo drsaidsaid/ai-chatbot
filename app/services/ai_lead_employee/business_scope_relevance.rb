@@ -5,9 +5,9 @@ class AiLeadEmployee::BusinessScopeRelevance
     a an and are can do does for from how i in is it my of on or our the this to we what with you your
     hii hiki jinsi kuhusu kwa la na ni unaweza ya yako
   ].freeze
-  EXTERNAL_HOW_TO_PATTERNS = [
-    /\Ahow (?:do|can|could|should) i\b/,
-    /\A(?:ninawezaje|nawezaje|jinsi gani ninaweza)\b/
+  BUSINESS_DIRECTED_TOKENS = %w[
+    business biashara company kampuni contact customer customers huduma inquiry inquiries integrate integration
+    location offer offers open price pricing product products service services support team wateja your
   ].freeze
 
   def initialize(account:, message:, offer: nil)
@@ -17,46 +17,40 @@ class AiLeadEmployee::BusinessScopeRelevance
   end
 
   def clearly_outside_scope?
-    external_how_to? && !approved_scope_match?
+    informational_question? && !business_directed? && !approved_scope_match?
   end
 
   private
 
   attr_reader :account, :message, :offer
 
-  def external_how_to?
-    EXTERNAL_HOW_TO_PATTERNS.any? { |pattern| normalized_message.match?(pattern) }
+  def informational_question?
+    message.include?('?') || normalized_message.match?(
+      /\A(?:can|could|do|does|how|is|are|what|when|where|which|who|why|je|jinsi|lini|nini|wapi)\b/
+    )
+  end
+
+  def business_directed?
+    normalized_message.split.intersect?(BUSINESS_DIRECTED_TOKENS)
   end
 
   def approved_scope_match?
     question_tokens = significant_tokens(message)
     return false if question_tokens.empty?
 
-    scope_texts.any? do |text|
+    approved_scope_texts.any? do |text|
       overlap = question_tokens & significant_tokens(text)
       overlap.size >= [2, question_tokens.size].min
     end
   end
 
-  def scope_texts
-    @scope_texts ||= offer_texts + knowledge_item_texts + knowledge_document_texts
-  end
-
-  def offer_texts
-    offers = offer ? [offer] : account.qualification_offers.enabled_in_order.to_a
-    offers.map { |candidate| [candidate.name, candidate.configuration].to_json }
-  end
-
-  def knowledge_item_texts
-    account.knowledge_items.usable_by_ai_employee.filter_map do |item|
-      [item.title, item.question, item.answer].join(' ') if item.verified_source_reference?
-    end
-  end
-
-  def knowledge_document_texts
-    account.knowledge_documents.eligible_for_ai_employee.filter_map do |document|
-      [document.title, document.body].join(' ') if document.verified_source_reference?
-    end
+  def approved_scope_texts
+    @approved_scope_texts ||= AiLeadEmployee::KnowledgeAnswerService.new(
+      account: account,
+      question: message,
+      offer: offer,
+      language: AiLeadEmployee::LanguageDetector.detect(message)
+    ).approved_scope_texts
   end
 
   def significant_tokens(value)

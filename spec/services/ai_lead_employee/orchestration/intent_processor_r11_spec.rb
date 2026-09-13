@@ -67,8 +67,16 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
   it 'answers an external how-to question when approved Business knowledge covers that work' do
     triggering_message.update!(content: 'How do I repair my bicycle?')
-    create(:knowledge_item, account: account, question: 'How do I repair my bicycle?',
-                            answer: 'Bring the bicycle to our repair workshop for an inspection.')
+    offer = create_offer
+    conversation.update!(offer: offer)
+    create(
+      :knowledge_document,
+      account: account,
+      title: 'Bicycle repair workshop',
+      body: 'Bring the bicycle to our repair workshop for an inspection.',
+      general_question_access: false,
+      offer_ids: [offer.id]
+    )
     connection = create(:ai_provider_connection, account: account)
     allow(provider_client).to receive(:complete).and_return(
       AiLeadEmployee::AiProvider::Response.new(
@@ -83,6 +91,19 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
     expect(intent.outbound_message.content).to eq('Bring the bicycle to our repair workshop for an inspection.')
+  end
+
+  it 'sets a boundary for an arbitrary informational question outside the approved Business scope' do
+    triggering_message.update!(content: 'What is the capital of France?')
+    create(:knowledge_item, account: account, question: 'How can I grow my coaching business?',
+                            answer: 'Use the approved coaching programme.')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
   it 'records a typed answer to the current configured Offer question even without fixed qualification words' do

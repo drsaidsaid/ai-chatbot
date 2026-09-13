@@ -349,7 +349,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
                     'duplicate_ignored' => false,
                     'opt_out_recorded' => true,
                     'sender_invoked' => false,
-                    'configuration_version' => qualification.configuration_version,
+                    'configuration_version' => qualification&.configuration_version || configuration_version,
                     'knowledge_versions' => knowledge_snapshot['items'],
                     'provider_model' => provider_snapshot['model'],
                     'prompt_version' => PROMPT_VERSION

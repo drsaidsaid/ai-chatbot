@@ -51,7 +51,7 @@ RSpec.describe 'Leads API', type: :request do
   end
 
   describe 'PATCH /api/v1/accounts/{account.id}/leads/{id}' do
-    it 'updates editable fields, records audit history, and recomputes qualification' do
+    it 'rejects legacy evidence fields when no Offer criteria are configured' do
       contact = create(:contact, :with_phone_number, account: account, name: 'Jane Nkosi')
       create(:conversation, account: account, inbox: inbox, contact: contact)
       create(:lead_qualification, account: account, contact: contact, quality: :unknown)
@@ -72,10 +72,10 @@ RSpec.describe 'Leads API', type: :request do
             },
             as: :json
 
-      expect(response).to have_http_status(:success)
-      expect(response.parsed_body['quality']).to eq('highly_qualified')
-      expect(response.parsed_body['business_name']).to eq('Nuru Boutique')
-      expect(Audited::Audit.where(auditable: contact).last.audited_changes).to include('ai_lead_employee_action' => 'lead_edit')
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to include('Configure an Offer')
+      expect(contact.reload.additional_attributes['company_name']).to be_nil
+      expect(QualificationEvidence.where(account: account, contact: contact)).to be_empty
     end
 
     it 'returns validation errors instead of silently retaining an invalid phone edit' do
@@ -105,7 +105,7 @@ RSpec.describe 'Leads API', type: :request do
       expect(hidden_contact.reload.name).to eq('Hidden Lead')
     end
 
-    it 'applies operator evidence edits to the visible conversation, not a newer hidden conversation' do
+    it 'rejects unscoped operator evidence instead of attaching it to any visible or hidden conversation' do
       create(:inbox_member, user: operator, inbox: inbox)
       contact = create(:contact, :with_phone_number, account: account, name: 'Shared Lead')
       visible_conversation = create(
@@ -130,8 +130,9 @@ RSpec.describe 'Leads API', type: :request do
             params: { lead: { evidence: { problem: 'qualify visible sales leads' } } },
             as: :json
 
-      expect(response).to have_http_status(:success)
-      expect(QualificationEvidence.where(conversation: visible_conversation, signal: :problem)).to exist
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to include('Configure an Offer')
+      expect(QualificationEvidence.where(conversation: visible_conversation, signal: :problem)).not_to exist
       expect(QualificationEvidence.where(conversation: hidden_conversation, signal: :problem)).not_to exist
     end
   end

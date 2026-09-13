@@ -24,17 +24,17 @@ RSpec.describe 'Lead Qualifications API', type: :request do
     expect(QualificationEvidence.where(contact: conversation.contact, offer: offer, field_key: 'budget').current.count).to eq(1)
   end
 
-  it 'does not create a legacy qualification from evidence when the Business has no configured Offer' do
-    expect(AiLeadEmployee::QualificationService).not_to receive(:configured_question_pairs)
+  it 'rejects qualification evidence when the Business has no configured Offer' do
+    expect(AiLeadEmployee::QualificationService).not_to receive(:new)
 
     post "/api/v1/accounts/#{account.id}/lead_qualifications/#{conversation.contact.id}/evidence",
          headers: agent.create_new_auth_token,
          params: { signal: 'budget', value: '$2500' },
          as: :json
 
-    expect(response).to have_http_status(:success)
-    expect(response.parsed_body).to include('quality' => 'unknown', 'next_question' => nil,
-                                            'evidence_id' => an_instance_of(Integer))
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['error']).to include('Configure an Offer')
+    expect(QualificationEvidence.where(account: account, contact: conversation.contact)).to be_empty
     expect(LeadQualification.where(account: account, contact: conversation.contact)).to be_empty
   end
 

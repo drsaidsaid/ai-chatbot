@@ -67,6 +67,38 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(records.fetch(:competing_item).reload).to be_approved
   end
 
+  it 'does not deadlock against the Booking Account-to-Conversation lock order' do
+    records = scenario
+    provider_entered = Queue.new
+    account_lock_acquired = Queue.new
+    allow(provider_client).to receive(:complete) do
+      provider_entered << true
+      release_provider.pop
+      provider_response(records.fetch(:connection))
+    end
+
+    processor, processor_pid = start_worker { process_intent(records.fetch(:intent).id) }
+    Timeout.timeout(15) { provider_entered.pop }
+    _booking, booking_pid = start_worker do
+      ApplicationRecord.transaction do
+        Account.where(id: records.fetch(:intent).account_id).lock.load
+        account_lock_acquired << true
+        release_final_check.pop
+        Conversation.where(id: records.fetch(:intent).conversation_id).lock.load
+      end
+    end
+    Timeout.timeout(15) { account_lock_acquired.pop }
+    release_provider << true
+    wait_until { !processor.alive? || blocked_by?(processor_pid, booking_pid) }
+
+    expect(blocked_by?(processor_pid, booking_pid)).to be(true)
+
+    release_final_check << true
+    finish_workers
+
+    expect(processor.value.reload).to be_completed
+  end
+
   def scenario
     @scenario ||= begin
       context = create_conversation_context

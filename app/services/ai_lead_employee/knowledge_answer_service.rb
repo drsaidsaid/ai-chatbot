@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AiLeadEmployee::KnowledgeAnswerService
+class AiLeadEmployee::KnowledgeAnswerService # rubocop:disable Metrics/ClassLength
   MATCH_STOPWORDS = %w[about are can does how is the this what when where which who why with your].freeze
   Result = Struct.new(:answer, :sources, :refusal_reason, keyword_init: true) do
     def answered?
@@ -46,6 +46,16 @@ class AiLeadEmployee::KnowledgeAnswerService
     Result.new(answer: document_excerpt(document), sources: [document_source_payload(document)], refusal_reason: nil)
   end
 
+  def approved_scope_texts
+    item_texts = eligible_items.filter_map do |item|
+      [item.title, item.question, item.answer].join(' ') if item.verified_source_reference?
+    end
+    document_texts = eligible_documents.filter_map do |document|
+      [document.title, document.body].join(' ') if document.verified_source_reference? && !document_expired?(document)
+    end
+    item_texts + document_texts
+  end
+
   private
 
   attr_reader :account, :question, :document_scope, :offer, :language
@@ -60,9 +70,12 @@ class AiLeadEmployee::KnowledgeAnswerService
   end
 
   def matching_items
-    account.knowledge_items.usable_by_ai_employee
-           .select { |item| eligible_item?(item) && matches?(item) }
-           .sort_by { |item| [APPROVED_ANSWER_PRIORITY.fetch(item.source_kind), -match_score(item), item.created_at] }
+    eligible_items.select { |item| matches?(item) }
+                  .sort_by { |item| [APPROVED_ANSWER_PRIORITY.fetch(item.source_kind), -match_score(item), item.created_at] }
+  end
+
+  def eligible_items
+    account.knowledge_items.usable_by_ai_employee.select { |item| eligible_item?(item) }
   end
 
   def unverified_refusal_reason(matches)
@@ -154,17 +167,26 @@ class AiLeadEmployee::KnowledgeAnswerService
   end
 
   def matching_document
-    scope = document_scope.present? ? [document_scope] : account.knowledge_documents.published.where(used_by_ai_employee: true)
-    scope.select { |document| document.verified_source_reference? && matches_document?(document) }
-         .min_by { |document| [-document_score(document), document.updated_at] }
+    matches = eligible_documents.select do |document|
+      document.verified_source_reference? && !document_expired?(document) && matches_document_content?(document)
+    end
+    matches.min_by { |document| [-document_score(document), document.updated_at] }
   end
 
-  def matches_document?(document)
+  def eligible_documents
+    scope = document_scope.present? ? [document_scope] : account.knowledge_documents.published.where(used_by_ai_employee: true)
+    scope.select { |document| eligible_document?(document) }
+  end
+
+  def eligible_document?(document)
     return false unless document.published? && document.used_by_ai_employee?
     return false unless language_matches?(document.import_metadata['language'])
     return false unless document.general_question_access? || offer_scope_matches?(document.offer_ids)
-    return false if document_expired?(document)
 
+    true
+  end
+
+  def matches_document_content?(document)
     (tokens(normalize(question)) & tokens(normalize([document.title, document.body].join(' ')))).size >= 2
   end
 
