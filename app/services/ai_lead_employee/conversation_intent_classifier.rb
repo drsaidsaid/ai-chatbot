@@ -78,7 +78,7 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
     classified_intent = intent
     Result.new(
       intent: classified_intent,
-      language: classification_language(classified_intent),
+      language: classification_language,
       **scope_result_attributes(classified_intent)
     )
   end
@@ -87,13 +87,13 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
 
   attr_reader :account, :conversation, :incoming_message, :message, :offer
 
-  def classification_language(classified_intent)
-    resolved = business_scope_relevance&.resolved_language if classified_intent == :business_question
+  def classification_language
+    resolved = business_scope_relevance&.resolved_language
     resolved || AiLeadEmployee::LanguageDetector.detect(message)
   end
 
   def scope_result_attributes(classified_intent)
-    resolved = classified_intent == :business_question
+    resolved = %i[business_question scope_clarification].include?(classified_intent)
     {
       scope_question: resolved ? business_scope_relevance&.resolved_question : nil,
       scope_message_id: resolved ? business_scope_relevance&.resolved_message_id : nil,
@@ -107,20 +107,25 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
 
   def content_intent
     return :qualification_answer if pending_offer_answer?
-    return :business_question if business_scope_relevance&.resolved_question.present?
+    return :business_question if resolved_scope_question?
 
     CONTENT_INTENT_CHECKS.find { |_intent, predicate| send(predicate) }&.first || :generic_safe
   end
 
+  def resolved_scope_question?
+    business_scope_relevance&.resolved_question.present? && !business_scope_relevance.reclarification_required?
+  end
+
   def unrelated?
+    return UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) } unless account
+    return false if business_scope_relevance.relevant?
     return true if UNRELATED_PATTERNS.any? { |pattern| normalized.match?(pattern) }
-    return false unless account
 
     business_scope_relevance.clearly_outside_scope?
   end
 
   def scope_clarification?
-    account && question? && business_scope_relevance.ambiguous?
+    account && (question? || business_scope_relevance.reclarification_required?) && business_scope_relevance.ambiguous?
   end
 
   def business_scope_relevance

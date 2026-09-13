@@ -137,6 +137,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       next block_intent!(reason) if reason.present?
 
       AiLeadEmployee::Orchestration::ProviderFailureHandler.new(intent: intent, failure: failure,
+                                                                lead_message: review_lead_message,
                                                                 enqueue_review_alerts: false).perform
       record_review_acknowledgment!(intent.review_request)
     end
@@ -193,6 +194,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def process_grounded_answer!
+    persist_scope_resolution!
     consume_scope_clarification!
     return request_review!(classification.review_reason) if classification.review_reason.present?
     return request_review!('human_requested') if classification.intent == :human_request
@@ -223,7 +225,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     ).perform
     outbound_message = create_outbound_message!(content: content, source_references: [],
                                                 qualification_result: qualification_result, status: 'conversation_reply')
-    record_scope_clarification! if classification.intent == :scope_clarification
+    record_scope_clarification!(outbound_message) if classification.intent == :scope_clarification
     create_outbox_event!(outbound_message)
     complete_intent!(outbound_message: outbound_message, provider_response: nil, source_references: [],
                      qualification_result: qualification_result, status: 'conversation_reply')
@@ -459,7 +461,10 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def classification
-    @classification ||= AiLeadEmployee::ConversationIntentClassifier.new(
+    return @classification if defined?(@classification)
+    return @classification = persisted_scope_classification if persisted_scope_resolution?
+
+    @classification = AiLeadEmployee::ConversationIntentClassifier.new(
       message: triggering_message.content,
       account: account,
       conversation: conversation,
@@ -470,6 +475,26 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def selected_offer
     account.qualification_offers.enabled_in_order.find_by(id: conversation.offer_id)
+  end
+
+  def persisted_scope_resolution?
+    intent.decision['scope_resolution'].present?
+  end
+
+  def persisted_scope_classification
+    scope = intent.decision.fetch('scope_resolution')
+    AiLeadEmployee::ConversationIntentClassifier::Result.new(
+      intent: persisted_scope_offer_current?(scope) ? :business_question : :scope_clarification,
+      language: scope.fetch('language').to_sym,
+      scope_question: scope.fetch('question'),
+      scope_message_id: scope.fetch('message_id'),
+      scope_clarification_consumed: false
+    )
+  end
+
+  def persisted_scope_offer_current?(scope)
+    scope['offer_id'] == selected_offer&.id &&
+      scope['offer_configuration_version'] == selected_offer&.configuration_version
   end
 
   def qualification_source_references(qualification_result)
@@ -565,16 +590,35 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     conversation.messages.find_by(id: classification.scope_message_id) || triggering_message
   end
 
-  def record_scope_clarification!
-    context = {
-      'question' => triggering_message.content,
-      'message_id' => triggering_message.id,
+  def record_scope_clarification!(clarification_message)
+    conversation.update!(additional_attributes: conversation.additional_attributes.merge(
+      AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY => scope_clarification_context(clarification_message)
+    ))
+  end
+
+  def scope_clarification_context(clarification_message)
+    {
+      'question' => classification.scope_question.presence || triggering_message.content,
+      'message_id' => classification.scope_message_id.presence || triggering_message.id,
+      'clarification_message_id' => clarification_message.id,
       'language' => classification.language.to_s,
       'offer_id' => selected_offer&.id,
+      'offer_configuration_version' => selected_offer&.configuration_version,
       'expires_at' => (Time.current + AiLeadEmployee::BusinessScopeRelevance::CONTEXT_TTL).iso8601(6)
     }
-    conversation.update!(additional_attributes: conversation.additional_attributes.merge(
-      AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY => context
+  end
+
+  def persist_scope_resolution!
+    return if classification.scope_question.blank? || classification.intent != :business_question
+
+    intent.update!(decision: intent.decision.merge(
+      'scope_resolution' => {
+        'question' => classification.scope_question,
+        'message_id' => classification.scope_message_id,
+        'language' => classification.language.to_s,
+        'offer_id' => selected_offer&.id,
+        'offer_configuration_version' => selected_offer&.configuration_version
+      }
     ))
   end
 

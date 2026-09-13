@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AiLeadEmployee::BusinessScopeRelevance
+class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLength
   CONTEXT_KEY = 'ai_employee_scope_clarification'
   CONTEXT_TTL = 15.minutes
   STOP_WORDS = %w[
@@ -12,10 +12,10 @@ class AiLeadEmployee::BusinessScopeRelevance
     /\bdo you (?:believe|enjoy|feel|like|prefer|think)\b/,
     /\b(?:unapenda nini|maoni yako binafsi)\b/
   ].freeze
-  EXTERNAL_NAMED_SUBJECT_PATTERNS = [
-    /\AHow much does\s+[[:upper:]][[:alnum:]'-]*/,
-    /\A(?:What|Which|Who) (?:is|are|was|were) the .+\b(?:of|in)\s+[[:upper:]][[:alnum:]'-]*/
+  EXTERNAL_FACT_PATTERNS = [
+    /\A(?:What|Which|Who) (?:is|are|was|were) the .+\b(?:of|in)\s+[[:upper:]][[:alnum:]'-]*/i
   ].freeze
+  EXTERNAL_NAMED_SUBJECT_PATTERNS = [/\AHow much does\s+[[:upper:]][[:alnum:]'-]*/i].freeze
 
   def initialize(account:, message:, offer: nil, conversation: nil, incoming_message: nil)
     @account = account
@@ -31,6 +31,10 @@ class AiLeadEmployee::BusinessScopeRelevance
 
   def ambiguous?
     disposition == :ambiguous
+  end
+
+  def relevant?
+    disposition == :relevant
   end
 
   def consumes_clarification?
@@ -53,6 +57,11 @@ class AiLeadEmployee::BusinessScopeRelevance
     @resolved_language
   end
 
+  def reclarification_required?
+    disposition
+    @reclarification_required == true
+  end
+
   private
 
   attr_reader :account, :message, :offer, :conversation, :incoming_message
@@ -72,8 +81,9 @@ class AiLeadEmployee::BusinessScopeRelevance
   def initial_disposition
     return :relevant unless informational_question?
     return :relevant if approved_scope_match?
-    return :unrelated if definitely_unrelated?
+    return :unrelated if external_fact_question?
     return :relevant if configured_scope_match?
+    return :unrelated if definitely_unrelated?
     return :relevant if established_subject_match?
 
     :ambiguous
@@ -84,37 +94,64 @@ class AiLeadEmployee::BusinessScopeRelevance
     return unless context
 
     @consumes_clarification = true
+    return resolve_pending_question(context) if informational_question?
     return :unrelated unless scope_confirmation?
 
+    restore_pending_question(context)
+    return :relevant if captured_offer_current?(context)
+
+    @reclarification_required = true
+    :ambiguous
+  end
+
+  def resolve_pending_question(context)
+    return :unrelated if normalized_message == normalize(context['question'])
+
+    initial_disposition
+  end
+
+  def restore_pending_question(context)
     @resolved_question = context['question']
     @resolved_message_id = context['message_id']
     @resolved_language = context['language']&.to_sym
-    :relevant
+  end
+
+  def captured_offer_current?(context)
+    context['offer_id'] == offer&.id && context['offer_configuration_version'] == offer&.configuration_version
   end
 
   def pending_clarification
     context = conversation&.additional_attributes&.[](CONTEXT_KEY)
-    return unless valid_pending_clarification?(context)
+    return unless context.is_a?(Hash)
 
-    context
+    return context if valid_pending_clarification?(context)
+
+    consume_invalid_context_if_later(context)
+    nil
   rescue ArgumentError, TypeError
     nil
+  end
+
+  def consume_invalid_context_if_later(context)
+    @consumes_clarification = true if incoming_message&.id.to_i > context['message_id'].to_i
   end
 
   def valid_pending_clarification?(context)
     context.is_a?(Hash) &&
       incoming_message&.id.to_i > context['message_id'].to_i &&
       Time.zone.parse(context['expires_at'].to_s) > Time.current &&
-      previous_public_incoming_id == context['message_id'].to_i
+      previous_public_message_id == context['clarification_message_id'].to_i
   end
 
-  def previous_public_incoming_id
-    conversation.messages.where(message_type: Message.message_types[:incoming], private: false)
-                .where('id < ?', incoming_message.id).order(id: :desc).pick(:id)
+  def previous_public_message_id
+    Message.where(conversation_id: conversation.id, private: false,
+                  message_type: [Message.message_types[:incoming], Message.message_types[:outgoing]])
+           .where('messages.id < ?', incoming_message.id).reorder(id: :desc).pick(:id)
   end
 
   def scope_confirmation?
-    return true if normalized_message.in?(%w[yes ndiyo ndio])
+    return false if normalized_message.split.intersect?(%w[no not hapana sio si])
+    return true if normalized_message.match?(/\A(?:yes|okay|ndiyo|ndio|sawa)\b/)
     return true if normalized_message.match?(
       /\b(?:your|this|the) (?:business|company|course|offer|product|program|programme|service)\b/
     )
@@ -148,9 +185,20 @@ class AiLeadEmployee::BusinessScopeRelevance
       EXTERNAL_NAMED_SUBJECT_PATTERNS.any? { |pattern| message.strip.match?(pattern) }
   end
 
+  def external_fact_question?
+    EXTERNAL_FACT_PATTERNS.any? { |pattern| message.strip.match?(pattern) }
+  end
+
   def configured_scope_match?
     configured_names.any? { |name| normalized_message.match?(/\b#{Regexp.escape(normalize(name))}\b/) } ||
+      addressed_configured_name_match? ||
       scope_match?(configured_scope_texts)
+  end
+
+  def addressed_configured_name_match?
+    return false unless normalized_message.split.intersect?(%w[your this])
+
+    configured_names.any? { |name| significant_tokens(message).intersect?(significant_tokens(name)) }
   end
 
   def approved_scope_match?

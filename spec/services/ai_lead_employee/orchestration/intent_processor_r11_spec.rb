@@ -125,8 +125,12 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     'Do you accept American Express?' => [:english, 'yes'],
     'Can I pay in installments?' => [:english, 'your programme'],
     'Do you deliver to Zanzibar?' => [:english, 'Growth coaching'],
+    'Do you offer certificates?' => [:english, 'okay'],
+    'Do you allow rescheduling?' => [:english, 'Yes, that is what I mean'],
     'Je, mnakubali M-Pesa?' => [:swahili, 'ndiyo'],
-    'Mnasafirisha hadi Arusha?' => [:swahili, 'Ofa hii']
+    'Mnasafirisha hadi Arusha?' => [:swahili, 'Ofa hii'],
+    'Je, mnakubali Airtel Money?' => [:swahili, 'sawa'],
+    'Je, mnasafirisha Jumapili?' => [:swahili, 'Ndiyo tafadhali']
   }.each do |unknown_question, (language, confirmation)|
     it "records Review for a plausible #{language} Business exchange: #{unknown_question}" do
       offer = create_offer
@@ -178,6 +182,100 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
     expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  it 'classifies named third-party questions consistently regardless of capitalization' do
+    account.update!(name: 'France')
+    conversation.update!(offer: create_offer(name: 'Capital'))
+    triggering_message.update!(content: 'what is the capital of France?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  it 'consumes a denial without treating it as Business confirmation' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    denial_intent = process_followup('No, I am not asking about this business.')
+
+    expect(denial_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(denial_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+    expect(conversation.reload.additional_attributes).not_to have_key(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+  end
+
+  it 'classifies a substantive next question independently instead of using it as confirmation' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    followup, followup_intent = followup_records('What does Pulse include?')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+  end
+
+  it 'rejects pending scope when another public prompt intervenes' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    create(
+      :message,
+      account: account,
+      inbox: channel.inbox,
+      conversation: conversation,
+      message_type: :outgoing,
+      content: 'A newer public prompt.'
+    )
+
+    confirmation_intent = process_followup('yes')
+
+    expect(confirmation_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(confirmation_intent.outbound_message.content).to eq('Could you tell me what you need about this business?')
+    expect(conversation.reload.additional_attributes).not_to have_key(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+  end
+
+  it 're-clarifies the original question when its selected Offer changes before confirmation' do
+    original_offer = create_offer(name: 'Pulse')
+    conversation.update!(offer: original_offer)
+    triggering_message.update!(content: 'Are there weekend classes?')
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    original_context = conversation.reload.additional_attributes.fetch(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+    expect(original_context).to include(
+      'offer_id' => original_offer.id,
+      'offer_configuration_version' => original_offer.configuration_version
+    )
+
+    replacement_offer = create_offer(name: 'Focus')
+    conversation.update!(offer: replacement_offer)
+    first_followup, first_confirmation = followup_records('yes')
+    drifted_classification = AiLeadEmployee::ConversationIntentClassifier.new(
+      message: first_followup.content,
+      account: account,
+      conversation: conversation,
+      incoming_message: first_followup,
+      offer: replacement_offer
+    ).perform
+    expect(drifted_classification.intent).to eq(:scope_clarification)
+    described_class.new(intent: first_confirmation, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(first_confirmation.reload.outbound_message.content).to eq('Are you asking about this business or one of its Offers?')
+    context = conversation.reload.additional_attributes.fetch(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+    expect(context).to include(
+      'question' => triggering_message.content,
+      'message_id' => triggering_message.id,
+      'offer_id' => replacement_offer.id,
+      'offer_configuration_version' => replacement_offer.configuration_version
+    )
+
+    second_confirmation = process_followup('yes', expected_scope: triggering_message.content)
+    expect(second_confirmation.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(second_confirmation.review_request).to have_attributes(lead_message_id: triggering_message.id)
   end
 
   [
@@ -238,6 +336,27 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
     expect(intent.review_request).to have_attributes(reason: 'no_approved_knowledge', status: 'open')
+  end
+
+  it 'prefers an exact configured Offer name over a third-party commerce heuristic' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'How much does Pulse cost?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to be_blocked
+    expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
+  it 'prefers addressed Account-name context over a fixed unrelated category' do
+    account.update!(name: 'Pilau Catering')
+    triggering_message.update!(content: 'What is your pilau price?')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to be_blocked
+    expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
   end
 
   it 'records Review for an unknown detail in the configured Offer scope' do
@@ -326,6 +445,62 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     )
   end
 
+  it 'preserves the clarified question across lease recovery' do
+    offer = create_offer(name: 'Pulse')
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Are there weekend classes?')
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    create(
+      :knowledge_item,
+      account: account,
+      question: triggering_message.content,
+      answer: 'Pulse has weekend classes.',
+      metadata: { 'source_reference' => 'pulse-weekend-recovery-v1', 'offer_ids' => [offer.id], 'language' => 'english' }
+    )
+    connection = create(:ai_provider_connection, account: account)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r11-recovered-answer', model: connection.model, content: 'Pulse has weekend classes.',
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+    _confirmation, confirmation_intent = followup_records('yes')
+
+    first_attempt = described_class.new(intent: confirmation_intent, enqueue_deliveries: false, enforce_launch_gate: false)
+    expect(first_attempt.send(:prepare_claimed_answer)).to be(true)
+    expect(confirmation_intent.reload.decision.dig('scope_resolution', 'question')).to eq(triggering_message.content)
+    expect(conversation.reload.additional_attributes).not_to have_key(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+    confirmation_intent.update!(lease_expires_at: 1.minute.ago)
+
+    described_class.new(intent: confirmation_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(confirmation_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(confirmation_intent.outbound_message.content).to eq('Pulse has weekend classes.')
+  end
+
+  it 'links provider-failure Review to the original clarified question' do
+    offer = create_offer(name: 'Pulse')
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Are there weekend classes?')
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    create(
+      :knowledge_item,
+      account: account,
+      question: triggering_message.content,
+      answer: 'Pulse has weekend classes.',
+      metadata: { 'source_reference' => 'pulse-weekend-failure-v1', 'offer_ids' => [offer.id], 'language' => 'english' }
+    )
+    create(:ai_provider_connection, account: account)
+    allow(provider_client).to receive(:complete).and_raise(AiLeadEmployee::AiProvider::TimeoutFailure)
+
+    confirmation_intent = process_followup('yes', expected_scope: triggering_message.content)
+
+    expect(confirmation_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_failure')
+    expect(confirmation_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
   it 'rejects an amount introduced by provider output and records Review instead' do
     create(:knowledge_item, account: account, question: message, answer: 'The integration is available.')
     connection = create(:ai_provider_connection, account: account)
@@ -392,11 +567,14 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       triggering_message: followup,
       observed_control_version: conversation.control_version
     )
+    followup.reload
     [followup, followup_intent]
   end
 
   def expect_followup_classification!(followup, expected_scope)
     offer = account.qualification_offers.enabled_in_order.find_by(id: conversation.offer_id)
+    context = conversation.additional_attributes[AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY]
+    expect_bound_clarification_prompt!(context, followup) if context && expected_scope
     classification = AiLeadEmployee::ConversationIntentClassifier.new(
       message: followup.content,
       account: account,
@@ -408,6 +586,15 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       expect(classification.scope_clarification_consumed).to be(true)
     end
     expect(classification).to have_attributes(intent: :business_question, scope_question: expected_scope) if expected_scope
+  end
+
+  def expect_bound_clarification_prompt!(context, followup)
+    previous_public_id = Message.where(
+      conversation_id: conversation.id,
+      private: false,
+      message_type: [Message.message_types[:incoming], Message.message_types[:outgoing]]
+    ).where('messages.id < ?', followup.id).reorder(id: :desc).pick(:id)
+    expect(context['clarification_message_id']).to eq(previous_public_id)
   end
 
   def question(key, prompt)
