@@ -23,7 +23,8 @@ class Api::V1::Accounts::AiSubscriptionsController < Api::V1::Accounts::BaseCont
     ).perform
     render json: preview_payload(result)
   rescue AiLeadEmployee::Subscriptions::PurchasePreview::InvalidPreview => e
-    render json: { error: e.message }, status: :unprocessable_entity
+    Rails.logger.info("AI subscription preview rejected: #{e.class}")
+    render json: { error: 'purchase_preview_unavailable' }, status: :unprocessable_entity
   end
 
   private
@@ -33,7 +34,7 @@ class Api::V1::Accounts::AiSubscriptionsController < Api::V1::Accounts::BaseCont
     subscription = AiLeadEmployee::AiSubscription.find_by(account_id: current_account.id)
     return summary unless subscription
 
-    details = { renewal_date_label: renewal_label(subscription) }
+    details = { reporting_timezone: subscription.reporting_timezone }
     if summary[:status] == 'renewal_due'
       consumed_top_ups = subscription.reply_usages.capacity_holding.top_up.count
       details[:preserved_top_up_ai_replies] = [subscription.top_up_ai_replies - consumed_top_ups, 0].max
@@ -92,9 +93,5 @@ class Api::V1::Accounts::AiSubscriptionsController < Api::V1::Accounts::BaseCont
 
   def money(amount)
     amount && format('%.2f', amount)
-  end
-
-  def renewal_label(subscription)
-    subscription.renews_at.in_time_zone(subscription.reporting_timezone).strftime('%-d %b %Y, %H:%M %Z')
   end
 end

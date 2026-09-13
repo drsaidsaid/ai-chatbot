@@ -6,6 +6,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
+    locale: { value: 'en' },
     t: (key, params = {}) => {
       const values = Object.values(params);
       return values.length ? `${key} ${values.join(' ')}` : key;
@@ -52,7 +53,7 @@ describe('AiProviderSettingsPage', () => {
           remaining_ai_replies: 2198,
           usage_percentage: 26.7,
           renewal_date: '2026-10-12T08:00:00Z',
-          renewal_date_label: '12 Oct 2026, 11:00 EAT',
+          reporting_timezone: 'Africa/Dar_es_Salaam',
           automation_allowed: true,
         },
         available_plans: [],
@@ -99,7 +100,7 @@ describe('AiProviderSettingsPage', () => {
     expect(wrapper.text()).toContain(
       'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.RECONCILIATION_REQUIRED 1'
     );
-    expect(wrapper.text()).toContain('12 Oct 2026, 11:00 EAT');
+    expect(wrapper.text()).toContain('Oct 12, 2026, 11:00 GMT+3');
     expect(wrapper.text()).not.toContain('2026-10-12T08:00:00Z');
     expect(wrapper.text()).toContain('Billed directly by Meta');
     expect(wrapper.text()).toContain(
@@ -215,7 +216,8 @@ describe('AiProviderSettingsPage', () => {
           included_ai_replies: 100,
           remaining_ai_replies: 0,
           usage_percentage: 100,
-          renewal_date_label: '12 Oct 2026, 11:00 EAT',
+          renewal_date: '2026-10-12T08:00:00Z',
+          reporting_timezone: 'Africa/Dar_es_Salaam',
           automation_allowed: false,
         },
         available_plans: [
@@ -249,7 +251,8 @@ describe('AiProviderSettingsPage', () => {
         resulting_included_ai_replies_remaining: 0,
         resulting_top_up_ai_replies_remaining: 50,
         resulting_ai_replies_remaining: 50,
-        renews_at_label: '12 Oct 2026, 11:00 EAT',
+        renews_at: '2026-10-12T08:00:00Z',
+        reporting_timezone: 'Africa/Dar_es_Salaam',
         preview_signature: 'signed-top-up-preview',
         unit_price_comparison: {
           comparison_plan_name: 'Growth',
@@ -363,7 +366,8 @@ describe('AiProviderSettingsPage', () => {
           used_ai_replies: 800,
           remaining_ai_replies: 200,
           usage_percentage: 80,
-          renewal_date_label: '12 Oct 2026, 11:00 EAT',
+          renewal_date: '2026-10-12T08:00:00Z',
+          reporting_timezone: 'Africa/Dar_es_Salaam',
           automation_allowed: true,
         },
         available_plans: [
@@ -405,7 +409,8 @@ describe('AiProviderSettingsPage', () => {
         resulting_included_ai_replies_remaining: 2200,
         resulting_top_up_ai_replies_remaining: 0,
         resulting_ai_replies_remaining: 2200,
-        renews_at_label: '12 Oct 2026, 11:00 EAT',
+        renews_at: '2026-10-12T08:00:00Z',
+        reporting_timezone: 'Africa/Dar_es_Salaam',
         preview_signature: 'signed-upgrade-preview',
       },
     });
@@ -423,7 +428,7 @@ describe('AiProviderSettingsPage', () => {
     expect(preview.text()).toContain('TZS 250,000.00');
     expect(preview.text()).toContain('TZS 150,000.00');
     expect(preview.text()).toContain('2200');
-    expect(preview.text()).toContain('12 Oct 2026, 11:00 EAT');
+    expect(preview.text()).toContain('Oct 12, 2026, 11:00 GMT+3');
     expect(aiSubscriptionAPI.createRequest).not.toHaveBeenCalled();
   });
 

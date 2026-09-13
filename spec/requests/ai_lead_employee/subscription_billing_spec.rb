@@ -114,7 +114,9 @@ RSpec.describe 'AI subscription billing', type: :request do
         'resulting_included_ai_replies' => 30, 'resulting_included_ai_replies_remaining' => 22,
         'resulting_top_up_ai_replies_remaining' => 2, 'resulting_ai_replies_remaining' => 24
       )
-      expect(response.parsed_body.fetch('renews_at_label')).not_to match(/T\d{2}:/)
+      expect(response.parsed_body).to include(
+        'renews_at' => '2026-10-12T00:00:00.000Z', 'reporting_timezone' => 'UTC'
+      )
       expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account)).to be_empty
     end
   end
@@ -130,7 +132,7 @@ RSpec.describe 'AI subscription billing', type: :request do
     }, headers: other_admin.create_new_auth_token, as: :json
 
     expect(response).to have_http_status(:unprocessable_entity)
-    expect(response.parsed_body.fetch('error')).to match(/without an active plan/)
+    expect(response.parsed_body.fetch('error')).to eq('purchase_preview_unavailable')
   end
 
   it 'reports unknown provider cost as unknown rather than zero contribution cost', :aggregate_failures do

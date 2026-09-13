@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import aiSubscriptionAPI from 'dashboard/api/aiSubscription';
 import Button from 'dashboard/components-next/button/Button.vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const subscription = ref({
   status: 'inactive',
   used_ai_replies: 0,
@@ -103,6 +103,19 @@ const formatMoney = (currency, amount) => {
   const fraction = `${rawFraction}00`.slice(0, 2);
   return `${currency} ${sign}${whole}.${fraction}`;
 };
+const formatRenewal = (date, reportingTimezone) => {
+  if (!date || !reportingTimezone) return '';
+  return new Intl.DateTimeFormat(locale.value, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+    hour12: false,
+    timeZone: reportingTimezone,
+  }).format(new Date(date));
+};
 
 onMounted(load);
 </script>
@@ -168,7 +181,10 @@ onMounted(load);
       <p class="mt-2 text-xs text-n-slate-11">
         {{
           t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.RENEWS', {
-            date: subscription.renewal_date_label,
+            date: formatRenewal(
+              subscription.renewal_date,
+              subscription.reporting_timezone
+            ),
           })
         }}
       </p>
@@ -305,7 +321,10 @@ onMounted(load);
         <p class="mt-3 text-sm text-n-slate-11">
           {{
             t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.SAME_RENEWAL', {
-              date: purchasePreview.renews_at_label,
+              date: formatRenewal(
+                purchasePreview.renews_at,
+                purchasePreview.reporting_timezone
+              ),
             })
           }}
         </p>

@@ -51,6 +51,8 @@ RSpec.describe AiLeadEmployee::Subscriptions::PurchasePreview do
   end
 
   it 'previews an approved top-up after current included and purchased usage', :aggregate_failures do
+    create(:ai_service_plan, code: 'not-an-upgrade', name: 'Lower price', included_ai_replies: 20,
+                             monthly_price: 90_000)
     consume_replies(12)
 
     preview = described_class.new(account: account, plan: starter, purpose: :top_up,

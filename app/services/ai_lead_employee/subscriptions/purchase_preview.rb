@@ -139,7 +139,7 @@ class AiLeadEmployee::Subscriptions::PurchasePreview
       requested_ai_replies: purpose == 'top_up' ? plan.top_up_ai_replies : nil,
       resulting_included_ai_replies: plan.included_ai_replies,
       renews_at: subscription&.renews_at,
-      renews_at_label: renewal_label(subscription),
+      reporting_timezone: subscription&.reporting_timezone,
       unit_price_comparison: unit_price_comparison(subscription)
     )
   end
@@ -180,14 +180,9 @@ class AiLeadEmployee::Subscriptions::PurchasePreview
     comparison = AiLeadEmployee::AiServicePlan.published
                                               .where(currency: plan.currency)
                                               .where('included_ai_replies > ?', plan.included_ai_replies)
+                                              .where('monthly_price > ?', plan.monthly_price)
                                               .order(:included_ai_replies, :monthly_price, :id)
                                               .first
     [plan, comparison]
-  end
-
-  def renewal_label(subscription)
-    return unless subscription
-
-    subscription.renews_at.in_time_zone(subscription.reporting_timezone).strftime('%-d %b %Y, %H:%M %Z')
   end
 end

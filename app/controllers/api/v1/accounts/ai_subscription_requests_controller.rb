@@ -14,7 +14,8 @@ class Api::V1::Accounts::AiSubscriptionRequestsController < Api::V1::Accounts::B
     ).perform
     render json: payload(request_record), status: :created
   rescue AiLeadEmployee::Subscriptions::RequestService::InvalidRequest => e
-    render json: { error: e.message }, status: :unprocessable_entity
+    Rails.logger.info("AI subscription request rejected: #{e.class}")
+    render json: { error: 'subscription_request_unavailable' }, status: :unprocessable_entity
   end
 
   private

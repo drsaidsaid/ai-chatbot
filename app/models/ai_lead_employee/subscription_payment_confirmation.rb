@@ -14,6 +14,10 @@ class AiLeadEmployee::SubscriptionPaymentConfirmation < ApplicationRecord
   validates :payment_reference, uniqueness: { scope: :account_id }
   validate :request_matches_confirmation
 
+  def readonly?
+    persisted?
+  end
+
   private
 
   def request_matches_confirmation
