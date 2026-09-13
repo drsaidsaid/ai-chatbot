@@ -225,7 +225,11 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def business_question?
-    question? || token_match?(BUSINESS_QUESTION_TOKENS)
+    question? || (token_match?(BUSINESS_QUESTION_TOKENS) && !modal_name_declaration?)
+  end
+
+  def modal_name_declaration?
+    normalized.match?(/\A(?:may|will)\b/) && !question?
   end
 
   def question?

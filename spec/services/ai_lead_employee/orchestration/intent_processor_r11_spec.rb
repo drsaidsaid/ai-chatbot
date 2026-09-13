@@ -369,6 +369,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     'Yes what does Pulse include?' => 'Pulse',
     'Yes, and does Pulse include coaching' => 'Pulse',
     'Ndiyo Pulse inajumuisha nini' => 'Pulse',
+    'Ndiyo Bei ya Pulse ni nini' => 'Pulse',
     'Ndiyo, na Online Profits inajumuisha nini' => 'Online Profits'
   }.each do |content, offer_name|
     it "extracts an acknowledgment followed by a request: #{content}" do
@@ -433,6 +434,39 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(denial_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
+  ['Yes, actually no', 'I mean Pulse, but no', 'Ndiyo, lakini hapana'].each do |content|
+    it "uses a trailing bare denial as the last scoped proposition: #{content}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      denial_intent = process_followup(content)
+
+      expect(denial_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      expected_boundary = if AiLeadEmployee::LanguageDetector.detect(content) == :swahili
+                            'Ninaweza kusaidia kwa maswali kuhusu biashara hii na Ofa zake.'
+                          else
+                            'I can help with questions about this business and its Offers.'
+                          end
+      expect(denial_intent.outbound_message.content).to eq(expected_boundary)
+    end
+  end
+
+  ['No, actually yes', 'Hapana, lakini ndiyo'].each do |content|
+    it "uses a trailing bare confirmation as the last scoped proposition: #{content}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      confirmation_intent = process_followup(content, expected_scope: triggering_message.content)
+
+      expect(confirmation_intent.reload).to be_blocked
+      expect(confirmation_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+    end
+  end
+
   it 'evaluates a new unrelated request independently while clarification is pending' do
     conversation.update!(offer: create_offer(name: 'Pulse'))
     triggering_message.update!(content: 'Can I book a flight?')
@@ -461,7 +495,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     end
   end
 
-  ['Maybe, your business', 'Labda, biashara hii', "Yes, I'm not sure", 'Okay, maybe', 'Sawa, sijui'].each do |content|
+  ['Maybe, your business', 'Labda, biashara hii', "Yes, I'm not sure", 'Okay, maybe', 'Sawa, sijui',
+   'Maybe I mean Pulse', "I'm not sure I mean Pulse"].each do |content|
     it "re-clarifies an uncertain scope-tail acknowledgment: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')

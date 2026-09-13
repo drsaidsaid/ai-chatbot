@@ -222,9 +222,29 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   def scope_polarity
     events = polarity_events(denial_patterns, :denial) +
              polarity_events(correction_patterns, :confirmation) +
+             polarity_events(affirmation_patterns, :confirmation) +
              polarity_events([uncertainty_pattern], :uncertain)
-    events << [0, :denial] if normalized_message.in?(%w[no hapana])
-    events.max_by(&:first)&.last
+    latest = events.max_by(&:first)
+    return :uncertain if latest&.last == :confirmation && uncertainty_governs_correction?(events)
+
+    latest&.last
+  end
+
+  def uncertainty_governs_correction?(events)
+    uncertainty = last_event(events, :uncertain)
+    correction = last_event(events, :confirmation)
+    return false unless uncertainty && correction && uncertainty.first < correction.first
+
+    contrast_absent_between?(uncertainty.first, correction.first)
+  end
+
+  def last_event(events, polarity)
+    events.select { |(_, event_polarity)| event_polarity == polarity }.max_by(&:first)
+  end
+
+  def contrast_absent_between?(first, last)
+    intervening_text = normalized_message[first...last]
+    intervening_text.exclude?(' but ') && intervening_text.exclude?(' lakini ')
   end
 
   def polarity_events(patterns, polarity)
@@ -235,6 +255,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
 
   def denial_patterns
     [
+      /\b(?:no|hapana)\z/,
       /\b(?:(?:do not|don t) mean|not asking about|not about|not referring to) (?:this |your |the )?#{scope_noun_pattern}\b/,
       /\b(?:sio|si) kuhusu #{swahili_scope_noun_pattern}\b/,
       /\bsimaanishi #{swahili_scope_noun_pattern}\b/,
@@ -246,6 +267,10 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     configured_names.map do |name|
       /\b(?:i mean|namaanisha) (?:the |this )?#{Regexp.escape(normalize(name))}(?: (?:offer|course|product|service|ofa|kozi|huduma))?\b/
     end
+  end
+
+  def affirmation_patterns
+    [/\b(?:yes|okay|sure|correct|exactly|indeed|ndiyo|ndio|sawa|naam|ndivyo)\z/]
   end
 
   def uncertainty_pattern

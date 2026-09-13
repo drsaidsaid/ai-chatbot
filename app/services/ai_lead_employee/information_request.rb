@@ -4,15 +4,17 @@ class AiLeadEmployee::InformationRequest
   GREETING_TOKENS = %w[hello hi hey habari mambo].freeze
   POLITE_TOKENS = %w[please tafadhali].freeze
   CONNECTIVE_TOKENS = %w[and but then na lakini].freeze
-  QUESTION_WORDS = %w[what how when where why which who je jinsi lini nini wapi].freeze
+  QUESTION_WORDS = %w[what how when where why which who gani ipi je jinsi lini nini wapi].freeze
   ENGLISH_AUXILIARIES = %w[can could do does is are may should will would].freeze
   ENGLISH_SUBJECTS = %w[i you we they he she it your our this that the there].freeze
   ENGLISH_REQUEST_VERBS = %w[
-    accept allow cost cover deliver have help include offer provide ship start support teach work
+    accept allow cost cover deliver have help include integrate offer provide ship start support teach work
   ].freeze
   ACKNOWLEDGMENT_TOKENS = %w[yes okay sure correct exactly indeed ndiyo ndio sawa naam ndivyo].freeze
-  REPORTED_SPEECH_TOKENS = %w[asked explained knew know said says told].freeze
-  SWAHILI_STARTERS = %w[je jinsi lini mna naweza ninaweza nini unaweza wapi].freeze
+  REPORTED_SPEECH_TOKENS = %w[
+    alieleza alisema aliuliza asked explained knew know said says told walieleza walisema waliuliza
+  ].freeze
+  SWAHILI_STARTERS = %w[gani ipi je jinsi lini mna naweza ninaweza nini unaweza wapi].freeze
 
   def self.call(message)
     new(message).call
@@ -69,7 +71,7 @@ class AiLeadEmployee::InformationRequest
 
   def swahili_terminal_question?(value)
     match = value.match(
-      /\A(?<subject>(?:[[:alnum:]'-]+\s){1,4})(?:(?:ina|una|mna|wana)[[:alpha:]]+|iko)\b.*\b(?:nini|lini|wapi)\z/
+      /\A(?<subject>(?:[[:alnum:]'-]+\s){1,4})(?:(?:ina|una|mna|wana)[[:alpha:]]+|iko|ni)\b.*\b(?:gani|ipi|nini|lini|wapi)\z/
     )
     match && significant_reported_speech_absent?(match[:subject])
   end
@@ -80,8 +82,13 @@ class AiLeadEmployee::InformationRequest
 
   def english_auxiliary_question?(tokens)
     return false unless ENGLISH_AUXILIARIES.include?(tokens.first)
+    return true if ENGLISH_SUBJECTS.include?(tokens.second)
 
-    ENGLISH_SUBJECTS.include?(tokens.second) || tokens.drop(2).intersect?(ENGLISH_REQUEST_VERBS)
+    predicate_index = tokens.each_index.drop(2).find { |index| ENGLISH_REQUEST_VERBS.include?(tokens[index]) }
+    return false unless predicate_index
+
+    subject_tokens = tokens[1...predicate_index]
+    subject_tokens.present? && subject_tokens.size <= 4 && !subject_tokens.intersect?(ENGLISH_AUXILIARIES)
   end
 
   def compound_clauses
