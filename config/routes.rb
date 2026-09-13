@@ -202,6 +202,7 @@ Rails.application.routes.draw do
           end
           resource :ai_provider_connection, only: [:show]
           resource :ai_subscription, only: [:show] do
+            post :preview
             resources :requests, controller: 'ai_subscription_requests', only: [:create]
           end
           resource :qualification_configuration, only: [:show, :update]

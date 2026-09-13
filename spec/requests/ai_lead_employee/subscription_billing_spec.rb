@@ -34,7 +34,7 @@ RSpec.describe 'AI subscription billing', type: :request do
     request_id = response.parsed_body.fetch('id')
     expect(response.parsed_body).to include(
       'status' => 'pending',
-      'amount' => '250000.0',
+      'amount' => '250000.00',
       'currency' => 'TZS',
       'payment_instructions' => 'Pay the approved invoice and share its reference.'
     )
@@ -87,6 +87,50 @@ RSpec.describe 'AI subscription billing', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
     expect(plan.reload.monthly_price).to eq(250_000)
     expect(plan).to be_archived
+  end
+
+  it 'previews an exact tenant-scoped upgrade before creating a payment request', :aggregate_failures do
+    travel_to Time.zone.parse('2026-09-15T09:00:00Z') do
+      starter = create(:ai_service_plan, code: 'starter', name: 'Starter', monthly_price: 100_000,
+                                         included_ai_replies: 10, top_up_price: 75_000, top_up_ai_replies: 5)
+      growth = create(:ai_service_plan, code: 'growth', name: 'Growth', monthly_price: 250_000,
+                                        included_ai_replies: 30, top_up_price: 90_000, top_up_ai_replies: 5)
+      create(:ai_subscription, account: account, ai_service_plan: starter,
+                               included_ai_replies: 10, top_up_ai_replies: 2)
+      8.times do
+        usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: create(:ai_orchestration_intent, account: account))
+        usage.update!(status: :settled, settled_at: Time.current)
+      end
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/preview", params: {
+        ai_service_plan_id: growth.id, purpose: 'upgrade'
+      }, headers: admin_headers, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body).to include(
+        'purpose' => 'upgrade', 'amount_due' => '150000.00', 'currency' => 'TZS',
+        'current_monthly_price' => '100000.00', 'target_monthly_price' => '250000.00',
+        'used_ai_replies' => 8, 'current_remaining_ai_replies' => 4,
+        'resulting_included_ai_replies' => 30, 'resulting_included_ai_replies_remaining' => 22,
+        'resulting_top_up_ai_replies_remaining' => 2, 'resulting_ai_replies_remaining' => 24
+      )
+      expect(response.parsed_body.fetch('renews_at_label')).not_to match(/T\d{2}:/)
+      expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account)).to be_empty
+    end
+  end
+
+  it 'does not disclose another Business Account subscription in a purchase preview' do
+    other_account = create(:account)
+    other_admin = create(:user, account: other_account, role: :administrator)
+    plan = create(:ai_service_plan)
+    create(:ai_subscription, account: account, ai_service_plan: plan)
+
+    post "/api/v1/accounts/#{other_account.id}/ai_subscription/preview", params: {
+      ai_service_plan_id: plan.id, purpose: 'top_up'
+    }, headers: other_admin.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body.fetch('error')).to match(/without an active plan/)
   end
 
   it 'reports unknown provider cost as unknown rather than zero contribution cost', :aggregate_failures do

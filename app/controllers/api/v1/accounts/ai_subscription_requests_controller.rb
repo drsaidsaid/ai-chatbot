@@ -9,7 +9,8 @@ class Api::V1::Accounts::AiSubscriptionRequestsController < Api::V1::Accounts::B
       account: current_account,
       requested_by: current_user,
       plan: plan,
-      purpose: params[:purpose]
+      purpose: params[:purpose],
+      preview_signature: params[:preview_signature]
     ).perform
     render json: payload(request_record), status: :created
   rescue AiLeadEmployee::Subscriptions::RequestService::InvalidRequest => e
@@ -23,7 +24,7 @@ class Api::V1::Accounts::AiSubscriptionRequestsController < Api::V1::Accounts::B
       id: request_record.id,
       purpose: request_record.purpose,
       status: request_record.status,
-      amount: request_record.quoted_amount&.to_s('F'),
+      amount: request_record.quoted_amount && format('%.2f', request_record.quoted_amount),
       currency: request_record.currency,
       requested_ai_replies: request_record.requested_ai_replies,
       payment_instructions: request_record.payment_instructions
