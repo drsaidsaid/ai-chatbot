@@ -2,94 +2,60 @@
 
 class AiLeadEmployee::Subscriptions::RequestService
   InvalidRequest = Class.new(StandardError)
+  FutureCyclePrepaid = Class.new(InvalidRequest)
 
-  def initialize(account:, requested_by:, plan:, purpose:)
+  def initialize(account:, requested_by:, plan:, purpose:, preview_signature: nil)
     @account = account
     @requested_by = requested_by
     @plan = plan
     @purpose = purpose.to_s
+    @preview_signature = preview_signature
   end
 
   def perform
-    raise InvalidRequest, 'The selected plan is not available' unless plan_available?
-
-    account.with_lock do
-      validate_purpose!
-      AiLeadEmployee::AiSubscriptionRequest.create!(
+    request_record = nil
+    purchase_preview.perform do |preview, subscription|
+      validate_preview_signature!(preview)
+      request_record = AiLeadEmployee::AiSubscriptionRequest.create!(
         account: account,
         ai_service_plan: plan,
-        expected_current_plan: @subscription&.ai_service_plan,
-        expected_subscription_updated_at: @subscription&.updated_at,
+        expected_current_plan: subscription&.ai_service_plan,
+        expected_subscription_updated_at: subscription&.updated_at,
         requested_by: requested_by,
         purpose: purpose,
-        quoted_amount: quoted_amount,
-        currency: plan.currency,
-        requested_ai_replies: normalized_requested_units,
+        quoted_amount: preview.fetch(:amount_due),
+        currency: preview.fetch(:currency),
+        requested_ai_replies: preview[:requested_ai_replies],
         payment_instructions: plan.payment_instructions
       )
     end
+    request_record
+  rescue AiLeadEmployee::Subscriptions::PurchasePreview::InvalidPreview => e
+    raise request_error_for(e), e.message
   end
 
   private
 
-  attr_reader :account, :requested_by, :plan, :purpose
+  attr_reader :account, :requested_by, :plan, :purpose, :preview_signature
 
-  def plan_available?
-    return false unless plan
-    return true if plan.published?
-    return false unless purpose.in?(%w[renewal top_up])
+  def request_error_for(error)
+    return FutureCyclePrepaid if error.is_a?(AiLeadEmployee::Subscriptions::PurchasePreview::FutureCyclePrepaid)
 
-    AiLeadEmployee::AiSubscription.exists?(account_id: account.id, ai_service_plan_id: plan.id)
+    InvalidRequest
   end
 
-  def validate_purpose!
-    @subscription = AiLeadEmployee::AiSubscription.find_by(account_id: account.id)
-    validate_subscription_presence!(@subscription)
-    validate_upgrade!(@subscription) if purpose == 'upgrade'
-    validate_renewal!(@subscription) if purpose == 'renewal'
-    validate_top_up! if purpose == 'top_up'
+  def validate_preview_signature!(preview)
+    return unless purpose.in?(%w[top_up upgrade])
+    return if preview_signature.present? && AiLeadEmployee::Subscriptions::PurchasePreview.signature_valid?(
+      preview_signature, account: account, preview: preview
+    )
+
+    raise InvalidRequest, 'Your balance changed or the preview expired. Review the purchase again.'
   end
 
-  def validate_subscription_presence!(subscription)
-    missing_existing_subscription = subscription.blank? && purpose != 'new_subscription'
-    raise InvalidRequest, 'Choose new subscription for an account without an active plan' if missing_existing_subscription
-
-    raise InvalidRequest, 'This Business Account already has a subscription' if subscription.present? && purpose == 'new_subscription'
-    return if subscription.blank? || subscription.active?
-
-    raise InvalidRequest, 'Subscription is not active; contact the Platform Operator before requesting payment'
-  end
-
-  def validate_upgrade!(subscription)
-    allowance_increases = plan.included_ai_replies > subscription.included_ai_replies
-    price_increases = plan.monthly_price > subscription.ai_service_plan.monthly_price
-    currency_matches = plan.currency == subscription.ai_service_plan.currency
-    return if allowance_increases && price_increases && currency_matches
-
-    raise InvalidRequest, 'An upgrade must keep currency and increase both the allowance and monthly price'
-  end
-
-  def validate_top_up!
-    return if plan.top_up_price.present? && plan.top_up_ai_replies.present?
-
-    raise InvalidRequest, 'This plan does not have an approved top-up package'
-  end
-
-  def validate_renewal!(subscription)
-    return if plan.id == subscription.ai_service_plan_id
-
-    raise InvalidRequest, 'A renewal must use the current plan; request an upgrade to change plans'
-  end
-
-  def quoted_amount
-    return plan.top_up_price if purpose == 'top_up'
-    return plan.monthly_price unless purpose == 'upgrade'
-
-    current_price = @subscription.ai_service_plan.monthly_price
-    [plan.monthly_price - current_price, 0].max
-  end
-
-  def normalized_requested_units
-    plan.top_up_ai_replies if purpose == 'top_up'
+  def purchase_preview
+    AiLeadEmployee::Subscriptions::PurchasePreview.new(
+      account: account, plan: plan, purpose: purpose
+    )
   end
 end

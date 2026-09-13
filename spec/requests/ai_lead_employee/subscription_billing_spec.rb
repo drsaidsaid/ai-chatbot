@@ -34,7 +34,7 @@ RSpec.describe 'AI subscription billing', type: :request do
     request_id = response.parsed_body.fetch('id')
     expect(response.parsed_body).to include(
       'status' => 'pending',
-      'amount' => '250000.0',
+      'amount' => '250000.00',
       'currency' => 'TZS',
       'payment_instructions' => 'Pay the approved invoice and share its reference.'
     )
@@ -87,6 +87,126 @@ RSpec.describe 'AI subscription billing', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
     expect(plan.reload.monthly_price).to eq(250_000)
     expect(plan).to be_archived
+  end
+
+  it 'previews an exact tenant-scoped upgrade before creating a payment request', :aggregate_failures do
+    travel_to Time.zone.parse('2026-09-15T09:00:00Z') do
+      starter = create(:ai_service_plan, code: 'starter', name: 'Starter', monthly_price: 100_000,
+                                         included_ai_replies: 10, top_up_price: 75_000, top_up_ai_replies: 5)
+      growth = create(:ai_service_plan, code: 'growth', name: 'Growth', monthly_price: 250_000,
+                                        included_ai_replies: 30, top_up_price: 90_000, top_up_ai_replies: 5)
+      create(:ai_subscription, account: account, ai_service_plan: starter,
+                               included_ai_replies: 10, top_up_ai_replies: 2)
+      8.times do
+        usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: create(:ai_orchestration_intent, account: account))
+        usage.update!(status: :settled, settled_at: Time.current)
+      end
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/preview", params: {
+        ai_service_plan_id: growth.id, purpose: 'upgrade'
+      }, headers: admin_headers, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body).to include(
+        'purpose' => 'upgrade', 'amount_due' => '150000.00', 'currency' => 'TZS',
+        'current_monthly_price' => '100000.00', 'target_monthly_price' => '250000.00',
+        'used_ai_replies' => 8, 'current_remaining_ai_replies' => 4,
+        'resulting_included_ai_replies' => 30, 'resulting_included_ai_replies_remaining' => 22,
+        'resulting_top_up_ai_replies_remaining' => 2, 'resulting_ai_replies_remaining' => 24
+      )
+      expect(response.parsed_body).to include(
+        'renews_at' => '2026-10-12T00:00:00.000Z', 'reporting_timezone' => 'UTC'
+      )
+      expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account)).to be_empty
+    end
+  end
+
+  it 'returns a stable wait-until-renewal action when a future cycle is prepaid' do
+    starter = create(:ai_service_plan, code: 'starter', monthly_price: 100_000, included_ai_replies: 10)
+    growth = create(:ai_service_plan, code: 'growth', monthly_price: 250_000, included_ai_replies: 30)
+    create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10,
+                             paid_through_at: Time.zone.parse('2026-11-12T00:00:00Z'))
+
+    post "/api/v1/accounts/#{account.id}/ai_subscription/preview", params: {
+      ai_service_plan_id: growth.id, purpose: 'upgrade'
+    }, headers: admin_headers, as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body.fetch('error')).to eq('upgrade_available_after_renewal')
+    expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account)).to be_empty
+  end
+
+  it 'keeps the wait-until-renewal action when renewal is prepaid after an upgrade preview' do
+    travel_to Time.zone.parse('2026-09-15T09:00:00Z') do
+      starter = create(:ai_service_plan, code: 'starter', monthly_price: 100_000, included_ai_replies: 10)
+      growth = create(:ai_service_plan, code: 'growth', monthly_price: 250_000, included_ai_replies: 30)
+      create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/preview", params: {
+        ai_service_plan_id: growth.id, purpose: 'upgrade'
+      }, headers: admin_headers, as: :json
+      upgrade_signature = response.parsed_body.fetch('preview_signature')
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/requests", params: {
+        ai_service_plan_id: starter.id, purpose: 'renewal'
+      }, headers: admin_headers, as: :json
+      renewal_request_id = response.parsed_body.fetch('id')
+      post "/platform/api/v1/accounts/#{account.id}/subscription_payment_confirmations", params: {
+        subscription_request_id: renewal_request_id,
+        payment_reference: 'PREVIEW-RACE-RENEWAL',
+        amount: '100000.00',
+        currency: 'TZS',
+        confirmed_at: '2026-09-15T09:00:00Z'
+      }, headers: platform_headers, as: :json
+      expect(response).to have_http_status(:success)
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/requests", params: {
+        ai_service_plan_id: growth.id, purpose: 'upgrade', preview_signature: upgrade_signature
+      }, headers: admin_headers, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body.fetch('error')).to eq('upgrade_available_after_renewal')
+      expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account, purpose: 'upgrade')).to be_empty
+    end
+  end
+
+  it 'does not disclose another Business Account subscription in a purchase preview' do
+    other_account = create(:account)
+    other_admin = create(:user, account: other_account, role: :administrator)
+    plan = create(:ai_service_plan)
+    create(:ai_subscription, account: account, ai_service_plan: plan)
+
+    post "/api/v1/accounts/#{other_account.id}/ai_subscription/preview", params: {
+      ai_service_plan_id: plan.id, purpose: 'top_up'
+    }, headers: other_admin.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body.fetch('error')).to eq('purchase_preview_unavailable')
+  end
+
+  it 'requires a fresh top-up preview when the displayed plan comparison changes' do
+    starter = create(:ai_service_plan, code: 'starter', name: 'Starter', monthly_price: 100_000,
+                                       included_ai_replies: 10, top_up_price: 75_000, top_up_ai_replies: 5)
+    create(:ai_service_plan, code: 'growth', version: 1, name: 'Growth', monthly_price: 250_000,
+                             included_ai_replies: 30)
+    create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+
+    post "/api/v1/accounts/#{account.id}/ai_subscription/preview", params: {
+      ai_service_plan_id: starter.id, purpose: 'top_up'
+    }, headers: admin_headers, as: :json
+    signature = response.parsed_body.fetch('preview_signature')
+    expect(response.parsed_body.dig('unit_price_comparison', 'comparison_plan_name')).to eq('Growth')
+
+    replacement = create(:ai_service_plan, code: 'growth', version: 2, status: :draft, published_at: nil,
+                                           name: 'Growth Plus', monthly_price: 300_000, included_ai_replies: 40)
+    replacement.publish!
+    post "/api/v1/accounts/#{account.id}/ai_subscription/requests", params: {
+      ai_service_plan_id: starter.id, purpose: 'top_up', preview_signature: signature
+    }, headers: admin_headers, as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body.fetch('error')).to eq('subscription_request_unavailable')
+    expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account)).to be_empty
   end
 
   it 'reports unknown provider cost as unknown rather than zero contribution cost', :aggregate_failures do

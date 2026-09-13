@@ -298,9 +298,15 @@ RSpec.describe AiLeadEmployee::ReplyAllowance do
   it 'does not deadlock concurrent payment confirmation and partial closure' do
     usage, = terminal_partial_reply
     operator = create(:platform_app, finance_operations_enabled: true)
+    purchase_preview = AiLeadEmployee::Subscriptions::PurchasePreview.new(
+      account: account, plan: subscription.ai_service_plan, purpose: :top_up
+    ).perform
     request = AiLeadEmployee::Subscriptions::RequestService.new(
       account: account, requested_by: create(:user, account: account, role: :administrator),
-      plan: subscription.ai_service_plan, purpose: :top_up
+      plan: subscription.ai_service_plan, purpose: :top_up,
+      preview_signature: AiLeadEmployee::Subscriptions::PurchasePreview.signature_for(
+        account: account, preview: purchase_preview
+      )
     ).perform
     gate = Queue.new
     workers = [

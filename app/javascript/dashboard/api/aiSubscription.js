@@ -10,6 +10,10 @@ class AiSubscriptionAPI extends ApiClient {
   createRequest(data) {
     return axios.post(`${this.url}/requests`, data);
   }
+
+  previewPurchase(data) {
+    return axios.post(`${this.url}/preview`, data);
+  }
 }
 
 export default new AiSubscriptionAPI();

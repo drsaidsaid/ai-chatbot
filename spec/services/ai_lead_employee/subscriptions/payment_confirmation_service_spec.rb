@@ -10,8 +10,15 @@ RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
   let(:growth) { create(:ai_service_plan, code: 'growth', included_ai_replies: 30, monthly_price: 250_000) }
 
   def request_for(plan:, purpose:)
+    preview_signature = if purpose.to_s.in?(%w[top_up upgrade])
+                          preview = AiLeadEmployee::Subscriptions::PurchasePreview.new(
+                            account: account, plan: plan, purpose: purpose
+                          ).perform
+                          AiLeadEmployee::Subscriptions::PurchasePreview.signature_for(account: account, preview: preview)
+                        end
     AiLeadEmployee::Subscriptions::RequestService.new(
-      account: account, requested_by: admin, plan: plan, purpose: purpose
+      account: account, requested_by: admin, plan: plan, purpose: purpose,
+      preview_signature: preview_signature
     ).perform
   end
 
@@ -57,6 +64,20 @@ RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
     expect(AiLeadEmployee::AiSubscription.find_by!(account: account).top_up_ai_replies).to eq(5)
   end
 
+  it 'keeps confirmed payment evidence immutable after entitlement activation' do
+    request = request_for(plan: starter, purpose: 'new_subscription')
+    confirmation = confirm(request, reference: 'IMMUTABLE-PAYMENT', amount: 100_000)
+
+    expect do
+      confirmation.update!(amount: 1, currency: 'USD', payment_reference: 'REWRITTEN')
+    end.to raise_error(ActiveRecord::ReadOnlyRecord)
+    expect { confirmation.destroy! }.to raise_error(ActiveRecord::ReadOnlyRecord)
+    expect(confirmation.reload).to have_attributes(
+      amount: 100_000, currency: 'TZS', payment_reference: 'IMMUTABLE-PAYMENT',
+      purpose: 'new_subscription', confirmed_by_platform_app: platform_app
+    )
+  end
+
   it 'rejects a platform confirmation that changes an approved top-up package' do
     create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
     request = request_for(plan: starter, purpose: 'top_up')
@@ -84,6 +105,26 @@ RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
       paid_through_at: Time.zone.parse('2026-11-12T00:00:00Z')
     )
     expect(AiLeadEmployee::ReplyAllowance.summary(account: account)[:used_ai_replies]).to eq(1)
+  end
+
+  it 'keeps a prepaid future cycle on its paid plan until the renewal boundary' do
+    subscription = create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+    pending_upgrade = request_for(plan: growth, purpose: 'upgrade')
+    renewal = request_for(plan: starter, purpose: 'renewal')
+
+    confirm(renewal, reference: 'PREPAID-RENEWAL', amount: 100_000)
+
+    expect do
+      confirm(pending_upgrade, reference: 'PREPAID-UPGRADE', amount: 150_000)
+    end.to raise_error(described_class::InvalidConfirmation, /future renewal is already paid/)
+    expect do
+      request_for(plan: growth, purpose: 'upgrade')
+    end.to raise_error(AiLeadEmployee::Subscriptions::PurchasePreview::InvalidPreview, /future renewal is already paid/)
+    expect(subscription.reload).to have_attributes(
+      ai_service_plan: starter, included_ai_replies: 10,
+      paid_through_at: Time.zone.parse('2026-11-12T00:00:00Z')
+    )
+    expect(AiLeadEmployee::SubscriptionPaymentConfirmation.where(account: account).count).to eq(1)
   end
 
   it 'rejects a reused payment reference when entitlement details differ' do
@@ -120,6 +161,149 @@ RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
     end.to raise_error(described_class::InvalidConfirmation, /Subscription changed/)
 
     expect(request.reload).to be_pending
+  end
+
+  it 'supports multiple same-cycle upgrades using only each full plan-price difference' do
+    enterprise = create(:ai_service_plan, code: 'enterprise', included_ai_replies: 50, monthly_price: 400_000)
+    subscription = create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10,
+                                            top_up_ai_replies: 3)
+    original_renewal = subscription.renews_at
+
+    first = request_for(plan: growth, purpose: 'upgrade')
+    expect(first.quoted_amount).to eq(150_000)
+    confirm(first, reference: 'UPGRADE-GROWTH', amount: 150_000)
+
+    second = request_for(plan: enterprise, purpose: 'upgrade')
+    expect(second.quoted_amount).to eq(150_000)
+    confirm(second, reference: 'UPGRADE-ENTERPRISE', amount: 150_000)
+
+    expect(subscription.reload).to have_attributes(
+      ai_service_plan: enterprise, included_ai_replies: 50, top_up_ai_replies: 3, renews_at: original_renewal
+    )
+  end
+
+  it 'serializes concurrent usage and upgrade without losing or multiplying capacity' do
+    subscription = create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+    9.times do
+      usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: create(:ai_orchestration_intent, account: account))
+      usage.update!(status: :settled, settled_at: Time.current)
+    end
+    request = request_for(plan: growth, purpose: 'upgrade')
+    intent = create(:ai_orchestration_intent, account: account)
+    gate = Queue.new
+    workers = [
+      -> { AiLeadEmployee::ReplyAllowance.reserve!(intent: intent) },
+      -> { confirm(request, reference: 'CONCURRENT-UPGRADE', amount: 150_000) }
+    ].map do |operation|
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          gate.pop
+          operation.call
+        rescue StandardError => e
+          e
+        end
+      end
+    end
+    2.times { gate << true }
+
+    expect(workers).to all(satisfy { |worker| worker.join(10) == worker })
+    errors = workers.map(&:value).grep(StandardError)
+    expect(errors).to all(be_a(described_class::InvalidConfirmation).and(have_attributes(message: /Subscription changed/)))
+    if request.reload.pending?
+      fresh_request = request_for(plan: growth, purpose: 'upgrade')
+      confirm(fresh_request, reference: 'CONCURRENT-UPGRADE-REVIEWED', amount: 150_000)
+    end
+    expect(subscription.reload.ai_service_plan).to eq(growth)
+    expect(AiLeadEmployee::ReplyAllowance.summary(account: account)).to include(
+      reserved_ai_replies: 1, used_ai_replies: 9, remaining_ai_replies: 20
+    )
+  end
+
+  it 'allows only one stale snapshot to win during concurrent renewal and upgrade confirmations' do
+    subscription = create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+    renewal = request_for(plan: starter, purpose: 'renewal')
+    upgrade = request_for(plan: growth, purpose: 'upgrade')
+    gate = Queue.new
+    operations = [
+      -> { confirm(renewal, reference: 'CONCURRENT-RENEWAL', amount: 100_000) },
+      -> { confirm(upgrade, reference: 'CONCURRENT-UPGRADE-2', amount: 150_000) }
+    ].map do |operation|
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          gate.pop
+          operation.call
+        rescue StandardError => e
+          e
+        end
+      end
+    end
+    2.times { gate << true }
+
+    expect(operations).to all(satisfy { |worker| worker.join(10) == worker })
+    outcomes = operations.map(&:value)
+    expect(outcomes.grep(AiLeadEmployee::SubscriptionPaymentConfirmation).one?).to be(true)
+    expect(outcomes.grep(described_class::InvalidConfirmation).one?).to be(true)
+    expect(AiLeadEmployee::SubscriptionPaymentConfirmation.where(account: account).count).to eq(1)
+    expect(subscription.reload.ai_service_plan).to be_in([starter, growth])
+  end
+
+  it 'serializes concurrent usage and renewal without resetting usage or losing the renewal payment' do
+    subscription = create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+    9.times do
+      usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: create(:ai_orchestration_intent, account: account))
+      usage.update!(status: :settled, settled_at: Time.current)
+    end
+    renewal = request_for(plan: starter, purpose: 'renewal')
+    intent = create(:ai_orchestration_intent, account: account)
+    original_paid_through = subscription.paid_through_at
+    gate = Queue.new
+    workers = [
+      -> { AiLeadEmployee::ReplyAllowance.reserve!(intent: intent) },
+      -> { confirm(renewal, reference: 'CONCURRENT-USAGE-RENEWAL', amount: 100_000) }
+    ].map do |operation|
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          gate.pop
+          operation.call
+        rescue StandardError => e
+          e
+        end
+      end
+    end
+    2.times { gate << true }
+
+    expect(workers).to all(satisfy { |worker| worker.join(10) == worker })
+    errors = workers.map(&:value).grep(StandardError)
+    expect(errors).to all(be_a(described_class::InvalidConfirmation).and(have_attributes(message: /Subscription changed/)))
+    confirm(request_for(plan: starter, purpose: 'renewal'), reference: 'REVIEWED-USAGE-RENEWAL', amount: 100_000) if renewal.reload.pending?
+
+    expect(subscription.reload.paid_through_at).to be > original_paid_through
+    expect(AiLeadEmployee::ReplyAllowance.summary(account: account)).to include(
+      reserved_ai_replies: 1, used_ai_replies: 9, remaining_ai_replies: 0
+    )
+    expect(AiLeadEmployee::SubscriptionPaymentConfirmation.where(account: account).count).to eq(1)
+  end
+
+  it 'carries unused purchased extras across a paid renewal and monthly allowance reset' do
+    subscription = nil
+    travel_to Time.zone.parse('2026-09-20T08:00:00Z') do
+      subscription = create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10,
+                                              top_up_ai_replies: 5)
+      12.times do
+        usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: create(:ai_orchestration_intent, account: account))
+        usage.update!(status: :settled, settled_at: Time.current)
+      end
+      renewal = request_for(plan: starter, purpose: 'renewal')
+      confirm(renewal, reference: 'CARRY-RENEWAL', amount: 100_000)
+    end
+    travel_to Time.zone.parse('2026-10-12T00:00:01Z') do
+      summary = AiLeadEmployee::ReplyAllowance.summary(account: account)
+
+      expect(summary).to include(
+        included_ai_replies: 10, used_ai_replies: 0, top_up_ai_replies_remaining: 3,
+        remaining_ai_replies: 13
+      )
+    end
   end
 
   it 'does not create payment requests for a subscription awaiting review' do

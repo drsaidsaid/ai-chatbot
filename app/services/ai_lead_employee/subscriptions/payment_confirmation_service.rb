@@ -23,25 +23,31 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
   def perform
     raise InvalidConfirmation, 'Confirmation time is required' if confirmed_at.blank?
 
-    account.with_lock do
-      operator = PlatformApp.lock.find_by(id: platform_app&.id, finance_operations_enabled: true)
-      raise InvalidConfirmation, 'Platform app no longer has finance authority' unless operator
-
-      existing = AiLeadEmployee::SubscriptionPaymentConfirmation.find_by(account: account, payment_reference: payment_reference)
-      return ensure_same_confirmation!(existing) if existing
-
-      request.lock!
-      validate_confirmation!
-      confirmation = create_confirmation!
-      apply_entitlement!
-      request.update!(status: :confirmed, confirmed_at: confirmed_at)
-      confirmation
-    end
+    account.with_lock { confirm_under_account_lock }
   end
 
   private
 
   attr_reader :account, :request, :platform_app, :payment_reference, :amount, :currency, :confirmed_at, :granted_ai_replies
+
+  def confirm_under_account_lock
+    operator = current_operator!
+    subscription = AiLeadEmployee::AiSubscription.lock.find_by(account_id: account.id)
+    request.lock!
+    existing = AiLeadEmployee::SubscriptionPaymentConfirmation.find_by(account: account, payment_reference: payment_reference)
+    return ensure_same_confirmation!(existing) if existing
+
+    validate_confirmation!(subscription)
+    confirmation = create_confirmation!(operator)
+    apply_entitlement!(subscription)
+    request.update!(status: :confirmed, confirmed_at: confirmed_at)
+    confirmation
+  end
+
+  def current_operator!
+    PlatformApp.lock.find_by(id: platform_app&.id, finance_operations_enabled: true) ||
+      raise(InvalidConfirmation, 'Platform app no longer has finance authority')
+  end
 
   def ensure_same_confirmation!(existing)
     expected = [request.id, amount, currency]
@@ -51,19 +57,18 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     existing
   end
 
-  def validate_confirmation!
+  def validate_confirmation!(subscription)
     raise InvalidConfirmation, 'Payment reference is required' if payment_reference.blank?
     raise InvalidConfirmation, 'Confirmation time cannot be in the future' if confirmed_at.future?
     raise InvalidConfirmation, 'Subscription request belongs to another Business Account' unless request.account_id == account.id
     raise InvalidConfirmation, 'Subscription request is no longer pending' unless request.pending?
 
-    validate_current_entitlement!
+    validate_current_entitlement!(subscription)
     validate_payment_terms!
     validate_top_up_units! if request.purpose == 'top_up'
   end
 
-  def validate_current_entitlement!
-    subscription = AiLeadEmployee::AiSubscription.find_by(account_id: account.id)
+  def validate_current_entitlement!(subscription)
     if request.purpose == 'new_subscription'
       raise InvalidConfirmation, 'Business Account already has a subscription' if subscription
 
@@ -71,6 +76,10 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     end
 
     raise InvalidConfirmation, 'Business Account has no subscription' unless subscription
+
+    if request.purpose == 'upgrade' && subscription.future_cycle_prepaid?
+      raise InvalidConfirmation, 'A future renewal is already paid. Upgrade after the included credits renew.'
+    end
 
     validate_subscription_snapshot!(subscription)
 
@@ -115,11 +124,11 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     raise InvalidConfirmation, 'Confirmed top-up units do not match the approved package'
   end
 
-  def create_confirmation!
+  def create_confirmation!(operator)
     AiLeadEmployee::SubscriptionPaymentConfirmation.create!(
       account: account,
       ai_subscription_request: request,
-      confirmed_by_platform_app: platform_app,
+      confirmed_by_platform_app: operator,
       purpose: request.purpose,
       payment_reference: payment_reference,
       amount: amount,
@@ -129,12 +138,12 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     )
   end
 
-  def apply_entitlement!
-    send(PURPOSE_APPLIERS.fetch(request.purpose))
+  def apply_entitlement!(subscription)
+    send(PURPOSE_APPLIERS.fetch(request.purpose), subscription)
   end
 
-  def activate_subscription!
-    raise InvalidConfirmation, 'Business Account already has a subscription' if AiLeadEmployee::AiSubscription.exists?(account_id: account.id)
+  def activate_subscription!(subscription)
+    raise InvalidConfirmation, 'Business Account already has a subscription' if subscription
 
     zone = reporting_zone
     period_start = confirmed_at.in_time_zone(zone)
@@ -151,11 +160,9 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     )
   end
 
-  def renew_subscription!
-    subscription = required_subscription!
-    subscription.with_lock do
-      confirmed_at < subscription.renews_at ? prepay_renewal!(subscription) : activate_late_renewal!(subscription)
-    end
+  def renew_subscription!(subscription)
+    subscription = required_subscription!(subscription)
+    confirmed_at < subscription.renews_at ? prepay_renewal!(subscription) : activate_late_renewal!(subscription)
   end
 
   def prepay_renewal!(subscription)
@@ -175,23 +182,19 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     subscription.resolve_alerts!
   end
 
-  def upgrade_subscription!
-    subscription = required_subscription!
-    subscription.with_lock do
-      subscription.update!(ai_service_plan: request.ai_service_plan,
-                           included_ai_replies: request.ai_service_plan.included_ai_replies, action_required_alerted_at: nil)
-      rebalance_current_period_top_ups!(subscription)
-      subscription.resolve_alerts!
-    end
+  def upgrade_subscription!(subscription)
+    subscription = required_subscription!(subscription)
+    subscription.update!(ai_service_plan: request.ai_service_plan,
+                         included_ai_replies: request.ai_service_plan.included_ai_replies, action_required_alerted_at: nil)
+    rebalance_current_period_top_ups!(subscription)
+    subscription.resolve_alerts!
   end
 
-  def add_top_up!
-    subscription = required_subscription!
-    subscription.with_lock do
-      subscription.update!(top_up_ai_replies: subscription.top_up_ai_replies + confirmed_units,
-                           action_required_alerted_at: nil)
-      subscription.resolve_alerts!
-    end
+  def add_top_up!(subscription)
+    subscription = required_subscription!(subscription)
+    subscription.update!(top_up_ai_replies: subscription.top_up_ai_replies + confirmed_units,
+                         action_required_alerted_at: nil)
+    subscription.resolve_alerts!
   end
 
   def rebalance_current_period_top_ups!(subscription)
@@ -208,9 +211,8 @@ class AiLeadEmployee::Subscriptions::PaymentConfirmationService
     request.requested_ai_replies if request.purpose == 'top_up'
   end
 
-  def required_subscription!
-    AiLeadEmployee::AiSubscription.find_by(account_id: account.id) ||
-      raise(InvalidConfirmation, 'Business Account has no subscription')
+  def required_subscription!(subscription)
+    subscription || raise(InvalidConfirmation, 'Business Account has no subscription')
   end
 
   def reporting_zone

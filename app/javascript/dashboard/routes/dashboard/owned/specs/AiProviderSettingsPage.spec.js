@@ -6,6 +6,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
+    locale: { value: 'en' },
     t: (key, params = {}) => {
       const values = Object.values(params);
       return values.length ? `${key} ${values.join(' ')}` : key;
@@ -18,7 +19,7 @@ vi.mock('dashboard/api/aiProviderConnection', () => ({
 }));
 
 vi.mock('dashboard/api/aiSubscription', () => ({
-  default: { get: vi.fn(), createRequest: vi.fn() },
+  default: { get: vi.fn(), previewPurchase: vi.fn(), createRequest: vi.fn() },
 }));
 
 describe('AiProviderSettingsPage', () => {
@@ -52,6 +53,7 @@ describe('AiProviderSettingsPage', () => {
           remaining_ai_replies: 2198,
           usage_percentage: 26.7,
           renewal_date: '2026-10-12T08:00:00Z',
+          reporting_timezone: 'Africa/Dar_es_Salaam',
           automation_allowed: true,
         },
         available_plans: [],
@@ -98,10 +100,17 @@ describe('AiProviderSettingsPage', () => {
     expect(wrapper.text()).toContain(
       'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.RECONCILIATION_REQUIRED 1'
     );
-    expect(wrapper.text()).toContain('2026-10-12T08:00:00Z');
+    expect(wrapper.text()).toContain('Oct 12, 2026, 11:00 GMT+3');
+    expect(wrapper.text()).not.toContain('2026-10-12T08:00:00Z');
     expect(wrapper.text()).toContain('Billed directly by Meta');
     expect(wrapper.text()).toContain(
       'Billed separately by the advertising platform'
+    );
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.NO_AUTOMATIC_CHARGES'
+    );
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.MANUAL_REVIEW'
     );
   });
 
@@ -197,7 +206,7 @@ describe('AiProviderSettingsPage', () => {
     );
   });
 
-  it('shows a durable owner alert and requests only the approved top-up package', async () => {
+  it('shows a durable owner alert and previews the approved top-up before requesting payment', async () => {
     aiSubscriptionAPI.get.mockResolvedValue({
       data: {
         subscription: {
@@ -207,6 +216,8 @@ describe('AiProviderSettingsPage', () => {
           included_ai_replies: 100,
           remaining_ai_replies: 0,
           usage_percentage: 100,
+          renewal_date: '2026-10-12T08:00:00Z',
+          reporting_timezone: 'Africa/Dar_es_Salaam',
           automation_allowed: false,
         },
         available_plans: [
@@ -225,6 +236,32 @@ describe('AiProviderSettingsPage', () => {
         separate_charges: {},
       },
     });
+    aiSubscriptionAPI.previewPurchase.mockResolvedValue({
+      data: {
+        purpose: 'top_up',
+        plan_id: 4,
+        plan_name: 'Starter',
+        amount_due: '75000.00',
+        currency: 'TZS',
+        requested_ai_replies: 50,
+        used_ai_replies: 100,
+        awaiting_delivery_ai_replies: 0,
+        current_remaining_ai_replies: 0,
+        resulting_included_ai_replies: 100,
+        resulting_included_ai_replies_remaining: 0,
+        resulting_top_up_ai_replies_remaining: 50,
+        resulting_ai_replies_remaining: 50,
+        renews_at: '2026-10-12T08:00:00Z',
+        reporting_timezone: 'Africa/Dar_es_Salaam',
+        preview_signature: 'signed-top-up-preview',
+        unit_price_comparison: {
+          comparison_plan_name: 'Growth',
+          savings_percentage: 44.4,
+          included_unit_price: '8333.33',
+          top_up_unit_price: '15000.00',
+        },
+      },
+    });
     aiSubscriptionAPI.createRequest.mockResolvedValue({ data: { id: 13 } });
     const wrapper = mount(AiProviderSettingsPage);
     await flushPromises();
@@ -238,9 +275,27 @@ describe('AiProviderSettingsPage', () => {
     await topUpButton.trigger('click');
     await flushPromises();
 
+    expect(aiSubscriptionAPI.previewPurchase).toHaveBeenCalledWith({
+      ai_service_plan_id: 4,
+      purpose: 'top_up',
+    });
+    expect(aiSubscriptionAPI.createRequest).not.toHaveBeenCalled();
+    expect(wrapper.get('[data-testid="purchase-preview"]').text()).toContain(
+      'TZS 75,000.00'
+    );
+    expect(wrapper.get('[data-testid="purchase-preview"]').text()).toContain(
+      '44.4'
+    );
+
+    await wrapper
+      .get('[data-testid="confirm-purchase-request"]')
+      .trigger('click');
+    await flushPromises();
+
     expect(aiSubscriptionAPI.createRequest).toHaveBeenCalledWith({
       ai_service_plan_id: 4,
       purpose: 'top_up',
+      preview_signature: 'signed-top-up-preview',
     });
   });
 
@@ -298,5 +353,168 @@ describe('AiProviderSettingsPage', () => {
     expect(wrapper.text()).toContain('Valid Growth');
     expect(wrapper.text()).not.toContain('Cheap Large');
     expect(wrapper.text()).not.toContain('USD Large');
+  });
+
+  it('shows the exact full-cycle upgrade difference and resulting balance before payment instructions', async () => {
+    aiSubscriptionAPI.get.mockResolvedValue({
+      data: {
+        subscription: {
+          status: 'active',
+          plan_id: 4,
+          plan_name: 'Starter',
+          included_ai_replies: 1000,
+          used_ai_replies: 800,
+          remaining_ai_replies: 200,
+          usage_percentage: 80,
+          renewal_date: '2026-10-12T08:00:00Z',
+          reporting_timezone: 'Africa/Dar_es_Salaam',
+          automation_allowed: true,
+        },
+        available_plans: [
+          {
+            id: 4,
+            name: 'Starter',
+            currency: 'TZS',
+            monthly_price: '100000.00',
+            included_ai_replies: 1000,
+            top_up_price: '75000.00',
+            top_up_ai_replies: 500,
+          },
+          {
+            id: 5,
+            name: 'Growth',
+            currency: 'TZS',
+            monthly_price: '250000.00',
+            included_ai_replies: 3000,
+          },
+        ],
+        alerts: [],
+        pending_requests: [],
+        separate_charges: {},
+      },
+    });
+    aiSubscriptionAPI.previewPurchase.mockResolvedValue({
+      data: {
+        purpose: 'upgrade',
+        plan_id: 5,
+        plan_name: 'Growth',
+        currency: 'TZS',
+        current_monthly_price: '100000.00',
+        target_monthly_price: '250000.00',
+        amount_due: '150000.00',
+        used_ai_replies: 800,
+        awaiting_delivery_ai_replies: 0,
+        current_remaining_ai_replies: 200,
+        resulting_included_ai_replies: 3000,
+        resulting_included_ai_replies_remaining: 2200,
+        resulting_top_up_ai_replies_remaining: 0,
+        resulting_ai_replies_remaining: 2200,
+        renews_at: '2026-10-12T08:00:00Z',
+        reporting_timezone: 'Africa/Dar_es_Salaam',
+        preview_signature: 'signed-upgrade-preview',
+      },
+    });
+
+    const wrapper = mount(AiProviderSettingsPage);
+    await flushPromises();
+    const upgradeButton = wrapper
+      .findAllComponents(Button)
+      .find(button => button.props('label').includes('REQUEST_UPGRADE'));
+    await upgradeButton.trigger('click');
+    await flushPromises();
+
+    const preview = wrapper.get('[data-testid="purchase-preview"]');
+    expect(preview.text()).toContain('TZS 100,000.00');
+    expect(preview.text()).toContain('TZS 250,000.00');
+    expect(preview.text()).toContain('TZS 150,000.00');
+    expect(preview.text()).toContain('2200');
+    expect(preview.text()).toContain('Oct 12, 2026, 11:00 GMT+3');
+    expect(aiSubscriptionAPI.createRequest).not.toHaveBeenCalled();
+  });
+
+  it('tells the admin to wait for renewal when a future cycle is already paid', async () => {
+    aiSubscriptionAPI.get.mockResolvedValue({
+      data: {
+        subscription: {
+          status: 'active',
+          plan_id: 4,
+          plan_name: 'Starter',
+          included_ai_replies: 100,
+          remaining_ai_replies: 20,
+          usage_percentage: 80,
+          automation_allowed: true,
+        },
+        available_plans: [
+          {
+            id: 4,
+            name: 'Starter',
+            currency: 'TZS',
+            monthly_price: '100000.00',
+            included_ai_replies: 100,
+          },
+          {
+            id: 5,
+            name: 'Growth',
+            currency: 'TZS',
+            monthly_price: '250000.00',
+            included_ai_replies: 300,
+          },
+        ],
+        alerts: [],
+        pending_requests: [],
+        separate_charges: {},
+      },
+    });
+    aiSubscriptionAPI.previewPurchase.mockRejectedValue({
+      response: { data: { error: 'upgrade_available_after_renewal' } },
+    });
+    const wrapper = mount(AiProviderSettingsPage);
+    await flushPromises();
+
+    const upgradeButton = wrapper
+      .findAllComponents(Button)
+      .find(button => button.props('label').includes('REQUEST_UPGRADE'));
+    await upgradeButton.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.UPGRADE_AFTER_RENEWAL'
+    );
+    expect(wrapper.text()).not.toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.REQUEST_FAILED'
+    );
+  });
+
+  it('explains that purchased extras remain recorded while renewal is due', async () => {
+    aiSubscriptionAPI.get.mockResolvedValue({
+      data: {
+        subscription: {
+          status: 'renewal_due',
+          plan_id: 4,
+          plan_name: 'Starter',
+          preserved_top_up_ai_replies: 25,
+          automation_allowed: false,
+        },
+        available_plans: [
+          {
+            id: 4,
+            name: 'Starter',
+            currency: 'TZS',
+            monthly_price: '100000.00',
+            included_ai_replies: 100,
+          },
+        ],
+        alerts: [],
+        pending_requests: [],
+        separate_charges: {},
+      },
+    });
+
+    const wrapper = mount(AiProviderSettingsPage);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.PRESERVED_EXTRAS 25'
+    );
   });
 });
