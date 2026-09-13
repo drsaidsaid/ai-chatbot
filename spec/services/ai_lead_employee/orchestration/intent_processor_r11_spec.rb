@@ -314,6 +314,22 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect_followup_classification!(followup, 'what does Health and Wellness include')
   end
 
+  it 'preserves a conjunction-bearing configured name after a delimiter-free acknowledgment' do
+    conversation.update!(offer: create_offer(name: 'Growth na Wellness'))
+    triggering_message.update!(content: 'Je, mnakubali benki?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, followup_intent = followup_records('Ndiyo Growth na Wellness inajumuisha nini')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to be_blocked
+    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+    expect(followup_intent.decision.fetch('scope_resolution')).to include(
+      'question' => 'Growth na Wellness inajumuisha nini', 'message_id' => followup.id, 'language' => 'swahili'
+    )
+  end
+
   it 'sets the boundary from an extracted compound third-party request' do
     conversation.update!(offer: create_offer(name: 'Pulse'))
     triggering_message.update!(content: 'Can I book a flight?')
@@ -399,6 +415,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   {
     'Yes what does Pulse include?' => 'Pulse',
     'Yes, and does Pulse include coaching' => 'Pulse',
+    'Yes, and does Growth Plan include coaching' => 'Growth Plan',
     'Ndiyo Pulse inajumuisha nini' => 'Pulse',
     'Ndiyo Bei ya Pulse ni nini' => 'Pulse',
     'Ndiyo, na Online Profits inajumuisha nini' => 'Online Profits'
@@ -441,6 +458,20 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
   end
 
+  ['Maybe. I mean Pulse.', 'I was not sure; now I mean Pulse'].each do |content|
+    it "uses a configured correction after a sentence or corrective boundary: #{content}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      correction_intent = process_followup(content, expected_scope: triggering_message.content)
+
+      expect(correction_intent.reload).to be_blocked
+      expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+    end
+  end
+
   it 'accepts a configured correction with a determiner and scope noun' do
     conversation.update!(offer: create_offer(name: 'Pulse'))
     triggering_message.update!(content: 'Can I book a flight?')
@@ -465,8 +496,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(denial_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
-  ['Yes, actually no', 'Yes, actually no thanks', 'I mean Pulse, but no', 'Ndiyo, lakini hapana',
-   'Ndiyo, lakini hapana asante'].each do |content|
+  ['Yes, actually no', 'Yes, actually no thanks', 'Yes, actually no thank you', 'I mean Pulse, but no',
+   'Ndiyo, lakini hapana', 'Ndiyo, lakini hapana asante', 'Sijui. Hapana.'].each do |content|
     it "uses a trailing bare denial as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')
@@ -485,7 +516,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     end
   end
 
-  ['No, actually yes', 'No, actually yes please', 'Hapana, lakini ndiyo', 'Hapana, lakini ndiyo tafadhali'].each do |content|
+  ['No, actually yes', 'No, actually yes please', 'No, actually yes thank you', 'Hapana, lakini ndiyo',
+   'Hapana, lakini ndiyo tafadhali', 'Maybe. Yes.'].each do |content|
     it "uses a trailing bare confirmation as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')

@@ -151,11 +151,12 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
 
   ['Which plan fits me', 'Who teaches the course', 'Will you deliver to Zanzibar', 'May I pay by card',
    'Does Pulse include coaching', 'Does Pulse integrate with HubSpot', 'Can Growth Academy help me',
-   'Is Pulse available', 'Are Growth Academy classes recorded',
+   'Does Growth Plan include coaching', 'will Pulse work', 'Is Pulse available', 'Are Growth Academy classes recorded',
    'Jinsi gani huduma hii inafanya kazi', 'Lini kozi inaanza', 'Ni lini kozi inaanza',
    'Mnasafirisha hadi Arusha', 'Mna huduma Zanzibar', 'Ninaweza kulipa kwa M-Pesa', 'Naweza kulipa kwa M-Pesa',
    'Wapi ofisi yenu', 'Ni wapi ofisi yenu', 'Growth Coaching inajumuisha nini', 'Kozi ya Pulse inaanza lini',
-   'Kozi inaanza siku gani', 'Huduma hii ni ipi', 'Huduma yetu ya Growth Coaching inaanza lini',
+   'Kozi inaanza siku gani', 'Kozi ina vipindi vingapi', 'Huduma hii ni ipi',
+   'Huduma yetu ya Growth Coaching inaanza lini',
    'Ofisi yenu iko wapi'].each do |message|
     it "recognizes an unpunctuated English or Swahili question clause: #{message}" do
       expect(described_class.new(message: message).perform.intent).to eq(:business_question)
@@ -168,14 +169,16 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
 
   ['I know how it works', 'I already explained what happened', 'They asked Pulse inajumuisha nini',
    'Alieleza Kozi ya Pulse inaanza lini', 'Walisema Pulse inajumuisha nini',
-   'Amesema Pulse inajumuisha nini', 'Tumeeleza Kozi ya Pulse inaanza lini'].each do |message|
+   'Amesema Pulse inajumuisha nini', 'Tumeeleza Kozi ya Pulse inaanza lini',
+   'Asha aliniambia kozi inaanza lini', 'Walijua Pulse inaanza lini'].each do |message|
     it "does not treat an embedded question word as a request: #{message}" do
       expect(described_class.new(message: message).perform.intent).to eq(:generic_safe)
     end
   end
 
   ['Will Smith Academy opens tomorrow', 'May Consulting closes today', 'May Consulting will offer support',
-   'May Consulting plans to offer support',
+   'May Consulting plans to offer support', 'May Consulting services include support',
+   'Will Smith Academy classes offer coaching', 'Will Smith Academy students work hard',
    'Unavailable seats are listed', 'Unable customers receive support'].each do |message|
     it "does not mistake a name or English declarative fragment for a modal question: #{message}" do
       expect(described_class.new(message: message).perform.intent).not_to eq(:business_question)

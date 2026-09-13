@@ -244,19 +244,25 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def contrast_absent_between?(first, last)
-    intervening_text = normalized_message[first...last]
-    intervening_text.exclude?(' but ') && intervening_text.exclude?(' lakini ')
+    intervening_text = polarity_message[first...last]
+    intervening_text.exclude?(' but ') && intervening_text.exclude?(' lakini ') &&
+      intervening_text.exclude?(' actually ') && intervening_text.exclude?(' now ') &&
+      intervening_text.exclude?(' however ') && intervening_text.exclude?(' clauseboundary ')
+  end
+
+  def polarity_message
+    @polarity_message ||= normalize(message.gsub(/[.;!?]+\s*(?=\S)/, ' clauseboundary '))
   end
 
   def polarity_events(patterns, polarity)
     patterns.flat_map do |pattern|
-      normalized_message.to_enum(:scan, pattern).map { [Regexp.last_match.begin(0), polarity] }
+      polarity_message.to_enum(:scan, pattern).map { [Regexp.last_match.begin(0), polarity] }
     end
   end
 
   def denial_patterns
     [
-      /\b(?:no|hapana)(?: thanks| please| asante| tafadhali)?\z/,
+      /\b(?:no|hapana)(?: thanks| thank you| please| asante| tafadhali)?\z/,
       /\b(?:(?:do not|don t) mean|not asking about|not about|not referring to) (?:this |your |the )?#{scope_noun_pattern}\b/,
       /\b(?:sio|si) kuhusu #{swahili_scope_noun_pattern}\b/,
       /\bsimaanishi #{swahili_scope_noun_pattern}\b/,
@@ -271,7 +277,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def affirmation_patterns
-    [/\b(?:yes|okay|sure|correct|exactly|indeed|ndiyo|ndio|sawa|naam|ndivyo)(?: thanks| please| asante| tafadhali)?\z/]
+    [/\b(?:yes|okay|sure|correct|exactly|indeed|ndiyo|ndio|sawa|naam|ndivyo)(?: thanks| thank you| please| asante| tafadhali)?\z/]
   end
 
   def uncertainty_pattern

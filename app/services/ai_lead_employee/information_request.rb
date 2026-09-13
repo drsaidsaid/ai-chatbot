@@ -4,7 +4,7 @@ class AiLeadEmployee::InformationRequest
   GREETING_TOKENS = %w[hello hi hey habari mambo].freeze
   POLITE_TOKENS = %w[please tafadhali].freeze
   CONNECTIVE_TOKENS = %w[and but then na lakini].freeze
-  QUESTION_WORDS = %w[what how when where why which who gani ipi je jinsi lini nini wapi].freeze
+  QUESTION_WORDS = %w[what how when where why which who gani ipi je jinsi lini ngapi nini wapi].freeze
   ENGLISH_AUXILIARIES = %w[can could do does is are may should will would].freeze
   ENGLISH_SUBJECTS = %w[i you we they he she it your our this that the there].freeze
   ENGLISH_REQUEST_VERBS = %w[
@@ -13,14 +13,14 @@ class AiLeadEmployee::InformationRequest
   ENGLISH_COPULAR_PREDICATES = %w[
     available closed eligible included open offered recorded required supported unavailable
   ].freeze
-  NON_SUBJECT_TOKENS = (ENGLISH_AUXILIARIES + %w[expect expects intend intends plan planned plans to]).freeze
+  NON_SUBJECT_TOKENS = (ENGLISH_AUXILIARIES + %w[to]).freeze
   ACKNOWLEDGMENT_TOKENS = %w[yes okay sure correct exactly indeed ndiyo ndio sawa naam ndivyo].freeze
   REPORTED_SPEECH_TOKENS = %w[
     asked asks explained knew know reported reports said says told
   ].freeze
-  SWAHILI_REPORTING_STEM = /(?:eleza|sema|uliza)\z/
-  SWAHILI_STARTERS = %w[gani ipi je jinsi lini mna naweza ninaweza nini unaweza wapi].freeze
-  SWAHILI_LANGUAGE_TOKENS = (SWAHILI_STARTERS + %w[bei huduma inaanza inajumuisha iko kozi siku]).freeze
+  SWAHILI_REPORTING_STEM = /(?:ambia|eleza|jua|sema|uliza)\z/
+  SWAHILI_STARTERS = %w[gani ipi je jinsi lini mna naweza ngapi ninaweza nini unaweza wapi].freeze
+  SWAHILI_LANGUAGE_TOKENS = (SWAHILI_STARTERS + %w[bei huduma ina inaanza inajumuisha iko kozi siku]).freeze
 
   def self.call(message)
     new(message).call
@@ -47,7 +47,7 @@ class AiLeadEmployee::InformationRequest
   end
 
   def substantive_followup
-    compound_clauses.drop(1).find { |clause| request_clause?(clause) } || acknowledgment_followup
+    acknowledgment_followup || compound_clauses.drop(1).find { |clause| request_clause?(clause) }
   end
 
   private
@@ -61,11 +61,11 @@ class AiLeadEmployee::InformationRequest
   def request_clause?(clause)
     value = without_preamble(normalize(clause))
     tokens = value.split
-    direct_question?(value, tokens) || terminal_question?(value)
+    direct_question?(value, tokens, clause) || terminal_question?(value)
   end
 
-  def direct_question?(value, tokens)
-    QUESTION_WORDS.include?(tokens.first) || english_auxiliary_question?(tokens) ||
+  def direct_question?(value, tokens, raw_clause)
+    QUESTION_WORDS.include?(tokens.first) || english_auxiliary_question?(tokens, raw_clause) ||
       SWAHILI_STARTERS.include?(tokens.first) || value.match?(/\Amna[[:alpha:]]{3,}\b/) ||
       value.match?(/\A(?:tell me|explain|describe|niambie)\b/) || value.match?(/\Ani (?:jinsi|lini|nini|wapi)\b/)
   end
@@ -77,7 +77,7 @@ class AiLeadEmployee::InformationRequest
 
   def swahili_terminal_question?(value)
     match = value.match(
-      /\A(?<subject>.+\s)(?:(?:ina|una|mna|wana)[[:alpha:]]+|iko|ni)\b.*\b(?:gani|ipi|nini|lini|wapi)\z/
+      /\A(?<subject>.+\s)(?:(?:ina|una|mna|wana)[[:alpha:]]*|iko|ni)\b.*\b(?:gani|ipi|lini|[[:alpha:]]*ngapi|nini|wapi)\z/
     )
     match && significant_reported_speech_absent?(match[:subject])
   end
@@ -87,16 +87,27 @@ class AiLeadEmployee::InformationRequest
     !tokens.intersect?(REPORTED_SPEECH_TOKENS) && tokens.none? { |token| token.match?(SWAHILI_REPORTING_STEM) }
   end
 
-  def english_auxiliary_question?(tokens)
+  def english_auxiliary_question?(tokens, raw_clause)
     return false unless ENGLISH_AUXILIARIES.include?(tokens.first)
     return true if ENGLISH_SUBJECTS.include?(tokens.second)
 
-    predicates = tokens.first.in?(%w[is are]) ? ENGLISH_COPULAR_PREDICATES : ENGLISH_REQUEST_VERBS
-    predicate_index = tokens.each_index.drop(2).find { |index| predicates.include?(tokens[index]) }
-    return false unless predicate_index
+    predicate_index = english_predicate_index(tokens)
+    return false unless predicate_index && predicate_index <= 5
+    return false if ambiguous_capitalized_name?(raw_clause, tokens.first, predicate_index)
 
     subject_tokens = tokens[1...predicate_index]
     subject_tokens.present? && !subject_tokens.intersect?(NON_SUBJECT_TOKENS)
+  end
+
+  def english_predicate_index(tokens)
+    predicates = tokens.first.in?(%w[is are]) ? ENGLISH_COPULAR_PREDICATES : ENGLISH_REQUEST_VERBS
+    tokens.each_index.drop(2).find { |index| predicates.include?(tokens[index]) }
+  end
+
+  def ambiguous_capitalized_name?(raw_clause, auxiliary, predicate_index)
+    return false unless auxiliary.in?(%w[may will]) && predicate_index > 2
+
+    raw_clause.to_s.strip.scan(/[[:alpha:]'-]+/).first(2).all? { |word| word.match?(/\A[[:upper:]]/) }
   end
 
   def compound_clauses
@@ -115,7 +126,8 @@ class AiLeadEmployee::InformationRequest
 
   def acknowledgment_followup
     match = message.match(/\A\s*(?:#{ACKNOWLEDGMENT_TOKENS.join('|')})\b[\s,;:—–-]+(?<followup>.+)\z/i)
-    followup = match&.[](:followup)&.strip
+    followup = match&.[](:followup)&.strip&.sub(/\A(?:and|but|then|na|lakini)\b[\s,;:—–-]*/i, '')
+    followup = followup&.sub(/[.!?]+\z/, '')
     followup if followup.present? && request_clause?(followup)
   end
 
