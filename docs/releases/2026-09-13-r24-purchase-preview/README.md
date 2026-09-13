@@ -4,7 +4,7 @@ Ticket: [R24 / issue 40](https://github.com/drsaidsaid/ai-chatbot/issues/40)
 
 Integrated blocker baseline: `c4b286899cf0ffbbfc4fb1f693dba202ef9af5c2`
 
-Verified source candidate: `c758355a8d60bd6f9b07086e35248c785432715d`
+Verified source candidate: `6d10530c449b203cd3603a1d68e5db9b4e8dcc89`
 
 Branch: `codex/r24-billing-clarity`
 
@@ -68,12 +68,16 @@ or a subsequently allocated browser revalidation.
   desktop/phone-fluid layout primitives, preview-before-request, exact
   money/difference/balance, locale/timezone date rendering, computed savings, preserved-extra guidance,
   and the wait-until-renewal action.
+- Bounded follow-up request suite: **17 examples, 0 failures**. The added
+  regression first failed with the generic request error, then passed after the
+  typed prepaid-cycle result was preserved through request creation. It covers
+  upgrade preview, intervening early renewal payment, and upgrade request.
 - Changed Ruby files: focused RuboCop checks passed with no offences.
 - Changed JavaScript/Vue files: focused ESLint checks passed with no errors.
 - The prior source candidate `8c97b7a45cc32cf134f25b775f15bec0e751acfd`
   completed the production Vite build (**5,085 modules transformed**) and browser
   acceptance. Those results do not attest the corrected source candidate.
-- Build and browser revalidation for `c758355a8d60bd6f9b07086e35248c785432715d`
+- Build and browser revalidation for `6d10530c449b203cd3603a1d68e5db9b4e8dcc89`
   remain pending explicit allocation, as requested by the coordinator.
 - `git diff --check`, Ruby syntax checks and English locale JSON parsing passed.
 - The normal repository pre-commit hook passed for every source commit.
@@ -89,6 +93,13 @@ closes them with the single lock scope, the explicit prepaid-cycle product guard
 and a complete signed comparison snapshot described above. Remaining smell notes
 about purpose strings and serializer reuse are non-blocking refactoring
 opportunities within the existing R23 domain.
+
+The subsequent specification review found one presentation-path residual: when
+an early renewal was confirmed after an upgrade preview, request creation safely
+blocked the upgrade but collapsed the typed result to a generic error. This
+candidate preserves that typed result through `RequestService` and the request
+controller, so both preview-time and request-time rejection produce the same
+stable wait-until-renewal action used by the existing UI.
 
 ## Browser acceptance
 
