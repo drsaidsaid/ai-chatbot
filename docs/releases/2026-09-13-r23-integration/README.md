@@ -2,7 +2,7 @@
 
 Base: fbee83c96afa58ab1610a0f480b34eb04b1e5ef8 (accepted R09).
 Candidate: db255c4bae90a3a613e1d08341180dde52978155 (R23 evidence tip).
-Acceptance is complete locally; normal merge commit/hooks, push and issue closure remain. No deployment.
+Acceptance is complete locally. Normal merge commit and hooks passed; push and issue closure follow. No deployment.
 
 The combination preserves R09 Offer authority and delivery lifecycle plus R23
 logical reply reservations, receipt-based settlement, and manual finance controls.
@@ -39,7 +39,7 @@ WebMock test boundaries, not live customer sends.
 
 ## Still required
 
-Normal merge commit/hooks, evidence verification, push and issue closure.
+Push and issue closure; source/evidence hashes are verified.
 Forward upgrade and combined frontend/build/browser acceptance now passed as recorded below.
 
 
@@ -54,3 +54,10 @@ The checked-in combined schema is now the actual resulting Rails dump. This
 removes a stray `expected_delivery_parts` column from the provider-usage table
 that existed only in the candidate schema, not its migrations; logical reply
 usage retains its intended expected-delivery-parts field and constraint.
+
+
+Final integration source commit: 2a528cbf9d121eafb471e3b06e9dfddd2d96c893. The normal hook ran52 Ruby-file checks
+and frontend staged lint, passing after correcting two nonfunctional style issues.
+Source hashes cover the combined changed runtime/test/release-script files.
+The release scripts use only the dedicated synthetic database; all three R23
+coordinator databases and preview/Redis processes were removed after acceptance.
