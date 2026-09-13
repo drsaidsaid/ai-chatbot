@@ -502,7 +502,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   ['Yes, what does Pulse include and what does Netflix cost?',
-   'What does Growth and Wellness include, and what does Netflix cost?'].each do |content|
+   'What does Growth and Wellness include, and what does Netflix cost?',
+   'Yes, what does Pulse include and what does Netflix cost and what does Pulse cover?'].each do |content|
     it "isolates a later external request after a configured request: #{content}" do
       offer_name = content.include?('Growth and Wellness') ? 'Growth and Wellness' : 'Pulse'
       conversation.update!(offer: create_offer(name: offer_name))
@@ -604,8 +605,9 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(denial_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
-  ['Yes, actually no', 'Yes, actually no thanks', 'Yes, actually no thank you', 'I mean Pulse, but no',
-   'Ndiyo, lakini hapana', 'Ndiyo, lakini hapana asante', 'Sijui. Hapana.'].each do |content|
+  ['Yes, actually no', 'Yes, actually no thanks', 'Yes, actually no thank you', 'Yes. Actually no. Thank you.',
+   'I mean Pulse, but no', 'Ndiyo, lakini hapana', 'Ndiyo, lakini hapana asante', 'Ndiyo. Hapana. Asante.',
+   'Sijui. Hapana.'].each do |content|
     it "uses a trailing bare denial as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')
@@ -625,7 +627,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   ['No, actually yes', 'No, actually yes please', 'No, actually yes thank you', 'Hapana, lakini ndiyo',
-   'Hapana, lakini ndiyo tafadhali', 'Maybe. Yes.'].each do |content|
+   'Hapana, lakini ndiyo tafadhali', 'Maybe. Yes.', 'Maybe. Yes. Thank you.', 'Sijui. Ndiyo. Asante.'].each do |content|
     it "uses a trailing bare confirmation as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')

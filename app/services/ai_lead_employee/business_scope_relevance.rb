@@ -255,7 +255,10 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def polarity_message
-    @polarity_message ||= normalize(message.gsub(/(?:[.;!?—–]+|\n+|\s+-\s+)\s*(?=\S)/, ' clauseboundary '))
+    @polarity_message ||= begin
+      value = normalize(message.gsub(/(?:[.;!?—–]+|\n+|\s+-\s+)\s*(?=\S)/, ' clauseboundary '))
+      value.sub(/ clauseboundary (?:thanks|thank you|please|asante|tafadhali)\z/, '')
+    end
   end
 
   def polarity_events(patterns, polarity)

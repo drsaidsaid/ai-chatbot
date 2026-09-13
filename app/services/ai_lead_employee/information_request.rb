@@ -151,15 +151,22 @@ class AiLeadEmployee::InformationRequest
   end
 
   def split_request_followup(clause)
-    clause.to_enum(:scan, /\b(?:and|but|then|na|lakini)\b/i).each do
+    boundaries = request_connector_boundaries(clause)
+    return [clause] if boundaries.empty?
+
+    starts = [0, *boundaries.map { |boundary| boundary.end(0) }]
+    ends = [*boundaries.map { |boundary| boundary.begin(0) }, clause.length]
+    starts.zip(ends).map { |first, last| clause[first...last].strip }
+  end
+
+  def request_connector_boundaries(clause)
+    clause.to_enum(:scan, /\b(?:and|but|then|na|lakini)\b/i).filter_map do
       boundary = Regexp.last_match
       next if configured_name_boundary?(clause, boundary)
 
       followup = clause[boundary.end(0)..].to_s.strip
-      return [clause[0...boundary.begin(0)].strip, followup] if request_clause?(followup)
+      boundary if request_clause?(followup)
     end
-
-    [clause]
   end
 
   def configured_name_boundary?(clause, boundary)
