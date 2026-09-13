@@ -32,10 +32,10 @@ class AiLeadEmployee::Orchestration::ProviderFailureHandler
       blocked_reason: block_reasons[:provider_failure],
       failure_class: failure.failure_class,
       review_request: review_result.request,
-      decision: {
+      decision: intent.decision.merge(
         status: 'provider_failed',
         failure_class: failure.failure_class
-      },
+      ),
       blocked_at: Time.current
     }
   end

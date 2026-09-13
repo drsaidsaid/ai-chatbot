@@ -150,15 +150,17 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
   end
 
   ['Which plan fits me', 'Who teaches the course', 'Will you deliver to Zanzibar', 'May I pay by card',
+   'Does Pulse include coaching', 'Can Growth Academy help me',
    'Jinsi gani huduma hii inafanya kazi', 'Lini kozi inaanza', 'Ni lini kozi inaanza',
    'Mnasafirisha hadi Arusha', 'Mna huduma Zanzibar', 'Ninaweza kulipa kwa M-Pesa', 'Naweza kulipa kwa M-Pesa',
-   'Wapi ofisi yenu', 'Ni wapi ofisi yenu', 'Pulse inajumuisha nini'].each do |message|
+   'Wapi ofisi yenu', 'Ni wapi ofisi yenu', 'Growth Coaching inajumuisha nini', 'Kozi ya Pulse inaanza lini',
+   'Ofisi yenu iko wapi'].each do |message|
     it "recognizes an unpunctuated English or Swahili question clause: #{message}" do
       expect(described_class.new(message: message).perform.intent).to eq(:business_question)
     end
   end
 
-  ['I know how it works', 'I already explained what happened'].each do |message|
+  ['I know how it works', 'I already explained what happened', 'They asked Pulse inajumuisha nini'].each do |message|
     it "does not treat an embedded question word as a request: #{message}" do
       expect(described_class.new(message: message).perform.intent).to eq(:generic_safe)
     end

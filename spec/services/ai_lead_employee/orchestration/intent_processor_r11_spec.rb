@@ -276,25 +276,42 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   it 'uses an extracted compound request for approved-knowledge retrieval' do
-    conversation.update!(offer: create_offer(name: 'Pulse'))
+    conversation.update!(offer: create_offer(name: 'Growth and Wellness'))
     triggering_message.update!(content: 'Can I book a flight?')
-    create(:knowledge_item, account: account, question: 'What does Pulse include?', answer: 'Pulse includes weekly coaching.')
+    create(
+      :knowledge_item,
+      account: account,
+      question: 'What does Growth and Wellness include?',
+      answer: 'Growth and Wellness includes weekly coaching.'
+    )
     connection = create(:ai_provider_connection, account: account)
     allow(provider_client).to receive(:complete).and_return(
       AiLeadEmployee::AiProvider::Response.new(
-        id: 'r11-compound-answer', model: connection.model, content: 'Pulse includes weekly coaching.',
+        id: 'r11-compound-answer', model: connection.model, content: 'Growth and Wellness includes weekly coaching.',
         finish_reason: 'stop', configuration_version: connection.configuration_version
       )
     )
 
     described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
     expect_scope_clarification!
-    followup, followup_intent = followup_records('Yes, and what does Pulse include?')
+    followup, followup_intent = followup_records('Yes, and what does Growth and Wellness include?')
+    expect_followup_classification!(followup, 'what does Growth and Wellness include')
     described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
 
     expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
-    expect(followup_intent.outbound_message.content).to eq('Pulse includes weekly coaching.')
+    expect(followup_intent.outbound_message.content).to eq('Growth and Wellness includes weekly coaching.')
     expect(followup_intent.decision.dig('scope_resolution', 'message_id')).to eq(followup.id)
+  end
+
+  it 'preserves the complete configured name when it contains a conjunction' do
+    conversation.update!(offer: create_offer(name: 'Health and Wellness'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, = followup_records('Yes, and what does Health and Wellness include?')
+
+    expect_followup_classification!(followup, 'what does Health and Wellness include')
   end
 
   it 'sets the boundary from an extracted compound third-party request' do
@@ -309,17 +326,63 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(followup_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
+  it 'preserves extracted question provenance when its provider request fails' do
+    offer = create_offer(name: 'Pulse')
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Can I book a flight?')
+    create(
+      :knowledge_item,
+      account: account,
+      question: 'What does Pulse include?',
+      answer: 'Pulse includes weekly coaching.',
+      metadata: { 'source_reference' => 'pulse-compound-failure-v1', 'offer_ids' => [offer.id], 'language' => 'english' }
+    )
+    create(:ai_provider_connection, account: account)
+    allow(provider_client).to receive(:complete).and_raise(AiLeadEmployee::AiProvider::TimeoutFailure)
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, followup_intent = followup_records('Yes, and what does Pulse include?')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_failure')
+    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+    expect(followup_intent.decision.fetch('scope_resolution')).to include(
+      'question' => 'what does Pulse include', 'message_id' => followup.id, 'language' => 'english'
+    )
+  end
+
   it 'classifies a terminal Swahili question after confirmation as a new request' do
-    conversation.update!(offer: create_offer(name: 'Pulse'))
+    conversation.update!(offer: create_offer(name: 'Growth Academy'))
     triggering_message.update!(content: 'Je, mnakubali benki?')
 
     described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
     expect_scope_clarification!
-    followup, followup_intent = followup_records('Ndiyo, na Pulse inajumuisha nini')
+    followup, followup_intent = followup_records('Ndiyo, na Growth Academy inajumuisha nini')
     described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
 
     expect(followup_intent.reload).to be_blocked
     expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+  end
+
+  {
+    'Yes what does Pulse include?' => 'Pulse',
+    'Yes, and does Pulse include coaching' => 'Pulse',
+    'Ndiyo Pulse inajumuisha nini' => 'Pulse',
+    'Ndiyo, na Online Profits inajumuisha nini' => 'Online Profits'
+  }.each do |content, offer_name|
+    it "extracts an acknowledgment followed by a request: #{content}" do
+      conversation.update!(offer: create_offer(name: offer_name))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      followup, followup_intent = followup_records(content)
+      described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(followup_intent.reload).to be_blocked
+      expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+    end
   end
 
   it 'uses a later configured correction after rejecting the broad Business scope' do
@@ -329,6 +392,18 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
     expect_scope_clarification!
     correction_intent = process_followup('I do not mean your business; I mean Pulse', expected_scope: triggering_message.content)
+
+    expect(correction_intent.reload).to be_blocked
+    expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
+  it 'uses a later configured correction after an earlier uncertainty' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    correction_intent = process_followup('I was not sure, but I mean Pulse', expected_scope: triggering_message.content)
 
     expect(correction_intent.reload).to be_blocked
     expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)

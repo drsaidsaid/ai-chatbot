@@ -7,6 +7,11 @@ class AiLeadEmployee::InformationRequest
   QUESTION_WORDS = %w[what how when where why which who je jinsi lini nini wapi].freeze
   ENGLISH_AUXILIARIES = %w[can could do does is are may should will would].freeze
   ENGLISH_SUBJECTS = %w[i you we they he she it your our this that the there].freeze
+  ENGLISH_REQUEST_VERBS = %w[
+    accept allow cost cover deliver have help include offer provide ship start support teach work
+  ].freeze
+  ACKNOWLEDGMENT_TOKENS = %w[yes okay sure correct exactly indeed ndiyo ndio sawa naam ndivyo].freeze
+  REPORTED_SPEECH_TOKENS = %w[asked explained knew know said says told].freeze
   SWAHILI_STARTERS = %w[je jinsi lini mna naweza ninaweza nini unaweza wapi].freeze
 
   def self.call(message)
@@ -34,7 +39,7 @@ class AiLeadEmployee::InformationRequest
   end
 
   def substantive_followup
-    compound_clauses.drop(1).find { |clause| request_clause?(clause) }
+    compound_clauses.drop(1).find { |clause| request_clause?(clause) } || acknowledgment_followup
   end
 
   private
@@ -58,16 +63,45 @@ class AiLeadEmployee::InformationRequest
   end
 
   def terminal_question?(value)
-    value.match?(/\A[[:alnum:]'-]+ (?:ina|una|mna|wana)[[:alpha:]]+\b.*\b(?:nini|lini|wapi)\z/) ||
+    swahili_terminal_question?(value) ||
       value.match?(/\Ai am interested\b.*\b(?:i am )?(?:not sure|unsure) (?:where|how|what)\b/)
   end
 
+  def swahili_terminal_question?(value)
+    match = value.match(
+      /\A(?<subject>(?:[[:alnum:]'-]+\s){1,4})(?:(?:ina|una|mna|wana)[[:alpha:]]+|iko)\b.*\b(?:nini|lini|wapi)\z/
+    )
+    match && significant_reported_speech_absent?(match[:subject])
+  end
+
+  def significant_reported_speech_absent?(subject)
+    !subject.split.intersect?(REPORTED_SPEECH_TOKENS)
+  end
+
   def english_auxiliary_question?(tokens)
-    ENGLISH_AUXILIARIES.include?(tokens.first) && ENGLISH_SUBJECTS.include?(tokens.second)
+    return false unless ENGLISH_AUXILIARIES.include?(tokens.first)
+
+    ENGLISH_SUBJECTS.include?(tokens.second) || tokens.drop(2).intersect?(ENGLISH_REQUEST_VERBS)
   end
 
   def compound_clauses
-    split_clauses(/(?:[.!?;,—–]+|\n+|\b(?:and|but|then|na|lakini)\b)/i)
+    clauses.flat_map { |clause| split_request_followup(clause) }.compact_blank
+  end
+
+  def split_request_followup(clause)
+    clause.to_enum(:scan, /\b(?:and|but|then|na|lakini)\b/i).each do
+      boundary = Regexp.last_match
+      followup = clause[boundary.end(0)..].to_s.strip
+      return [clause[0...boundary.begin(0)].strip, followup] if request_clause?(followup)
+    end
+
+    [clause]
+  end
+
+  def acknowledgment_followup
+    match = message.match(/\A\s*(?:#{ACKNOWLEDGMENT_TOKENS.join('|')})\b[\s,;:—–-]+(?<followup>.+)\z/i)
+    followup = match&.[](:followup)&.strip
+    followup if followup.present? && request_clause?(followup)
   end
 
   def split_clauses(pattern)

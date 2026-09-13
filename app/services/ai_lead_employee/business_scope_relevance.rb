@@ -116,7 +116,6 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   def resolve_pending_response(context)
     followup = AiLeadEmployee::InformationRequest.substantive_followup(message)
     return resolve_new_question(followup) if followup.present?
-    return reclarify(context) if uncertain_acknowledgment?
 
     explicit_resolution = resolve_explicit_scope(context)
     return explicit_resolution if explicit_resolution
@@ -139,6 +138,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   def resolve_explicit_scope(context)
     return resolve_confirmation(context) if scope_polarity == :confirmation
     return :unrelated if scope_polarity == :denial
+    return reclarify(context) if scope_polarity == :uncertain
   end
 
   def substantive_information_request?
@@ -219,12 +219,10 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
       normalized_message.match?(/\A(?:that s right|please do|you got it)\b/)
   end
 
-  def uncertain_acknowledgment?
-    normalized_message.match?(/\b(?:maybe|perhaps|not sure|i am not sure|i m not sure|i think so|labda|sijui)\b/)
-  end
-
   def scope_polarity
-    events = polarity_events(denial_patterns, :denial) + polarity_events(correction_patterns, :confirmation)
+    events = polarity_events(denial_patterns, :denial) +
+             polarity_events(correction_patterns, :confirmation) +
+             polarity_events([uncertainty_pattern], :uncertain)
     events << [0, :denial] if normalized_message.in?(%w[no hapana])
     events.max_by(&:first)&.last
   end
@@ -248,6 +246,10 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     configured_names.map do |name|
       /\b(?:i mean|namaanisha) (?:the |this )?#{Regexp.escape(normalize(name))}(?: (?:offer|course|product|service|ofa|kozi|huduma))?\b/
     end
+  end
+
+  def uncertainty_pattern
+    /\b(?:maybe|perhaps|not sure|i am not sure|i m not sure|i think so|labda|sijui)\b/
   end
 
   def scope_noun_pattern
