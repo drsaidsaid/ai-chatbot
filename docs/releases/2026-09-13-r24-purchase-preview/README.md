@@ -40,6 +40,10 @@ All database-backed checks used only the newly created local database
 by an exact database-name comparison and explicit `R24_DB_OPT_IN=yes`. Synthetic
 test-only Active Record encryption values were supplied. No shared
 `chatwoot_test` database or destructive committed-fixture cleanup was used.
+The dedicated database remains preserved locally only for a later explicitly
+allocated, guarded browser-acceptance run. It is not shared and must not be used
+without the same exact-name guard and explicit opt-in. Remove it after browser
+acceptance, or when the coordinator confirms that it is no longer needed.
 
 - Focused Rails suite: **56 examples, 0 failures**. It covers exact preview and
   tenant isolation, stale signed preview, immutable payment evidence, duplicate
