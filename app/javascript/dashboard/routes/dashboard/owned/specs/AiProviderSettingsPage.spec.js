@@ -105,6 +105,12 @@ describe('AiProviderSettingsPage', () => {
     expect(wrapper.text()).toContain(
       'Billed separately by the advertising platform'
     );
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.NO_AUTOMATIC_CHARGES'
+    );
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.MANUAL_REVIEW'
+    );
   });
 
   it('uses a phone-safe fluid usage meter without a fixed minimum width', async () => {

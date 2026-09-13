@@ -118,6 +118,9 @@ onMounted(load);
     <p class="mt-1 text-sm text-n-slate-11">
       {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.DESCRIPTION') }}
     </p>
+    <p class="mt-1 text-sm text-n-slate-11">
+      {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.NO_AUTOMATIC_CHARGES') }}
+    </p>
 
     <div
       v-if="subscriptionAlerts.length"
@@ -467,6 +470,9 @@ onMounted(load);
       role="alert"
     >
       {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.REQUEST_FAILED') }}
+    </p>
+    <p class="mt-4 text-sm text-n-slate-11">
+      {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.MANUAL_REVIEW') }}
     </p>
 
     <section class="mt-8 border-t border-n-weak pt-6">
