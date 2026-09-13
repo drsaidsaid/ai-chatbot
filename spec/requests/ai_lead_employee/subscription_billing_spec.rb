@@ -136,6 +136,40 @@ RSpec.describe 'AI subscription billing', type: :request do
     expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account)).to be_empty
   end
 
+  it 'keeps the wait-until-renewal action when renewal is prepaid after an upgrade preview' do
+    travel_to Time.zone.parse('2026-09-15T09:00:00Z') do
+      starter = create(:ai_service_plan, code: 'starter', monthly_price: 100_000, included_ai_replies: 10)
+      growth = create(:ai_service_plan, code: 'growth', monthly_price: 250_000, included_ai_replies: 30)
+      create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/preview", params: {
+        ai_service_plan_id: growth.id, purpose: 'upgrade'
+      }, headers: admin_headers, as: :json
+      upgrade_signature = response.parsed_body.fetch('preview_signature')
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/requests", params: {
+        ai_service_plan_id: starter.id, purpose: 'renewal'
+      }, headers: admin_headers, as: :json
+      renewal_request_id = response.parsed_body.fetch('id')
+      post "/platform/api/v1/accounts/#{account.id}/subscription_payment_confirmations", params: {
+        subscription_request_id: renewal_request_id,
+        payment_reference: 'PREVIEW-RACE-RENEWAL',
+        amount: '100000.00',
+        currency: 'TZS',
+        confirmed_at: '2026-09-15T09:00:00Z'
+      }, headers: platform_headers, as: :json
+      expect(response).to have_http_status(:success)
+
+      post "/api/v1/accounts/#{account.id}/ai_subscription/requests", params: {
+        ai_service_plan_id: growth.id, purpose: 'upgrade', preview_signature: upgrade_signature
+      }, headers: admin_headers, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body.fetch('error')).to eq('upgrade_available_after_renewal')
+      expect(AiLeadEmployee::AiSubscriptionRequest.where(account: account, purpose: 'upgrade')).to be_empty
+    end
+  end
+
   it 'does not disclose another Business Account subscription in a purchase preview' do
     other_account = create(:account)
     other_admin = create(:user, account: other_account, role: :administrator)

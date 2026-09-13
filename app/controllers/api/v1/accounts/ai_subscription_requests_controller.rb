@@ -13,6 +13,9 @@ class Api::V1::Accounts::AiSubscriptionRequestsController < Api::V1::Accounts::B
       preview_signature: params[:preview_signature]
     ).perform
     render json: payload(request_record), status: :created
+  rescue AiLeadEmployee::Subscriptions::RequestService::FutureCyclePrepaid => e
+    Rails.logger.info("AI subscription request rejected: #{e.class}")
+    render json: { error: 'upgrade_available_after_renewal' }, status: :unprocessable_entity
   rescue AiLeadEmployee::Subscriptions::RequestService::InvalidRequest => e
     Rails.logger.info("AI subscription request rejected: #{e.class}")
     render json: { error: 'subscription_request_unavailable' }, status: :unprocessable_entity

@@ -2,6 +2,7 @@
 
 class AiLeadEmployee::Subscriptions::RequestService
   InvalidRequest = Class.new(StandardError)
+  FutureCyclePrepaid = Class.new(InvalidRequest)
 
   def initialize(account:, requested_by:, plan:, purpose:, preview_signature: nil)
     @account = account
@@ -30,12 +31,18 @@ class AiLeadEmployee::Subscriptions::RequestService
     end
     request_record
   rescue AiLeadEmployee::Subscriptions::PurchasePreview::InvalidPreview => e
-    raise InvalidRequest, e.message
+    raise request_error_for(e), e.message
   end
 
   private
 
   attr_reader :account, :requested_by, :plan, :purpose, :preview_signature
+
+  def request_error_for(error)
+    return FutureCyclePrepaid if error.is_a?(AiLeadEmployee::Subscriptions::PurchasePreview::FutureCyclePrepaid)
+
+    InvalidRequest
+  end
 
   def validate_preview_signature!(preview)
     return unless purpose.in?(%w[top_up upgrade])
