@@ -256,6 +256,37 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
   end
 
+  ['No, I am not asking about this business, but what does Pulse include?',
+   "No, I am not asking about this business\nWhat does Pulse include?",
+   'No, I am not asking about this business—what does Pulse include?',
+   'No, not Netflix, tell me about Pulse',
+   'Yes, and what does Pulse include?'].each do |content|
+    it "classifies a compound replacement request independently: #{content}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      followup, followup_intent = followup_records(content)
+      described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(followup_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+      expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+    end
+  end
+
+  it 'uses a later configured correction after rejecting the broad Business scope' do
+    conversation.update!(offer: create_offer(name: 'Pulse'))
+    triggering_message.update!(content: 'Can I book a flight?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    correction_intent = process_followup('I do not mean your business; I mean Pulse', expected_scope: triggering_message.content)
+
+    expect(correction_intent.reload).to be_blocked
+    expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+  end
+
   it 'evaluates a new unrelated request independently while clarification is pending' do
     conversation.update!(offer: create_offer(name: 'Pulse'))
     triggering_message.update!(content: 'Can I book a flight?')
@@ -268,18 +299,35 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(followup_intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
   end
 
-  it 'repeats the original clarification for an uncertain acknowledgment' do
-    conversation.update!(offer: create_offer(name: 'Pulse'))
-    triggering_message.update!(content: 'Can I book a flight?')
+  ['I am not sure', "I'm not sure"].each do |content|
+    it "repeats the original clarification for an uncertain acknowledgment: #{content}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: 'Can I book a flight?')
 
-    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
-    expect_scope_clarification!
-    uncertain_intent = process_followup('I am not sure')
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      uncertain_intent = process_followup(content)
 
-    expect(uncertain_intent.reload).to have_attributes(state: 'completed', review_request: nil)
-    expect(uncertain_intent.outbound_message.content).to eq('Are you asking about this business or one of its Offers?')
-    context = conversation.reload.additional_attributes.fetch(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
-    expect(context).to include('question' => triggering_message.content, 'message_id' => triggering_message.id)
+      expect(uncertain_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      expect(uncertain_intent.outbound_message.content).to eq('Are you asking about this business or one of its Offers?')
+      context = conversation.reload.additional_attributes.fetch(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+      expect(context).to include('question' => triggering_message.content, 'message_id' => triggering_message.id)
+    end
+  end
+
+  ['Maybe, your business', 'Labda, biashara hii'].each do |content|
+    it "re-clarifies an uncertain scope-tail acknowledgment: #{content}" do
+      conversation.update!(offer: create_offer(name: 'Pulse'))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      uncertain_intent = process_followup(content)
+
+      expect(uncertain_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      context = conversation.reload.additional_attributes.fetch(AiLeadEmployee::BusinessScopeRelevance::CONTEXT_KEY)
+      expect(context).to include('question' => triggering_message.content, 'message_id' => triggering_message.id)
+    end
   end
 
   it 'classifies a substantive next question independently instead of using it as confirmation' do
@@ -491,6 +539,18 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
     expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  ['Football Academy', 'Pilau Catering'].each do |name|
+    it "keeps a specific configured name authoritative despite a category token: #{name}" do
+      conversation.update!(offer: create_offer(name: name))
+      triggering_message.update!(content: "What does #{name} include?")
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(intent.reload).to be_blocked
+      expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+    end
   end
 
   it 'does not let a configured Offer name override an unrelated physiological question' do

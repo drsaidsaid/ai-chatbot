@@ -108,10 +108,16 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def content_intent
-    return :qualification_answer if pending_offer_answer?
-    return :business_question if resolved_scope_question?
+    classified = preclassified_intent
+    return classified if classified
 
     CONTENT_INTENT_CHECKS.find { |_intent, predicate| send(predicate) }&.first || :generic_safe
+  end
+
+  def preclassified_intent
+    return :qualification_answer if pending_offer_answer?
+    return :business_question if resolved_scope_question?
+    return :scope_clarification if business_scope_relevance&.reclarification_required?
   end
 
   def resolved_scope_question?

@@ -4,7 +4,7 @@ class AiLeadEmployee::LanguageDetector
   SWAHILI_TOKENS = %w[
     asante biashara habari hali jina karibu kama kuhusu kujua kuongea lugha maelezo
     kujiunga mambo malalamiko mnakubali mnasafirisha msaada mtandaoni nahitaji naitwa naomba nataka ndio ndiyo nimelipa
-    hapana je jinsi labda lini mnafundisha naam ndiyo ndivyo ninaweza ningependa nini sawa sijui simaanishi siwezi
+    hapana je jinsi labda lini mnafundisha naam ndiyo ndivyo ni ninaweza ningependa nini sawa sijui simaanishi siwezi
     tafadhali unaongea utapeli wapi
   ].freeze
 

@@ -51,7 +51,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def addressed_authoritative_scope_match?
-    approved_scope_match? || addressed_configured_name_match?
+    approved_scope_match? || addressed_configured_name_match? || specific_configured_name_match?
   end
 
   def consumes_clarification?
@@ -109,7 +109,12 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     return unless context
 
     @consumes_clarification = true
-    return resolve_pending_question(context) if denial_followed_by_information_request?
+    resolve_pending_response(context)
+  end
+
+  def resolve_pending_response(context)
+    return resolve_pending_question(context) if AiLeadEmployee::InformationRequest.substantive_followup?(message)
+    return resolve_confirmation(context) if configured_scope_correction?
     return :unrelated if scope_denial?
     return reclarify(context) if uncertain_acknowledgment?
     return resolve_pending_question(context) if substantive_information_request?
@@ -197,7 +202,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def uncertain_acknowledgment?
-    normalized_message.match?(/\A(?:maybe|perhaps|not sure|i am not sure|i think so|labda|sijui)\z/)
+    normalized_message.match?(/\A(?:maybe|perhaps|not sure|i am not sure|i m not sure|i think so|labda|sijui)\b/)
   end
 
   def scope_denial?
@@ -208,10 +213,10 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
       normalized_message.match?(/\bsimaanishi #{swahili_scope_noun_pattern}\b/) || configured_name_denied?
   end
 
-  def denial_followed_by_information_request?
-    return false unless scope_denial?
-
-    message.split(/[.!?;]+/).drop(1).any? { |part| AiLeadEmployee::InformationRequest.call(part) }
+  def configured_scope_correction?
+    configured_names.any? do |name|
+      normalized_message.match?(/\b(?:i mean|namaanisha) #{Regexp.escape(normalize(name))}\b/)
+    end
   end
 
   def configured_name_denied?
@@ -273,6 +278,13 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     return false unless normalized_message.split.intersect?(%w[your this])
 
     configured_names.any? { |name| significant_tokens(message).intersect?(significant_tokens(name)) }
+  end
+
+  def specific_configured_name_match?
+    configured_names.any? do |name|
+      normalized_name = normalize(name)
+      significant_tokens(normalized_name).size >= 2 && normalized_message.match?(/\b#{Regexp.escape(normalized_name)}\b/)
+    end
   end
 
   def approved_scope_match?

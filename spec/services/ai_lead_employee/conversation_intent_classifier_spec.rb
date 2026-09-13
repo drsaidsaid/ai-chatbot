@@ -149,8 +149,9 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
     end
   end
 
-  ['Which plan fits me', 'Who teaches the course', 'Jinsi gani huduma hii inafanya kazi',
-   'Lini kozi inaanza', 'Wapi ofisi yenu'].each do |message|
+  ['Which plan fits me', 'Who teaches the course', 'Will you deliver to Zanzibar', 'Jinsi gani huduma hii inafanya kazi',
+   'Lini kozi inaanza', 'Ni lini kozi inaanza', 'Mnasafirisha hadi Arusha', 'Wapi ofisi yenu',
+   'Ni wapi ofisi yenu'].each do |message|
     it "recognizes an unpunctuated English or Swahili question clause: #{message}" do
       expect(described_class.new(message: message).perform.intent).to eq(:business_question)
     end
