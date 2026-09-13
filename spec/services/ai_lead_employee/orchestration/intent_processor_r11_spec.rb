@@ -482,7 +482,11 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     'Tell me a football score na Growth na Wellness inajumuisha nini' =>
       ['Growth na Wellness', 'Growth na Wellness inajumuisha nini'],
     'What is the weather and does Growth and Wellness include coaching?' =>
-      ['Growth and Wellness', 'does Growth and Wellness include coaching']
+      ['Growth and Wellness', 'does Growth and Wellness include coaching'],
+    'Growth na Wellness then Growth na Wellness inajumuisha nini' =>
+      ['Growth na Wellness', 'Growth na Wellness inajumuisha nini'],
+    'Growth na Wellness inajumuisha nini na Growth na Wellness inaanza lini' =>
+      ['Growth na Wellness', 'Growth na Wellness inaanza lini']
   }.each do |content, (offer_name, expected_question)|
     it "isolates a configured request after an unrelated clause: #{content}" do
       conversation.update!(offer: create_offer(name: offer_name))
@@ -606,7 +610,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   ['Yes, actually no', 'Yes, actually no thanks', 'Yes, actually no thank you', 'Yes. Actually no. Thank you.',
-   'I mean Pulse, but no', 'Ndiyo, lakini hapana', 'Ndiyo, lakini hapana asante', 'Ndiyo. Hapana. Asante.',
+   'Yes. Actually no. Thank you very much.', 'I mean Pulse, but no', 'Ndiyo, lakini hapana',
+   'Ndiyo, lakini hapana asante', 'Ndiyo. Hapana. Asante.', 'Ndiyo. Hapana. Asante sana.',
    'Sijui. Hapana.'].each do |content|
     it "uses a trailing bare denial as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
@@ -627,7 +632,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   ['No, actually yes', 'No, actually yes please', 'No, actually yes thank you', 'Hapana, lakini ndiyo',
-   'Hapana, lakini ndiyo tafadhali', 'Maybe. Yes.', 'Maybe. Yes. Thank you.', 'Sijui. Ndiyo. Asante.'].each do |content|
+   'Hapana, lakini ndiyo tafadhali', 'Maybe. Yes.', 'Maybe. Yes. Thank you.',
+   'Maybe. Yes. Thank you very much.', 'Sijui. Ndiyo. Asante.', 'Sijui. Ndiyo. Asante sana.'].each do |content|
     it "uses a trailing bare confirmation as the last scoped proposition: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')

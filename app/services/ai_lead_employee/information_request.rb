@@ -171,7 +171,8 @@ class AiLeadEmployee::InformationRequest
 
   def configured_name_boundary?(clause, boundary)
     configured_names.any? do |name|
-      configured_name_pattern(name).match(clause) do |name_match|
+      clause.to_enum(:scan, configured_name_pattern(name)).any? do
+        name_match = Regexp.last_match
         name_match.begin(0) <= boundary.begin(0) && name_match.end(0) >= boundary.end(0)
       end
     end
