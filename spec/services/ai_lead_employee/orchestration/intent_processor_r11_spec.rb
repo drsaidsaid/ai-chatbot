@@ -330,6 +330,22 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     )
   end
 
+  it 'preserves a bare conjunction-bearing configured name while clarification is pending' do
+    conversation.update!(offer: create_offer(name: 'Growth na Wellness'))
+    triggering_message.update!(content: 'Je, mnakubali benki?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    followup, followup_intent = followup_records('Growth na Wellness inajumuisha nini')
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(followup_intent.reload).to be_blocked
+    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+    expect(followup_intent.decision.fetch('scope_resolution')).to include(
+      'question' => 'Growth na Wellness inajumuisha nini', 'message_id' => followup.id, 'language' => 'swahili'
+    )
+  end
+
   it 'sets the boundary from an extracted compound third-party request' do
     conversation.update!(offer: create_offer(name: 'Pulse'))
     triggering_message.update!(content: 'Can I book a flight?')
@@ -413,6 +429,42 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   {
+    'Will Growth Plan include coaching' => 'Growth Plan',
+    'May Growth Academy offer installments' => 'Growth Academy',
+    'Does Complete Online Business Growth Academy include coaching' => 'Complete Online Business Growth Academy'
+  }.each do |content, offer_name|
+    it "accepts an exact configured subject beyond generic modal ambiguity: #{content}" do
+      conversation.update!(offer: create_offer(name: offer_name))
+      triggering_message.update!(content: content)
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(intent.reload).to be_blocked
+      expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+    end
+  end
+
+  {
+    'Jua Academy inajumuisha nini' => 'Jua Academy',
+    'Sema inaanza lini' => 'Sema'
+  }.each do |content, offer_name|
+    it "accepts an exact configured Swahili name that resembles a reporting stem: #{content}" do
+      conversation.update!(offer: create_offer(name: offer_name))
+      triggering_message.update!(content: content)
+      classification = AiLeadEmployee::ConversationIntentClassifier.new(
+        message: content, account: account, conversation: conversation, incoming_message: triggering_message,
+        offer: conversation.offer
+      ).perform
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(classification).to have_attributes(intent: :business_question, language: :swahili)
+      expect(intent.reload).to be_blocked
+      expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+    end
+  end
+
+  {
     'Yes what does Pulse include?' => 'Pulse',
     'Yes, and does Pulse include coaching' => 'Pulse',
     'Yes, and does Growth Plan include coaching' => 'Growth Plan',
@@ -458,7 +510,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(correction_intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
   end
 
-  ['Maybe. I mean Pulse.', 'I was not sure; now I mean Pulse'].each do |content|
+  ['Maybe. I mean Pulse.', 'I was not sure; now I mean Pulse', "Maybe\nI mean Pulse", "Sijui\nNamaanisha Pulse",
+   'Maybe—I mean Pulse', 'Sijui–Namaanisha Pulse'].each do |content|
     it "uses a configured correction after a sentence or corrective boundary: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')

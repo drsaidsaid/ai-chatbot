@@ -80,12 +80,16 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
     @reclarification_required == true
   end
 
+  def information_request?
+    AiLeadEmployee::InformationRequest.call(message, configured_names: configured_names)
+  end
+
   private
 
   attr_reader :account, :message, :offer, :conversation, :incoming_message
 
   def informational_question?
-    AiLeadEmployee::InformationRequest.call(message)
+    information_request?
   end
 
   def disposition
@@ -114,7 +118,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def resolve_pending_response(context)
-    followup = AiLeadEmployee::InformationRequest.substantive_followup(message)
+    followup = AiLeadEmployee::InformationRequest.substantive_followup(message, configured_names: configured_names)
     return resolve_new_question(followup) if followup.present?
 
     explicit_resolution = resolve_explicit_scope(context)
@@ -251,7 +255,7 @@ class AiLeadEmployee::BusinessScopeRelevance # rubocop:disable Metrics/ClassLeng
   end
 
   def polarity_message
-    @polarity_message ||= normalize(message.gsub(/[.;!?]+\s*(?=\S)/, ' clauseboundary '))
+    @polarity_message ||= normalize(message.gsub(/(?:[.;!?—–]+|\n+)\s*(?=\S)/, ' clauseboundary '))
   end
 
   def polarity_events(patterns, polarity)

@@ -233,7 +233,7 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def question?
-    AiLeadEmployee::InformationRequest.call(message)
+    account ? business_scope_relevance.information_request? : AiLeadEmployee::InformationRequest.call(message)
   end
 
   def token_match?(expected_tokens)

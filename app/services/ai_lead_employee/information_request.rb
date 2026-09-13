@@ -22,20 +22,21 @@ class AiLeadEmployee::InformationRequest
   SWAHILI_STARTERS = %w[gani ipi je jinsi lini mna naweza ngapi ninaweza nini unaweza wapi].freeze
   SWAHILI_LANGUAGE_TOKENS = (SWAHILI_STARTERS + %w[bei huduma ina inaanza inajumuisha iko kozi siku]).freeze
 
-  def self.call(message)
-    new(message).call
+  def self.call(message, configured_names: [])
+    new(message, configured_names: configured_names).call
   end
 
-  def self.substantive_followup?(message)
-    new(message).substantive_followup?
+  def self.substantive_followup?(message, configured_names: [])
+    new(message, configured_names: configured_names).substantive_followup?
   end
 
-  def self.substantive_followup(message)
-    new(message).substantive_followup
+  def self.substantive_followup(message, configured_names: [])
+    new(message, configured_names: configured_names).substantive_followup
   end
 
-  def initialize(message)
+  def initialize(message, configured_names: [])
     @message = message.to_s
+    @configured_names = configured_names.compact_blank
   end
 
   def call
@@ -47,15 +48,26 @@ class AiLeadEmployee::InformationRequest
   end
 
   def substantive_followup
-    acknowledgment_followup || compound_clauses.drop(1).find { |clause| request_clause?(clause) }
+    acknowledgment_followup || whole_message_request || compound_clauses.drop(1).find { |clause| request_clause?(clause) }
   end
 
   private
 
-  attr_reader :message
+  attr_reader :configured_names, :message
 
   def clauses
     split_clauses(/(?:[.!?;,—–]+|\n+)/)
+  end
+
+  def whole_message_request
+    message.strip if configured_conjunction_name_match? && request_clause?(message)
+  end
+
+  def configured_conjunction_name_match?
+    configured_names.any? do |name|
+      normalized_name = normalize(name)
+      normalized_name.split.intersect?(CONNECTIVE_TOKENS) && normalize(message).match?(/\b#{Regexp.escape(normalized_name)}\b/)
+    end
   end
 
   def request_clause?(clause)
@@ -79,7 +91,7 @@ class AiLeadEmployee::InformationRequest
     match = value.match(
       /\A(?<subject>.+\s)(?:(?:ina|una|mna|wana)[[:alpha:]]*|iko|ni)\b.*\b(?:gani|ipi|lini|[[:alpha:]]*ngapi|nini|wapi)\z/
     )
-    match && significant_reported_speech_absent?(match[:subject])
+    match && (configured_subject?(match[:subject]) || significant_reported_speech_absent?(match[:subject]))
   end
 
   def significant_reported_speech_absent?(subject)
@@ -89,7 +101,7 @@ class AiLeadEmployee::InformationRequest
 
   def english_auxiliary_question?(tokens, raw_clause)
     return false unless ENGLISH_AUXILIARIES.include?(tokens.first)
-    return true if ENGLISH_SUBJECTS.include?(tokens.second)
+    return true if explicit_english_subject_question?(tokens)
 
     predicate_index = english_predicate_index(tokens)
     return false unless predicate_index && predicate_index <= 5
@@ -99,15 +111,34 @@ class AiLeadEmployee::InformationRequest
     subject_tokens.present? && !subject_tokens.intersect?(NON_SUBJECT_TOKENS)
   end
 
+  def explicit_english_subject_question?(tokens)
+    ENGLISH_SUBJECTS.include?(tokens.second) || configured_english_subject_question?(tokens)
+  end
+
+  def configured_english_subject_question?(tokens)
+    configured_names.any? do |name|
+      name_tokens = normalize(name).split
+      predicate = tokens[1 + name_tokens.length]
+      tokens[1, name_tokens.length] == name_tokens && english_predicates(tokens.first).include?(predicate)
+    end
+  end
+
   def english_predicate_index(tokens)
-    predicates = tokens.first.in?(%w[is are]) ? ENGLISH_COPULAR_PREDICATES : ENGLISH_REQUEST_VERBS
-    tokens.each_index.drop(2).find { |index| predicates.include?(tokens[index]) }
+    tokens.each_index.drop(2).find { |index| english_predicates(tokens.first).include?(tokens[index]) }
+  end
+
+  def english_predicates(auxiliary)
+    auxiliary.in?(%w[is are]) ? ENGLISH_COPULAR_PREDICATES : ENGLISH_REQUEST_VERBS
   end
 
   def ambiguous_capitalized_name?(raw_clause, auxiliary, predicate_index)
     return false unless auxiliary.in?(%w[may will]) && predicate_index > 2
 
     raw_clause.to_s.strip.scan(/[[:alpha:]'-]+/).first(2).all? { |word| word.match?(/\A[[:upper:]]/) }
+  end
+
+  def configured_subject?(subject)
+    configured_names.any? { |name| normalize(name) == normalize(subject) }
   end
 
   def compound_clauses
