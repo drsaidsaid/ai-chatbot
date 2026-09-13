@@ -106,6 +106,59 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
+  it 'does not treat a personal-preference question as Business scope merely because it says your' do
+    triggering_message.update!(content: 'What is your favorite animal?')
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+  end
+
+  ['What is open source software?', 'Who delivered the keynote speech?'].each do |unrelated_question|
+    it "keeps an unrelated question outside Review despite an ambiguous verb: #{unrelated_question}" do
+      triggering_message.update!(content: unrelated_question)
+      conversation.reload
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
+    end
+  end
+
+  {
+    'Do you accept American Express?' => :english,
+    'Can I pay in installments?' => :english,
+    'Do you deliver to Zanzibar?' => :english,
+    'Je, mnakubali M-Pesa?' => :swahili,
+    'Mnasafirisha hadi Arusha?' => :swahili
+  }.each do |unknown_question, language|
+    it "records Review for a plausible #{language} Business exchange: #{unknown_question}" do
+      triggering_message.update!(content: unknown_question)
+      conversation.reload
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+      expect(intent.review_request).to have_attributes(reason: 'no_approved_knowledge', status: 'open')
+      expect(intent.outbound_message.content).to include('recorded your question for the team to review')
+      expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+    end
+  end
+
+  it 'records Review for an unknown detail in the configured Offer scope' do
+    offer = create_offer
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Does Growth coaching include weekend delivery?')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(intent.review_request).to have_attributes(reason: 'no_approved_knowledge', status: 'open')
+  end
+
   it 'records a typed answer to the current configured Offer question even without fixed qualification words' do
     configured_question = question('clinic_count', 'How many clinics?').merge('answer_type' => 'text')
     offer = create_offer(qualification_mode: 'enabled', questions: [configured_question])
