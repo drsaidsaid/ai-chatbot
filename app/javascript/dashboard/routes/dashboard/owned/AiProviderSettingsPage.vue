@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import aiProviderConnectionAPI from 'dashboard/api/aiProviderConnection';
+import AiSubscriptionSection from './AiSubscriptionSection.vue';
 
 const { t } = useI18n();
 const service = ref({
@@ -23,15 +24,13 @@ const statusLabel = computed(() =>
     : t('AI_LEAD_EMPLOYEE.AI_PROVIDER.MANAGED_UNAVAILABLE')
 );
 const healthLabel = computed(() => {
-  if (service.value.readiness_status === 'healthy') {
+  if (service.value.readiness_status === 'healthy')
     return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.HEALTHY');
-  }
-  if (service.value.readiness_status === 'not_checked') {
+  if (service.value.readiness_status === 'not_checked')
     return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.NOT_CHECKED');
-  }
-  if (service.value.readiness_status === 'failed') {
+  if (service.value.readiness_status === 'failed')
     return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.NEEDS_ATTENTION');
-  }
+
   return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.DISABLED_STATUS');
 });
 const usageLabel = computed(
@@ -39,19 +38,19 @@ const usageLabel = computed(
     `${service.value.requests_used_today} / ${service.value.daily_request_limit}`
 );
 const pauseLabel = computed(() => {
-  if (!service.value.automation_paused_reason) {
+  if (!service.value.automation_paused_reason)
     return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.AUTOMATION_ALLOWED');
-  }
   if (service.value.automation_paused_reason === 'usage_limit_exhausted') {
     return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.PAUSE.USAGE_LIMIT_EXHAUSTED');
   }
+
   return t('AI_LEAD_EMPLOYEE.AI_PROVIDER.PAUSE.PROVIDER_DISABLED');
 });
 const load = async () => {
   isLoading.value = true;
   try {
-    const { data } = await aiProviderConnectionAPI.get();
-    service.value = { ...service.value, ...data };
+    const response = await aiProviderConnectionAPI.get();
+    service.value = { ...service.value, ...response.data };
   } finally {
     isLoading.value = false;
   }
@@ -151,6 +150,8 @@ onMounted(load);
             })
           }}
         </p>
+
+        <AiSubscriptionSection />
       </template>
     </section>
   </main>

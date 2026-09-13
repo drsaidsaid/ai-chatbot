@@ -3,14 +3,40 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
   belongs_to :account
   belongs_to :conversation
   belongs_to :message
+  belongs_to :ai_reply_usage, class_name: 'AiLeadEmployee::AiReplyUsage', optional: true
 
   enum :state, %w[pending claimed dispatching accepted unknown failed canceled].index_with(&:itself)
+
+  after_update_commit :reconcile_ai_reply_usage, if: :saved_change_to_state?
+
+  validate :tenant_scope
 
   MAX_CLAIM_ATTEMPTS = 3
 
   scope :recoverable, lambda {
     where(state: 'pending').or(where(state: %w[claimed dispatching]).where('lease_expires_at IS NULL OR lease_expires_at <= ?', Time.current))
   }
+  scope :retryable_subscription_alerts, lambda {
+    joins(:message).where(state: 'failed', attempts: ...MAX_CLAIM_ATTEMPTS)
+                   .where("messages.additional_attributes #>> '{ai_lead_employee,alert_type}' = ?",
+                          AiLeadEmployee::SubscriptionAlertDeliveryService::ALERT_TYPE)
+  }
+
+  private
+
+  def tenant_scope
+    return if account_id.blank?
+
+    validate_association_account(:conversation, conversation)
+    validate_association_account(:message, message)
+    validate_association_account(:ai_reply_usage, ai_reply_usage) if ai_reply_usage
+  end
+
+  def validate_association_account(name, record)
+    errors.add(name, 'must belong to the same Business Account') if record&.account_id != account_id
+  end
+
+  public
 
   def recover!
     with_lifecycle(review: true) do |owner, reviews|
@@ -56,10 +82,14 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
                                                                                           'qualification_context')).lock_offers!
       next false unless retry_authorized?(user)
 
-      with_lifecycle do |lifecycle, _reviews|
-        retry_locked!(lifecycle)
+      with_reply_reservation do
+        with_lifecycle { |lifecycle, _reviews| retry_locked!(lifecycle) }
       end
     end
+  end
+
+  def retry_subscription_alert!
+    Whatsapp::SubscriptionAlertRetry.new(self).perform
   end
 
   def self.cancel_automation!(conversation:, reason:)
@@ -129,14 +159,30 @@ class Whatsapp::OutboundDelivery < ApplicationRecord
     account.reload.active? && membership && (membership.administrator? || conversation.assignee_id == user.id)
   end
 
+  def with_reply_reservation
+    usage = AiLeadEmployee::AiReplyUsage.for_delivery(self)
+    return yield unless usage
+
+    usage.ai_subscription.with_lock do
+      usage.lock!
+      usage.ai_subscription.alerts.order(:id).lock('FOR NO KEY UPDATE').load
+      yield
+    end
+  end
+
   def retry_locked!(lifecycle)
     return false if lifecycle.artifact_for(self)
     return false unless failed? && message.reload.source_id.blank?
+    return false unless AiLeadEmployee::ReplyAllowance.rereserve_for_delivery!(self)
 
     update!(state: :pending, owner_token: nil, lease_expires_at: nil, failure_code: nil)
     message.update!(status: :sent, external_error: nil)
     publish!
     true
+  end
+
+  def reconcile_ai_reply_usage
+    AiLeadEmployee::ReplyAllowance.reconcile_delivery!(self)
   end
 
   def recover_claim!(owner)

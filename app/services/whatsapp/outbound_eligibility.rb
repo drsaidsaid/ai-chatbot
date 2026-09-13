@@ -95,7 +95,7 @@ class Whatsapp::OutboundEligibility
     alert = alert_authority
     return alert.failure_code || qualification_failure(alert) if alert.alert?
 
-    lead_failure = lead_automation_failure
+    lead_failure = automation_prerequisite_failure
     return lead_failure if lead_failure
     return qualification_failure(alert) unless provider_control_required?
 
@@ -121,6 +121,10 @@ class Whatsapp::OutboundEligibility
       conversation: origin, context: attributes['qualification_context'],
       required: attributes.dig('qualification', 'offer_id').present?
     ).failure_code
+  end
+
+  def automation_prerequisite_failure
+    lead_automation_failure || AiLeadEmployee::ReplyAllowance.delivery_failure_code(message: @message)
   end
 
   def provider_control_required?

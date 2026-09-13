@@ -13,4 +13,8 @@ class PlatformApp < ApplicationRecord
   validates :name, presence: true
 
   has_many :platform_app_permissibles, dependent: :destroy_async
+
+  def finance_operator?
+    finance_operations_enabled?
+  end
 end

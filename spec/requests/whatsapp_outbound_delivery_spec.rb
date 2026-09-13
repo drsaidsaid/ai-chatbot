@@ -320,6 +320,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
   it 'allows prompt human takeover while the model is still working and discards its late answer' do
     conversation.update!(control_state: :ai_active, assignee: nil)
     create(:ai_provider_connection, account: channel.account)
+    create(:ai_subscription, account: channel.account)
     approve_launch!
     create(:knowledge_item, account: channel.account, question: 'Do you offer AI employees?', answer: 'We build AI employees for businesses.')
     incoming = create(:message, account: channel.account, inbox: channel.inbox, conversation: conversation,
@@ -353,6 +354,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
   it 'discards an in-flight answer after a provider configuration change commits before cancellation' do # rubocop:disable RSpec/ExampleLength
     conversation.update!(control_state: :ai_active, assignee: nil)
     connection = create(:ai_provider_connection, account: channel.account)
+    create(:ai_subscription, account: channel.account)
     approve_launch!
     create(:knowledge_item, account: channel.account, question: 'Do you offer AI employees?', answer: 'We build AI employees for businesses.')
     incoming = create(:message, account: channel.account, inbox: channel.inbox, conversation: conversation,

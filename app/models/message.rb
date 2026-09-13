@@ -416,8 +416,12 @@ class Message < ApplicationRecord
   def record_whatsapp_outbound_delivery
     return unless whatsapp_delivery_required?
 
-    create_whatsapp_outbound_delivery!(account: account, conversation: conversation,
-                                       observed_control_version: conversation.control_version)
+    create_whatsapp_outbound_delivery!(
+      account: account,
+      conversation: conversation,
+      observed_control_version: conversation.control_version,
+      ai_reply_usage_id: additional_attributes.dig('ai_lead_employee', 'ai_reply_usage_id')
+    )
   end
 
   def whatsapp_delivery_required?

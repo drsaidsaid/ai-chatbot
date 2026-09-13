@@ -201,6 +201,9 @@ Rails.application.routes.draw do
             end
           end
           resource :ai_provider_connection, only: [:show]
+          resource :ai_subscription, only: [:show] do
+            resources :requests, controller: 'ai_subscription_requests', only: [:create]
+          end
           resource :qualification_configuration, only: [:show, :update]
           resources :qualification_offers, only: [:index, :show, :create, :update]
           resource :whatsapp_connection, only: [:show, :update] do
@@ -653,6 +656,9 @@ Rails.application.routes.draw do
   namespace :platform, defaults: { format: 'json' } do
     namespace :api do
       namespace :v1 do
+        resources :ai_service_plans, only: [:index, :create, :update] do
+          post :publish, on: :member
+        end
         resources :users, only: [:create, :show, :update, :destroy] do
           member do
             get :login
@@ -663,6 +669,10 @@ Rails.application.routes.draw do
           delete :avatar, on: :member
         end
         resources :accounts, only: [:index, :create, :show, :update, :destroy] do
+          resource :billing_summary, only: [:show]
+          resources :subscription_payment_confirmations, only: [:create]
+          resources :ai_reply_usages, only: [:index, :update]
+          resources :cost_allocations, only: [:index, :create], controller: 'account_cost_allocations'
           resource :ai_provider_connection, only: [:show, :update, :destroy] do
             post :health_check
           end

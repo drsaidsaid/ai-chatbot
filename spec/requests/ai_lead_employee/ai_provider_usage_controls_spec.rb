@@ -68,6 +68,7 @@ RSpec.describe 'AI provider usage controls', type: :request do
     ).perform
 
     expect(result.run).to be_completed
+    expect(AiLeadEmployee::AiReplyUsage.where(account: account)).to be_empty
     expect(connection.usages.sole).to have_attributes(purpose: 'evaluation')
   end
 
@@ -305,6 +306,7 @@ RSpec.describe 'AI provider usage controls', type: :request do
     end
 
     expect(result.run).to be_completed
+    expect(AiLeadEmployee::AiReplyUsage.where(account: account)).to be_empty
     expect(request).to have_been_requested.once
     expect(connection.usages.sole).to have_attributes(purpose: 'evaluation')
   ensure

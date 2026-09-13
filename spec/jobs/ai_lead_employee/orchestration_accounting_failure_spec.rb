@@ -84,6 +84,24 @@ RSpec.describe 'AI orchestration after uncertain provider accounting', type: :jo
     expect(records.fetch(:connection).reload.last_health_status).to be_nil
   end
 
+  it 'releases the reserved customer unit when an expired claim exhausts recovery attempts' do
+    records = create_orchestration_records
+    usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: records.fetch(:intent))
+    records.fetch(:intent).update!(
+      state: :processing,
+      attempts: AiLeadEmployee::OrchestrationIntent::MAX_CLAIM_ATTEMPTS,
+      owner_token: 'expired-owner',
+      lease_expires_at: 1.minute.ago
+    )
+    records.fetch(:conversation).reload
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to receive(:for)
+
+    AiLeadEmployee::Orchestration::IntentProcessor.new(intent: records.fetch(:intent), enqueue_deliveries: false).perform
+
+    expect(records.fetch(:intent).reload).to have_attributes(state: 'failed', failure_class: 'claim_recovery_exhausted')
+    expect(usage.reload).to be_released
+  end
+
   private
 
   def expect_terminal_uncertainty(records, provider_request, first_error)
@@ -115,6 +133,7 @@ RSpec.describe 'AI orchestration after uncertain provider accounting', type: :jo
       status: usage_status,
       failure_class: usage_status == 'failed' ? failure_class : nil
     )
+    expect(records.fetch(:intent).ai_reply_usage.reload).to be_released
   end
 
   def expect_terminal_intent(records)
@@ -129,6 +148,7 @@ RSpec.describe 'AI orchestration after uncertain provider accounting', type: :jo
     expect(records.fetch(:conversation).messages.outgoing).to be_empty
     expect(OutboxEvent.where(account: records.fetch(:account))).to be_empty
     expect(records.fetch(:connection).usages.sole).to have_attributes(status: 'reserved')
+    expect(records.fetch(:intent).ai_reply_usage.reload).to be_released
   end
 
   def run_and_recover(records)
@@ -168,6 +188,7 @@ RSpec.describe 'AI orchestration after uncertain provider accounting', type: :jo
     channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
     account = channel.account
     connection = create(:ai_provider_connection, account: account, daily_request_limit: 10)
+    create(:ai_subscription, account: account, included_ai_replies: 10)
     conversation = create_conversation(channel, account)
     message = create_triggering_message(conversation, channel, account)
     create(:knowledge_item, account: account, question: message.content, answer: 'Yes, we build AI employees.')

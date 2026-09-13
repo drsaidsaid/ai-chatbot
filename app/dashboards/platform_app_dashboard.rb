@@ -11,6 +11,7 @@ class PlatformAppDashboard < Administrate::BaseDashboard
     access_token: Field::HasOne,
     id: Field::Number,
     name: Field::String,
+    finance_operations_enabled: Field::Boolean,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -23,6 +24,7 @@ class PlatformAppDashboard < Administrate::BaseDashboard
   COLLECTION_ATTRIBUTES = %i[
     id
     name
+    finance_operations_enabled
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES
@@ -30,6 +32,7 @@ class PlatformAppDashboard < Administrate::BaseDashboard
   SHOW_PAGE_ATTRIBUTES = %i[
     id
     name
+    finance_operations_enabled
     created_at
     updated_at
     access_token
@@ -40,6 +43,7 @@ class PlatformAppDashboard < Administrate::BaseDashboard
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
     name
+    finance_operations_enabled
   ].freeze
 
   # COLLECTION_FILTERS

@@ -34,4 +34,10 @@ class PlatformController < ActionController::API
 
     render json: { error: 'Non permissible resource' }, status: :unauthorized
   end
+
+  def validate_finance_operator
+    return if @platform_app&.finance_operator?
+
+    render json: { error: 'Finance operations permission required' }, status: :unauthorized
+  end
 end

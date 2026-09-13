@@ -1,0 +1,37 @@
+Curated verification summary; not a raw console capture. Complete output is retained in the R23 acceptance task transcript.
+Final verified source commit: e0bbd23ea109f71e73f725cacf382d398ea25acd
+Final verified source tree: f15b183eea722340ceb60b437a744a9e7d1f1997
+
+$ POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r23_final_2473 RAILS_ENV=test ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=<synthetic-test-value> ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=<synthetic-test-value> ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=<synthetic-test-value> bundle exec rspec spec/requests/ai_lead_employee/subscription_billing_spec.rb spec/services/ai_lead_employee/reply_allowance_spec.rb spec/services/ai_lead_employee/subscriptions/payment_confirmation_service_spec.rb spec/services/ai_lead_employee/orchestration/intent_processor_customer_allowance_spec.rb spec/services/ai_lead_employee/subscription_alert_delivery_service_spec.rb spec/jobs/ai_lead_employee/orchestration_accounting_failure_spec.rb spec/requests/ai_lead_employee/end_to_end_canonical_launch_proof_spec.rb spec/requests/whatsapp_outbound_delivery_spec.rb
+
+Finished successfully at source commit 4ca8b6ef033836eb35f9a8d949d2e3fe270b4073
+111 examples, 0 failures
+
+$ POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r23_final_2473 RAILS_ENV=test ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=<synthetic-test-value> ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=<synthetic-test-value> ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=<synthetic-test-value> bundle exec rspec spec/requests/ai_lead_employee/subscription_billing_spec.rb spec/services/ai_lead_employee/reply_allowance_spec.rb spec/services/ai_lead_employee/subscriptions/payment_confirmation_service_spec.rb
+
+Final changed-path verification at e0bbd23e
+43 examples, 0 failures
+
+$ /opt/homebrew/bin/pnpm exec vitest run app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js
+
+Test Files  1 passed (1)
+Tests       8 passed (8)
+Duration    1.19s
+
+$ bundle exec rubocop app/models/ai_lead_employee/ai_reply_usage.rb app/services/ai_lead_employee/reply_allowance.rb app/services/ai_lead_employee/reply_usage_reconciler.rb app/services/ai_lead_employee/subscriptions/payment_confirmation_service.rb db/migrate/20260912000300_prevent_overlapping_ai_cost_allocations.rb db/migrate/20260912000500_allow_closed_partial_ai_reply_usages.rb spec/services/ai_lead_employee/reply_allowance_spec.rb spec/services/ai_lead_employee/subscriptions/payment_confirmation_service_spec.rb
+
+8 files inspected, no offenses detected
+
+$ /opt/homebrew/bin/pnpm exec eslint app/javascript/dashboard/routes/dashboard/owned/AiSubscriptionSection.vue app/javascript/dashboard/routes/dashboard/owned/specs/AiProviderSettingsPage.spec.js
+
+No problems reported.
+
+$ POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r23_final_2473 RAILS_ENV=test bundle exec rails db:migrate:down VERSION=20260912000500
+$ POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r23_final_2473 RAILS_ENV=test bundle exec rails db:migrate:up VERSION=20260912000500
+
+Migration 20260912000500 reverted and reapplied successfully. Down restored the original `[reserved, settled, released]` constraint; up produced `[reserved, settled, released, partially_delivered, partial_failure_closed]`. Migration 20260912000300 is byte-for-byte identical to its accepted `df632e57` version and remains limited to cost-allocation overlap protection.
+
+$ git diff --check
+$ git diff --exit-code -- pnpm-lock.yaml
+
+Both passed with no output.
