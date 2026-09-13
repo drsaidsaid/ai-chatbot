@@ -9,3 +9,5 @@ Coordinator combined verification:60 backend examples passed and17 Vue examples 
 The final candidate browser exercised signed preview -> fixture prepaid future cycle -> blocked request with actionable renewal message, preview-time rejection, and restored current-cycle recovery. Zero requests/confirmations/credits granted. Worker fixture/services/tab/viewport cleaned. No external payment, provider calls, deployment or customer messaging.
 
 The coordinator database is removed after verification. See candidate correction evidence for prior failed red tests and exact fixes. Integration adds no migration. The prepaid future-cycle upgrade policy deliberately asks the user to wait until that cycle becomes current instead of silently granting unpaid higher-plan entitlement.
+
+Final accepted source merge: a07cde1eeafc5ea27820db831c3167d1c23f4b54. Normal commit hooks passed. Coordinator-owned test database has been dropped.
