@@ -48,7 +48,7 @@ class AiLeadEmployee::InformationRequest
   end
 
   def substantive_followup
-    acknowledgment_followup || whole_message_request || compound_clauses.drop(1).find { |clause| request_clause?(clause) }
+    acknowledgment_followup || compound_request_followup
   end
 
   private
@@ -57,17 +57,6 @@ class AiLeadEmployee::InformationRequest
 
   def clauses
     split_clauses(/(?:[.!?;,—–]+|\n+)/)
-  end
-
-  def whole_message_request
-    message.strip if configured_conjunction_name_match? && request_clause?(message)
-  end
-
-  def configured_conjunction_name_match?
-    configured_names.any? do |name|
-      normalized_name = normalize(name)
-      normalized_name.split.intersect?(CONNECTIVE_TOKENS) && normalize(message).match?(/\b#{Regexp.escape(normalized_name)}\b/)
-    end
   end
 
   def request_clause?(clause)
@@ -91,11 +80,14 @@ class AiLeadEmployee::InformationRequest
     match = value.match(
       /\A(?<subject>.+\s)(?:(?:ina|una|mna|wana)[[:alpha:]]*|iko|ni)\b.*\b(?:gani|ipi|lini|[[:alpha:]]*ngapi|nini|wapi)\z/
     )
-    match && (configured_subject?(match[:subject]) || significant_reported_speech_absent?(match[:subject]))
+    match && significant_reported_speech_absent?(match[:subject])
   end
 
   def significant_reported_speech_absent?(subject)
-    tokens = subject.split
+    subject_without_names = configured_names.reduce(normalize(subject)) do |value, name|
+      value.gsub(/\b#{Regexp.escape(normalize(name))}\b/, ' ')
+    end
+    tokens = subject_without_names.squish.split
     !tokens.intersect?(REPORTED_SPEECH_TOKENS) && tokens.none? { |token| token.match?(SWAHILI_REPORTING_STEM) }
   end
 
@@ -137,17 +129,32 @@ class AiLeadEmployee::InformationRequest
     raw_clause.to_s.strip.scan(/[[:alpha:]'-]+/).first(2).all? { |word| word.match?(/\A[[:upper:]]/) }
   end
 
-  def configured_subject?(subject)
-    configured_names.any? { |name| normalize(name) == normalize(subject) }
-  end
-
   def compound_clauses
     clauses.flat_map { |clause| split_request_followup(clause) }.compact_blank
+  end
+
+  def compound_request_followup
+    parsed_clauses = compound_clauses
+    parsed_clauses.drop(1).find { |clause| request_clause?(clause) } || configured_conjunction_request(parsed_clauses)
+  end
+
+  def configured_conjunction_request(parsed_clauses)
+    clause = parsed_clauses.one? && parsed_clauses.first
+    clause if clause && configured_conjunction_name_match?(clause) && request_clause?(clause)
+  end
+
+  def configured_conjunction_name_match?(value)
+    configured_names.any? do |name|
+      normalized_name = normalize(name)
+      normalized_name.split.intersect?(CONNECTIVE_TOKENS) && normalize(value).match?(/\b#{Regexp.escape(normalized_name)}\b/)
+    end
   end
 
   def split_request_followup(clause)
     clause.to_enum(:scan, /\b(?:and|but|then|na|lakini)\b/i).each do
       boundary = Regexp.last_match
+      next if configured_name_boundary?(clause, boundary)
+
       followup = clause[boundary.end(0)..].to_s.strip
       return [clause[0...boundary.begin(0)].strip, followup] if request_clause?(followup)
     end
@@ -155,11 +162,33 @@ class AiLeadEmployee::InformationRequest
     [clause]
   end
 
+  def configured_name_boundary?(clause, boundary)
+    configured_names.any? do |name|
+      configured_name_pattern(name).match(clause) do |name_match|
+        name_match.begin(0) <= boundary.begin(0) && name_match.end(0) >= boundary.end(0)
+      end
+    end
+  end
+
+  def configured_name_pattern(name)
+    /\b#{name.to_s.strip.split(/\s+/).map { |token| Regexp.escape(token) }.join('\\s+')}\b/i
+  end
+
   def acknowledgment_followup
+    followup = acknowledgment_suffix
+    return if followup.blank?
+
+    request_after_connector(followup) || (followup if request_clause?(followup))
+  end
+
+  def acknowledgment_suffix
     match = message.match(/\A\s*(?:#{ACKNOWLEDGMENT_TOKENS.join('|')})\b[\s,;:—–-]+(?<followup>.+)\z/i)
     followup = match&.[](:followup)&.strip&.sub(/\A(?:and|but|then|na|lakini)\b[\s,;:—–-]*/i, '')
-    followup = followup&.sub(/[.!?]+\z/, '')
-    followup if followup.present? && request_clause?(followup)
+    followup&.sub(/[.!?]+\z/, '')
+  end
+
+  def request_after_connector(value)
+    split_request_followup(value).drop(1).find { |clause| request_clause?(clause) }
   end
 
   def split_clauses(pattern)

@@ -330,20 +330,23 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     )
   end
 
-  it 'preserves a bare conjunction-bearing configured name while clarification is pending' do
-    conversation.update!(offer: create_offer(name: 'Growth na Wellness'))
-    triggering_message.update!(content: 'Je, mnakubali benki?')
+  ['Growth na Wellness inajumuisha nini', 'Growth na Wellness inajumuisha nini?',
+   'Hapana, Growth na Wellness inajumuisha nini?'].each do |content|
+    it "preserves a bare conjunction-bearing configured name while clarification is pending: #{content}" do
+      conversation.update!(offer: create_offer(name: 'Growth na Wellness'))
+      triggering_message.update!(content: 'Je, mnakubali benki?')
 
-    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
-    expect_scope_clarification!
-    followup, followup_intent = followup_records('Growth na Wellness inajumuisha nini')
-    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      followup, followup_intent = followup_records(content)
+      described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
 
-    expect(followup_intent.reload).to be_blocked
-    expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
-    expect(followup_intent.decision.fetch('scope_resolution')).to include(
-      'question' => 'Growth na Wellness inajumuisha nini', 'message_id' => followup.id, 'language' => 'swahili'
-    )
+      expect(followup_intent.reload).to be_blocked
+      expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+      expect(followup_intent.decision.fetch('scope_resolution')).to include(
+        'question' => 'Growth na Wellness inajumuisha nini', 'message_id' => followup.id, 'language' => 'swahili'
+      )
+    end
   end
 
   it 'sets the boundary from an extracted compound third-party request' do
@@ -445,8 +448,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   {
-    'Jua Academy inajumuisha nini' => 'Jua Academy',
-    'Sema inaanza lini' => 'Sema'
+    'Kozi ya Jua Academy inaanza lini' => 'Jua Academy',
+    'Huduma ya Sema inajumuisha nini' => 'Sema'
   }.each do |content, offer_name|
     it "accepts an exact configured Swahili name that resembles a reporting stem: #{content}" do
       conversation.update!(offer: create_offer(name: offer_name))
@@ -461,6 +464,58 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       expect(classification).to have_attributes(intent: :business_question, language: :swahili)
       expect(intent.reload).to be_blocked
       expect(intent.review_request).to have_attributes(lead_message_id: triggering_message.id)
+    end
+  end
+
+  it 'keeps a Swahili reporting verb outside the configured-name span declarative' do
+    conversation.update!(offer: create_offer(name: 'Jua Academy'))
+    triggering_message.update!(content: 'Asha alisema Jua Academy inaanza lini')
+    classification = AiLeadEmployee::ConversationIntentClassifier.new(
+      message: triggering_message.content, account: account, conversation: conversation,
+      incoming_message: triggering_message, offer: conversation.offer
+    ).perform
+
+    expect(classification.intent).to eq(:generic_safe)
+  end
+
+  {
+    'Tell me a football score na Growth na Wellness inajumuisha nini' =>
+      ['Growth na Wellness', 'Growth na Wellness inajumuisha nini'],
+    'What is the weather and does Growth and Wellness include coaching?' =>
+      ['Growth and Wellness', 'does Growth and Wellness include coaching']
+  }.each do |content, (offer_name, expected_question)|
+    it "isolates a configured request after an unrelated clause: #{content}" do
+      conversation.update!(offer: create_offer(name: offer_name))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      followup, followup_intent = followup_records(content)
+      described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+      expect(followup_intent.reload).to be_blocked
+      expect(followup_intent.review_request).to have_attributes(lead_message_id: followup.id)
+      expect(followup_intent.decision.fetch('scope_resolution')).to include(
+        'question' => expected_question, 'message_id' => followup.id
+      )
+    end
+  end
+
+  ['Yes, what does Pulse include and what does Netflix cost?',
+   'What does Growth and Wellness include, and what does Netflix cost?'].each do |content|
+    it "isolates a later external request after a configured request: #{content}" do
+      offer_name = content.include?('Growth and Wellness') ? 'Growth and Wellness' : 'Pulse'
+      conversation.update!(offer: create_offer(name: offer_name))
+      triggering_message.update!(content: 'Can I book a flight?')
+
+      described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+      expect_scope_clarification!
+      followup_intent = process_followup(content)
+
+      expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+      expect(followup_intent.outbound_message.content).to eq(
+        'I can help with questions about this business and its Offers.'
+      )
     end
   end
 
@@ -511,7 +566,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   end
 
   ['Maybe. I mean Pulse.', 'I was not sure; now I mean Pulse', "Maybe\nI mean Pulse", "Sijui\nNamaanisha Pulse",
-   'Maybe—I mean Pulse', 'Sijui–Namaanisha Pulse'].each do |content|
+   'Maybe—I mean Pulse', 'Sijui–Namaanisha Pulse', 'Maybe - I mean Pulse'].each do |content|
     it "uses a configured correction after a sentence or corrective boundary: #{content}" do
       conversation.update!(offer: create_offer(name: 'Pulse'))
       triggering_message.update!(content: 'Can I book a flight?')
