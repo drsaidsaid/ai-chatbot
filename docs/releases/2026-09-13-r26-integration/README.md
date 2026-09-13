@@ -23,3 +23,7 @@ At390x844, document/body/viewport width all390; mobile saved cards and statuses 
 Browser seed first rejected a synthetic password without a special character, after creating its synthetic account. That exact account was removed before successful reseeding. No pre-existing data was changed. Test databases remain until coordinator cleanup.
 
 Scripts alongside this file are disposable test harnesses, not production startup code. Browser credentials were passed via environment and are not persisted here.
+
+## Final integration checkpoint
+
+Accepted source merge: c1e9914afff032520388fd27e505e95267378b13. Normal hooks passed after shortening the constant-return Account method to equivalent endless-method syntax to satisfy the combined class-length limit. All three coordinator-owned R26 test databases have been dropped; no coordinator runtime remains.
