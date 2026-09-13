@@ -432,6 +432,59 @@ describe('AiProviderSettingsPage', () => {
     expect(aiSubscriptionAPI.createRequest).not.toHaveBeenCalled();
   });
 
+  it('tells the admin to wait for renewal when a future cycle is already paid', async () => {
+    aiSubscriptionAPI.get.mockResolvedValue({
+      data: {
+        subscription: {
+          status: 'active',
+          plan_id: 4,
+          plan_name: 'Starter',
+          included_ai_replies: 100,
+          remaining_ai_replies: 20,
+          usage_percentage: 80,
+          automation_allowed: true,
+        },
+        available_plans: [
+          {
+            id: 4,
+            name: 'Starter',
+            currency: 'TZS',
+            monthly_price: '100000.00',
+            included_ai_replies: 100,
+          },
+          {
+            id: 5,
+            name: 'Growth',
+            currency: 'TZS',
+            monthly_price: '250000.00',
+            included_ai_replies: 300,
+          },
+        ],
+        alerts: [],
+        pending_requests: [],
+        separate_charges: {},
+      },
+    });
+    aiSubscriptionAPI.previewPurchase.mockRejectedValue({
+      response: { data: { error: 'upgrade_available_after_renewal' } },
+    });
+    const wrapper = mount(AiProviderSettingsPage);
+    await flushPromises();
+
+    const upgradeButton = wrapper
+      .findAllComponents(Button)
+      .find(button => button.props('label').includes('REQUEST_UPGRADE'));
+    await upgradeButton.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.UPGRADE_AFTER_RENEWAL'
+    );
+    expect(wrapper.text()).not.toContain(
+      'AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.REQUEST_FAILED'
+    );
+  });
+
   it('explains that purchased extras remain recorded while renewal is due', async () => {
     aiSubscriptionAPI.get.mockResolvedValue({
       data: {

@@ -107,6 +107,26 @@ RSpec.describe AiLeadEmployee::Subscriptions::PaymentConfirmationService do
     expect(AiLeadEmployee::ReplyAllowance.summary(account: account)[:used_ai_replies]).to eq(1)
   end
 
+  it 'keeps a prepaid future cycle on its paid plan until the renewal boundary' do
+    subscription = create(:ai_subscription, account: account, ai_service_plan: starter, included_ai_replies: 10)
+    pending_upgrade = request_for(plan: growth, purpose: 'upgrade')
+    renewal = request_for(plan: starter, purpose: 'renewal')
+
+    confirm(renewal, reference: 'PREPAID-RENEWAL', amount: 100_000)
+
+    expect do
+      confirm(pending_upgrade, reference: 'PREPAID-UPGRADE', amount: 150_000)
+    end.to raise_error(described_class::InvalidConfirmation, /future renewal is already paid/)
+    expect do
+      request_for(plan: growth, purpose: 'upgrade')
+    end.to raise_error(AiLeadEmployee::Subscriptions::PurchasePreview::InvalidPreview, /future renewal is already paid/)
+    expect(subscription.reload).to have_attributes(
+      ai_service_plan: starter, included_ai_replies: 10,
+      paid_through_at: Time.zone.parse('2026-11-12T00:00:00Z')
+    )
+    expect(AiLeadEmployee::SubscriptionPaymentConfirmation.where(account: account).count).to eq(1)
+  end
+
   it 'rejects a reused payment reference when entitlement details differ' do
     first_request = request_for(plan: starter, purpose: 'new_subscription')
     confirm(first_request, reference: 'BANK-ONE', amount: 100_000)

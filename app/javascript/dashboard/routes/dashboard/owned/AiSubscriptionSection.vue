@@ -57,8 +57,11 @@ const requestPlan = async (plan, purpose, previewSignature = null) => {
     purchasePreview.value = null;
     selectedPurchase.value = null;
     await load();
-  } catch {
-    requestStatus.value = 'failed';
+  } catch (error) {
+    requestStatus.value =
+      error.response?.data?.error === 'upgrade_available_after_renewal'
+        ? 'upgrade_after_renewal'
+        : 'failed';
   }
 };
 const previewPurchase = async (plan, purpose) => {
@@ -73,8 +76,11 @@ const previewPurchase = async (plan, purpose) => {
     purchasePreview.value = response.data;
     selectedPurchase.value = { plan, purpose };
     requestStatus.value = '';
-  } catch {
-    requestStatus.value = 'failed';
+  } catch (error) {
+    requestStatus.value =
+      error.response?.data?.error === 'upgrade_available_after_renewal'
+        ? 'upgrade_after_renewal'
+        : 'failed';
   }
 };
 const confirmPurchaseRequest = async () => {
@@ -489,6 +495,13 @@ onMounted(load);
       role="alert"
     >
       {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.REQUEST_FAILED') }}
+    </p>
+    <p
+      v-if="requestStatus === 'upgrade_after_renewal'"
+      class="mt-3 text-sm text-n-amber-11"
+      role="status"
+    >
+      {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.UPGRADE_AFTER_RENEWAL') }}
     </p>
     <p class="mt-4 text-sm text-n-slate-11">
       {{ t('AI_LEAD_EMPLOYEE.AI_PROVIDER.SUBSCRIPTION.MANUAL_REVIEW') }}

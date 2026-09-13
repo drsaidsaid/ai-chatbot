@@ -38,6 +38,10 @@ class AiLeadEmployee::AiSubscription < ApplicationRecord
     true
   end
 
+  def future_cycle_prepaid?
+    paid_through_at > renews_at
+  end
+
   def billing_boundary_after(current_boundary, zone = nil)
     zone ||= ActiveSupport::TimeZone[reporting_timezone] || ActiveSupport::TimeZone['UTC']
     current_boundary = current_boundary.in_time_zone(zone)

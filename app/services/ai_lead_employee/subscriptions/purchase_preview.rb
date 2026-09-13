@@ -2,10 +2,11 @@
 
 class AiLeadEmployee::Subscriptions::PurchasePreview
   InvalidPreview = Class.new(StandardError)
+  FutureCyclePrepaid = Class.new(InvalidPreview)
   SIGNED_FIELDS = %i[
     purpose plan_id amount_due currency requested_ai_replies used_ai_replies awaiting_delivery_ai_replies
     current_remaining_ai_replies resulting_included_ai_replies resulting_included_ai_replies_remaining
-    resulting_top_up_ai_replies_remaining resulting_ai_replies_remaining renews_at
+    resulting_top_up_ai_replies_remaining resulting_ai_replies_remaining renews_at unit_price_comparison
   ].freeze
 
   class << self
@@ -29,6 +30,7 @@ class AiLeadEmployee::Subscriptions::PurchasePreview
     def canonical_value(value)
       return value.utc.iso8601(6) if value.respond_to?(:iso8601)
       return value.to_s('F') if value.is_a?(BigDecimal)
+      return value.keys.sort_by(&:to_s).to_h { |key| [key.to_s, canonical_value(value.fetch(key))] } if value.is_a?(Hash)
 
       value
     end
@@ -104,6 +106,8 @@ class AiLeadEmployee::Subscriptions::PurchasePreview
   end
 
   def validate_upgrade!(subscription)
+    raise FutureCyclePrepaid, 'A future renewal is already paid. Upgrade after the included credits renew.' if subscription.future_cycle_prepaid?
+
     allowance_increases = plan.included_ai_replies > subscription.included_ai_replies
     price_increases = plan.monthly_price > subscription.ai_service_plan.monthly_price
     currency_matches = plan.currency == subscription.ai_service_plan.currency
@@ -166,7 +170,13 @@ class AiLeadEmployee::Subscriptions::PurchasePreview
     return unless top_up_unit_price > included_unit_price
 
     {
+      top_up_plan_id: source_plan.id,
+      top_up_price: source_plan.top_up_price,
+      top_up_ai_replies: source_plan.top_up_ai_replies,
+      comparison_plan_id: comparison_plan.id,
       comparison_plan_name: comparison_plan.name,
+      comparison_monthly_price: comparison_plan.monthly_price,
+      comparison_included_ai_replies: comparison_plan.included_ai_replies,
       top_up_unit_price: top_up_unit_price,
       included_unit_price: included_unit_price,
       savings_percentage: (((top_up_unit_price - included_unit_price) / top_up_unit_price) * 100).round(1).to_f

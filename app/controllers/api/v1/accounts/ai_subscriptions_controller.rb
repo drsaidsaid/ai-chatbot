@@ -22,6 +22,9 @@ class Api::V1::Accounts::AiSubscriptionsController < Api::V1::Accounts::BaseCont
       account: current_account, plan: plan, purpose: params[:purpose]
     ).perform
     render json: preview_payload(result)
+  rescue AiLeadEmployee::Subscriptions::PurchasePreview::FutureCyclePrepaid => e
+    Rails.logger.info("AI subscription preview rejected: #{e.class}")
+    render json: { error: 'upgrade_available_after_renewal' }, status: :unprocessable_entity
   rescue AiLeadEmployee::Subscriptions::PurchasePreview::InvalidPreview => e
     Rails.logger.info("AI subscription preview rejected: #{e.class}")
     render json: { error: 'purchase_preview_unavailable' }, status: :unprocessable_entity
@@ -85,7 +88,7 @@ class Api::V1::Accounts::AiSubscriptionsController < Api::V1::Accounts::BaseCont
   def comparison_payload(comparison)
     return unless comparison
 
-    comparison.merge(
+    comparison.slice(:comparison_plan_name, :savings_percentage).merge(
       top_up_unit_price: money(comparison[:top_up_unit_price]),
       included_unit_price: money(comparison[:included_unit_price])
     )

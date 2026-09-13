@@ -809,6 +809,7 @@
         "PENDING": "{count} payment request pending manual confirmation",
         "REQUESTED": "Request recorded. Follow the approved payment instructions; access changes only after platform confirmation.",
         "REQUEST_FAILED": "The request could not be recorded. Review the selection and try again.",
+        "UPGRADE_AFTER_RENEWAL": "A future month is already paid on your current plan. Upgrade after your monthly credits renew, or contact platform support.",
         "SEPARATE_COSTS": "Separate charges",
         "PROVIDER_COSTS_PRIVATE": "AI provider costs are tracked separately by the platform and do not change your credit count."
       },
