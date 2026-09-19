@@ -47,18 +47,11 @@ export default {
       name: 'ai_lead_employee_settings_booking_business_hours',
       section: 'booking_business_hours',
     }),
-    {
-      path: frontendURL(
-        'accounts/:accountId/settings/ai-lead-employee/team-assignment'
-      ),
+    aiLeadEmployeeSettingsRoute({
+      path: 'team-assignment',
       name: 'ai_lead_employee_settings_team_assignment',
-      redirect: to => ({
-        name: 'agent_list',
-        params: to.params,
-        query: to.query,
-      }),
-      meta: { permissions: ADMIN_PERMISSIONS },
-    },
+      section: 'team_assignment',
+    }),
     aiLeadEmployeeSettingsRoute({
       path: 'follow-ups',
       name: 'ai_lead_employee_settings_follow_ups',

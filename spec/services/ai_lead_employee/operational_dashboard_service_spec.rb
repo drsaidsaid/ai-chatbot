@@ -105,6 +105,21 @@ RSpec.describe AiLeadEmployee::OperationalDashboardService do
       expect(payload[:leads].pluck(:id)).to eq([review_contact.id])
     end
 
+    it 'treats a Hot Lead as open sales-handoff work, not every Highly Qualified Lead' do
+      needs_action = create(:contact, account: account)
+      already_handled = create(:contact, account: account)
+      needs_action_conversation = create(:conversation, account: account, inbox: inbox, contact: needs_action, control_state: :human_active)
+      create(:conversation, account: account, inbox: inbox, contact: already_handled, control_state: :human_active)
+      hot_qualification = create(:lead_qualification, account: account, contact: needs_action, quality: :highly_qualified)
+      create(:lead_qualification, account: account, contact: already_handled, quality: :highly_qualified, follow_up_state: :call_booked)
+      create(:lead_handoff, account: account, contact: needs_action, conversation: needs_action_conversation,
+                            lead_qualification: hot_qualification, status: :open)
+
+      payload = described_class.new(account: account, user: admin, filters: { hot: 'true' }).perform
+
+      expect(payload[:leads].pluck(:id)).to eq([needs_action.id])
+    end
+
     it 'renders the conversation that matched conversation-scoped queue filters' do
       contact = create(:contact, account: account)
       matched_conversation = create(

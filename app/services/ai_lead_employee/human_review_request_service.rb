@@ -44,7 +44,7 @@ class AiLeadEmployee::HumanReviewRequestService
         reason: reason
       )
       created = request.new_record?
-      request.assign_attributes(question: lead_message.content.to_s) if created
+      request.assign_attributes(question: lead_message.content.to_s, assigned_user: default_owner) if created
       request.save!
     end
 
@@ -52,7 +52,7 @@ class AiLeadEmployee::HumanReviewRequestService
   end
 
   def deliver_alerts!(request)
-    recipients = alert_recipients
+    recipients = alert_recipients(request)
     previous_deliveries = request.alert_deliveries.index_by { |delivery| delivery['recipient'] }
     deliveries = recipients.map { |recipient| alert_delivery_for(request, recipient, previous_deliveries[recipient]) }
     request.update!(alert_recipients: recipients, alert_deliveries: deliveries)
@@ -117,8 +117,16 @@ class AiLeadEmployee::HumanReviewRequestService
     "#{ALERT_TEXT_PREFIX}: #{lead_message.content.to_s.truncate(120)}"
   end
 
-  def alert_recipients
-    Array(conversation.account.settings&.dig('ai_review_alert_recipients')).filter_map(&:presence).uniq
+  def alert_recipients(request)
+    routes = conversation.account.settings&.dig('ai_lead_employee', 'alert_routes', ALERT_TYPE)
+    return Array(conversation.account.settings&.dig('ai_review_alert_recipients')).filter_map(&:presence).uniq if routes.blank?
+
+    AiLeadEmployee::HandoffAlertRecipients.new(account: conversation.account, alert_type: ALERT_TYPE).for(request.assigned_user)
+  end
+
+  def default_owner
+    operator_id = conversation.account.settings&.dig('ai_lead_employee', 'human_operator_id')
+    conversation.account.users.find_by(id: operator_id)
   end
 
   def whatsapp_channel

@@ -14,6 +14,7 @@ class Api::V1::Accounts::OperationalDashboardsController < Api::V1::Accounts::Ba
   def dashboard_params
     params.permit(
       :quality,
+      :hot,
       :follow_up_state,
       :follow_up_status,
       :assignee_id,

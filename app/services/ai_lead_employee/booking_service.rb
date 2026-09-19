@@ -436,20 +436,9 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
   end
 
   def alert_recipients
-    routes = Array(account.settings&.dig('ai_lead_employee', 'alert_routes', PREPARATION_ALERT_TYPE))
-    routes = [{ 'type' => 'assignee' }] if routes.blank?
-    routes.filter_map { |route| recipient_for(route) }.flatten.compact.uniq
-  end
-
-  def recipient_for(route)
-    case route.to_h['type']
-    when 'assignee'
-      conversation.assignee&.custom_attributes&.dig('whatsapp_alert_phone')
-    when 'admin'
-      account.administrators.map { |admin| admin.custom_attributes&.dig('whatsapp_alert_phone') }
-    else
-      route.to_h['recipient']
-    end
+    AiLeadEmployee::HandoffAlertRecipients
+      .new(account: account, alert_type: PREPARATION_ALERT_TYPE)
+      .for(conversation.assignee, fallback_routes: [{ 'type' => 'assignee' }])
   end
 
   def confirmation_text(booking)

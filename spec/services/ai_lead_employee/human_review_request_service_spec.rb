@@ -68,4 +68,21 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
     expect(SendReplyJob).not_to have_received(:perform_later).with(alert_message.id)
     expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
   end
+
+  it 'assigns a configured default owner and routes an urgent review only to the configured Business Account member' do
+    owner = create(:user, account: account, role: :agent, custom_attributes: { 'whatsapp_alert_phone' => '+255700000099' })
+    account.update!(
+      settings: {
+        'ai_lead_employee' => {
+          'human_operator_id' => owner.id,
+          'alert_routes' => { described_class::ALERT_TYPE => [{ 'type' => 'member', 'user_id' => owner.id }] }
+        }
+      }
+    )
+
+    result = described_class.new(conversation: conversation, lead_message: message, reason: 'no_approved_knowledge').perform
+
+    expect(result.request.assigned_user).to eq(owner)
+    expect(result.request.alert_recipients).to eq(['255700000099'])
+  end
 end

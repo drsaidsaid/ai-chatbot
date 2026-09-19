@@ -9,6 +9,7 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
 import BookingConfigurationAPI from 'dashboard/api/bookingConfiguration';
 import QualificationConfigurationAPI from 'dashboard/api/qualificationConfiguration';
+import AlertConfigurationAPI from 'dashboard/api/alertConfiguration';
 import OfferConfigurationPanel from './OfferConfigurationPanel.vue';
 
 const props = defineProps({ section: { type: String, required: true } });
@@ -31,6 +32,17 @@ const booking = reactive({
   exceptions: [],
   connection: null,
 });
+const alertConfiguration = reactive({
+  default_owner_id: null,
+  team_members: [],
+  alert_routes: {},
+});
+const alertTypes = [
+  ['highly_qualified_sales_handoff', 'Hot Lead'],
+  ['booking_preparation', 'Booking'],
+  ['human_review_request', 'Urgent Review Request'],
+  ['knowledge_approval', 'Knowledge approval'],
+];
 const weekdays = [
   ['Sun', 0],
   ['Mon', 1],
@@ -95,11 +107,12 @@ const isQualification = computed(
 const isBooking = computed(
   () => activeSection.value.key === 'booking_business_hours'
 );
+const isTeamOrAlerts = computed(() =>
+  ['team_assignment', 'alerts'].includes(activeSection.value.key)
+);
 const nativeDestination = computed(
   () =>
     ({
-      team_assignment: { label: 'Open teams', route: 'settings_teams_list' },
-      alerts: { label: 'Open inboxes', route: 'settings_inbox_list' },
       whatsapp_connection: {
         label: 'Open inboxes',
         route: 'settings_inbox_list',
@@ -107,6 +120,16 @@ const nativeDestination = computed(
     })[activeSection.value.key]
 );
 
+const applyAlertConfiguration = data => {
+  alertConfiguration.default_owner_id = data.default_owner?.id || null;
+  alertConfiguration.team_members = data.team_members || [];
+  alertConfiguration.alert_routes = data.alert_routes || {};
+  alertTypes.forEach(([type]) => {
+    if (!alertConfiguration.alert_routes[type]?.length) {
+      alertConfiguration.alert_routes[type] = [{ type: 'assignee' }];
+    }
+  });
+};
 const load = async () => {
   if (activeSection.value.key === 'offers_qualification') {
     loading.value = false;
@@ -114,18 +137,22 @@ const load = async () => {
   }
   loading.value = true;
   try {
-    const [qualificationResponse, bookingResponse] = await Promise.all([
-      QualificationConfigurationAPI.get(),
-      BookingConfigurationAPI.get(),
-    ]);
+    const [qualificationResponse, bookingResponse, alertConfigurationResponse] =
+      await Promise.all([
+        QualificationConfigurationAPI.get(),
+        BookingConfigurationAPI.get(),
+        AlertConfigurationAPI.get(),
+      ]);
     Object.assign(qualification, qualificationResponse.data);
     Object.assign(booking, bookingResponse.data);
+    applyAlertConfiguration(alertConfigurationResponse.data);
   } catch {
     useAlert('Unable to load these settings.');
   } finally {
     loading.value = false;
   }
 };
+const routeFor = type => alertConfiguration.alert_routes[type][0];
 const saveQualification = async () => {
   saving.value = true;
   try {
@@ -150,6 +177,21 @@ const saveBooking = async () => {
     useAlert('Booking settings saved.');
   } catch {
     useAlert('Unable to save booking settings.');
+  } finally {
+    saving.value = false;
+  }
+};
+const saveAlertConfiguration = async () => {
+  saving.value = true;
+  try {
+    const { data } = await AlertConfigurationAPI.update({
+      default_owner_id: alertConfiguration.default_owner_id || null,
+      alert_routes: alertConfiguration.alert_routes,
+    });
+    applyAlertConfiguration(data);
+    useAlert('Team and alert settings saved.');
+  } catch {
+    useAlert('Unable to save team and alert settings.');
   } finally {
     saving.value = false;
   }
@@ -193,11 +235,17 @@ onMounted(load);
           </p>
         </div>
         <button
-          v-if="isQualification || isBooking"
+          v-if="isQualification || isBooking || isTeamOrAlerts"
           type="button"
           class="min-h-10 shrink-0 whitespace-nowrap rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
           :disabled="saving || loading"
-          @click="isQualification ? saveQualification() : saveBooking()"
+          @click="
+            isQualification
+              ? saveQualification()
+              : isBooking
+                ? saveBooking()
+                : saveAlertConfiguration()
+          "
         >
           {{ saving ? 'Saving...' : 'Save changes' }}
         </button>
@@ -315,30 +363,33 @@ onMounted(load);
                 type="time"
                 class="h-10 rounded-lg border border-n-weak px-3"
             /></label>
-            <label class="grid gap-1 text-sm"
-              ><span>Buffer before (minutes)</span
-              ><input
+            <label class="grid gap-1 text-sm">
+              <span>Buffer before (minutes)</span>
+              <input
                 v-model.number="booking.buffer_before_minutes"
                 type="number"
                 min="0"
                 class="h-10 rounded-lg border border-n-weak px-3"
-            /></label>
-            <label class="grid gap-1 text-sm"
-              ><span>Buffer after (minutes)</span
-              ><input
+              />
+            </label>
+            <label class="grid gap-1 text-sm">
+              <span>Buffer after (minutes)</span>
+              <input
                 v-model.number="booking.buffer_after_minutes"
                 type="number"
                 min="0"
                 class="h-10 rounded-lg border border-n-weak px-3"
-            /></label>
-            <label class="grid gap-1 text-sm"
-              ><span>Minimum notice (minutes)</span
-              ><input
+              />
+            </label>
+            <label class="grid gap-1 text-sm">
+              <span>Minimum notice (minutes)</span>
+              <input
                 v-model.number="booking.minimum_notice_minutes"
                 type="number"
                 min="0"
                 class="h-10 rounded-lg border border-n-weak px-3"
-            /></label>
+              />
+            </label>
           </div>
           <fieldset class="mt-5">
             <legend class="text-sm font-medium text-n-slate-12">
@@ -395,6 +446,103 @@ onMounted(load);
             {{ booking.allowed_hours.start }}–{{ booking.allowed_hours.end }}
             {{ booking.timezone }}, {{ booking.duration_minutes }} minute calls.
           </p>
+        </template>
+        <template v-else-if="activeSection.key === 'team_assignment'">
+          <h2 class="text-base font-semibold text-n-slate-12">Default owner</h2>
+          <p class="mt-2 text-sm text-n-slate-11">
+            New Hot Lead and Review Request work goes to this Human Operator
+            when a route uses the assignee.
+          </p>
+          <label class="mt-4 grid max-w-md gap-1 text-sm">
+            <span>Human Operator</span>
+            <select
+              v-model.number="alertConfiguration.default_owner_id"
+              class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3"
+            >
+              <option :value="null">No automatic owner</option>
+              <option
+                v-for="member in alertConfiguration.team_members"
+                :key="member.id"
+                :value="member.id"
+              >
+                {{ member.name
+                }}{{
+                  member.phone_configured ? '' : ' — no WhatsApp alert number'
+                }}
+              </option>
+            </select>
+          </label>
+          <RouterLink
+            :to="accountScopedRoute('settings_teams_list')"
+            class="mt-5 inline-flex h-9 items-center rounded-lg border border-n-weak px-4 text-sm font-medium"
+          >
+            Manage team members
+          </RouterLink>
+        </template>
+        <template v-else-if="activeSection.key === 'alerts'">
+          <p class="mb-5 text-sm text-n-slate-11">
+            Each alert goes only to the selected authorized recipient. Delivery
+            status is shown on the related work item.
+          </p>
+          <div class="grid gap-4">
+            <section
+              v-for="[type, label] in alertTypes"
+              :key="type"
+              class="rounded-xl border border-n-weak p-4"
+            >
+              <h2 class="text-base font-semibold text-n-slate-12">
+                {{ label }}
+              </h2>
+              <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                <label class="grid gap-1 text-sm">
+                  <span>Recipient</span>
+                  <select
+                    v-model="routeFor(type).type"
+                    class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3"
+                  >
+                    <option value="assignee">Assigned Human Operator</option>
+                    <option value="admin">
+                      Business Account administrators
+                    </option>
+                    <option value="member">Specific team member</option>
+                    <option value="whatsapp">WhatsApp number</option>
+                  </select>
+                </label>
+                <label
+                  v-if="routeFor(type).type === 'whatsapp'"
+                  class="grid gap-1 text-sm"
+                >
+                  <span>WhatsApp number</span>
+                  <input
+                    v-model.trim="routeFor(type).recipient"
+                    type="tel"
+                    inputmode="tel"
+                    placeholder="255700000000"
+                    class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3"
+                  />
+                </label>
+                <label
+                  v-if="routeFor(type).type === 'member'"
+                  class="grid gap-1 text-sm"
+                >
+                  <span>Team member</span>
+                  <select
+                    v-model.number="routeFor(type).user_id"
+                    class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3"
+                  >
+                    <option :value="null" disabled>Select a team member</option>
+                    <option
+                      v-for="member in alertConfiguration.team_members"
+                      :key="member.id"
+                      :value="member.id"
+                    >
+                      {{ member.name }}
+                    </option>
+                  </select>
+                </label>
+              </div>
+            </section>
+          </div>
         </template>
         <template v-else-if="nativeDestination">
           <h2 class="text-base font-semibold text-n-slate-12">

@@ -28,12 +28,13 @@ class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::Base
   end
 
   def propose_knowledge
-    @review_request.propose_knowledge!(
+    knowledge_item = @review_request.propose_knowledge!(
       proposer: Current.user,
       source_kind: proposal_source_kind,
       title: proposal_params[:title],
       answer: proposal_params[:answer]
     )
+    AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: knowledge_item).perform
     render json: payload(@review_request.reload)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity

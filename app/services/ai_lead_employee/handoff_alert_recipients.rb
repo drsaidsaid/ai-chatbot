@@ -6,8 +6,10 @@ class AiLeadEmployee::HandoffAlertRecipients
     @alert_type = alert_type
   end
 
-  def for(assignee)
-    alert_routes.filter_map { |route| recipient_for(route, assignee) }.flatten.filter_map { |recipient| normalized_recipient(recipient) }.uniq
+  def for(assignee, fallback_routes: nil)
+    routes = alert_routes
+    routes = Array(fallback_routes) if routes.empty?
+    routes.filter_map { |route| recipient_for(route, assignee) }.flatten.filter_map { |recipient| normalized_recipient(recipient) }.uniq
   end
 
   private
@@ -24,7 +26,9 @@ class AiLeadEmployee::HandoffAlertRecipients
       whatsapp_alert_phone_for(assignee)
     when 'admin'
       account.administrators.map { |admin| whatsapp_alert_phone_for(admin) }
-    else
+    when 'member'
+      whatsapp_alert_phone_for(account.users.find_by(id: route.to_h['user_id']))
+    when 'whatsapp'
       route.to_h['recipient']
     end
   end
