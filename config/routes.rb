@@ -206,7 +206,15 @@ Rails.application.routes.draw do
             resources :requests, controller: 'ai_subscription_requests', only: [:create]
           end
           resource :qualification_configuration, only: [:show, :update]
-          resources :qualification_offers, only: [:index, :show, :create, :update]
+          resources :qualification_offers, only: [:index, :show, :create, :update] do
+            member do
+              patch 'commercial_terms', action: :update_commercial_terms
+              post 'commercial_terms/publish', action: :publish_commercial_terms
+              post 'commercial_terms/preview', action: :preview_commercial_terms
+              post 'commercial_proposals/:proposal_id/approve', action: :approve_commercial_proposal
+              post 'commercial_proposals/:proposal_id/reject', action: :reject_commercial_proposal
+            end
+          end
           resource :whatsapp_connection, only: [:show, :update] do
             post :health_check
             post :retry_receiving

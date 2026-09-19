@@ -176,6 +176,137 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.sources.first[:source_kind]).to eq('pricing')
   end
 
+  it 'uses the selected Offer published commercial revision instead of conflicting price knowledge' do
+    admin = create(:user, account: account, role: :administrator)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: selected_offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: selected_offer, expected_version: term.draft_version, editor: admin)
+    create(
+      :knowledge_item,
+      account: account,
+      source_kind: :pricing,
+      question: 'What is the price of growth coaching?',
+      answer: 'An old document says USD 900.',
+      metadata: { 'offer_ids' => [selected_offer.id] }
+    )
+
+    result = described_class.new(
+      account: account,
+      offer: selected_offer.reload,
+      question: 'What is the price of growth coaching?'
+    ).perform
+
+    expect(result.answer).to include('USD 1250.00')
+    expect(result.answer).not_to include('USD 900')
+    expect(result.sources).to contain_exactly(include(type: 'offer_commercial_terms', offer_id: selected_offer.id))
+  end
+
+  it 'blocks a price quotation when the selected Offer has no published commercial revision' do
+    create(
+      :knowledge_item,
+      account: account,
+      source_kind: :pricing,
+      question: 'What is the price of growth coaching?',
+      answer: 'An old document says USD 900.',
+      metadata: { 'offer_ids' => [selected_offer.id] }
+    )
+
+    result = described_class.new(
+      account: account,
+      offer: selected_offer,
+      question: 'What is the price of growth coaching?'
+    ).perform
+
+    expect(result).to be_refused
+    expect(result.refusal_reason).to eq('no_published_price')
+    expect(result.answer).to be_nil
+  end
+
+  it 'keeps actual platform pricing separate while preserving Offer authority in mixed budget questions' do
+    admin = create(:user, account: account, role: :administrator)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: selected_offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: selected_offer, expected_version: term.draft_version, editor: admin)
+    create(
+      :knowledge_item,
+      account: account,
+      source_kind: :pricing,
+      question: 'Does my USD 500 budget cover the price?',
+      answer: 'An old answer says the Offer costs USD 500.',
+      metadata: { 'offer_ids' => [selected_offer.id] }
+    )
+
+    platform_result = described_class.new(
+      account: account, offer: selected_offer.reload, question: 'What is the platform subscription price?'
+    ).perform
+    budget_result = described_class.new(
+      account: account, offer: selected_offer, question: 'Does my USD 500 budget cover the price?'
+    ).perform
+
+    expect(platform_result.answer).to be_nil
+    expect(platform_result).to be_refused
+    expect(budget_result.answer).to include('USD 1250.00')
+    expect(budget_result.answer).not_to include('costs USD 500')
+    expect(budget_result.sources).to contain_exactly(include(type: 'offer_commercial_terms'))
+  end
+
+  it 'does not let stale knowledge override a selected Offer whose name includes plan or subscription' do
+    selected_offer.update!(name: 'Growth Plan Subscription')
+    admin = create(:user, account: account, role: :administrator)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: selected_offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: selected_offer, expected_version: term.draft_version, editor: admin)
+    create(
+      :knowledge_item,
+      account: account,
+      source_kind: :pricing,
+      question: 'What is the Growth Plan Subscription price?',
+      answer: 'The old price was USD 20.',
+      metadata: { 'offer_ids' => [selected_offer.id] }
+    )
+
+    result = described_class.new(
+      account: account, offer: selected_offer.reload, question: 'What is the Growth Plan Subscription price?'
+    ).perform
+
+    expect(result.answer).to include('USD 1250.00')
+    expect(result.answer).not_to include('USD 20')
+    expect(result.sources).to contain_exactly(include(type: 'offer_commercial_terms'))
+  end
+
+  it 'keeps Offer authority when a price question explicitly excludes the platform subscription' do
+    admin = create(:user, account: account, role: :administrator)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: selected_offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: selected_offer, expected_version: term.draft_version, editor: admin)
+    create(
+      :knowledge_item,
+      account: account,
+      source_kind: :pricing,
+      question: 'What is the course price?',
+      answer: 'The old course price was USD 900.',
+      metadata: { 'offer_ids' => [selected_offer.id] }
+    )
+
+    result = described_class.new(
+      account: account,
+      offer: selected_offer.reload,
+      question: 'What is the course price, excluding the platform subscription?'
+    ).perform
+
+    expect(result.answer).to include('USD 1250.00')
+    expect(result.answer).not_to include('USD 900')
+    expect(result.sources).to contain_exactly(include(type: 'offer_commercial_terms'))
+  end
+
   it 'does not use unapproved rejected inactive or cross-tenant knowledge' do
     other_account = create(:account)
     create(:knowledge_item, account: account, status: :draft, question: 'Do you offer audits?', answer: 'Draft answer')

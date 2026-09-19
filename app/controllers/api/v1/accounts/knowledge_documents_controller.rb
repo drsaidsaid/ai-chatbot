@@ -15,14 +15,20 @@ class Api::V1::Accounts::KnowledgeDocumentsController < Api::V1::Accounts::BaseC
 
   def create
     document = current_account.knowledge_documents.new
-    document.save_draft!(attributes: knowledge_document_params, editor: Current.user)
+    KnowledgeDocument.transaction do
+      document.save_draft!(attributes: knowledge_document_params, editor: Current.user)
+      extract_commercial_proposals(document)
+    end
     render json: payload(document, include_body: true), status: :created
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def update
-    @knowledge_document.save_draft!(attributes: knowledge_document_params, editor: Current.user)
+    KnowledgeDocument.transaction do
+      @knowledge_document.save_draft!(attributes: knowledge_document_params, editor: Current.user)
+      extract_commercial_proposals(@knowledge_document)
+    end
     render json: payload(@knowledge_document.reload, include_body: true)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -34,11 +40,14 @@ class Api::V1::Accounts::KnowledgeDocumentsController < Api::V1::Accounts::BaseC
   end
 
   def import
-    document = current_account.knowledge_documents.new(import_document_params.merge(last_editor: Current.user))
-    document.import_metadata = import_metadata(document)
-    document.status = document.body.present? ? :draft : :import_failed
-    document.revisions = [{ event: 'imported', editor_id: Current.user&.id, recorded_at: Time.current.iso8601 }]
-    document.save!
+    document = current_account.knowledge_documents.new(import_document_attributes)
+    KnowledgeDocument.transaction do
+      document.import_metadata = import_metadata(document)
+      document.status = document.body.present? ? :draft : :import_failed
+      document.revisions = [{ event: 'imported', editor_id: Current.user&.id, recorded_at: Time.current.iso8601 }]
+      document.save!
+      extract_commercial_proposals(document)
+    end
     render json: payload(document, include_body: true), status: :created
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -68,6 +77,25 @@ class Api::V1::Accounts::KnowledgeDocumentsController < Api::V1::Accounts::BaseC
 
   def knowledge_document
     @knowledge_document = current_account.knowledge_documents.find(params[:id])
+  end
+
+  def selected_import_offer
+    return if params[:offer_id].blank?
+
+    @selected_import_offer ||= current_account.qualification_offers.find(params[:offer_id])
+  end
+
+  def import_document_attributes
+    scope = selected_import_offer ? { offer_ids: [selected_import_offer.id], general_question_access: false } : {}
+    import_document_params.merge(scope).merge(last_editor: Current.user)
+  end
+
+  def extract_commercial_proposals(document)
+    return if document.body.blank?
+
+    current_account.qualification_offers.where(id: Array(document.offer_ids)).find_each do |offer|
+      AiLeadEmployee::CommercialProposalExtractor.new(document: document, offer: offer).perform
+    end
   end
 
   def knowledge_document_params
@@ -109,7 +137,8 @@ class Api::V1::Accounts::KnowledgeDocumentsController < Api::V1::Accounts::BaseC
       published_at: document.published_at,
       archived_at: document.archived_at,
       updated_at: document.updated_at,
-      last_editor: document.last_editor && { id: document.last_editor.id, name: document.last_editor.name }
+      last_editor: document.last_editor && { id: document.last_editor.id, name: document.last_editor.name },
+      commercial_proposals: document.commercial_proposals.order(created_at: :desc).map(&:payload)
     }
   end
 end

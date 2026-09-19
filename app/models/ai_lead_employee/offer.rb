@@ -8,6 +8,8 @@ class AiLeadEmployee::Offer < ApplicationRecord
   belongs_to :account
   has_many :configuration_revisions, class_name: 'AiLeadEmployee::OfferConfigurationRevision', dependent: :restrict_with_exception
   has_many :lead_qualifications, dependent: :restrict_with_exception
+  has_one :commercial_term, class_name: 'AiLeadEmployee::OfferCommercialTerm', dependent: :restrict_with_exception
+  has_many :commercial_proposals, class_name: 'AiLeadEmployee::OfferCommercialProposal', dependent: :restrict_with_exception
 
   validates :name, presence: true, uniqueness: { scope: :account_id }
   validates :currency, inclusion: { in: AiLeadEmployee::OfferMoney::PRECISION.keys }
@@ -40,7 +42,10 @@ class AiLeadEmployee::Offer < ApplicationRecord
 
   def payload
     configuration.merge('id' => id, 'name' => name, 'currency' => currency, 'enabled' => enabled,
-                        'version' => configuration_version, 'budget_ranges' => public_budget_ranges)
+                        'version' => configuration_version, 'budget_ranges' => public_budget_ranges,
+                        'commercial_terms_draft' => commercial_term&.draft_payload,
+                        'published_commercial_terms' => commercial_term&.published_payload,
+                        'commercial_proposals' => commercial_proposals.order(created_at: :desc).map(&:payload))
   end
 
   private

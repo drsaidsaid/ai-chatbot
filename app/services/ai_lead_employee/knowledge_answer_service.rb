@@ -24,17 +24,20 @@ class AiLeadEmployee::KnowledgeAnswerService # rubocop:disable Metrics/ClassLeng
     'supporting_document' => 4
   }.freeze
 
-  def initialize(account:, question:, document_scope: nil, offer: nil, language: nil)
+  def initialize(account:, question:, document_scope: nil, offer: nil, language: nil, promotion_eligible: nil) # rubocop:disable Metrics/ParameterLists
     @account = account
     @question = question.to_s
     @document_scope = document_scope
     @offer = offer
     @language = language&.to_s
+    @promotion_eligible = promotion_eligible
   end
 
   def perform
-    return unanswered_result('angry_question') if angry_question?
-    return unanswered_result('sensitive_question') if high_risk_sensitive_question?
+    refusal_reason = early_refusal_reason
+    return unanswered_result(refusal_reason) if refusal_reason
+
+    return published_offer_price if published_offer_price_required?
 
     item_result = approved_item_result
     return item_result if item_result.present?
@@ -58,7 +61,36 @@ class AiLeadEmployee::KnowledgeAnswerService # rubocop:disable Metrics/ClassLeng
 
   private
 
-  attr_reader :account, :question, :document_scope, :offer, :language
+  attr_reader :account, :question, :document_scope, :offer, :language, :promotion_eligible
+
+  def early_refusal_reason
+    return 'angry_question' if angry_question?
+    return 'sensitive_question' if high_risk_sensitive_question?
+    return 'non_offer_pricing' if price_question? && platform_money_question?
+  end
+
+  def published_offer_price_required?
+    price_question? && (offer.present? || account.qualification_offers.exists?)
+  end
+
+  def price_question?
+    tokens(normalize(question)).intersect?(%w[price prices pricing cost costs fee fees much bei gharama])
+  end
+
+  def platform_money_question?
+    normalized = normalize(question)
+    return false if offer && normalized.include?(normalize(offer.name))
+    return false unless normalized.match?(/\b(platform (?:subscription|plan|price)|ai reply credits?|meta (?:charge|advertising)|ad spend)\b/)
+
+    !normalized.match?(/\b(course|offer|programme?|product|service|package|coaching)\s+(price|pricing|cost|fee)s?\b/)
+  end
+
+  def published_offer_price
+    result = AiLeadEmployee::OfferPricingResolver.new(
+      account: account, offer: offer, promotion_eligible: promotion_eligible
+    ).perform
+    Result.new(answer: result.answer, sources: result.sources, refusal_reason: result.refusal_reason)
+  end
 
   def approved_item_result
     matches = matching_items

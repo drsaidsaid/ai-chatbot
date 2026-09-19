@@ -36,6 +36,7 @@
 class KnowledgeDocument < ApplicationRecord
   belongs_to :account
   belongs_to :last_editor, class_name: 'User', optional: true
+  has_many :commercial_proposals, class_name: 'AiLeadEmployee::OfferCommercialProposal', dependent: :restrict_with_exception
 
   enum status: {
     draft: 0,

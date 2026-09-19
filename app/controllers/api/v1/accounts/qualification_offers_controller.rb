@@ -19,6 +19,62 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
     save_offer(offer, :ok)
   end
 
+  def update_commercial_terms
+    AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: offer,
+      attributes: commercial_terms_params,
+      expected_version: params[:draft_version]
+    )
+    render json: offer.reload.payload
+  rescue AiLeadEmployee::CommercialTerms::Conflict => e
+    render json: { error: e.message }, status: :conflict
+  rescue ArgumentError, KeyError, ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def publish_commercial_terms
+    AiLeadEmployee::CommercialTerms.publish!(offer: offer, expected_version: params.require(:draft_version), editor: Current.user)
+    render json: offer.reload.payload
+  rescue AiLeadEmployee::CommercialTerms::Conflict => e
+    render json: { error: e.message }, status: :conflict
+  rescue ArgumentError, ActionController::ParameterMissing, ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def preview_commercial_terms
+    result = AiLeadEmployee::OfferPricingResolver.new(
+      account: current_account,
+      offer: offer,
+      at: preview_time,
+      promotion_eligible: preview_promotion_eligible
+    ).perform
+    render json: {
+      answer: result.answer,
+      answered: result.answered?,
+      refusal_reason: result.refusal_reason,
+      pricing_variant: result.variant,
+      sources: result.sources
+    }
+  rescue ArgumentError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def approve_commercial_proposal
+    proposal = offer.commercial_proposals.find(params[:proposal_id])
+    record = AiLeadEmployee::CommercialProposalReviewer.new(offer: offer, proposal: proposal, reviewer: Current.user).approve!
+    render json: offer.reload.payload.merge('commercial_terms_draft' => record.draft_payload)
+  rescue ArgumentError, ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def reject_commercial_proposal
+    proposal = offer.commercial_proposals.find(params[:proposal_id])
+    AiLeadEmployee::CommercialProposalReviewer.new(offer: offer, proposal: proposal, reviewer: Current.user).reject!
+    render json: offer.reload.payload
+  rescue ArgumentError, ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
   private
 
   def offer
@@ -44,6 +100,22 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
                                               budget_ranges: [:label, :minimum, :maximum, :position, :enabled],
                                               score_weights: {}, score_thresholds: [:qualified, :highly_qualified]).to_h
     permitted.merge('rules' => rule_params)
+  end
+
+  def commercial_terms_params
+    params.require(:commercial_terms).permit(
+      :amount, :currency, :quote_required, :effective_from, :effective_until, :timezone, :conditions, :pricing_url,
+      :promotion_amount, :promotion_starts_at, :promotion_ends_at, :promotion_conditions, :promotion_requires_confirmation,
+      :promotion_eligibility_field
+    )
+  end
+
+  def preview_time
+    params[:at].present? ? Time.iso8601(params[:at]) : Time.current
+  end
+
+  def preview_promotion_eligible
+    ActiveModel::Type::Boolean.new.cast(params[:promotion_eligible]) if params.key?(:promotion_eligible)
   end
 
   def rule_params
