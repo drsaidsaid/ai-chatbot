@@ -126,6 +126,90 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
     end
   end
 
+  it 'serializes concurrent Review replays into one linked alert Message' do
+    lead_message = create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                                    message_type: :incoming, content: 'A second question', provider_created_at: Time.current)
+    start = Queue.new
+    workers = Array.new(2) do |index|
+      start_worker("r14-review-replay-#{index}") do
+        start.pop
+        AiLeadEmployee::HumanReviewRequestService.new(
+          conversation: @conversation, lead_message: lead_message,
+          reason: :no_approved_knowledge, enqueue_alerts: false
+        ).perform.request.id
+      end
+    end
+    workers.size.times { start << true }
+    request_ids = workers.map(&:value)
+    request = HumanReviewRequest.find(request_ids.first)
+    alert_messages = Message.where("additional_attributes #>> '{ai_lead_employee,review_request_id}' = ?", request.id.to_s)
+
+    expect(request_ids.uniq).to contain_exactly(request.id)
+    expect(request.reload.alert_deliveries.one?).to be(true)
+    expect(alert_messages.count).to eq(1)
+    expect(request.alert_deliveries.sole['message_id']).to eq(alert_messages.sole.id)
+  end
+
+  it 'publishes Review dispatch only after its Message link is committed' do
+    lead_message = create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                                    message_type: :incoming, content: 'A committed question', provider_created_at: Time.current)
+    observed = nil
+    allow(SendReplyJob).to receive(:perform_later) do |message_id|
+      observed = Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          request = HumanReviewRequest.find_by!(lead_message: lead_message, reason: :no_approved_knowledge)
+          [Message.exists?(message_id), request.alert_deliveries.sole['message_id']]
+        end
+      end.value
+    end
+
+    result = AiLeadEmployee::HumanReviewRequestService.new(
+      conversation: @conversation, lead_message: lead_message, reason: :no_approved_knowledge
+    ).perform
+
+    expect(observed).to eq([true, result.request.alert_deliveries.sole['message_id']])
+    expect(SendReplyJob).to have_received(:perform_later).once
+  end
+
+  it 'serializes a knowledge retry with dispatch using Conversation then approval authority' do
+    configure_domain_alert_routes(AiLeadEmployee::KnowledgeApprovalAlertDeliveryService::ALERT_TYPE)
+    item = create(:knowledge_item, account: @channel.account, status: :draft, approved_at: nil, metadata: {})
+    AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item, enqueue: false).perform
+    alert = Message.find(item.reload.metadata.fetch('knowledge_approval_alert_deliveries').sole.fetch('message_id'))
+    create(:message, account: @channel.account, inbox: @channel.inbox, conversation: alert.conversation,
+                     message_type: :incoming, provider_created_at: Time.current)
+    alert.update!(status: :failed, external_error: 'retry requested')
+    entered = Queue.new
+    dispatch_release = Queue.new
+    allow_any_instance_of(Whatsapp::OutboundAlertAuthority).to receive(:lock_record!).and_wrap_original do |method| # rubocop:disable RSpec/AnyInstance
+      if Thread.current[:r14_pause_knowledge_dispatch]
+        entered << true
+        dispatch_release.pop
+      end
+      method.call
+    end
+    dispatch = start_worker('r14-knowledge-dispatch') do
+      Thread.current[:r14_pause_knowledge_dispatch] = true
+      SendReplyJob.perform_now(alert.id)
+    ensure
+      Thread.current[:r14_pause_knowledge_dispatch] = false
+    end
+    Timeout.timeout(10) { entered.pop }
+    retry_worker = start_worker('r14-knowledge-retry') do
+      AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item.reload, enqueue: false).perform
+    end
+    await_blocked!(retry_worker, 'r14-knowledge-retry')
+    dispatch_release << true
+    dispatch.value
+    retry_worker.value
+
+    expect(alert.reload.whatsapp_outbound_delivery).to be_accepted
+    expect(@provider_request).to have_been_requested.once
+    expect(Message.where("additional_attributes #>> '{ai_lead_employee,knowledge_item_id}' = ?", item.id.to_s).count).to eq(1)
+  ensure
+    dispatch_release << true if dispatch_release
+  end
+
   it 'does not discover a newly committed origin review after the authority prefix recorded absence' do
     inserted = Queue.new
     creator = start_worker('r09-late-review-creator') do

@@ -39,6 +39,7 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
     alert_message = account.messages.find(result.request.alert_deliveries.first['message_id'])
     expect(alert_message.additional_attributes.dig('ai_lead_employee', 'delivery_boundary')).to eq('outbox')
     expect(alert_message.additional_attributes.dig('ai_lead_employee', 'review_request_id')).to eq(result.request.id)
+    expect(alert_message.content).to include('Reason: No approved knowledge', 'Owner: Unassigned')
     expect(SendReplyJob).to have_received(:perform_later).with(alert_message.id).once
     expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
 
@@ -105,6 +106,39 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
     expect(existing.reload.assigned_user).to eq(owner)
     expect(conversation.reload.assignee).to eq(owner)
     expect(existing.alert_deliveries.sole).to include('recipient' => '255700000099', 'status' => 'queued')
+  end
+
+  it 'restores the retained default owner when the canonical Conversation assignee was cleared' do
+    owner = create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700000099' })
+    account.update!(settings: { 'ai_lead_employee' => { 'human_operator_id' => owner.id,
+                                                        'alert_routes' => { described_class::ALERT_TYPE => [{ 'type' => 'assignee' }] } } })
+    request = described_class.new(conversation: conversation, lead_message: message, reason: :no_approved_knowledge).perform.request
+    Conversations::AssignmentService.new(conversation: conversation.reload, assignee_id: nil).perform
+
+    described_class.new(conversation: conversation.reload, lead_message: message, reason: :no_approved_knowledge).perform
+
+    expect(request.reload.assigned_user).to eq(owner)
+    expect(conversation.reload.assignee).to eq(owner)
+  end
+
+  it 'rolls back a created alert Message when persistence fails and replays without a duplicate' do
+    service = described_class.new(conversation: conversation, lead_message: message, reason: :no_approved_knowledge)
+    allow(service).to receive(:persist_alert_deliveries!).and_wrap_original do |original, *args|
+      original.call(*args)
+      raise IOError, 'synthetic crash before commit'
+    end
+
+    expect { service.perform }.to raise_error(IOError, 'synthetic crash before commit')
+
+    request = HumanReviewRequest.find_by!(conversation: conversation, lead_message: message, reason: :no_approved_knowledge)
+    alerts = account.messages.where("additional_attributes #>> '{ai_lead_employee,review_request_id}' = ?", request.id.to_s)
+    expect(request.alert_deliveries).to be_empty
+    expect(alerts).to be_empty
+
+    described_class.new(conversation: conversation.reload, lead_message: message, reason: :no_approved_knowledge).perform
+
+    expect(request.reload.alert_deliveries.one?).to be(true)
+    expect(alerts.reload.count).to eq(1)
   end
 
   it 'rejects a queued assignee alert after the conversation is reassigned' do

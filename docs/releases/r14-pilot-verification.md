@@ -87,3 +87,11 @@ Final focused evidence:
 - Focused RuboCop: no offenses. Focused ESLint: no errors; existing Knowledge panel formatting warnings remain. `git diff --check`: clean.
 
 The coordinator prohibited another Vite build or browser run for this completion phase. The previously recorded integrated build passed at commit `7ef34819`; no real alert delivery, deployment, push, or integration was performed.
+
+## Post-review concurrency repair
+
+- Review alert Message creation and its JSON link now commit in one transaction while holding the canonical Conversation then Review Request locks. Concurrent replay produces one Message, and an exception after Message creation rolls the Message back so replay cannot orphan or duplicate it. Dispatch jobs are published only after the transaction returns.
+- Review assignment always invokes the two-record idempotency check. If the Conversation assignee is cleared while the Review retains the configured default owner, replay restores the canonical Conversation assignment.
+- Knowledge creation and retry now lock every existing alert Conversation in stable order before the Knowledge Item, reload and recheck draft status under lock, and enqueue after commit. This matches dispatch's Conversation-to-authority order and prevents a retry from surviving approval.
+- Review alerts include reason and owner. Booking preparation alerts include owner.
+- Focused service paths: 28 examples, 0 failures. Dedicated PostgreSQL concurrency/authority suite: 14 examples, 0 failures, including actual concurrent Review replay, post-commit enqueue observation, and knowledge retry/dispatch workers.

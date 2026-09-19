@@ -445,11 +445,12 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
     "Your call is booked for #{booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z')}."
   end
 
-  def preparation_alert_text(booking) # rubocop:disable Metrics/AbcSize
+  def preparation_alert_text(booking) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     evidence = qualification&.evidence_snapshot.to_h
     [
       'Call booked with Hot Lead',
       "Open: #{conversation_url}",
+      "Owner: #{conversation.assignee&.name || booking.assignee&.name || 'Unassigned'}",
       "Lead: #{conversation.contact.name} #{conversation.contact.phone_number} #{conversation.contact.email}".squish,
       "When: #{booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z')}",
       "Summary: #{qualification&.reasons.to_a.join('; ').presence || @eligibility.offer&.name || 'Booked call'}",

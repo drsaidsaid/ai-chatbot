@@ -52,4 +52,23 @@ RSpec.describe AiLeadEmployee::KnowledgeApprovalAlertDeliveryService do
     expect(alert.reload.whatsapp_outbound_delivery).to be_pending
     expect(SendReplyJob).to have_received(:perform_later).with(alert.id).twice
   end
+
+  it 'rechecks approval state under lock before creating or retrying an alert' do
+    channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    account = channel.account
+    operator = create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700123456' })
+    account.update!(settings: { 'ai_lead_employee' => { 'human_operator_id' => operator.id,
+                                                        'alert_routes' => { described_class::ALERT_TYPE => [{ 'type' => 'assignee' }] } } })
+    stale_item = create(:knowledge_item, account: account, status: :draft, approved_at: nil, metadata: {})
+    KnowledgeItem.find(stale_item.id).approve!
+    allow(SendReplyJob).to receive(:perform_later)
+
+    expect do
+      described_class.new(knowledge_item: stale_item).perform
+    end.not_to change(account.messages, :count)
+
+    expect(stale_item.reload).to be_approved
+    expect(stale_item.metadata['knowledge_approval_alert_deliveries']).to be_blank
+    expect(SendReplyJob).not_to have_received(:perform_later)
+  end
 end

@@ -10,12 +10,19 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
   end
 
   def perform
-    return knowledge_item unless knowledge_item.draft? && whatsapp_channel
+    return knowledge_item unless whatsapp_channel
 
-    message_ids = []
-    knowledge_item.with_lock do
-      deliveries = recipients.map { |recipient| deliver_to_recipient(recipient, message_ids) }
+    knowledge_item.reload
+    message_ids = ApplicationRecord.transaction do
+      lock_existing_alert_conversations!
+      knowledge_item.lock!
+      knowledge_item.reload
+      next [] unless knowledge_item.draft?
+
+      queued_ids = []
+      deliveries = recipients.map { |recipient| deliver_to_recipient(recipient, queued_ids) }
       knowledge_item.update!(metadata: knowledge_item.metadata.merge('knowledge_approval_alert_deliveries' => deliveries))
+      queued_ids
     end
     message_ids.uniq.each { |id| SendReplyJob.perform_later(id) if enqueue }
     knowledge_item
@@ -33,6 +40,12 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
   private
 
   attr_reader :account, :enqueue, :knowledge_item
+
+  def lock_existing_alert_conversations!
+    message_ids = Array(knowledge_item.metadata['knowledge_approval_alert_deliveries']).filter_map { |delivery| delivery['message_id'] }
+    conversation_ids = account.messages.reorder(nil).where(id: message_ids).distinct.pluck(:conversation_id)
+    Conversation.where(account_id: account.id, id: conversation_ids).order(:id).lock('FOR NO KEY UPDATE').load
+  end
 
   def recipients
     AiLeadEmployee::HandoffAlertRecipients.new(account: account, alert_type: ALERT_TYPE).for(default_owner)
@@ -67,7 +80,8 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
   end
 
   def default_owner
-    account.users.find_by(id: account.settings&.dig('ai_lead_employee', 'human_operator_id'))
+    operator_id = account.reload.settings&.dig('ai_lead_employee', 'human_operator_id')
+    account.users.find_by(id: operator_id)
   end
 
   def previous_message(recipient)
