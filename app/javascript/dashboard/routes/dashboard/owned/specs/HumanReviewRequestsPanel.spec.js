@@ -194,8 +194,17 @@ describe('HumanReviewRequestsPanel', () => {
         {
           id: 55,
           suggestion: 'Review whether the fit rule is too broad.',
-          evidence: '{"quality":"qualified"}',
+          source_type: 'lead_handoff',
+          evidence:
+            '{"quality":"highly_qualified","score":88,"reasons":["Lead agreed to a sales handoff"],"evidence":{"sales_call_agreement":{"typed_value":true}}}',
           conversation_display_id: 42,
+        },
+        {
+          id: 56,
+          suggestion: 'Review the configured region rule.',
+          source_type: 'human_review_request',
+          evidence: 'Is service available outside the configured region?',
+          conversation_display_id: 43,
         },
       ],
     });
@@ -208,6 +217,15 @@ describe('HumanReviewRequestsPanel', () => {
     expect(
       wrapper.get('[data-testid="pending-configuration-feedback"]').text()
     ).toContain('Review whether the fit rule is too broad.');
+    expect(wrapper.text()).toContain(
+      'Qualification: Highly Qualified · Score: 88'
+    );
+    expect(wrapper.text()).toContain('Reasons: Lead agreed to a sales handoff');
+    expect(wrapper.text()).toContain(
+      'Source question: Is service available outside the configured region?'
+    );
+    expect(wrapper.text()).not.toContain('sales_call_agreement');
+    expect(wrapper.text()).not.toContain('typed_value');
     await wrapper
       .findAll('button')
       .find(button => button.text() === 'Mark reviewed')
@@ -217,9 +235,10 @@ describe('HumanReviewRequestsPanel', () => {
     expect(ReviewConfigurationSuggestionsAPI.review).toHaveBeenCalledWith(55, {
       outcome: 'reviewed',
     });
-    expect(
-      wrapper.find('[data-testid="pending-configuration-feedback"]').exists()
-    ).toBe(false);
+    expect(wrapper.text()).not.toContain(
+      'Review whether the fit rule is too broad.'
+    );
+    expect(wrapper.text()).toContain('Review the configured region rule.');
   });
 
   it('reloads when the selected review changes and hides a review from another conversation', async () => {

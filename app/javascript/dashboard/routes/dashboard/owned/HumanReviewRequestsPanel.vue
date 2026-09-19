@@ -77,6 +77,43 @@ const feedbackStatusLabel = status => {
   return labels[status] || status;
 };
 
+const humanizeEvidenceValue = value =>
+  value
+    ?.toString()
+    .replaceAll('_', ' ')
+    .replace(/\b\w/g, character => character.toUpperCase());
+
+const feedbackEvidenceLines = suggestion => {
+  if (suggestion.source_type === 'human_review_request') {
+    return [
+      t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_SOURCE_QUESTION', {
+        question: suggestion.evidence,
+      }),
+    ];
+  }
+
+  try {
+    const evidence = JSON.parse(suggestion.evidence);
+    const lines = [
+      t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_QUALIFICATION_SUMMARY', {
+        quality: humanizeEvidenceValue(evidence.quality),
+        score: evidence.score ?? t('AI_LEAD_EMPLOYEE.REVIEWS.UNAVAILABLE'),
+      }),
+    ];
+    const reasons = Array(evidence.reasons).slice(0, 2).join('; ');
+    if (reasons) {
+      lines.push(
+        t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_QUALIFICATION_REASONS', {
+          reasons,
+        })
+      );
+    }
+    return lines;
+  } catch {
+    return [t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_SOURCE_UNAVAILABLE')];
+  }
+};
+
 const visibleRequests = computed(() =>
   reviewRequests.value.filter(request => {
     if (props.reviewId) {
@@ -253,12 +290,12 @@ watch(() => [props.reviewId, props.conversationId], loadReviewRequests);
         class="grid gap-2 rounded-md border border-n-weak p-3 text-sm text-n-slate-12"
       >
         <p class="font-medium">{{ suggestion.suggestion }}</p>
-        <p class="text-xs text-n-slate-11">
-          {{
-            t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_EVIDENCE', {
-              evidence: suggestion.evidence,
-            })
-          }}
+        <p
+          v-for="line in feedbackEvidenceLines(suggestion)"
+          :key="line"
+          class="text-xs text-n-slate-11"
+        >
+          {{ line }}
         </p>
         <a
           class="w-fit text-n-blue-text underline"
