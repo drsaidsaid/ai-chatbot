@@ -200,6 +200,22 @@ describe NotificationListener do
         expect(notification_setting.user.notifications.count).to eq(1)
       end
 
+      it 'applies an outbox notification effect only once when delivery repeats' do
+        create(:inbox_member, user: first_agent, inbox: inbox)
+        conversation.reload
+        builder = instance_double(NotificationBuilder, perform: true)
+        allow(NotificationBuilder).to receive(:new).and_return(builder)
+        outbox_event = OutboxEvent.create!(account: account, aggregate: conversation,
+                                           event_type: Conversations::ControlService::BOT_HANDOFF_EVENT_TYPE,
+                                           idempotency_key: "notification-receipt/#{conversation.id}")
+        event = Events::Base.new(event_name, Time.zone.now, conversation: conversation, outbox_event_id: outbox_event.id)
+
+        2.times { listener.conversation_bot_handoff(event) }
+
+        expect(builder).to have_received(:perform).once
+        expect(OutboxEffectReceipt.where(outbox_event: outbox_event, consumer: described_class.name).count).to eq(1)
+      end
+
       it 'does not create notification for inbox members who have notifications turned off' do
         notification_setting = agent_with_out_notification.notification_settings.first
         notification_setting.unselect_all_email_flags

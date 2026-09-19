@@ -48,6 +48,28 @@ describe('#mutations', () => {
     });
   });
 
+  describe('#SET_PREVIOUS_CONVERSATIONS', () => {
+    it('does not prepend messages already in the conversation window', () => {
+      const state = {
+        allConversations: [
+          { id: 1, messages: [{ id: 1 }, { id: 2 }, { id: 3 }] },
+        ],
+      };
+
+      mutations[types.SET_PREVIOUS_CONVERSATIONS](state, {
+        id: 1,
+        data: [{ id: 1 }, { id: 3 }, { id: 4 }],
+      });
+
+      expect(state.allConversations[0].messages).toEqual([
+        { id: 4 },
+        { id: 1 },
+        { id: 2 },
+        { id: 3 },
+      ]);
+    });
+  });
+
   describe('#ASSIGN_TEAM', () => {
     it('clears current chat window', () => {
       const state = { allConversations: [{ id: 1, meta: {} }] };

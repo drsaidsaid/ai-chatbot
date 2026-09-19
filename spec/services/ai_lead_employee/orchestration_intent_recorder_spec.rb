@@ -141,6 +141,61 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     expect(enqueued_jobs.map { |job| job[:job] }).not_to include(SendReplyJob)
   end
 
+  it 'rejects delayed unsupported media from before resume and records the next one once' do
+    approve_launch_gate!
+
+    contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
+    contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    operator = create(:user, account: whatsapp_channel.account)
+    conversation = create(:conversation,
+                          account: whatsapp_channel.account,
+                          inbox: whatsapp_channel.inbox,
+                          contact: contact,
+                          contact_inbox: contact_inbox,
+                          control_state: :human_active,
+                          control_version: 4,
+                          assignee: operator)
+    tied_timestamp = Time.zone.parse('2026-09-13 09:00:00 UTC')
+    pre_resume_message = create(:message,
+                                account: whatsapp_channel.account,
+                                inbox: whatsapp_channel.inbox,
+                                conversation: conversation,
+                                sender: contact,
+                                message_type: :incoming,
+                                content: I18n.t('conversations.messages.whatsapp.unsupported_message'),
+                                content_attributes: { is_unsupported: true },
+                                source_id: 'wamid.UNSUPPORTED.PRE.RESUME',
+                                created_at: tied_timestamp)
+
+    expect(described_class.new(message: pre_resume_message).perform).to be_nil
+    expect(HumanReviewRequest.where(lead_message: pre_resume_message)).to be_empty
+
+    Conversations::ControlService.new(conversation: conversation).resume_ai!
+
+    expect do
+      2.times { expect(described_class.new(message: pre_resume_message).perform).to be_nil }
+    end.not_to change(HumanReviewRequest, :count)
+
+    post_resume_message = create(:message,
+                                 account: whatsapp_channel.account,
+                                 inbox: whatsapp_channel.inbox,
+                                 conversation: conversation,
+                                 sender: contact,
+                                 message_type: :incoming,
+                                 content: I18n.t('conversations.messages.whatsapp.unsupported_message'),
+                                 content_attributes: { is_unsupported: true },
+                                 source_id: 'wamid.UNSUPPORTED.POST.RESUME',
+                                 created_at: tied_timestamp)
+
+    expect do
+      2.times { expect(described_class.new(message: post_resume_message).perform).to be_nil }
+    end.to change(HumanReviewRequest, :count).by(1)
+    expect(HumanReviewRequest.find_by!(lead_message: post_resume_message)).to have_attributes(
+      conversation: conversation,
+      reason: 'unsupported_media'
+    )
+  end
+
   it 'does not create automation while a Human Operator owns the conversation' do
     contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
     contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
@@ -170,13 +225,15 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
 
     contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
     contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    operator = create(:user, account: whatsapp_channel.account)
     conversation = create(:conversation,
                           account: whatsapp_channel.account,
                           inbox: whatsapp_channel.inbox,
                           contact: contact,
                           contact_inbox: contact_inbox,
-                          control_state: :ai_paused,
-                          control_version: 4)
+                          control_state: :human_active,
+                          control_version: 4,
+                          assignee: operator)
 
     expect do
       Conversations::ControlService.new(conversation: conversation).resume_ai!
@@ -192,9 +249,63 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
                              source_id: 'wamid.RESUMED.LEAD')
     intent = described_class.new(message: resumed_message).perform
 
+    expect(conversation.reload).to have_attributes(control_state: 'ai_active', assignee: nil)
     expect(intent).to have_attributes(
       conversation: conversation,
       triggering_message: resumed_message,
+      observed_control_version: 5,
+      state: 'pending'
+    )
+  end
+
+  it 'rejects delayed or replayed pre-resume messages while accepting the next persisted inbound message' do
+    approve_launch_gate!
+
+    contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
+    contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    operator = create(:user, account: whatsapp_channel.account)
+    conversation = create(:conversation,
+                          account: whatsapp_channel.account,
+                          inbox: whatsapp_channel.inbox,
+                          contact: contact,
+                          contact_inbox: contact_inbox,
+                          control_state: :human_active,
+                          control_version: 4,
+                          assignee: operator)
+    tied_timestamp = Time.zone.parse('2026-09-13 09:00:00 UTC')
+    pre_resume_message = create(:message,
+                                account: whatsapp_channel.account,
+                                inbox: whatsapp_channel.inbox,
+                                conversation: conversation,
+                                sender: contact,
+                                message_type: :incoming,
+                                content: 'This arrived while a Human Operator was active.',
+                                source_id: 'wamid.PRE.RESUME',
+                                created_at: tied_timestamp)
+
+    Conversations::ControlService.new(conversation: conversation).resume_ai!
+
+    expect(conversation.reload).to have_attributes(
+      control_state: 'ai_active', control_version: 5, ai_resume_after_message_id: pre_resume_message.id
+    )
+    expect do
+      2.times { expect(described_class.new(message: pre_resume_message).perform).to be_nil }
+    end.not_to change(AiLeadEmployee::OrchestrationIntent, :count)
+
+    post_resume_message = create(:message,
+                                 account: whatsapp_channel.account,
+                                 inbox: whatsapp_channel.inbox,
+                                 conversation: conversation,
+                                 sender: contact,
+                                 message_type: :incoming,
+                                 content: 'This arrived after explicit resume.',
+                                 source_id: 'wamid.POST.RESUME',
+                                 created_at: tied_timestamp)
+    intent = described_class.new(message: post_resume_message).perform
+
+    expect(intent).to have_attributes(
+      conversation: conversation,
+      triggering_message: post_resume_message,
       observed_control_version: 5,
       state: 'pending'
     )

@@ -35,7 +35,7 @@ RSpec.describe Conversations::ControlService do
   it 'opens a handoff for Human Operators and blocks automation' do
     conversation.update!(status: :pending, assignee_agent_bot: create(:agent_bot, account: account))
 
-    described_class.new(conversation: conversation).handoff_requested!
+    event = described_class.new(conversation: conversation).handoff_requested!
 
     expect(conversation.reload).to have_attributes(
       status: 'open',
@@ -46,6 +46,11 @@ RSpec.describe Conversations::ControlService do
     expect(pending_intent.reload).to have_attributes(
       state: 'blocked',
       blocked_reason: 'ineligible_inbox_status'
+    )
+    expect(event).to have_attributes(
+      event_type: described_class::BOT_HANDOFF_EVENT_TYPE,
+      idempotency_key: "conversation-bot-handoff/#{conversation.id}/4",
+      state: 'pending'
     )
   end
 
@@ -59,14 +64,39 @@ RSpec.describe Conversations::ControlService do
     expect(follow_up.reload).to have_attributes(status: 'cancelled', cancellation_reason: 'control_state_ai_paused')
   end
 
+  it 'does not pause a closed Conversation' do
+    conversation.update!(status: :resolved, control_state: :closed, control_version: 4)
+    prior_intent_state = pending_intent.reload.state
+
+    expect do
+      described_class.new(conversation: conversation).pause_ai!
+    end.to raise_error(described_class::InvalidTransition, /resolved conversation/)
+
+    expect(conversation.reload).to have_attributes(status: 'resolved', control_state: 'closed', control_version: 4)
+    expect(pending_intent.reload.state).to eq(prior_intent_state)
+  end
+
+  it 'does not pause a resolved Conversation with an inconsistent active Control State' do
+    conversation.update!(status: :resolved, control_state: :ai_active, control_version: 4)
+    prior_intent_state = pending_intent.reload.state
+
+    expect do
+      described_class.new(conversation: conversation).pause_ai!
+    end.to raise_error(described_class::InvalidTransition, /resolved conversation/)
+
+    expect(conversation.reload).to have_attributes(status: 'resolved', control_state: 'ai_active', control_version: 4)
+    expect(pending_intent.reload.state).to eq(prior_intent_state)
+  end
+
   it 'resumes only future eligible lead messages without reviving pending AI work' do
-    conversation.update!(control_state: :ai_paused, control_version: 4)
+    operator = create(:user, account: account)
+    conversation.update!(control_state: :human_active, control_version: 4, assignee: operator)
 
     expect do
       described_class.new(conversation: conversation).resume_ai!
     end.not_to change(Message, :count)
 
-    expect(conversation.reload).to have_attributes(control_state: 'ai_active', control_version: 5)
+    expect(conversation.reload).to have_attributes(control_state: 'ai_active', control_version: 5, assignee: nil)
     expect(pending_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'incompatible_control_state')
   end
 
@@ -78,6 +108,61 @@ RSpec.describe Conversations::ControlService do
     end.to raise_error(described_class::InvalidTransition)
 
     expect(conversation.reload).to have_attributes(control_state: 'closed', control_version: 4)
+    expect(pending_intent.reload).to have_attributes(state: 'pending')
+  end
+
+  it 'does not resume a resolved Conversation with an inconsistent paused Control State' do
+    operator = create(:user, account: account)
+    conversation.update!(status: :resolved, control_state: :ai_paused, control_version: 4, assignee: operator)
+    prior_intent_state = pending_intent.reload.state
+
+    expect do
+      described_class.new(conversation: conversation).resume_ai!
+    end.to raise_error(described_class::InvalidTransition, /resolved conversation/)
+
+    expect(conversation.reload).to have_attributes(
+      status: 'resolved', control_state: 'ai_paused', control_version: 4, assignee: operator
+    )
+    expect(pending_intent.reload.state).to eq(prior_intent_state)
+  end
+
+  it 'does not request handoff outside AI Active' do
+    conversation.update!(status: :open, control_state: :human_active, control_version: 4)
+
+    expect do
+      described_class.new(conversation: conversation).handoff_requested!
+    end.to raise_error(described_class::InvalidTransition, /only while active/)
+
+    expect(conversation.reload).to have_attributes(status: 'open', control_state: 'human_active', control_version: 4)
+    expect(pending_intent.reload).to have_attributes(state: 'pending')
+  end
+
+  it 'does not resume directly from a requested handoff' do
+    stale_conversation = Conversation.find(conversation.id)
+    conversation.update!(control_state: :handoff_requested, control_version: 4)
+
+    expect do
+      described_class.new(conversation: stale_conversation).resume_ai!
+    end.to raise_error(described_class::InvalidTransition, /only from human active or AI paused/)
+
+    expect(conversation.reload).to have_attributes(control_state: 'handoff_requested', control_version: 4)
+    expect(pending_intent.reload).to have_attributes(state: 'pending')
+  end
+
+  it 'does not let a stale assignee resume after reassignment' do
+    original_operator = create(:user, account: account, role: :agent)
+    new_operator = create(:user, account: account, role: :agent)
+    conversation.update!(control_state: :human_active, control_version: 4, assignee: original_operator)
+    stale_conversation = Conversation.find(conversation.id)
+    conversation.update!(control_version: 5, assignee: new_operator)
+
+    expect do
+      described_class.new(conversation: stale_conversation, actor: original_operator).resume_ai!
+    end.to raise_error(described_class::InvalidTransition, /control access changed/)
+
+    expect(conversation.reload).to have_attributes(
+      control_state: 'human_active', control_version: 5, assignee: new_operator
+    )
     expect(pending_intent.reload).to have_attributes(state: 'pending')
   end
 end

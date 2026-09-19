@@ -128,6 +128,24 @@ describe('AIEmployeeControlPanel', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
+  it('explains why resume is unavailable while handoff is requested', async () => {
+    const { dispatch, wrapper } = createWrapper({
+      chat: {
+        control_state: 'handoff_requested',
+        meta: { assignee: null, assignee_type: null },
+      },
+    });
+
+    const resumeButton = wrapper.find('[data-testid="ai-control-resume"]');
+    expect(resumeButton.attributes('disabled')).toBeDefined();
+    expect(
+      wrapper.find('[data-testid="ai-control-resume-explanation"]').text()
+    ).toBe('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.HANDOFF_CONTROL_EXPLANATION');
+
+    await resumeButton.trigger('click');
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it('shows automated-contact withdrawal separately from qualification and AI control', async () => {
     const { dispatch, wrapper } = createWrapper({
       chat: {

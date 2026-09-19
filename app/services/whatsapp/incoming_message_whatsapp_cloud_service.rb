@@ -8,9 +8,15 @@ class Whatsapp::IncomingMessageWhatsappCloudService < Whatsapp::IncomingMessageB
     processed_params
     return process_message_batch if messages_data&.many?
 
-    new_provider_message = new_provider_message?
-    super
-    record_coexistence_echo_takeover! if new_provider_message && outgoing_echo
+    if outgoing_echo
+      ActiveRecord::Base.transaction do
+        new_provider_message = new_provider_message?
+        super
+        record_coexistence_echo_takeover! if new_provider_message
+      end
+    else
+      super
+    end
     record_orchestration_intent! if @message.present?
   end
 

@@ -195,6 +195,11 @@ RSpec.describe 'Automated Contact Consent', type: :request do
     conversation_id = lead.dig('conversation', 'display_id')
     evidence_id = lead.dig('detail', 'automated_contact_consent', 'evidence', 'id')
 
+    post "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation_id}/pause_ai",
+         headers: admin.create_new_auth_token,
+         as: :json
+    expect(response).to have_http_status(:ok)
+
     post "/api/v1/accounts/#{channel.account_id}/conversations/#{conversation_id}/resume_ai",
          headers: admin.create_new_auth_token,
          as: :json

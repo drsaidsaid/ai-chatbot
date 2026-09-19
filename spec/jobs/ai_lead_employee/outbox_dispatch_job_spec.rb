@@ -45,6 +45,30 @@ RSpec.describe AiLeadEmployee::OutboxDispatchJob do
     expect(message.status).to eq('sent') # Provider delivered/read has not been established.
   end
 
+  it 'recovers a committed bot handoff once with its original transition time' do
+    conversation.update!(assignee: nil, control_state: :ai_active)
+    handoff_at = 2.hours.ago.change(usec: 0)
+    handoff_event = travel_to(handoff_at) do
+      Conversations::ControlService.new(conversation: conversation).handoff_requested!
+    end
+    allow(Rails.configuration.dispatcher).to receive(:dispatch) do |event_name, timestamp, data|
+      ReportingEventListener.instance.conversation_bot_handoff(Events::Base.new(event_name, timestamp, data))
+      true
+    end
+
+    travel_to(handoff_at + 2.hours) do
+      2.times { described_class.perform_now }
+    end
+
+    expect(handoff_event.reload).to have_attributes(state: 'delivered', attempts: 1)
+    expect(Rails.configuration.dispatcher).to have_received(:dispatch)
+      .with(Events::Types::CONVERSATION_BOT_HANDOFF, handoff_event.created_at,
+            hash_including(outbox_event_id: handoff_event.id)).once
+    reporting_event = account.reporting_events.find_by!(name: 'conversation_bot_handoff', conversation: conversation)
+    expect(reporting_event.event_end_time).to eq(handoff_event.created_at)
+    expect(account.reporting_events.where(name: 'conversation_bot_handoff', conversation: conversation).count).to eq(1)
+  end
+
   it 'marks a follow-up sent only after provider acceptance' do
     follow_up = prepare_follow_up
     request = accept_request

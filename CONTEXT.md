@@ -135,6 +135,24 @@ _Avoid_: Lead status, conversation status
 
 **Control State**:
 The authority governing who may reply automatically: AI Active, Handoff Requested, Human Active, AI Paused, or Closed.
+Explicit resume from Human Active returns the Conversation to AI Active and
+clears the Human Operator assignment. A Team Member then returns to their
+assigned Conversation list; only an administrator retains account-wide access.
+Resume permits only a later eligible Inbound Message to create new work. It does
+not revive canceled work or change Automated Contact Consent.
+Public takeover and resolution change Inbox Conversation Status, Control State,
+assignment, control version, and pending-work eligibility together while holding
+the Conversation lock. The acting Human Operator's current assignment is checked
+inside that lock, so a request authorized before reassignment cannot change the
+new operator's Conversation.
+Bot Handoff commits a durable Outbox Event with the Control State transition.
+Each notification and reporting consumer records a unique receipt with its
+effect, allowing safe retry after a worker interruption. The scheduled outbox
+dispatcher recovers committed handoffs whose immediate enqueue is lost.
+An Agent Bot may request that handoff only while it is still the active bot for
+the Conversation's Inbox and remains the exact bot assigned to the Conversation;
+the service rechecks all three facts while holding the Conversation lock. A
+recovered handoff retains the Outbox Event creation time as its occurrence time.
 _Avoid_: Conversation status, bot status
 
 **AI Orchestration**:

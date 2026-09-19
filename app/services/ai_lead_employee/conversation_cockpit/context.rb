@@ -94,7 +94,12 @@ class AiLeadEmployee::ConversationCockpit::Context
   def booking_time_label(booking)
     return EMPTY_VALUE if booking.blank?
 
-    "#{booking.starts_at.strftime('%b %-d, %Y at %-I:%M %p')} #{booking.timezone}"
+    starts_at = booking.starts_at.in_time_zone(booking.timezone)
+    "#{starts_at.strftime('%b %-d, %Y at %-I:%M %p')} #{booking.timezone}"
+  end
+
+  def opted_out?
+    LeadFollowUpOptOut.exists?(account_id: account.id, contact_id: contact.id)
   end
 
   def user_payload(user)
