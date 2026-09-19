@@ -478,6 +478,23 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(proposal.dig('configuration', 'rules').pluck('field')).to eq(['sales_call_agreement'])
   end
 
+  it 'blocks a legacy proposal when reversed revenue-or-business alternatives enable a sales call' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Alternative qualification', source_type: 'document',
+                                         body: 'Monthly sales below TZS 1,000,000 or no business yet is a suitable lead. ' \
+                                               'A sales call requires their agreement.' } }, as: :json
+    proposal = response.parsed_body
+    source = AiLeadEmployee::BusinessSetupSource.find(proposal.fetch('id'))
+    source.update!(proposal: source.proposal.except('qualification_clarification_required'))
+
+    post "#{source_url}/#{proposal.fetch('id')}/publish", headers: headers,
+                                                          params: { expected_source_version: proposal.fetch('version'),
+                                                                    expected_offer_version: offer.reload.configuration_version }, as: :json
+
+    expect(response).to have_http_status(:conflict)
+    expect(response.parsed_body.fetch('error')).to include('Clarify the qualification alternatives')
+  end
+
   it 'computes missing links and ambiguous actions after prose inference' do
     post source_url, headers: headers,
                      params: { source: { title: 'Purchase', source_type: 'document',
@@ -520,6 +537,34 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(keys).to include('independent_readiness')
     expect(keys.grep(/setup_fit_/).size).to eq(1)
     expect(corrected.dig('configuration', 'rules')).to include(include('field' => 'independent_readiness'))
+  end
+
+  it 'preserves an owner-edited canonical sales-call agreement during source correction' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Call draft', source_type: 'document',
+                                         body: 'We coach founders. A sales call requires their agreement.' } }, as: :json
+    first = response.parsed_body
+    reviewed = first.fetch('configuration').deep_dup
+    question = reviewed.fetch('questions').sole
+    rule = reviewed.fetch('rules').sole
+    question['prompt'] = 'May we arrange a call with you?'
+    question['required'] = false
+    rule['enabled'] = false
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Call draft', source_type: 'document',
+                                                                    body: 'We answer founder questions.',
+                                                                    reviewed_configuration: reviewed } }, as: :json
+
+    corrected = response.parsed_body
+    persisted = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    expect(corrected.fetch('version')).to eq(2)
+    expect(corrected.dig('configuration', 'questions')).to include(question)
+    expect(corrected.dig('configuration', 'rules')).to include(rule)
+    expect(persisted.proposal.dig('source_ownership', 'questions')).to eq({})
+    expect(persisted.proposal.dig('source_ownership', 'rules')).to eq({})
+    expect(persisted.history.last).to include('event' => 'corrected', 'version' => 2)
   end
 
   it 'replaces published source-owned requirements while preserving independent Offer edits' do

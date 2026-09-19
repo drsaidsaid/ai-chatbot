@@ -113,10 +113,13 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
   def configuration
     proposed = configuration_without_previous_source_fields
     @generated_question_keys = []
-    @source_ownership = { 'question_keys' => [] }
+    @source_ownership = { 'question_keys' => [], 'questions' => {}, 'rules' => {} }
     apply_next_step_proposal!(proposed)
     apply_qualification_proposal!(proposed)
     normalize_positions!(proposed)
+    AiLeadEmployee::BusinessSetupProposalOwnership.record!(
+      ownership: source_ownership, configuration: proposed, keys: generated_question_keys
+    )
     proposed
   end
 
@@ -126,16 +129,10 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
       'score_weights', 'score_thresholds'
     )
     previous_ownership = previous_proposal.fetch('source_ownership', {})
-    obsolete_keys = Array(previous_ownership['question_keys']).presence || Array(previous_proposal['generated_question_keys'])
-    remove_previous_questions!(proposed, obsolete_keys)
+    AiLeadEmployee::BusinessSetupProposalOwnership.remove_unchanged_fields!(proposed, previous_ownership)
     reset_owned_value!(proposed, 'next_step', previous_ownership['next_step'])
     reset_owned_value!(proposed, 'qualification_mode', previous_ownership['qualification_mode'])
     proposed
-  end
-
-  def remove_previous_questions!(proposed, obsolete_keys)
-    proposed['questions'] = Array(proposed['questions']).reject { |question| obsolete_keys.include?(question['key']) }
-    proposed['rules'] = Array(proposed['rules']).reject { |rule| obsolete_keys.include?(rule['field']) }
   end
 
   def reset_owned_value!(proposed, field, ownership)
@@ -194,7 +191,11 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
 
   def proposed_rules(proposed, questions)
     position = Array(proposed['rules']).length
-    questions.each_with_index.map do |question, index|
+    existing_fields = Array(proposed['rules']).pluck('field')
+    questions.each_with_index.filter_map do |question, index|
+      next if existing_fields.include?(question['key'])
+
+      existing_fields << question['key']
       {
         'kind' => 'requirement', 'dimension' => question['purpose'], 'field' => question['key'],
         'operator' => question['key'] == 'sales_call_agreement' ? 'eq' : 'positive',
@@ -205,7 +206,7 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
 
   def generated_question_keys = @generated_question_keys || []
 
-  def source_ownership = @source_ownership || { 'question_keys' => [] }
+  def source_ownership = @source_ownership || { 'question_keys' => [], 'questions' => {}, 'rules' => {} }
 
   def knowledge_body
     approved_sentences.map { |sentence| sentence.sub(/[.!?]+\z/, '') }.join('. ')

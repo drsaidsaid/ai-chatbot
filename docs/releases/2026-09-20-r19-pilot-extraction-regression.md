@@ -13,14 +13,18 @@ The same regression also verifies that an unresolved disjunctive qualification
 cannot publish a qualification-dependent sales-call setup, even when a legacy
 saved proposal lacks the new clarification marker. Answer-only knowledge with
 an unrelated missing price remains publishable. Repeated sales-call agreement
-sentences produce one canonical question and rule.
+sentences produce one canonical question and rule. Reversed revenue-or-business
+alternatives are handled equally conservatively. Source correction retires a
+generated field only while its saved question and rule values remain unchanged;
+an administrator's canonical sales-call agreement edit is preserved and
+detached from source ownership.
 
 Verification on isolated test database `ale_r19_final_patch_20260919_spec`:
 
 ```text
 RAILS_ENV=test POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ale_r19_final_patch_20260919_spec \
   bundle exec rspec spec/requests/ai_lead_employee/business_setup_sources_spec.rb
-# 62 examples, 0 failures
+# 64 examples, 0 failures
 
 bundle exec rubocop app/models/ai_lead_employee/business_setup_source.rb \
   app/services/ai_lead_employee/business_setup_proposal_extractor.rb \

@@ -3,8 +3,14 @@
 class AiLeadEmployee::BusinessSetupQualificationProposal
   EXPLANATORY_NEGATION_PATTERN = /\b(?:does\s+not|do\s+not|doesn't|don't|cannot|can't)\s+(?:automatically\s+)?(?:mean|make|guarantee|imply)\b/i
   COMPLEX_QUALIFICATION_PATTERN = %r{
-    \b(?:lead|customer|client|fit|eligible|suitable)\b.*
-    \b(?:or|and/or)\b.*\b(?:no\s+business|revenue|income|salary)\b
+    (?=.*\b(?:lead|customer|client|fit|eligible|suitable)\b)
+    (?=.*(?:
+      \b(?:no\s+(?:business|company)|without\s+a\s+business)\b.*\b(?:or|and/or)\b.*
+      \b(?:revenue|turnover|sales|income|salary)\b
+      |
+      \b(?:revenue|turnover|sales|income|salary)\b.*\b(?:or|and/or)\b.*
+      \b(?:no\s+(?:business|company)|without\s+a\s+business)\b
+    ))
   }ix
   SALES_CALL_AGREEMENT_PATTERN = /
     \b(?:sales\s+call|discovery\s+call|simu\s+ya\s+mauzo)\b.*\b(?:requires?|needs?)\b.*
