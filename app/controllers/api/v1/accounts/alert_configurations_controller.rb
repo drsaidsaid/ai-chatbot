@@ -95,7 +95,7 @@ class Api::V1::Accounts::AlertConfigurationsController < Api::V1::Accounts::Base
     when 'member'
       validate_member_route!(route)
     when 'whatsapp'
-      raise ActionController::BadRequest, 'Alert recipient is invalid' if Whatsapp::RecipientIdentifier.normalize(route['recipient']).blank?
+      validate_whatsapp_route!(route)
     end
   end
 
@@ -103,6 +103,16 @@ class Api::V1::Accounts::AlertConfigurationsController < Api::V1::Accounts::Base
     return if current_account.users.exists?(id: route['user_id'])
 
     raise ActionController::BadRequest, 'Alert recipient must belong to this Business Account'
+  end
+
+  def validate_whatsapp_route!(route)
+    recipient = Whatsapp::RecipientIdentifier.normalize(route['recipient'])
+    raise ActionController::BadRequest, 'Alert recipient is invalid' if recipient.blank?
+
+    belongs_to_member = current_account.users.any? do |user|
+      Whatsapp::RecipientIdentifier.normalize(user.custom_attributes['whatsapp_alert_phone']) == recipient
+    end
+    raise ActionController::BadRequest, 'Alert recipient must be a current Business Account member' unless belongs_to_member
   end
 
   def user_payload(user)

@@ -60,3 +60,13 @@ Candidate was rebased from `5834d354fcadad4f5825582dab9db5de098fa1b1` onto integ
 - Integrated-baseline focused alert paths: 34 examples, 0 failures (the R14 hot-queue example ran separately because three unrelated Operational Dashboard baseline assertions remain failing).
 - Affected Vue paths: 3 files, 22 tests, 0 failures.
 - The three unrelated Operational Dashboard baseline assertions concern Human Operator visibility, rejected review filter options, and Human Operator metrics; the R14 diff only adds the hot-queue example.
+
+## Review repair follow-up
+
+- Knowledge alerts use the canonical `/knowledge?knowledge_item_id=:id` route.
+- Automatic and manual Human Review assignment synchronize the assigned canonical Conversation, preserve human-control audit history, and retain a `human_review_assignment` audit on the request.
+- Explicit WhatsApp routes require a current Business Account member with the same verified alert phone; routing rechecks that membership at delivery time.
+- Review alert text includes its canonical review-queue conversation link.
+- Focused authorization and delivery tests: 17 examples, 0 failures. Focused RuboCop and diff checks passed.
+
+Remaining acceptance work: manual reassignment UI, current delivery-status/retry presentation for knowledge alerts, and replacing legacy hard-coded Handoff Alert summary fields with the amended R14 context are not complete in this commit.

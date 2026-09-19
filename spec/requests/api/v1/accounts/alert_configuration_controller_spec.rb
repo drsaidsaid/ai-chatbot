@@ -38,6 +38,21 @@ RSpec.describe 'Alert Configuration API', type: :request do
     expect(account.reload.settings.dig('ai_lead_employee', 'alert_routes')).to be_nil
   end
 
+  it 'allows an explicit WhatsApp route only when it belongs to a current team member' do
+    operator
+    patch "/api/v1/accounts/#{account.id}/alert_configuration",
+          headers: admin.create_new_auth_token,
+          params: { alert_routes: { booking_preparation: [{ type: 'whatsapp', recipient: '255700000001' }] } }, as: :json
+
+    expect(response).to have_http_status(:success)
+
+    patch "/api/v1/accounts/#{account.id}/alert_configuration",
+          headers: admin.create_new_auth_token,
+          params: { alert_routes: { booking_preparation: [{ type: 'whatsapp', recipient: '255700000099' }] } }, as: :json
+
+    expect(response).to have_http_status(:bad_request)
+  end
+
   it 'does not expose or let a Human Operator change Team and alerts settings' do
     get "/api/v1/accounts/#{account.id}/alert_configuration", headers: agent.create_new_auth_token, as: :json
     expect(response).to have_http_status(:unauthorized)

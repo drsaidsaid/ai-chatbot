@@ -141,17 +141,30 @@ class Whatsapp::OutboundAlertAuthority
     when 'member'
       member_alert_phone(route, account)
     when 'whatsapp'
-      route.to_h['recipient']
+      verified_alert_phone(route, account)
     end
   end
 
   def assignee_alert_phone(account)
-    user = knowledge_alert? ? account.users.find_by(id: account.settings&.dig('ai_lead_employee', 'human_operator_id')) : record.conversation.assignee
+    user = if knowledge_alert?
+             account.users.find_by(id: account.settings&.dig('ai_lead_employee', 'human_operator_id'))
+           elsif record.is_a?(HumanReviewRequest)
+             record.assigned_user
+           else
+             record.conversation.assignee
+           end
     user.custom_attributes['whatsapp_alert_phone'] if user && AccountUser.exists?(account_id: account.id, user_id: user.id)
   end
 
   def member_alert_phone(route, account)
     account.users.find_by(id: route.to_h['user_id'])&.custom_attributes&.dig('whatsapp_alert_phone')
+  end
+
+  def verified_alert_phone(route, account)
+    recipient = normalize(route.to_h['recipient'])
+    account.users.find do |user|
+      normalize(user.custom_attributes['whatsapp_alert_phone']) == recipient
+    end&.custom_attributes&.dig('whatsapp_alert_phone')
   end
 
   def normalize(value)

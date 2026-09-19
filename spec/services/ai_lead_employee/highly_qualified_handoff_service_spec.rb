@@ -6,6 +6,7 @@ RSpec.describe AiLeadEmployee::HighlyQualifiedHandoffService do
   let(:account) { create(:account) }
   let(:operator) { create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '255700000001' }) }
   let(:admin) { create(:user, :administrator, account: account, custom_attributes: { 'whatsapp_alert_phone' => '255700000002' }) }
+  let(:named_recipient) { create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '255700000003' }) }
   let!(:channel) do
     create(
       :channel_whatsapp,
@@ -65,6 +66,7 @@ RSpec.describe AiLeadEmployee::HighlyQualifiedHandoffService do
 
   before do
     admin
+    named_recipient
     allow(SendReplyJob).to receive(:perform_later)
     account.update!(
       settings: {

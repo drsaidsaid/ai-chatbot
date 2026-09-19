@@ -44,9 +44,11 @@ class AiLeadEmployee::HumanReviewRequestService
         reason: reason
       )
       created = request.new_record?
-      request.assign_attributes(question: lead_message.content.to_s, assigned_user: default_owner) if created
+      request.assign_attributes(question: lead_message.content.to_s) if created
       request.save!
     end
+
+    request.assign_to!(default_owner) if created && default_owner
 
     [request, created]
   end
@@ -114,7 +116,16 @@ class AiLeadEmployee::HumanReviewRequestService
   end
 
   def alert_text
-    "#{ALERT_TEXT_PREFIX}: #{lead_message.content.to_s.truncate(120)}"
+    [
+      "#{ALERT_TEXT_PREFIX}: #{lead_message.content.to_s.truncate(120)}",
+      "Open: #{conversation_url}"
+    ].join("\n")
+  end
+
+  def conversation_url
+    base_url = ENV.fetch('FRONTEND_URL', '').presence
+    path = "/app/accounts/#{conversation.account_id}/conversations/#{conversation.display_id}?queue=review"
+    base_url ? "#{base_url.delete_suffix('/')}#{path}" : path
   end
 
   def alert_recipients(request)

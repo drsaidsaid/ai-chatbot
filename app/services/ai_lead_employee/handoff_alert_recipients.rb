@@ -29,7 +29,7 @@ class AiLeadEmployee::HandoffAlertRecipients
     when 'member'
       whatsapp_alert_phone_for(account.users.find_by(id: route.to_h['user_id']))
     when 'whatsapp'
-      route.to_h['recipient']
+      verified_alert_phone(route)
     end
   end
 
@@ -41,5 +41,12 @@ class AiLeadEmployee::HandoffAlertRecipients
     return if user.blank?
 
     user.custom_attributes&.dig('whatsapp_alert_phone').presence
+  end
+
+  def verified_alert_phone(route)
+    recipient = normalized_recipient(route.to_h['recipient'])
+    account.users.find do |user|
+      normalized_recipient(user.custom_attributes&.dig('whatsapp_alert_phone')) == recipient
+    end&.custom_attributes&.dig('whatsapp_alert_phone')
   end
 end

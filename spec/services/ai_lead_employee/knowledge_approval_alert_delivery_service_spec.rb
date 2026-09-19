@@ -17,7 +17,7 @@ RSpec.describe AiLeadEmployee::KnowledgeApprovalAlertDeliveryService do
     message = account.messages.find(delivery.fetch('message_id'))
 
     expect(delivery).to include('recipient' => '255700123456', 'status' => 'queued')
-    expect(message.content).to include('Knowledge approval needed', "/knowledge/#{item.id}")
+    expect(message.content).to include('Knowledge approval needed', "/knowledge?knowledge_item_id=#{item.id}")
     expect(Whatsapp::OutboundAlertAuthority.new(message).failure_code).to be_nil
     expect { described_class.new(knowledge_item: item.reload).perform }.not_to change(account.messages, :count)
   end

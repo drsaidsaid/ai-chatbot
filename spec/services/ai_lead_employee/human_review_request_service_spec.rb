@@ -83,6 +83,11 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
     result = described_class.new(conversation: conversation, lead_message: message, reason: 'no_approved_knowledge').perform
 
     expect(result.request.assigned_user).to eq(owner)
+    expect(conversation.reload.assignee).to eq(owner)
     expect(result.request.alert_recipients).to eq(['255700000099'])
+    expect(Audited::Audit.where(auditable: result.request).last.audited_changes).to include(
+      'ai_lead_employee_action' => 'human_review_assignment',
+      'assigned_user_id' => [nil, owner.id]
+    )
   end
 end

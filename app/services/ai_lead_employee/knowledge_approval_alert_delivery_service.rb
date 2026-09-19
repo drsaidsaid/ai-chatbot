@@ -103,7 +103,7 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
 
   def knowledge_url
     base_url = ENV.fetch('FRONTEND_URL', '').presence
-    path = "/app/accounts/#{account.id}/knowledge/#{knowledge_item.id}"
+    path = "/app/accounts/#{account.id}/knowledge?knowledge_item_id=#{knowledge_item.id}"
     base_url ? "#{base_url.delete_suffix('/')}#{path}" : path
   end
 end
