@@ -48,3 +48,15 @@ No real alert delivery, deployment, push, or integration was performed. No proce
 - Exposed the existing validated direct WhatsApp route in the Team & Alerts UI.
 - Focused new service test passed: 1 example, 0 failures.
 - Focused Ruby lint covering new and changed backend files passed; focused ESLint and `git diff --check` passed.
+
+## Integrated-baseline follow-up
+
+Candidate was rebased from `5834d354fcadad4f5825582dab9db5de098fa1b1` onto integrated baseline `6c5b86590b5e19a9c8b850ad8fa6157893d8e02e`.
+
+- Updated the dedicated R07 alert-authority concurrency fixture for the integrated booking-agreement contract and a mocked Google cancellation response.
+- Added the legacy booked-call summary fallback when an existing booking has no Offer.
+- Ran the formerly fixture-gated suite with `ALE_R07_CURRENT_DB=1` against its dedicated `ale_r07_current_20260913_spec` database and `POSTGRES_STATEMENT_TIMEOUT=120s`: 11 examples, 0 failures, 0 pending.
+
+- Integrated-baseline focused alert paths: 34 examples, 0 failures (the R14 hot-queue example ran separately because three unrelated Operational Dashboard baseline assertions remain failing).
+- Affected Vue paths: 3 files, 22 tests, 0 failures.
+- The three unrelated Operational Dashboard baseline assertions concern Human Operator visibility, rejected review filter options, and Human Operator metrics; the R14 diff only adds the hot-queue example.

@@ -451,7 +451,7 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
       'Call booked with Hot Lead',
       "Lead: #{conversation.contact.name} #{conversation.contact.phone_number} #{conversation.contact.email}".squish,
       "When: #{booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z')}",
-      "Summary: #{qualification&.reasons.to_a.join('; ').presence || @eligibility.offer.name}",
+      "Summary: #{qualification&.reasons.to_a.join('; ').presence || @eligibility.offer&.name || 'Booked call'}",
       "Strongest evidence: #{strongest_evidence}",
       "Likely objection: #{evidence.dig('budget', 'value').to_s.include?('$') ? 'Budget fit' : 'Timing or budget fit'}",
       'Suggested opening question: What would make this call most useful for you today?'

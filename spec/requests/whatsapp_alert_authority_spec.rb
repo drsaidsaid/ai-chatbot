@@ -312,8 +312,7 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
         FOR EACH ROW EXECUTE FUNCTION r04_pause_booking_preparation();
       SQL
       preparation = start_worker('r04-booking-preparation') do
-        AiLeadEmployee::BookingService.new(conversation: @conversation, qualification: booking.lead_qualification,
-                                           starts_at: booking.starts_at, idempotency_key: booking.idempotency_key).perform
+        booking_service_for(booking).perform
       end
       await_blocked_or_finished(preparation, 'r04-booking-preparation')
       contender = start_worker('r04-booking-contender') do
@@ -428,19 +427,43 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
   def canonical_domain_alert(kind)
     type = kind == 'booking' ? AiLeadEmployee::BookingService::PREPARATION_ALERT_TYPE : AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE
     configure_domain_alert_routes(type)
-    if kind == 'booking'
-      record = create(:booking, account: @channel.account, conversation: @conversation, contact: @conversation.contact,
-                                idempotency_key: 'existing-booking')
-      AiLeadEmployee::BookingService.new(conversation: @conversation, qualification: record.lead_qualification,
-                                         starts_at: record.starts_at, idempotency_key: record.idempotency_key).perform
-      @alert = Message.find(record.reload.preparation_alert_deliveries.sole['message_id'])
-    else
-      record = create(:lead_handoff, account: @channel.account, conversation: @conversation, contact: @conversation.contact)
-      AiLeadEmployee::HandoffAlertDeliveryService.new(handoff: record, alert_text: 'Prepare for this Lead', recipients: ['255700000094'],
-                                                      enqueue: false).perform
-      @alert = Message.find(record.reload.alert_deliveries.sole['message_id'])
-    end
+    kind == 'booking' ? canonical_booking_alert : canonical_handoff_alert
+  end
+
+  def canonical_booking_alert
+    record = create(:booking, account: @channel.account, conversation: @conversation, contact: @conversation.contact,
+                              idempotency_key: 'existing-booking')
+    record.update!(agreement_message: booking_agreement_message(record))
+    create(:google_calendar_connection, account: @channel.account, calendar_id: record.calendar_id)
+    stub_google_cancellation
+    booking_service_for(record).perform
+    @alert = Message.find(record.reload.preparation_alert_deliveries.sole['message_id'])
     record
+  end
+
+  def canonical_handoff_alert
+    record = create(:lead_handoff, account: @channel.account, conversation: @conversation, contact: @conversation.contact)
+    AiLeadEmployee::HandoffAlertDeliveryService.new(handoff: record, alert_text: 'Prepare for this Lead', recipients: ['255700000094'],
+                                                    enqueue: false).perform
+    @alert = Message.find(record.reload.alert_deliveries.sole['message_id'])
+    record
+  end
+
+  def booking_agreement_message(booking)
+    create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                     sender: @conversation.contact, message_type: :incoming, provider_created_at: booking.starts_at - 1.minute)
+  end
+
+  def stub_google_cancellation
+    stub_request(:delete, %r{https://www.googleapis.com/calendar/v3/calendars/.*/events/.*}).to_return(status: 204)
+  end
+
+  def booking_service_for(booking)
+    AiLeadEmployee::BookingService.new(
+      conversation: @conversation, qualification: booking.lead_qualification,
+      starts_at: booking.starts_at, agreed_starts_at: booking.starts_at,
+      agreement_message: booking.agreement_message, idempotency_key: booking.idempotency_key
+    )
   end
 end
 # rubocop:enable RSpec/InstanceVariable
