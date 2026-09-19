@@ -17,6 +17,10 @@ class AiLeadEmployee::BusinessSetupQualificationProposal
 
   def self.any_complex?(sentences) = Array(sentences).any? { |sentence| complex?(sentence) }
 
+  def self.any_complex_text?(text)
+    any_complex?(text.to_s.split(/(?<=[.!?])\s+|\n+/))
+  end
+
   def self.question(sentence:, position:)
     return sales_call_agreement_question if sentence.match?(SALES_CALL_AGREEMENT_PATTERN)
 

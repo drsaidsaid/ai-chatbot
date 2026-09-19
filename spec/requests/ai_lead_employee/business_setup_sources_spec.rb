@@ -437,6 +437,9 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(proposal.fetch('unknowns').join(' ')).to include('qualification alternatives')
     expect(proposal.fetch('unknowns').join(' ')).not_to include('monetary statement could not')
 
+    source = AiLeadEmployee::BusinessSetupSource.find(proposal.fetch('id'))
+    source.update!(proposal: source.proposal.except('qualification_clarification_required'))
+
     post "#{source_url}/#{proposal.fetch('id')}/publish", headers: headers,
                                                           params: { expected_source_version: proposal.fetch('version'),
                                                                     expected_offer_version: offer.reload.configuration_version }, as: :json

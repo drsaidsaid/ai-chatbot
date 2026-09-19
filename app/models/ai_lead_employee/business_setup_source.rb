@@ -100,7 +100,7 @@ class AiLeadEmployee::BusinessSetupSource < ApplicationRecord
   end
 
   def ensure_qualification_action_is_resolved!
-    return unless proposal['qualification_clarification_required']
+    return unless proposal['qualification_clarification_required'] || AiLeadEmployee::BusinessSetupQualificationProposal.any_complex_text?(body)
     return unless proposal.dig('configuration', 'qualification_mode') == 'enabled'
     return unless proposal.dig('configuration', 'next_step', 'kind') == 'sales_call'
 

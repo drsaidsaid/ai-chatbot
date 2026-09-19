@@ -10,9 +10,10 @@ clarification. A revenue threshold is treated as a financial metric, not an
 ambiguous programme price.
 
 The same regression also verifies that an unresolved disjunctive qualification
-cannot publish a qualification-dependent sales-call setup, while answer-only
-knowledge with an unrelated missing price remains publishable. Repeated
-sales-call agreement sentences produce one canonical question and rule.
+cannot publish a qualification-dependent sales-call setup, even when a legacy
+saved proposal lacks the new clarification marker. Answer-only knowledge with
+an unrelated missing price remains publishable. Repeated sales-call agreement
+sentences produce one canonical question and rule.
 
 Verification on isolated test database `ale_r19_final_patch_20260919_spec`:
 
