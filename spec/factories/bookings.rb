@@ -7,8 +7,10 @@ FactoryBot.define do
     conversation { create(:conversation, account: account, contact: contact) }
     lead_qualification { create(:lead_qualification, account: account, contact: contact, quality: :highly_qualified) }
     calendar_id { 'sales-calendar' }
-    provider { 'local_calendar' }
+    provider { 'google_calendar' }
     status { :confirmed }
+    provider_state { 'confirmed' }
+    provider_event_id { "google-event-#{SecureRandom.hex(6)}" }
     starts_at { 1.day.from_now.change(usec: 0) }
     ends_at { starts_at + 30.minutes }
     timezone { 'Africa/Dar_es_Salaam' }

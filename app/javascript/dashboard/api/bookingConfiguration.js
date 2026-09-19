@@ -14,6 +14,18 @@ class BookingConfigurationAPI extends ApiClient {
   update(data) {
     return axios.patch(this.url, data);
   }
+
+  connectGoogle() {
+    return axios.post(
+      `${this.url.replace('booking_configuration', 'google_calendar_connection')}`
+    );
+  }
+
+  disconnectGoogle() {
+    return axios.delete(
+      `${this.url.replace('booking_configuration', 'google_calendar_connection')}`
+    );
+  }
 }
 
 export default new BookingConfigurationAPI();

@@ -29,7 +29,10 @@ class AiLeadEmployee::OfferEvidenceRecorder
     incoming_message&.persisted? && incoming_message.incoming? && !incoming_message.private?
   end
 
-  def observations
+  def observations # rubocop:disable Metrics/CyclomaticComplexity
+    proposal = booking_proposal_observation
+    return proposal if proposal.present?
+
     question = answered_question
     key = question&.fetch('key')
     builtin = QualificationQuestion::SIGNALS.key?(key&.to_sym)
@@ -38,9 +41,47 @@ class AiLeadEmployee::OfferEvidenceRecorder
     observations
   end
 
+  def booking_proposal_observation # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    proposal_message = previous_message
+    return unless proposal_message&.outgoing?
+
+    proposal = proposal_message.additional_attributes&.dig('ai_lead_employee', 'booking_proposal')
+    return unless proposal&.fetch('offer_id', nil) == offer.id &&
+                  proposal['offer_configuration_version'] == offer.configuration_version
+
+    answer = AiLeadEmployee::OfferTypedAnswer.new(
+      question: { 'answer_type' => 'boolean' }, content: incoming_message.content, currency: offer.currency
+    ).observation
+    return unless answer&.fetch('typed_value', nil) == true
+
+    field = offer.next_step['agreement_field'].presence ||
+            (offer.next_step['kind'] == 'sales_call' ? 'sales_call_agreement' : 'appointment_agreement')
+    { field => answer.merge('proposal_message_id' => proposal_message.id,
+                            'agreed_starts_at' => Time.zone.parse(proposal.fetch('starts_at')).iso8601,
+                            'offer_configuration_version' => offer.configuration_version) }
+  rescue ArgumentError, KeyError
+    nil
+  end
+
   def add_typed_answer(observations, question, key)
     answer = AiLeadEmployee::OfferTypedAnswer.new(question: question, content: incoming_message.content, currency: offer.currency).observation
+    answer = attach_agreed_time(answer, key)
     observations[key] = answer if answer
+  end
+
+  def attach_agreed_time(answer, key) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    return answer unless answer&.fetch('typed_value', nil) == true
+
+    agreement_field = offer.next_step['agreement_field'].presence ||
+                      (offer.next_step['kind'] == 'sales_call' ? 'sales_call_agreement' : 'appointment_agreement')
+    return answer unless key == agreement_field
+
+    proposed = @answered_message&.additional_attributes&.dig('ai_lead_employee', 'booking_proposal', 'starts_at')
+    return answer if proposed.blank?
+
+    answer.merge('agreed_starts_at' => Time.zone.parse(proposed).iso8601)
+  rescue ArgumentError
+    answer
   end
 
   def record_observation!(signal, value)
@@ -69,15 +110,20 @@ class AiLeadEmployee::OfferEvidenceRecorder
                   value: value, observed_at: incoming_message.created_at)
   end
 
-  def answered_question
-    previous = conversation.messages.where(private: false).where('id < ?', incoming_message.id).reorder(id: :desc).first
+  def answered_question # rubocop:disable Metrics/CyclomaticComplexity
+    previous = previous_message
     return unless previous&.outgoing?
 
     metadata = previous.additional_attributes.dig('ai_lead_employee', 'qualification') || {}
     return unless metadata['offer_id'] == offer.id && metadata['configuration_version'] == offer.configuration_version
 
     matches = matching_questions(previous, metadata)
+    @answered_message = previous if matches.one?
     matches.first if matches.one?
+  end
+
+  def previous_message
+    @previous_message ||= conversation.messages.where(private: false).where('id < ?', incoming_message.id).reorder(id: :desc).first
   end
 
   def matching_questions(previous, metadata)

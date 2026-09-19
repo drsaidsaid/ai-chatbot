@@ -1,307 +1,482 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require 'timeout'
+
+# Stateful provider behavior and the full booking aggregate require shared fixtures and aggregate assertions.
+# rubocop:disable Lint/ConstantDefinitionInBlock, RSpec/InstanceVariable, RSpec/LeakyConstantDeclaration
+# rubocop:disable RSpec/ExampleLength, RSpec/MultipleExpectations, RSpec/MultipleMemoizedHelpers, Style/MultilineBlockChain
 
 RSpec.describe AiLeadEmployee::BookingService do
-  let(:account) do
-    create(
-      :account,
-      settings: {
-        'ai_lead_employee' => {
-          'booking' => {
-            'connected' => true,
-            'provider' => 'local_calendar',
-            'calendar_id' => 'sales',
-            'timezone' => 'Africa/Dar_es_Salaam',
-            'working_days' => [1],
-            'allowed_hours' => { 'start' => '09:00', 'end' => '10:00' },
-            'duration_minutes' => 30,
-            'buffer_before_minutes' => 0,
-            'buffer_after_minutes' => 0,
-            'minimum_notice_minutes' => 60
-          },
-          'alert_routes' => {
-            described_class::PREPARATION_ALERT_TYPE => [{ 'type' => 'assignee' }]
-          }
-        }
-      }
-    )
-  end
-  let(:operator) { create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '255700000001' }) }
-  let!(:channel) do
-    create(
-      :channel_whatsapp,
-      account: account,
-      provider: 'whatsapp_cloud',
-      sync_templates: false,
-      validate_provider_config: false,
-      provider_config: {
-        'api_key' => 'test-key',
-        'phone_number_id' => '111222333',
-        'business_account_id' => '444555666',
-        'source' => 'embedded_signup'
-      }
-    )
-  end
-  let(:contact) { create(:contact, account: account, name: 'Jane Lead', phone_number: '+255712345678', email: 'jane@example.test') }
-  let(:contact_inbox) { create(:contact_inbox, inbox: channel.inbox, contact: contact, source_id: '255712345678') }
-  let(:conversation) do
-    create(
-      :conversation,
-      account: account,
-      inbox: channel.inbox,
-      contact: contact,
-      contact_inbox: contact_inbox,
-      assignee: operator,
-      control_state: :ai_active,
-      control_version: 3
-    )
-  end
-  let!(:problem_evidence) { create(:qualification_evidence, account: account, contact: contact, conversation: conversation, signal: :problem) }
-  let(:qualification) do
-    create(
-      :lead_qualification,
-      account: account,
-      contact: contact,
-      quality: :highly_qualified,
-      follow_up_state: :human_review,
-      score: 90,
-      reasons: ['Problem: need more leads', 'Urgency: urgent'],
-      evidence_snapshot: {
-        'problem' => { 'value' => 'need more leads', 'evidence_id' => problem_evidence.id },
-        'urgency' => { 'value' => 'urgent' },
-        'budget' => { 'value' => '$2500' },
-        'decision_authority' => { 'value' => 'owner' }
-      }
-    )
-  end
-  let(:starts_at) { Time.zone.parse('2026-08-31T06:00:00Z') }
+  class CalendarFake
+    attr_reader :created_bookings
 
-  before do
-    stub_request(:post, 'https://graph.facebook.com/v23.0/123456789/messages')
-      .to_return(
-        status: 200,
-        body: { messages: [{ id: "wamid.#{SecureRandom.hex(4)}" }] }.to_json,
-        headers: { 'Content-Type' => 'application/json' }
-      )
-  end
+    def initialize(create_results: [], free_busy_result: nil, on_create: nil, on_free_busy: nil)
+      @create_results = create_results
+      @free_busy_result = free_busy_result
+      @on_create = on_create
+      @on_free_busy = on_free_busy
+      @created_bookings = []
+    end
 
-  it 'creates a durable booking, confirms the lead through the CE sender path, sends one optional calendar invite, and alerts the operator' do # rubocop:disable RSpec/MultipleExpectations
-    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      result = nil
-      perform_enqueued_jobs(only: SendReplyJob) do
-        result = described_class.new(
-          conversation: conversation,
-          qualification: qualification,
-          starts_at: starts_at,
-          idempotency_key: 'booking-key-1'
-        ).perform
-      end
+    def free_busy(**)
+      @on_free_busy&.call
+      @free_busy_result ||
+        AiLeadEmployee::BookingCalendarClient::FreeBusyResult.new(busy_slots: [], state: 'connected', error_code: nil)
+    end
 
-      booking = result.booking
-      confirmation_message = Message.find(booking.confirmation_message_id)
-      preparation_delivery = booking.preparation_alert_deliveries.first
-      preparation_message = Message.find(preparation_delivery['message_id'])
+    def create_event!(booking:)
+      created_bookings << booking
+      @on_create&.call(booking)
+      result = @create_results.shift
+      raise result if result.is_a?(Exception)
 
-      expect(result.created).to be(true)
-      expect(booking).to have_attributes(
-        contact: contact,
-        conversation: conversation,
-        lead_qualification: qualification,
-        assignee: operator,
-        starts_at: starts_at,
-        ends_at: starts_at + 30.minutes,
-        timezone: 'Africa/Dar_es_Salaam',
-        calendar_invitation_sent_at: be_present
-      )
-      expect(booking.qualification_evidence_ids).to contain_exactly(problem_evidence.id)
-      expect(booking.provider_event_id).to eq("booking-#{booking.id}")
-      expect(booking.confirmation_message_id).to be_present
-      expect(booking.preparation_alert_recipients).to eq(['255700000001'])
-      expect(booking.preparation_alert_deliveries).to all(include('status' => 'queued'))
-      expect(qualification.reload).to be_call_booked
-      expect(conversation.reload).to have_attributes(control_state: 'human_active', control_version: 4)
-      expect(confirmation_message).to have_attributes(conversation: conversation, private: false, message_type: 'outgoing')
-      expect(confirmation_message.content).to include('Your call is booked for Monday, August 31 at 9:00 AM EAT')
-      expect(confirmation_message.additional_attributes.dig('ai_lead_employee', 'delivery_boundary')).to eq('outbox')
-      expect(preparation_message.additional_attributes.dig('ai_lead_employee', 'delivery_boundary')).to eq('outbox')
-      expect(preparation_message.additional_attributes.dig('ai_lead_employee', 'booking_id')).to eq(booking.id)
-      expect(performed_jobs.pluck(:job)).to include(SendReplyJob)
+      result || {
+        'provider_event_id' => AiLeadEmployee::GoogleCalendarClient.event_id_for(booking),
+        'provider' => 'google_calendar',
+        'calendar_id' => booking.calendar_id,
+        'calendar_state' => 'confirmed',
+        'invitee_email' => booking.attendee_email
+      }.compact
     end
   end
 
-  it 'does not send a calendar invitation when the Lead has not supplied email' do
-    contact.update!(email: nil)
+  before do
+    allow(Chatwoot).to receive(:encryption_configured?).and_return(true)
+    proposal_message
+    agreement_message
+    agreement_evidence
 
+    stub_request(:post, %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages})
+      .to_return(status: 200, body: { messages: [{ id: 'wamid.BOOKING.CONFIRMED' }] }.to_json,
+                 headers: { 'Content-Type' => 'application/json' })
+  end
+
+  let(:account) do
+    create(:account, settings: { 'ai_lead_employee' => { 'booking' => {
+             'timezone' => 'Africa/Dar_es_Salaam', 'working_days' => [1],
+             'allowed_hours' => { 'start' => '09:00', 'end' => '10:00' },
+             'duration_minutes' => 30, 'minimum_notice_minutes' => 60
+           } } })
+  end
+  let!(:connection) do
+    create(:google_calendar_connection, account: account, status: :connected, access_token: nil, refresh_token: nil)
+  end
+  let(:operator) { create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '255700000001' }) }
+  let!(:channel) do
+    create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false,
+                              validate_provider_config: false,
+                              provider_config: { 'api_key' => 'test-key', 'phone_number_id' => '111222333',
+                                                 'business_account_id' => '444555666', 'source' => 'embedded_signup' })
+  end
+  let(:contact) { create(:contact, account: account, name: 'Jane Lead', phone_number: '+255712345678', email: 'stored@example.test') }
+  let(:contact_inbox) { create(:contact_inbox, inbox: channel.inbox, contact: contact, source_id: '255712345678') }
+  let(:offer) do
+    AiLeadEmployee::Offer.create!(account: account, name: 'Free fit call', currency: 'TZS', enabled: true,
+                                  configuration_version: 1, configuration: {
+                                    'qualification_mode' => 'enabled', 'next_step' => { 'kind' => 'sales_call' },
+                                    'questions' => [], 'rules' => [], 'score_weights' => {},
+                                    'score_thresholds' => { 'qualified' => 0, 'highly_qualified' => 100 }
+                                  })
+  end
+  let(:conversation) do
+    create(:conversation, account: account, inbox: channel.inbox, contact: contact, contact_inbox: contact_inbox,
+                          assignee: operator, offer: offer, control_state: :ai_active, control_version: 3)
+  end
+  let(:problem_evidence) do
+    create(:qualification_evidence, account: account, contact: contact, conversation: conversation, offer: offer,
+                                    field_key: 'problem', value: { 'value' => 'need more leads' })
+  end
+  let(:proposal_message) do
+    create(:message, account: account, inbox: channel.inbox, conversation: conversation, sender: operator,
+                     message_type: :outgoing, content: 'Would Monday at 9 work?',
+                     additional_attributes: {
+                       ai_lead_employee: { booking_proposal: {
+                         idempotency_key: 'proposal', starts_at: starts_at.iso8601,
+                         ends_at: (starts_at + 30.minutes).iso8601, offer_id: offer.id,
+                         offer_configuration_version: offer.configuration_version
+                       } }
+                     })
+  end
+  let(:agreement_evidence) do
+    create(:qualification_evidence, account: account, contact: contact, conversation: conversation, offer: offer,
+                                    message: agreement_message, field_key: 'sales_call_agreement', source: :human,
+                                    value: { 'value' => 'yes', 'typed_value' => true, 'polarity' => 'positive',
+                                             'agreed_starts_at' => starts_at.iso8601,
+                                             'proposal_message_id' => proposal_message.id,
+                                             'offer_configuration_version' => offer.configuration_version })
+  end
+  let(:agreement_message) do
+    create(:message, account: account, inbox: channel.inbox, conversation: conversation, sender: contact,
+                     message_type: :incoming, content: 'Monday at 9 works for me',
+                     provider_created_at: starts_at - 2.hours, created_at: starts_at - 2.hours,
+                     updated_at: starts_at - 2.hours)
+  end
+  let(:qualification) do
+    create(:lead_qualification, account: account, contact: contact, offer: offer, quality: :qualified,
+                                configuration_version: offer.configuration_version,
+                                assessment: { 'fit' => { 'status' => 'met' }, 'readiness' => { 'status' => 'met' },
+                                              'action_eligibility' => { 'status' => 'met' } },
+                                evidence_snapshot: { 'problem' => { 'value' => 'need more leads',
+                                                                    'evidence_id' => problem_evidence.id } })
+  end
+  let(:starts_at) { Time.zone.parse('2026-08-31T06:00:00Z') }
+  let(:calendar) { CalendarFake.new }
+
+  def perform_booking(key: 'booking-key', attendee_email: nil, agreed_time: starts_at, client: calendar)
+    described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at,
+                        agreed_starts_at: agreed_time, agreement_message: agreement_message,
+                        attendee_email: attendee_email, idempotency_key: key, calendar_client: client).perform
+  end
+
+  it 'confirms one durable provider event before queuing confirmation and preparation messages' do
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      booking = described_class.new(
-        conversation: conversation,
-        qualification: qualification,
-        starts_at: starts_at,
-        idempotency_key: 'booking-key-no-email'
-      ).perform.booking
+      result = perform_booking(attendee_email: 'voluntary@example.test')
+      booking = result.booking
 
-      expect(booking.calendar_invitation_sent_at).to be_nil
+      expect(result.created).to be(true)
+      expect(booking).to have_attributes(status: 'confirmed', provider_state: 'confirmed', offer: offer,
+                                         agreement_evidence: agreement_evidence, agreement_message: agreement_message,
+                                         attendee_email: 'voluntary@example.test', calendar_invitation_sent_at: be_present)
+      expect(booking.provider_event_id).to eq(AiLeadEmployee::GoogleCalendarClient.event_id_for(booking))
+      expect(booking.qualification_evidence_ids).to contain_exactly(problem_evidence.id, agreement_evidence.id)
+      expect(qualification.reload).to be_call_booked
+      expect(conversation.reload).to have_attributes(control_state: 'human_active', control_version: 5)
+      expect(Message.find(booking.confirmation_message_id).content).to include('Monday, August 31 at 9:00 AM EAT')
+      expect(booking.preparation_alert_deliveries.size).to eq(1)
+    end
+  end
+
+  it 'never infers an attendee email from the stored contact email' do
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      booking = perform_booking(key: 'no-email').booking
+      expect(booking).to have_attributes(attendee_email: nil, calendar_invitation_sent_at: nil)
       expect(booking.calendar_event_payload['invitee_email']).to be_nil
     end
   end
 
-  it 'deduplicates retries without duplicating calendar events, confirmations, or alerts' do
+  it 'dispatches the single confirmed-booking message through canonical WhatsApp authority after human handoff' do
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      perform_enqueued_jobs(only: SendReplyJob) do
-        described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at, idempotency_key: 'retry-key').perform
+      booking = perform_booking(key: 'dispatch-confirmation').booking
+      confirmation = Message.find(booking.confirmation_message_id)
+
+      SendReplyJob.perform_now(confirmation.id)
+
+      expect(confirmation.reload.whatsapp_outbound_delivery).to have_attributes(state: 'accepted', failure_code: nil)
+      expect(confirmation.source_id).to eq('wamid.BOOKING.CONFIRMED')
+      expect(conversation.reload).to be_human_active
+    end
+  end
+
+  it 'deduplicates confirmed retries and rejects reuse with a different payload' do
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      perform_booking(key: 'retry')
+      expect(perform_booking(key: 'retry').created).to be(false)
+      expect(calendar.created_bookings.size).to eq(1)
+      expect(Booking.count).to eq(1)
+      expect(Message.outgoing.count).to eq(3)
+
+      expect { perform_booking(key: 'retry', attendee_email: 'different@example.test') }
+        .to raise_error(described_class::Ineligible) { |error| expect(error.code).to eq('idempotency_key_payload_mismatch') }
+    end
+  end
+
+  it 'records an uncertain provider result without presenting a confirmation, then reconciles by deterministic retry' do
+    failure = AiLeadEmployee::GoogleCalendarClient::ProviderFailure.new(error_code: 'provider_timeout', state: 'connection_error')
+    client = CalendarFake.new(create_results: [failure, nil])
+
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      expect { perform_booking(key: 'unknown', client: client) }.to raise_error(described_class::ProviderUnknown)
+      booking = Booking.find_by!(idempotency_key: 'unknown')
+      expect(booking).to have_attributes(status: 'provider_unknown', provider_state: 'unknown', confirmation_message_id: nil)
+      expect(qualification.reload).not_to be_call_booked
+      expect(Message.outgoing.count).to eq(1)
+
+      reconciled = AiLeadEmployee::BookingReconciliationService.new(
+        account: account, user: operator, booking: booking, calendar_client: client
+      ).perform
+      expect(reconciled).to have_attributes(status: 'confirmed', provider_state: 'confirmed')
+      expect(Message.outgoing.count).to eq(3)
+      expect(client.created_bookings.map(&:id)).to eq([booking.id, booking.id])
+    end
+  end
+
+  it 'requires the source agreement to name the exact requested start time' do
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      expect { perform_booking(agreed_time: starts_at + 30.minutes) }
+        .to raise_error(described_class::Ineligible) { |error| expect(error.code).to eq('specific_agreed_time_required') }
+    end
+  end
+
+  it 'requires the submitted incoming Message to be the source of the agreement evidence' do
+    other_message = create(:message, account: account, inbox: channel.inbox, conversation: conversation, sender: contact,
+                                     message_type: :incoming, content: 'A different reply')
+
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      expect do
+        described_class.new(
+          conversation: conversation, qualification: qualification, starts_at: starts_at,
+          agreed_starts_at: starts_at, agreement_message: other_message,
+          idempotency_key: 'wrong-source', calendar_client: calendar
+        ).perform
+      end.to raise_error(described_class::Ineligible) do |error|
+        expect(error.code).to eq('lead_agreement_message_required')
       end
+    end
+  end
 
-      expect do
-        perform_enqueued_jobs(only: SendReplyJob) do
-          result = described_class.new(
-            conversation: conversation.reload,
-            qualification: qualification.reload,
-            starts_at: starts_at,
-            idempotency_key: 'retry-key'
-          ).perform
-          expect(result.created).to be(false)
+  it 'rejects stale Offer qualification even when the Lead is globally Highly Qualified' do
+    qualification.update!(quality: :highly_qualified, configuration_version: offer.configuration_version - 1)
+    expect { perform_booking }.to raise_error(described_class::Ineligible) do |error|
+      expect(error.code).to eq('offer_eligibility_not_met')
+    end
+  end
+
+  it 'holds provider-unknown slots against competing bookings' do
+    create(:booking, account: account, calendar_id: 'primary', starts_at: starts_at, ends_at: starts_at + 30.minutes,
+                     status: :provider_unknown)
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      expect { perform_booking(key: 'conflict') }.to raise_error(described_class::SlotUnavailable)
+    end
+  end
+
+  it 'uses the after buffer at the candidate end when reserving against local bookings' do
+    account.update!(settings: account.settings.deep_merge(
+      'ai_lead_employee' => { 'booking' => {
+        'buffer_before_minutes' => 5,
+        'buffer_after_minutes' => 20
+      } }
+    ))
+    create(:booking, account: account, calendar_id: 'primary',
+                     starts_at: starts_at + 45.minutes, ends_at: starts_at + 75.minutes)
+
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      expect { perform_booking(key: 'asymmetric-buffer') }.to raise_error(described_class::SlotUnavailable)
+    end
+  end
+
+  it 'surfaces a Calendar access failure instead of presenting it as an unavailable slot' do
+    failed_availability = AiLeadEmployee::BookingCalendarClient::FreeBusyResult.new(
+      busy_slots: [], state: 'permission_error', error_code: 'insufficient_permissions'
+    )
+    failed_calendar = CalendarFake.new(free_busy_result: failed_availability)
+
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      expect { perform_booking(key: 'permission-error', client: failed_calendar) }
+        .to raise_error(described_class::Ineligible) do |error|
+          expect(error.code).to eq('insufficient_permissions')
         end
-      end.not_to change(Booking, :count)
-
-      expect(Message.outgoing.count).to eq(2)
-      expect(Booking.last.preparation_alert_deliveries.count).to eq(1)
     end
+    expect(Booking.find_by(idempotency_key: 'permission-error')).to be_nil
   end
 
-  it 'recovers a legacy provider confirmation id through a durable local message' do
+  it 'serializes simultaneous requests so only one provider event can own the slot' do
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      booking = described_class.new(
-        conversation: conversation,
-        qualification: qualification,
-        starts_at: starts_at,
-        idempotency_key: 'legacy-confirmation-key'
-      ).perform.booking
-      booking.update!(confirmation_message_id: 'wamid.legacy-provider-id')
+      conversation
+      qualification
+      agreement_message
+      barrier = Queue.new
+      outcomes = Queue.new
+      workers = %w[concurrent-a concurrent-b].map do |key|
+        Thread.new do
+          ActiveRecord::Base.connection_pool.with_connection do
+            barrier.pop
+            outcomes << begin
+              perform_booking(key: key)
+              :confirmed
+            rescue described_class::SlotUnavailable
+              :unavailable
+            end
+          end
+        end
+      end
+      2.times { barrier << true }
+      workers.each(&:join)
 
-      expect do
-        described_class.new(
-          conversation: conversation.reload,
-          qualification: qualification.reload,
-          starts_at: starts_at,
-          idempotency_key: 'legacy-confirmation-key'
-        ).perform
-      end.to change(Message.outgoing, :count).by(1)
-
-      expect(booking.reload.confirmation_message_id).to match(/\A\d+\z/)
+      expect(Array.new(2) { outcomes.pop }).to contain_exactly(:confirmed, :unavailable)
+      expect(Booking.active.count).to eq(1)
+      expect(calendar.created_bookings.size).to eq(1)
     end
   end
 
-  it 'adds configured WhatsApp template params to preparation alert messages' do
-    channel.update!(
-      message_templates: [
-        {
-          'name' => 'booking_preparation',
-          'status' => 'APPROVED',
-          'category' => 'UTILITY',
-          'language' => 'en',
-          'parameter_format' => 'NAMED',
-          'components' => [
-            {
-              'type' => 'BODY',
-              'text' => 'Booking prep {{contact}} {{booking_time}} {{problem}} {{budget}}'
-            }
-          ]
-        }
+  it 'serializes different starts whose configured buffers overlap beyond the raw database ranges' do
+    account.update!(settings: account.settings.deep_merge(
+      'ai_lead_employee' => { 'booking' => {
+        'allowed_hours' => { 'start' => '09:00', 'end' => '11:00' },
+        'buffer_before_minutes' => 10,
+        'buffer_after_minutes' => 10
+      } }
+    ))
+    second_start = starts_at + 30.minutes
+    second_contact = create(:contact, account: account, phone_number: '+255712345679')
+    second_contact_inbox = create(:contact_inbox, inbox: channel.inbox, contact: second_contact, source_id: '255712345679')
+    second_conversation = create(
+      :conversation, account: account, inbox: channel.inbox, contact: second_contact,
+                     contact_inbox: second_contact_inbox, assignee: operator, offer: offer
+    )
+    second_qualification = create(
+      :lead_qualification, account: account, contact: second_contact, offer: offer, quality: :qualified,
+                           configuration_version: offer.configuration_version,
+                           assessment: { 'fit' => { 'status' => 'met' }, 'readiness' => { 'status' => 'met' },
+                                         'action_eligibility' => { 'status' => 'met' } }
+    )
+    second_proposal = create(
+      :message, account: account, inbox: channel.inbox, conversation: second_conversation, sender: operator,
+                message_type: :outgoing, content: 'Would Monday at 9:30 work?', additional_attributes: {
+                  ai_lead_employee: { booking_proposal: {
+                    idempotency_key: 'second-proposal', starts_at: second_start.iso8601,
+                    ends_at: (second_start + 30.minutes).iso8601, offer_id: offer.id,
+                    offer_configuration_version: offer.configuration_version
+                  } }
+                }
+    )
+    second_agreement = create(
+      :message, account: account, inbox: channel.inbox, conversation: second_conversation, sender: second_contact,
+                message_type: :incoming, content: 'Yes, 9:30 works'
+    )
+    create(
+      :qualification_evidence, account: account, contact: second_contact, conversation: second_conversation,
+                               offer: offer, message: second_agreement, field_key: 'sales_call_agreement', source: :human,
+                               value: { 'value' => 'yes', 'typed_value' => true, 'polarity' => 'positive',
+                                        'agreed_starts_at' => second_start.iso8601, 'proposal_message_id' => second_proposal.id,
+                                        'offer_configuration_version' => offer.configuration_version }
+    )
+
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      barrier = Queue.new
+      outcomes = Queue.new
+      workers = [
+        Thread.new do
+          ActiveRecord::Base.connection_pool.with_connection do
+            barrier.pop
+            outcomes << begin
+              perform_booking(key: 'buffer-race-first')
+              :confirmed
+            rescue described_class::SlotUnavailable
+              :unavailable
+            end
+          end
+        end,
+        Thread.new do
+          ActiveRecord::Base.connection_pool.with_connection do
+            barrier.pop
+            outcomes << begin
+              described_class.new(
+                conversation: second_conversation, qualification: second_qualification, starts_at: second_start,
+                agreed_starts_at: second_start, agreement_message: second_agreement,
+                idempotency_key: 'buffer-race-second', calendar_client: calendar
+              ).perform
+              :confirmed
+            rescue described_class::SlotUnavailable
+              :unavailable
+            end
+          end
+        end
       ]
-    )
-    account.update!(
-      settings: account.settings.deep_merge(
-        'ai_lead_employee' => {
-          'alert_templates' => {
-            described_class::PREPARATION_ALERT_TYPE => {
-              'name' => 'booking_preparation',
-              'language' => 'en',
-              'processed_params' => {}
-            }
-          }
-        }
+      2.times { barrier << true }
+      workers.each(&:join)
+
+      expect(Array.new(2) { outcomes.pop }).to contain_exactly(:confirmed, :unavailable)
+      expect(Booking.active.count).to eq(1)
+      expect(calendar.created_bookings.size).to eq(1)
+    end
+  end
+
+  it 'does not deadlock PostgreSQL slot reservation against an Offer revision write' do
+    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
+      conversation
+      qualification
+      agreement_message
+      writer_attributes = offer.payload.slice(
+        'name', 'currency', 'enabled', 'version', 'qualification_mode', 'next_step', 'questions', 'budget_ranges',
+        'rules', 'score_weights', 'score_thresholds'
       )
+      barrier = Queue.new
+      outcomes = Queue.new
+      workers = [
+        Thread.new do
+          ActiveRecord::Base.connection_pool.with_connection do
+            barrier.pop
+            outcomes << begin
+              AiLeadEmployee::OfferConfigurationWriter.new(offer: offer.reload, attributes: writer_attributes).perform
+              :offer_revised
+            rescue StandardError => e
+              e
+            end
+          end
+        end,
+        Thread.new do
+          ActiveRecord::Base.connection_pool.with_connection do
+            barrier.pop
+            outcomes << begin
+              perform_booking(key: 'offer-revision-race')
+              :booking_confirmed
+            rescue described_class::Ineligible
+              :booking_rejected_stale
+            rescue StandardError => e
+              e
+            end
+          end
+        end
+      ]
+      2.times { barrier << true }
+      Timeout.timeout(10) { workers.each(&:join) }
+      results = Array.new(2) { outcomes.pop }
+
+      expect(results).to include(:offer_revised)
+      expect(results.grep(ActiveRecord::Deadlocked)).to be_empty
+      expect(results & %i[booking_confirmed booking_rejected_stale]).not_to be_empty
+    end
+  end
+
+  it 'does not let a late same-key provider timeout downgrade a conclusive confirmation' do
+    failure = AiLeadEmployee::GoogleCalendarClient::ProviderFailure.new(
+      error_code: 'provider_timeout', state: 'connection_error'
     )
-
-    booking = nil
-    travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      booking = described_class.new(
-        conversation: conversation,
-        qualification: qualification,
-        starts_at: starts_at,
-        idempotency_key: 'booking-template-key'
-      ).perform.booking
-    end
-
-    preparation_message = Message.find(booking.preparation_alert_deliveries.first['message_id'])
-    template_params = preparation_message.additional_attributes['template_params']
-    expect(template_params).to include('name' => 'booking_preparation', 'language' => 'en')
-    expect(template_params.dig('processed_params', 'body')).to include(
-      'contact' => 'Jane Lead +255712345678 jane@example.test',
-      'booking_time' => 'Monday, August 31 at 9:00 AM EAT',
-      'problem' => 'need more leads',
-      'budget' => '$2500'
-    )
-  end
-
-  it 'rejects concurrent overlapping attempts at the database boundary' do
-    create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at + 15.minutes, ends_at: starts_at + 45.minutes)
-
-    expect do
-      create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at, ends_at: starts_at + 30.minutes)
-    end.to raise_error(ActiveRecord::RecordInvalid, /overlaps an active booking/)
-  end
-
-  it 'rejects a slot already held by another active booking' do
-    create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at, ends_at: starts_at + 30.minutes)
+    winner = CalendarFake.new
+    loser = CalendarFake.new(create_results: [failure], on_create: lambda do |_booking|
+      perform_booking(key: 'same-key-race', client: winner)
+    end)
 
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      expect do
-        described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at, idempotency_key: 'conflict-key').perform
-      end.to raise_error(described_class::SlotUnavailable)
+      result = perform_booking(key: 'same-key-race', client: loser)
+      expect(result.booking.reload).to have_attributes(status: 'confirmed', provider_state: 'confirmed')
     end
   end
 
-  it 'rejects a buffer-adjacent active booking through serialized availability checks' do
-    account.update!(
-      settings: account.settings.deep_merge(
-        'ai_lead_employee' => {
-          'booking' => {
-            'buffer_after_minutes' => 15
-          }
-        }
-      )
-    )
-    create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at, ends_at: starts_at + 30.minutes)
+  it 'revalidates the locked Offer revision after provider availability returns' do
+    changing_calendar = CalendarFake.new(on_free_busy: lambda do
+      offer.update!(configuration_version: offer.configuration_version + 1)
+    end)
 
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      expect do
-        described_class.new(
-          conversation: conversation,
-          qualification: qualification,
-          starts_at: starts_at + 30.minutes,
-          idempotency_key: 'buffer-conflict-key'
-        ).perform
-      end.to raise_error(described_class::SlotUnavailable)
+      expect { perform_booking(key: 'stale-authority', client: changing_calendar) }
+        .to raise_error(described_class::Ineligible) do |error|
+          expect(error.code).to eq('offer_eligibility_not_met')
+        end
     end
+    expect(Booking.find_by(idempotency_key: 'stale-authority')).to be_nil
   end
 
-  it 'rejects an overlapping active booking even when the selected start time differs' do
-    create(:booking, account: account, calendar_id: 'sales', starts_at: starts_at + 15.minutes, ends_at: starts_at + 45.minutes)
+  it 'rejects availability checked under a replaced calendar and business-hours authority' do
+    changing_calendar = CalendarFake.new(on_free_busy: lambda do
+      account.update!(settings: account.settings.deep_merge(
+        'ai_lead_employee' => { 'booking' => {
+          'calendar_id' => 'replacement-calendar',
+          'allowed_hours' => { 'start' => '12:00', 'end' => '13:00' }
+        } }
+      ))
+      connection.update!(calendar_id: 'replacement-calendar')
+    end)
 
     travel_to Time.zone.parse('2026-08-31T04:30:00Z') do
-      expect do
-        described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at, idempotency_key: 'overlap-key').perform
-      end.to raise_error(described_class::SlotUnavailable)
+      expect { perform_booking(key: 'changed-booking-authority', client: changing_calendar) }
+        .to raise_error(described_class::Ineligible) do |error|
+          expect(error.code).to eq('booking_configuration_changed_retry')
+        end
     end
-  end
-
-  it 'does not book a Lead that is not Highly Qualified' do
-    qualification.update!(quality: :qualified)
-
-    expect do
-      described_class.new(conversation: conversation, qualification: qualification, starts_at: starts_at, idempotency_key: 'not-hot').perform
-    end.to raise_error(described_class::NotHighlyQualified)
+    expect(Booking.find_by(idempotency_key: 'changed-booking-authority')).to be_nil
   end
 end
+# rubocop:enable Lint/ConstantDefinitionInBlock, RSpec/InstanceVariable, RSpec/LeakyConstantDeclaration
+# rubocop:enable RSpec/ExampleLength, RSpec/MultipleExpectations, RSpec/MultipleMemoizedHelpers, Style/MultilineBlockChain

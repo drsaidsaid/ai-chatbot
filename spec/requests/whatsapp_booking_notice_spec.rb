@@ -8,13 +8,30 @@ RSpec.describe 'Canonical WhatsApp booking mutation notices', type: :request do
   let(:provider_url) { %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages} }
 
   before do
+    create(:google_calendar_connection, account: channel.account, status: :connected,
+                                        calendar_id: booking.calendar_id)
+    channel.account.update!(settings: channel.account.settings.deep_merge(
+      'ai_lead_employee' => { 'booking' => {
+        'calendar_id' => booking.calendar_id, 'timezone' => 'UTC', 'working_days' => [0, 1, 2, 3, 4, 5, 6],
+        'allowed_hours' => { 'start' => '00:00', 'end' => '23:59' }, 'duration_minutes' => 30,
+        'minimum_notice_minutes' => 0
+      } }
+    ))
+    stub_request(:post, 'https://www.googleapis.com/calendar/v3/freeBusy')
+      .to_return(status: 200, body: { calendars: { booking.calendar_id => { busy: [] } } }.to_json,
+                 headers: { 'Content-Type' => 'application/json' })
+    stub_request(:patch, %r{https://www.googleapis.com/calendar/v3/calendars/.+/events/.+})
+      .to_return(status: 200, body: { id: booking.provider_event_id }.to_json,
+                 headers: { 'Content-Type' => 'application/json' })
+    stub_request(:delete, %r{https://www.googleapis.com/calendar/v3/calendars/.+/events/.+})
+      .to_return(status: 204, body: '')
     create(:message, account: channel.account, inbox: channel.inbox, conversation: conversation,
                      message_type: :incoming, provider_created_at: Time.current)
   end
 
   def mutate_booking(action)
     path = "/api/v1/accounts/#{channel.account_id}/bookings/#{booking.id}/#{action}"
-    params = { idempotency_key: "#{action}-once", reason: 'Lead requested a change', starts_at: 3.days.from_now.iso8601 }
+    params = { idempotency_key: "#{action}-once", reason: 'Lead requested a change', starts_at: 3.days.from_now.beginning_of_hour.iso8601 }
     if action == 'cancel'
       post(path, headers: admin.create_new_auth_token,
                  params: params)

@@ -494,15 +494,31 @@ purchase, appointment or sales-call progression.
   recorded follow-up Messages use the shared delivery invalidation. A stop before R04 dispatch
   authorization prevents provider HTTP; a stop after authorization cannot
   rewrite accepted or unknown truth.
-- Conflict-free call bookings are persisted as `bookings`, scoped by account,
-  contact, Conversation, Lead Qualification, assignee, calendar, confirmation,
-  calendar event, invitation, alert-delivery, and retry idempotency metadata.
+- Conflict-free call and appointment bookings are persisted as `bookings`, scoped
+  by account, contact, Conversation, selected Offer, optional current Offer
+  Qualification, exact agreement evidence and source Message, assignee, calendar,
+  provider operation state, invitation, alert-delivery, prerequisite snapshot,
+  and retry idempotency metadata.
 - Active bookings cannot overlap for the same account calendar. The service
   checks availability transactionally, the model rejects overlaps, and
   PostgreSQL enforces the invariant with a GiST exclusion constraint.
-- V1 stores booking configuration in account settings under
-  `ai_lead_employee.booking` until calendar connections and availability rules
-  are promoted to first-class records.
+- V1 stores business hours, timezone, buffers, minimum notice and date exceptions
+  in account settings under `ai_lead_employee.booking`. Google OAuth credentials,
+  granted scopes, calendar selection and recoverable connection state are stored
+  in the account-scoped encrypted `google_calendar_connections` record.
+- Availability intersects Google free/busy with local rules and active local
+  bookings. Connected-empty, disconnected, permission-error and transient
+  connection-error results remain distinct. Active pending and provider-unknown
+  bookings participate in the PostgreSQL overlap exclusion constraint.
+- Google event creation uses a deterministic event ID. Create, reschedule and
+  cancel operations persist pending/unknown provider state before crossing the
+  provider boundary, confirm local state and WhatsApp side effects only after a
+  conclusive provider result, and expose an explicit reconciliation path for an
+  uncertain response.
+- The booking prerequisite checker passes free sales-call and appointment paths
+  and fails closed for a configured `payment_confirmation` prerequisite. R28
+  supplies verified payment evidence through that seam; R13 does not infer or
+  implement payment success.
 - The owned dashboard Bookings surface exposes configuration, available slots,
   confirmed booking state, and Human Operator preparation-alert visibility.
 - Highly Qualified sales handoffs are persisted as `lead_handoffs`, scoped by

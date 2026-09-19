@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get '/google_calendar/callback', to: 'google_calendar/callbacks#show'
   get '/whatsapp/media/:token', to: 'whatsapp_media#show', as: :whatsapp_media
   # Retain CE public source while the standalone V1 exposes no customer portal or widget.
   match '/widget', '/widget/*path', '/public/*path', '/api/v1/widget/*path', '/hc', '/hc/*path', '/survey/*path',
@@ -236,10 +237,13 @@ Rails.application.routes.draw do
             post :evidence, on: :member
           end
           resource :booking_configuration, only: [:show, :update]
+          resource :google_calendar_connection, only: [:show, :create, :destroy]
           resources :bookings, only: [:index, :create] do
             get :available_slots, on: :collection
+            post :propose, on: :collection
             patch :reschedule, on: :member
             post :cancel, on: :member
+            post :reconcile, on: :member
           end
           namespace :channels do
             resource :twilio_channel, only: [:create]

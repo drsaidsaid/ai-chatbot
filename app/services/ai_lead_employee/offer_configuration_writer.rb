@@ -153,9 +153,28 @@ class AiLeadEmployee::OfferConfigurationWriter
     raise ArgumentError, 'Unsupported next step' unless AiLeadEmployee::Offer::NEXT_STEP_KINDS.include?(next_step['kind'])
     raise ArgumentError, 'Next-step prompt is too long' if next_step['prompt'].to_s.length > 240
 
+    validate_agreement_field!(next_step)
+    validate_booking_prerequisite!(next_step)
+
     validate_next_step_url!(next_step)
 
-    next_step.slice('kind', 'prompt', 'url').compact_blank
+    next_step.slice('kind', 'prompt', 'url', 'agreement_field', 'prerequisite').compact_blank
+  end
+
+  def validate_agreement_field!(next_step)
+    return if next_step['agreement_field'].blank?
+    return if next_step['agreement_field'].to_s.match?(/\A[a-z][a-z0-9_]{0,63}\z/)
+
+    raise ArgumentError, 'Agreement field must be a stable field key'
+  end
+
+  def validate_booking_prerequisite!(next_step)
+    return if next_step['prerequisite'].blank?
+
+    raise ArgumentError, 'Unsupported booking prerequisite' unless next_step['prerequisite'] == 'payment_confirmation'
+    return if next_step['kind'].in?(%w[sales_call appointment])
+
+    raise ArgumentError, 'Booking prerequisites require a call or appointment next step'
   end
 
   def validate_next_step_url!(next_step)

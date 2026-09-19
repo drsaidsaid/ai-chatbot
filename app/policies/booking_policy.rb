@@ -13,11 +13,19 @@ class BookingPolicy < ApplicationPolicy
     index?
   end
 
+  def propose?
+    create?
+  end
+
   def reschedule?
     index?
   end
 
   def cancel?
+    index?
+  end
+
+  def reconcile?
     index?
   end
 

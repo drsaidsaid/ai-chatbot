@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_19_000200) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -602,7 +602,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000200) do
     t.bigint "account_id", null: false
     t.bigint "contact_id", null: false
     t.bigint "conversation_id", null: false
-    t.bigint "lead_qualification_id", null: false
+    t.bigint "lead_qualification_id"
     t.bigint "assignee_id"
     t.string "calendar_id", null: false
     t.string "provider", null: false
@@ -622,14 +622,27 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000200) do
     t.jsonb "preparation_alert_deliveries", default: [], null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id", "calendar_id", "starts_at"], name: "index_bookings_on_active_slot", unique: true, where: "(status = 0)"
+    t.bigint "offer_id"
+    t.bigint "agreement_evidence_id"
+    t.bigint "agreement_message_id"
+    t.datetime "agreed_at"
+    t.string "attendee_email"
+    t.string "provider_state", default: "pending", null: false
+    t.string "provider_error_code"
+    t.datetime "provider_checked_at"
+    t.jsonb "provider_operation", default: {}, null: false
+    t.jsonb "prerequisite_snapshot", default: {}, null: false
+    t.index ["account_id", "calendar_id", "starts_at"], name: "index_bookings_on_active_slot", unique: true, where: "(status = ANY (ARRAY[0, 3, 4]))"
     t.index ["account_id", "idempotency_key"], name: "index_bookings_on_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
     t.index ["account_id"], name: "index_bookings_on_account_id"
+    t.index ["agreement_evidence_id"], name: "index_bookings_on_agreement_evidence_id"
+    t.index ["agreement_message_id"], name: "index_bookings_on_agreement_message_id"
     t.index ["assignee_id"], name: "index_bookings_on_assignee_id"
     t.index ["contact_id"], name: "index_bookings_on_contact_id"
     t.index ["conversation_id"], name: "index_bookings_on_conversation_id"
     t.index ["lead_qualification_id"], name: "index_bookings_on_lead_qualification_id"
-    t.exclusion_constraint "account_id WITH =, calendar_id WITH =, tsrange(starts_at, ends_at, '[)'::text) WITH &&", where: "status = 0", using: :gist, name: "index_bookings_on_active_slot_overlap"
+    t.index ["offer_id"], name: "index_bookings_on_offer_id"
+    t.exclusion_constraint "account_id WITH =, calendar_id WITH =, tsrange(starts_at, ends_at, '[)'::text) WITH &&", where: "status = ANY (ARRAY[0, 3, 4])", using: :gist, name: "index_bookings_on_active_slot_overlap"
   end
 
   create_table "calls", force: :cascade do |t|
@@ -1421,6 +1434,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000200) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "google_calendar_connections", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "provider", default: "google_calendar", null: false
+    t.integer "status", default: 0, null: false
+    t.string "calendar_id", default: "primary", null: false
+    t.string "account_email"
+    t.text "access_token"
+    t.text "refresh_token"
+    t.datetime "token_expires_at"
+    t.jsonb "granted_scopes", default: [], null: false
+    t.string "last_error_code"
+    t.datetime "last_checked_at"
+    t.string "oauth_state_digest"
+    t.datetime "oauth_state_expires_at"
+    t.bigint "authorization_generation", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_google_calendar_connections_on_account_id", unique: true
   end
 
   create_table "human_review_requests", force: :cascade do |t|
@@ -2551,15 +2584,19 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000200) do
   add_foreign_key "ai_subscriptions", "accounts"
   add_foreign_key "ai_subscriptions", "ai_service_plans"
   add_foreign_key "bookings", "accounts"
+  add_foreign_key "bookings", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "bookings", "contacts"
   add_foreign_key "bookings", "conversations"
   add_foreign_key "bookings", "lead_qualifications"
+  add_foreign_key "bookings", "messages", column: "agreement_message_id"
+  add_foreign_key "bookings", "qualification_evidences", column: "agreement_evidence_id"
   add_foreign_key "bookings", "users", column: "assignee_id"
   add_foreign_key "campaign_recipients", "accounts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
   add_foreign_key "conversations", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "google_calendar_connections", "accounts"
   add_foreign_key "human_review_requests", "accounts"
   add_foreign_key "human_review_requests", "conversations"
   add_foreign_key "human_review_requests", "knowledge_items"

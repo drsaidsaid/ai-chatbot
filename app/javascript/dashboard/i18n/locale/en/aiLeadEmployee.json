@@ -104,7 +104,20 @@
       "CONVERSATION_ERROR": "This conversation is unavailable or you do not have access.",
       "WRITING_TOOLS": "Writing tools",
       "CONTENT_TEMPLATES": "Content templates",
-      "RESIZE_EDITOR": "Resize reply editor"
+      "RESIZE_EDITOR": "Resize reply editor",
+      "BOOKING_DIALOG": {
+        "ARIA": "Book or propose a call time",
+        "BOOK_TITLE": "Book the agreed call",
+        "PROPOSE_TITLE": "Offer an available time",
+        "DESCRIPTION": "Times combine Google Calendar availability with saved business hours and buffers.",
+        "AVAILABLE_TIME": "Available time",
+        "VOLUNTARY_EMAIL": "The Lead voluntarily supplied an email for this invite",
+        "EMAIL_PLACEHOLDER": "lead@example.com",
+        "CANCEL": "Cancel",
+        "SAVING": "Saving…",
+        "CONFIRM": "Confirm booking",
+        "SEND_PROPOSAL": "Send proposed time"
+      }
     },
     "SETTINGS": {
       "TITLE": "Settings",
@@ -597,6 +610,8 @@
       "AVAILABLE_SLOTS": "Available slots",
       "NO_SLOTS": "No available slots match these rules",
       "SLOT_SOURCE": "Calendar availability, business hours, buffers, notice, and assignment rules",
+      "CALENDAR_UNAVAILABLE": "Google Calendar could not be checked ({error}). Reconnect it in Booking settings, then retry availability.",
+      "RECONCILE": "Reconcile calendar result",
       "UPCOMING": "Upcoming bookings",
       "LOADING": "Loading bookings",
       "EMPTY": "No calls booked yet",
@@ -696,6 +711,9 @@
       },
       "PROVIDER_STATE": {
         "CONNECTED": "Connected",
+        "DISCONNECTED": "Calendar not connected",
+        "PERMISSION_ERROR": "Calendar permission required",
+        "CONNECTION_ERROR": "Calendar connection failed",
         "FAILED": "Failed provider load"
       },
       "WEEKDAY": {

@@ -369,6 +369,8 @@ Booking availability is the intersection of:
 
 The agent offers available times or selects the next acceptable free time with the lead's agreement. It must prevent double booking.
 
+The booking record must preserve the selected Offer revision, the exact provider-backed time that was offered, and the Lead Message and current evidence that agreed to that same time. A global quality label does not substitute for Offer eligibility. Calendar permission and connection failures are shown separately from a connected calendar with no free time. An uncertain provider result remains visibly unknown until an idempotent retry or reconciliation establishes the outcome.
+
 After booking:
 
 - Send a WhatsApp confirmation to the lead.
@@ -376,6 +378,8 @@ After booking:
 - Send a calendar invitation only when the lead voluntarily provides an email address.
 - Mark the lead's follow-up state as Call booked.
 - Alert the assigned human immediately.
+
+Creation, rescheduling, and cancellation update Google Calendar before the product presents the new state as confirmed. These operations use stable idempotency keys, hold pending or unknown slots against competing requests, and never send a confirmation or change follow-up state while the provider outcome is unknown.
 
 The admin can configure weekdays, weekends, and time windows. Do not assume Online Profits business hours for other accounts; owners review availability before activating booking.
 

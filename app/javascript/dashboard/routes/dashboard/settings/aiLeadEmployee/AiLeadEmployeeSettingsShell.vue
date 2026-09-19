@@ -26,7 +26,20 @@ const booking = reactive({
   minimum_notice_minutes: 60,
   working_days: [],
   allowed_hours: { start: '09:00', end: '17:00' },
+  buffer_before_minutes: 0,
+  buffer_after_minutes: 0,
+  exceptions: [],
+  connection: null,
 });
+const weekdays = [
+  ['Sun', 0],
+  ['Mon', 1],
+  ['Tue', 2],
+  ['Wed', 3],
+  ['Thu', 4],
+  ['Fri', 5],
+  ['Sat', 6],
+];
 
 const sections = computed(() => [
   {
@@ -141,6 +154,26 @@ const saveBooking = async () => {
     saving.value = false;
   }
 };
+const connectGoogle = async () => {
+  try {
+    const { data } = await BookingConfigurationAPI.connectGoogle();
+    window.location.assign(data.authorization_url);
+  } catch {
+    useAlert('Unable to start Google Calendar connection.');
+  }
+};
+const disconnectGoogle = async () => {
+  try {
+    const { data } = await BookingConfigurationAPI.disconnectGoogle();
+    booking.connection = data;
+    booking.connected = false;
+    useAlert('Google Calendar disconnected.');
+  } catch {
+    useAlert('Unable to disconnect Google Calendar.');
+  }
+};
+const addException = () =>
+  booking.exceptions.push({ date: '', unavailable: true });
 watch(() => props.section, load);
 onMounted(load);
 </script>
@@ -207,8 +240,53 @@ onMounted(load);
           </div>
         </template>
         <template v-else-if="isBooking">
-          <h2 class="text-base font-semibold text-n-slate-12">Availability</h2>
+          <div class="rounded-xl border border-n-weak bg-n-solid-2 p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 class="text-base font-semibold text-n-slate-12">
+                  Google Calendar
+                </h2>
+                <p class="text-sm text-n-slate-11">
+                  {{
+                    booking.connected
+                      ? `Connected to ${booking.connection?.calendar_id || booking.calendar_id}`
+                      : 'Connect a calendar before offering times.'
+                  }}
+                </p>
+                <p
+                  v-if="booking.connection?.last_error_code"
+                  class="mt-1 text-sm text-n-ruby-11"
+                >
+                  Calendar access needs attention:
+                  {{ booking.connection.last_error_code }}. Reconnect to restore
+                  booking.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="h-10 rounded-lg border border-n-weak px-4 text-sm font-medium"
+                @click="
+                  booking.connected ? disconnectGoogle() : connectGoogle()
+                "
+              >
+                {{
+                  booking.connected ? 'Disconnect' : 'Connect Google Calendar'
+                }}
+              </button>
+            </div>
+          </div>
+          <h2 class="mt-6 text-base font-semibold text-n-slate-12">
+            Availability
+          </h2>
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm">
+              <span>Google Calendar ID</span>
+              <input
+                v-model="booking.calendar_id"
+                placeholder="primary"
+                class="h-10 rounded-lg border border-n-weak px-3"
+              />
+            </label>
             <label class="grid gap-1 text-sm">
               <span>Timezone</span>
               <input
@@ -237,7 +315,86 @@ onMounted(load);
                 type="time"
                 class="h-10 rounded-lg border border-n-weak px-3"
             /></label>
+            <label class="grid gap-1 text-sm"
+              ><span>Buffer before (minutes)</span
+              ><input
+                v-model.number="booking.buffer_before_minutes"
+                type="number"
+                min="0"
+                class="h-10 rounded-lg border border-n-weak px-3"
+            /></label>
+            <label class="grid gap-1 text-sm"
+              ><span>Buffer after (minutes)</span
+              ><input
+                v-model.number="booking.buffer_after_minutes"
+                type="number"
+                min="0"
+                class="h-10 rounded-lg border border-n-weak px-3"
+            /></label>
+            <label class="grid gap-1 text-sm"
+              ><span>Minimum notice (minutes)</span
+              ><input
+                v-model.number="booking.minimum_notice_minutes"
+                type="number"
+                min="0"
+                class="h-10 rounded-lg border border-n-weak px-3"
+            /></label>
           </div>
+          <fieldset class="mt-5">
+            <legend class="text-sm font-medium text-n-slate-12">
+              Available weekdays
+            </legend>
+            <div class="mt-2 flex flex-wrap gap-3">
+              <label
+                v-for="[label, day] in weekdays"
+                :key="day"
+                class="flex items-center gap-2 text-sm"
+              >
+                <input
+                  v-model="booking.working_days"
+                  type="checkbox"
+                  :value="day"
+                />{{ label }}
+              </label>
+            </div>
+          </fieldset>
+          <div class="mt-5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-medium text-n-slate-12">
+                Unavailable dates
+              </h3>
+              <button
+                type="button"
+                class="text-sm font-medium text-n-brand"
+                @click="addException"
+              >
+                Add date
+              </button>
+            </div>
+            <div
+              v-for="(exception, index) in booking.exceptions"
+              :key="index"
+              class="mt-2 flex gap-2"
+            >
+              <input
+                v-model="exception.date"
+                type="date"
+                class="h-10 rounded-lg border border-n-weak px-3"
+              />
+              <button
+                type="button"
+                class="text-sm text-n-ruby-11"
+                @click="booking.exceptions.splice(index, 1)"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+          <p class="mt-5 rounded-lg bg-n-alpha-2 p-3 text-sm text-n-slate-11">
+            Preview: {{ booking.working_days.length }} days each week,
+            {{ booking.allowed_hours.start }}–{{ booking.allowed_hours.end }}
+            {{ booking.timezone }}, {{ booking.duration_minutes }} minute calls.
+          </p>
         </template>
         <template v-else-if="nativeDestination">
           <h2 class="text-base font-semibold text-n-slate-12">

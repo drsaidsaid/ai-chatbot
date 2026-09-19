@@ -12,12 +12,12 @@ class AiLeadEmployee::ConversationCockpit::Context
   end
 
   def qualification
-    @qualification ||= if Current.user.is_a?(User)
-                         AiLeadEmployee::AccessScope.new(account: account,
-                                                         user: Current.user).qualification(contact)
-                       else
-                         contact&.lead_qualification
-                       end
+    return @qualification if defined?(@qualification)
+    return @qualification = nil if Current.user.is_a?(User) &&
+                                   !AiLeadEmployee::AccessScope.new(account: account, user: Current.user).complete_contact?(contact)
+
+    @qualification = LeadQualification.where(account: account, contact: contact, offer: conversation.offer)
+                                      .order(last_evaluated_at: :desc, id: :desc).first
   end
 
   def evidence_snapshot
@@ -34,6 +34,22 @@ class AiLeadEmployee::ConversationCockpit::Context
     @latest_booking =
       conversation.bookings.active.order(starts_at: :asc).first ||
       conversation.bookings.order(starts_at: :desc).first
+  end
+
+  def unresolved_booking
+    @unresolved_booking ||= conversation.bookings.active.where(provider_state: 'unknown').order(updated_at: :desc, id: :desc).first
+  end
+
+  def booking_eligibility
+    @booking_eligibility ||= AiLeadEmployee::BookingEligibility.new(
+      conversation: conversation, qualification: qualification
+    ).perform
+  end
+
+  def booking_proposal_eligibility
+    @booking_proposal_eligibility ||= AiLeadEmployee::BookingEligibility.new(
+      conversation: conversation, qualification: qualification, require_agreement: false
+    ).perform
   end
 
   def latest_handoff
