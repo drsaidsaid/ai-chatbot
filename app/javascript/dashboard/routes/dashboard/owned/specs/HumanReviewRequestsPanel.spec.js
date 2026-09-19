@@ -3,6 +3,8 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 import { createI18n } from 'vue-i18n';
 import HumanReviewRequestsPanel from '../HumanReviewRequestsPanel.vue';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
+import ReviewConfigurationSuggestionsAPI from 'dashboard/api/reviewConfigurationSuggestions';
+import { useMapGetter } from 'dashboard/composables/store';
 import messages from 'dashboard/i18n/locale/en/aiLeadEmployee.json';
 
 vi.mock('dashboard/api/humanReviewRequests', () => ({
@@ -16,6 +18,10 @@ vi.mock('dashboard/api/humanReviewRequests', () => ({
   },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
+vi.mock('dashboard/composables/store', () => ({ useMapGetter: vi.fn() }));
+vi.mock('dashboard/api/reviewConfigurationSuggestions', () => ({
+  default: { get: vi.fn(), review: vi.fn() },
+}));
 
 const review = {
   id: 8,
@@ -54,6 +60,8 @@ const mountPanel = async ({ conversationId = 12, reviewId = 8 } = {}) => {
 describe('HumanReviewRequestsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useMapGetter.mockReturnValue({ value: 'agent' });
+    ReviewConfigurationSuggestionsAPI.get.mockResolvedValue({ data: [] });
     HumanReviewRequestsAPI.show.mockResolvedValue({ data: review });
     HumanReviewRequestsAPI.resolve.mockResolvedValue({
       data: {
@@ -145,6 +153,73 @@ describe('HumanReviewRequestsPanel', () => {
     expect(wrapper.text()).toContain(proposeKnowledgeLabel);
     expect(wrapper.text()).not.toContain('Save private note and resolve');
     expect(wrapper.get('textarea').element.value).toBe('Private operator note');
+  });
+
+  it('renders a persisted provider failure and recovery guidance after reload', async () => {
+    HumanReviewRequestsAPI.show.mockResolvedValue({
+      data: {
+        ...review,
+        status: 'resolved',
+        resolution_kind: 'send_reply',
+        operator_answer: 'We will review the request.',
+        reply_outcome: 'reply_delivery_failed',
+        reply_delivery: {
+          outcome: 'reply_delivery_failed',
+          provider_status: 'failed',
+          authority_state: 'accepted',
+          failure_code: '13101',
+          recoverable: false,
+        },
+        knowledge_proposal_outcome: 'not_requested',
+        configuration_suggestion_outcome: 'not_requested',
+      },
+    });
+
+    const wrapper = await mountPanel();
+
+    expect(
+      wrapper.get('[data-testid="persisted-reply-delivery"]').text()
+    ).toContain('Reply delivery failed');
+    expect(wrapper.text()).toContain('Delivery failure code: 13101');
+    expect(wrapper.text()).toContain(
+      'Check provider status before sending again'
+    );
+  });
+
+  it('shows pending configuration feedback in an administrator queue', async () => {
+    useMapGetter.mockReturnValue({ value: 'administrator' });
+    HumanReviewRequestsAPI.get.mockResolvedValue({ data: [] });
+    ReviewConfigurationSuggestionsAPI.get.mockResolvedValue({
+      data: [
+        {
+          id: 55,
+          suggestion: 'Review whether the fit rule is too broad.',
+          evidence: '{"quality":"qualified"}',
+          conversation_display_id: 42,
+        },
+      ],
+    });
+    ReviewConfigurationSuggestionsAPI.review.mockResolvedValue({
+      data: { id: 55, status: 'reviewed' },
+    });
+
+    const wrapper = await mountPanel({ conversationId: null, reviewId: null });
+
+    expect(
+      wrapper.get('[data-testid="pending-configuration-feedback"]').text()
+    ).toContain('Review whether the fit rule is too broad.');
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Mark reviewed')
+      .trigger('click');
+    await flushPromises();
+
+    expect(ReviewConfigurationSuggestionsAPI.review).toHaveBeenCalledWith(55, {
+      outcome: 'reviewed',
+    });
+    expect(
+      wrapper.find('[data-testid="pending-configuration-feedback"]').exists()
+    ).toBe(false);
   });
 
   it('reloads when the selected review changes and hides a review from another conversation', async () => {

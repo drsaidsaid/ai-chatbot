@@ -5,6 +5,8 @@ import InboxConversationCockpit from '../InboxConversationCockpit.vue';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
+import LeadHandoffsAPI from 'dashboard/api/leadHandoffs';
+import ReviewConfigurationSuggestionsAPI from 'dashboard/api/reviewConfigurationSuggestions';
 
 vi.mock('dashboard/api/inbox/conversation', () => ({
   default: {
@@ -24,6 +26,17 @@ vi.mock('dashboard/api/humanReviewRequests', () => ({
     get: vi.fn(),
     show: vi.fn(),
   },
+}));
+
+vi.mock('dashboard/api/leadHandoffs', () => ({
+  default: {
+    show: vi.fn(),
+    proposeConfigurationSuggestion: vi.fn(),
+  },
+}));
+
+vi.mock('dashboard/api/reviewConfigurationSuggestions', () => ({
+  default: { get: vi.fn(), review: vi.fn() },
 }));
 
 vi.mock('dashboard/composables', () => ({
@@ -463,6 +476,32 @@ const deferred = () => {
 describe('InboxConversationCockpit', () => {
   beforeEach(() => {
     HumanReviewRequestsAPI.get.mockResolvedValue({ data: [] });
+    LeadHandoffsAPI.show.mockResolvedValue({
+      data: {
+        id: 1,
+        status: 'open',
+        configuration_suggestion_outcome: 'not_requested',
+        configuration_suggestion: null,
+        can_review_configuration_suggestion: false,
+      },
+    });
+    LeadHandoffsAPI.proposeConfigurationSuggestion.mockResolvedValue({
+      data: {
+        id: 1,
+        status: 'open',
+        configuration_suggestion_outcome: 'pending',
+        configuration_suggestion: {
+          id: 5,
+          status: 'pending',
+          suggestion: 'Review the readiness rule.',
+        },
+        can_review_configuration_suggestion: false,
+      },
+    });
+    ReviewConfigurationSuggestionsAPI.review.mockResolvedValue({
+      data: { id: 5, status: 'reviewed' },
+    });
+    ReviewConfigurationSuggestionsAPI.get.mockResolvedValue({ data: [] });
     InboxConversationsAPI.get.mockImplementation(params => {
       if (params?.queue === 'review') {
         return Promise.resolve({
@@ -502,6 +541,56 @@ describe('InboxConversationCockpit', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('records configuration feedback on the actual sales handoff', async () => {
+    const { wrapper } = await mountCockpit({
+      conversationId: 101,
+      role: 'agent',
+    });
+    const panel = wrapper.get('[data-testid="lead-handoff-feedback"]');
+
+    await panel
+      .get(
+        'textarea[placeholder="AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_SUGGESTION_PLACEHOLDER"]'
+      )
+      .setValue('Review the readiness rule.');
+    await panel
+      .findAll('button')
+      .find(button =>
+        button.text().includes('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_PROPOSE')
+      )
+      .trigger('click');
+    await flushPromises();
+
+    expect(LeadHandoffsAPI.proposeConfigurationSuggestion).toHaveBeenCalledWith(
+      1,
+      { category: 'poor_fit', suggestion: 'Review the readiness rule.' }
+    );
+    expect(panel.text()).toContain('Review the readiness rule.');
+  });
+
+  it('shows the administrator feedback queue on the real Needs review list route', async () => {
+    ReviewConfigurationSuggestionsAPI.get.mockResolvedValue({
+      data: [
+        {
+          id: 55,
+          suggestion: 'Review whether the fit rule is too broad.',
+          evidence: '{"quality":"qualified"}',
+          conversation_display_id: 202,
+        },
+      ],
+    });
+    const { wrapper, router } = await mountCockpit({ role: 'administrator' });
+
+    await clickQueue(wrapper, 'Needs review');
+
+    expect(router.currentRoute.value.name).toBe('home');
+    expect(router.currentRoute.value.query.queue).toBe('review');
+    expect(ReviewConfigurationSuggestionsAPI.get).toHaveBeenCalled();
+    expect(
+      wrapper.get('[data-testid="pending-configuration-feedback"]').text()
+    ).toContain('Review whether the fit rule is too broad.');
   });
 
   it('starts with a selectable All list and preserves filters through opening, returning and browser back', async () => {

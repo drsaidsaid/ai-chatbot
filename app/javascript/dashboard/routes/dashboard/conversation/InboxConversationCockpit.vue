@@ -14,6 +14,7 @@ import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/cons
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
 import HumanReviewRequestsPanel from 'dashboard/routes/dashboard/owned/HumanReviewRequestsPanel.vue';
+import LeadHandoffFeedbackPanel from './LeadHandoffFeedbackPanel.vue';
 
 const props = defineProps({
   inboxId: {
@@ -859,6 +860,9 @@ onMounted(() => {
             </div>
           </button>
         </template>
+        <HumanReviewRequestsPanel
+          v-if="activeQueue === 'review' && !selectedDisplayId"
+        />
       </div>
 
       <footer
@@ -1396,6 +1400,10 @@ onMounted(() => {
           </section>
         </template>
       </MessagesView>
+      <LeadHandoffFeedbackPanel
+        v-if="latestHandoff?.id"
+        :handoff-id="latestHandoff.id"
+      />
       <HumanReviewRequestsPanel
         v-if="activeQueue === 'review' && currentChat?.id"
         :conversation-id="currentChat.id"

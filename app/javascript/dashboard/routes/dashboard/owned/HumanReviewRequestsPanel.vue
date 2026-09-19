@@ -3,7 +3,9 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import { useMapGetter } from 'dashboard/composables/store';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
+import ReviewConfigurationSuggestionsAPI from 'dashboard/api/reviewConfigurationSuggestions';
 
 const props = defineProps({
   conversationId: { type: [String, Number], default: null },
@@ -12,11 +14,13 @@ const props = defineProps({
 
 const route = useRoute();
 const { t } = useI18n();
+const currentRole = useMapGetter('getCurrentRole');
 const reviewRequests = ref([]);
 const isLoading = ref(false);
 const resolvingId = ref(null);
 const resolutionForms = ref({});
 const resolutionResults = ref({});
+const pendingSuggestions = ref([]);
 const sourceOptions = computed(() => [
   { value: 'faq', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.FAQ') },
   { value: 'offer', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.OFFER') },
@@ -193,17 +197,99 @@ const reviewConfigurationSuggestion = async (request, outcome) => {
   }
 };
 
+const loadPendingSuggestions = async () => {
+  if (
+    currentRole.value !== 'administrator' ||
+    props.reviewId ||
+    props.conversationId
+  ) {
+    pendingSuggestions.value = [];
+    return;
+  }
+  const { data } = await ReviewConfigurationSuggestionsAPI.get();
+  pendingSuggestions.value = data;
+};
+
+const reviewPendingSuggestion = async (suggestion, outcome) => {
+  resolvingId.value = `suggestion-${suggestion.id}`;
+  try {
+    await ReviewConfigurationSuggestionsAPI.review(suggestion.id, { outcome });
+    pendingSuggestions.value = pendingSuggestions.value.filter(
+      record => record.id !== suggestion.id
+    );
+    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_REVIEWED'));
+  } catch {
+    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_ERROR'));
+  } finally {
+    resolvingId.value = null;
+  }
+};
+
+const suggestionConversationPath = suggestion =>
+  `/app/accounts/${route.params.accountId}/conversations/${suggestion.conversation_display_id}`;
+
 const conversationPath = request =>
   `/app/accounts/${route.params.accountId}/conversations/${request.conversation_display_id}?queue=review&review_id=${request.id}`;
 const knowledgePath = request =>
   `/app/accounts/${route.params.accountId}/knowledge?knowledge_item_id=${request.knowledge_item_id}`;
 
-onMounted(loadReviewRequests);
+onMounted(() => Promise.all([loadReviewRequests(), loadPendingSuggestions()]));
 watch(() => [props.reviewId, props.conversationId], loadReviewRequests);
 </script>
 
 <template>
   <section class="mt-6 border border-n-weak bg-n-solid-1">
+    <section
+      v-if="pendingSuggestions.length"
+      data-testid="pending-configuration-feedback"
+      class="grid gap-3 border-b border-n-weak p-4"
+    >
+      <h2 class="font-medium text-n-slate-12">
+        {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_QUEUE_TITLE') }}
+      </h2>
+      <article
+        v-for="suggestion in pendingSuggestions"
+        :key="suggestion.id"
+        class="grid gap-2 rounded-md border border-n-weak p-3 text-sm text-n-slate-12"
+      >
+        <p class="font-medium">{{ suggestion.suggestion }}</p>
+        <p class="text-xs text-n-slate-11">
+          {{
+            t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_EVIDENCE', {
+              evidence: suggestion.evidence,
+            })
+          }}
+        </p>
+        <a
+          class="w-fit text-n-blue-text underline"
+          :href="suggestionConversationPath(suggestion)"
+        >
+          {{
+            t('AI_LEAD_EMPLOYEE.REVIEWS.OPEN_CONVERSATION', {
+              id: suggestion.conversation_display_id,
+            })
+          }}
+        </a>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-lg border border-n-weak px-3 py-2 font-medium"
+            :disabled="resolvingId === `suggestion-${suggestion.id}`"
+            @click="reviewPendingSuggestion(suggestion, 'reviewed')"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_MARK_REVIEWED') }}
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-n-weak px-3 py-2 font-medium"
+            :disabled="resolvingId === `suggestion-${suggestion.id}`"
+            @click="reviewPendingSuggestion(suggestion, 'dismissed')"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_DISMISS') }}
+          </button>
+        </div>
+      </article>
+    </section>
     <div v-if="isLoading" class="px-4 py-6 text-sm text-n-slate-11">
       {{ t('AI_LEAD_EMPLOYEE.REVIEWS.LOADING') }}
     </div>
@@ -248,6 +334,46 @@ watch(() => [props.reviewId, props.conversationId], loadReviewRequests);
         class="rounded-md border border-n-weak bg-n-background px-3 py-2"
         :placeholder="t('AI_LEAD_EMPLOYEE.REVIEWS.ANSWER_PLACEHOLDER')"
       />
+      <section
+        v-if="
+          resolutionResults[request.id]?.status === 'resolved' &&
+          resolutionResults[request.id]?.resolution_kind === 'send_reply'
+        "
+        data-testid="persisted-reply-delivery"
+        class="grid gap-1 rounded-md border border-n-weak bg-n-background p-3"
+      >
+        <p class="font-medium">
+          {{ replyOutcomeMessage(resolutionResults[request.id].reply_outcome) }}
+        </p>
+        <p
+          v-if="resolutionResults[request.id].reply_delivery?.failure_code"
+          class="text-xs text-n-slate-11"
+        >
+          {{
+            t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_FAILURE_CODE', {
+              code: resolutionResults[request.id].reply_delivery.failure_code,
+            })
+          }}
+        </p>
+        <p
+          v-if="resolutionResults[request.id].reply_delivery?.recoverable"
+          class="text-xs text-n-slate-11"
+        >
+          {{ t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_RECOVERABLE') }}
+        </p>
+        <p
+          v-else-if="
+            [
+              'reply_delivery_failed',
+              'reply_delivery_unknown',
+              'reply_delivery_canceled',
+            ].includes(resolutionResults[request.id].reply_outcome)
+          "
+          class="text-xs text-n-slate-11"
+        >
+          {{ t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_MANUAL_CHECK') }}
+        </p>
+      </section>
       <template v-if="!resolutionResults[request.id]">
         <p class="text-xs text-n-slate-11">
           {{ t('AI_LEAD_EMPLOYEE.REVIEWS.RESOLUTION_EFFECT') }}

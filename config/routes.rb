@@ -203,6 +203,12 @@ Rails.application.routes.draw do
               post :review_configuration_suggestion
             end
           end
+          resources :lead_handoffs, only: [:show] do
+            post :propose_configuration_suggestion, on: :member
+          end
+          resources :review_configuration_suggestions, only: [:index] do
+            post :review, on: :member
+          end
           resource :ai_provider_connection, only: [:show]
           resource :ai_subscription, only: [:show] do
             post :preview
