@@ -62,6 +62,7 @@ class AiLeadEmployee::BusinessSetupSource < ApplicationRecord
       lock!
       offer.lock!
       ensure_current!(expected_source_version, expected_offer_version)
+      ensure_qualification_action_is_resolved!
       finalize_publication!(editor)
     end
   end
@@ -96,6 +97,14 @@ class AiLeadEmployee::BusinessSetupSource < ApplicationRecord
     return if proposal.dig('configuration', 'version').to_i == expected_offer_version.to_i
 
     raise Conflict, 'Reviewed configuration is stale; reload and create a new preview'
+  end
+
+  def ensure_qualification_action_is_resolved!
+    return unless proposal['qualification_clarification_required']
+    return unless proposal.dig('configuration', 'qualification_mode') == 'enabled'
+    return unless proposal.dig('configuration', 'next_step', 'kind') == 'sales_call'
+
+    raise Conflict, 'Clarify the qualification alternatives before publishing a sales-call setup'
   end
 
   def finalize_publication!(editor)

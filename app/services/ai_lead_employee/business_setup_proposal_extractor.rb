@@ -11,6 +11,7 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
   NEGATED_REQUIREMENT_PATTERN = /\b(no\s+.+\s+(?:required|needed)|does\s+not\s+require|not\s+required|haihitaji|si\s+lazima)\b/i
   VAGUE_FIT_UNKNOWN = 'Add a lead-addressable qualification requirement; “confirmed fit” alone cannot be asked of a Lead.'
   COMPLEX_QUALIFICATION_UNKNOWN = 'Clarify the qualification alternatives as one lead-addressable condition before adding rules.'
+
   def initialize(offer:, body:, reviewed_configuration:, previous_proposal: nil)
     @offer = offer
     @body = body.to_s
@@ -24,6 +25,7 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
       'facts' => approved_sentences.reject { |sentence| rule?(sentence) }.first(8),
       'rules' => qualification_rule_sentences.first(8),
       'unknowns' => unknowns(proposed_configuration),
+      'qualification_clarification_required' => AiLeadEmployee::BusinessSetupQualificationProposal.any_complex?(sentences),
       'configuration' => proposed_configuration,
       'knowledge_body' => knowledge_body,
       'generated_question_keys' => generated_question_keys,
@@ -67,7 +69,7 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
       append_next_step_unknowns(items, proposed_configuration)
       append_qualification_unknown(items, proposed_configuration)
       append_vague_fit_unknown(items)
-      append_complex_qualification_unknown(items)
+      items << COMPLEX_QUALIFICATION_UNKNOWN if AiLeadEmployee::BusinessSetupQualificationProposal.any_complex?(sentences)
       append_ambiguous_commercial_unknown(items)
       items << 'The source names multiple possible next steps; choose one before publishing.' if inferred_next_steps.many?
       items << 'Add at least one non-price business fact that the AI can use.' if approved_sentences.empty?
@@ -79,10 +81,6 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
   end
 
   def vague_fit_rule_present? = approved_sentences.any? { |sentence| rule?(sentence) && vague_fit_rule?(sentence) }
-
-  def append_complex_qualification_unknown(items)
-    items << COMPLEX_QUALIFICATION_UNKNOWN if sentences.any? { |sentence| AiLeadEmployee::BusinessSetupQualificationProposal.complex?(sentence) }
-  end
 
   def append_ambiguous_commercial_unknown(items)
     unresolved = sentences.flat_map { |sentence| AiLeadEmployee::CommercialClaimClassifier.clauses(sentence) }.any? do |clause|
@@ -189,6 +187,7 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
       )
       next if existing_keys.include?(question['key'])
 
+      existing_keys << question['key']
       question
     end
   end

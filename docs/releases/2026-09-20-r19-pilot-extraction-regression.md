@@ -9,15 +9,21 @@ and a disjunctive business/revenue qualification remains an explicit owner
 clarification. A revenue threshold is treated as a financial metric, not an
 ambiguous programme price.
 
+The same regression also verifies that an unresolved disjunctive qualification
+cannot publish a qualification-dependent sales-call setup, while answer-only
+knowledge with an unrelated missing price remains publishable. Repeated
+sales-call agreement sentences produce one canonical question and rule.
+
 Verification on isolated test database `ale_r19_final_patch_20260919_spec`:
 
 ```text
-bundle exec rspec spec/requests/ai_lead_employee/business_setup_sources_spec.rb
-# 60 examples, 0 failures
+RAILS_ENV=test POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ale_r19_final_patch_20260919_spec \
+  bundle exec rspec spec/requests/ai_lead_employee/business_setup_sources_spec.rb
+# 62 examples, 0 failures
 
-bundle exec rubocop app/services/ai_lead_employee/business_setup_proposal_extractor.rb \
+bundle exec rubocop app/models/ai_lead_employee/business_setup_source.rb \
+  app/services/ai_lead_employee/business_setup_proposal_extractor.rb \
   app/services/ai_lead_employee/business_setup_qualification_proposal.rb \
-  app/services/ai_lead_employee/commercial_claim_classifier.rb \
   spec/requests/ai_lead_employee/business_setup_sources_spec.rb
 # 0 offenses
 ```

@@ -404,6 +404,7 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(proposal.dig('configuration', 'rules')).to be_empty
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
   it 'keeps explanatory fit negations out of requirements and asks owners to clarify alternative qualifications' do
     post source_url, headers: headers, params: {
       source: {
@@ -412,6 +413,9 @@ RSpec.describe 'Business setup source review', type: :request do
           A suitable lead has no business yet, or monthly business revenue below TZS 1,000,000. They are willing to build an expert-based business and invest in mentoring. Business revenue is different from salary, profit and available budget.
           Ask naturally about missing business facts, their goal, their obstacle and readiness to speak. Do not repeat information already supplied. Fit does not automatically mean willingness to speak or buy. A sales call requires their agreement. The team will arrange calls manually during this pilot.
           The current programme price needs a team quote. Do not quote historical promotions or future prices. Growth goals are aspirations, not guaranteed results.
+          Answer genuine programme questions in English or Swahili using approved information. Do not provide a free personalized business consulting session. Acknowledge strategic questions and ask one useful qualifying question. Do not invent resource links.
+          For a relevant unanswered business question, acknowledge the gap and create a human review request without promising a callback deadline. Respect stop requests and human takeover. Unrelated questions receive a polite scope boundary.
+          Data deletion requests: support@onlineprofits.co.tz.
         NOTES
       }
     }, as: :json
@@ -432,6 +436,43 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(proposal.fetch('proposed_rules').join(' ')).not_to include('Fit does not automatically mean willingness')
     expect(proposal.fetch('unknowns').join(' ')).to include('qualification alternatives')
     expect(proposal.fetch('unknowns').join(' ')).not_to include('monetary statement could not')
+
+    post "#{source_url}/#{proposal.fetch('id')}/publish", headers: headers,
+                                                          params: { expected_source_version: proposal.fetch('version'),
+                                                                    expected_offer_version: offer.reload.configuration_version }, as: :json
+
+    expect(response).to have_http_status(:conflict)
+    expect(response.parsed_body.fetch('error')).to include('Clarify the qualification alternatives')
+    expect(offer.reload).to have_attributes(qualification_mode: 'not_configured')
+    expect(offer.next_step).to include('kind' => 'answer_only')
+  end
+  # rubocop:enable RSpec/MultipleExpectations
+
+  it 'allows answer-only knowledge publication when only a current price is unknown' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Quote-only knowledge', source_type: 'document',
+                                         body: 'We help founders build practical online businesses. ' \
+                                               'The current programme price needs a team quote.' } }, as: :json
+    proposal = response.parsed_body
+
+    expect(proposal.fetch('unknowns').join(' ')).to include('current price')
+
+    post "#{source_url}/#{proposal.fetch('id')}/publish", headers: headers,
+                                                          params: { expected_source_version: proposal.fetch('version'),
+                                                                    expected_offer_version: offer.reload.configuration_version }, as: :json
+
+    expect(response).to have_http_status(:success)
+  end
+
+  it 'deduplicates repeated sales-call agreement sentences within one proposal' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Repeated agreement', source_type: 'document',
+                                         body: 'We coach founders. A sales call requires their agreement. ' \
+                                               'A sales call requires their agreement.' } }, as: :json
+
+    proposal = response.parsed_body
+    expect(proposal.dig('configuration', 'questions').pluck('key')).to eq(['sales_call_agreement'])
+    expect(proposal.dig('configuration', 'rules').pluck('field')).to eq(['sales_call_agreement'])
   end
 
   it 'computes missing links and ambiguous actions after prose inference' do
