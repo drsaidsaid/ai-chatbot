@@ -404,6 +404,97 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(proposal.dig('configuration', 'rules')).to be_empty
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
+  it 'keeps explanatory fit negations out of requirements and asks owners to clarify alternative qualifications' do
+    post source_url, headers: headers, params: {
+      source: {
+        title: 'Owner-approved pilot notes', source_type: 'pasted_prose', body: <<~NOTES
+          Online Profits University offers 12 months of mentoring to help people build an expert-based business using their expertise to solve problems online through products or services.
+          A suitable lead has no business yet, or monthly business revenue below TZS 1,000,000. They are willing to build an expert-based business and invest in mentoring. Business revenue is different from salary, profit and available budget.
+          Ask naturally about missing business facts, their goal, their obstacle and readiness to speak. Do not repeat information already supplied. Fit does not automatically mean willingness to speak or buy. A sales call requires their agreement. The team will arrange calls manually during this pilot.
+          The current programme price needs a team quote. Do not quote historical promotions or future prices. Growth goals are aspirations, not guaranteed results.
+          Answer genuine programme questions in English or Swahili using approved information. Do not provide a free personalized business consulting session. Acknowledge strategic questions and ask one useful qualifying question. Do not invent resource links.
+          For a relevant unanswered business question, acknowledge the gap and create a human review request without promising a callback deadline. Respect stop requests and human takeover. Unrelated questions receive a polite scope boundary.
+          Data deletion requests: support@onlineprofits.co.tz.
+        NOTES
+      }
+    }, as: :json
+
+    proposal = response.parsed_body
+    questions = proposal.dig('configuration', 'questions')
+    rules = proposal.dig('configuration', 'rules')
+
+    expect(questions).to include(
+      include('key' => 'sales_call_agreement', 'answer_type' => 'boolean',
+              'prompt' => 'Would you like a sales call?', 'purpose' => 'action_eligibility')
+    )
+    expect(rules).to include(
+      include('field' => 'sales_call_agreement', 'operator' => 'eq', 'value' => true,
+              'dimension' => 'action_eligibility')
+    )
+    expect(questions.pluck('meaning').join(' ')).not_to include('Fit does not automatically mean willingness')
+    expect(proposal.fetch('proposed_rules').join(' ')).not_to include('Fit does not automatically mean willingness')
+    expect(proposal.fetch('unknowns').join(' ')).to include('qualification alternatives')
+    expect(proposal.fetch('unknowns').join(' ')).not_to include('monetary statement could not')
+
+    source = AiLeadEmployee::BusinessSetupSource.find(proposal.fetch('id'))
+    source.update!(proposal: source.proposal.except('qualification_clarification_required'))
+
+    post "#{source_url}/#{proposal.fetch('id')}/publish", headers: headers,
+                                                          params: { expected_source_version: proposal.fetch('version'),
+                                                                    expected_offer_version: offer.reload.configuration_version }, as: :json
+
+    expect(response).to have_http_status(:conflict)
+    expect(response.parsed_body.fetch('error')).to include('Clarify the qualification alternatives')
+    expect(offer.reload).to have_attributes(qualification_mode: 'not_configured')
+    expect(offer.next_step).to include('kind' => 'answer_only')
+  end
+  # rubocop:enable RSpec/MultipleExpectations
+
+  it 'allows answer-only knowledge publication when only a current price is unknown' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Quote-only knowledge', source_type: 'document',
+                                         body: 'We help founders build practical online businesses. ' \
+                                               'The current programme price needs a team quote.' } }, as: :json
+    proposal = response.parsed_body
+
+    expect(proposal.fetch('unknowns').join(' ')).to include('current price')
+
+    post "#{source_url}/#{proposal.fetch('id')}/publish", headers: headers,
+                                                          params: { expected_source_version: proposal.fetch('version'),
+                                                                    expected_offer_version: offer.reload.configuration_version }, as: :json
+
+    expect(response).to have_http_status(:success)
+  end
+
+  it 'deduplicates repeated sales-call agreement sentences within one proposal' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Repeated agreement', source_type: 'document',
+                                         body: 'We coach founders. A sales call requires their agreement. ' \
+                                               'A sales call requires their agreement.' } }, as: :json
+
+    proposal = response.parsed_body
+    expect(proposal.dig('configuration', 'questions').pluck('key')).to eq(['sales_call_agreement'])
+    expect(proposal.dig('configuration', 'rules').pluck('field')).to eq(['sales_call_agreement'])
+  end
+
+  it 'blocks a legacy proposal when reversed revenue-or-business alternatives enable a sales call' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Alternative qualification', source_type: 'document',
+                                         body: 'Monthly sales below TZS 1,000,000 or no business yet is a suitable lead. ' \
+                                               'A sales call requires their agreement.' } }, as: :json
+    proposal = response.parsed_body
+    source = AiLeadEmployee::BusinessSetupSource.find(proposal.fetch('id'))
+    source.update!(proposal: source.proposal.except('qualification_clarification_required'))
+
+    post "#{source_url}/#{proposal.fetch('id')}/publish", headers: headers,
+                                                          params: { expected_source_version: proposal.fetch('version'),
+                                                                    expected_offer_version: offer.reload.configuration_version }, as: :json
+
+    expect(response).to have_http_status(:conflict)
+    expect(response.parsed_body.fetch('error')).to include('Clarify the qualification alternatives')
+  end
+
   it 'computes missing links and ambiguous actions after prose inference' do
     post source_url, headers: headers,
                      params: { source: { title: 'Purchase', source_type: 'document',
@@ -446,6 +537,108 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(keys).to include('independent_readiness')
     expect(keys.grep(/setup_fit_/).size).to eq(1)
     expect(corrected.dig('configuration', 'rules')).to include(include('field' => 'independent_readiness'))
+  end
+
+  it 'retires unchanged legacy source-owned requirements during correction' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Legacy draft', source_type: 'document',
+                                         body: 'Customers need a retail registration.' } }, as: :json
+    first = response.parsed_body
+    old_key = first.dig('configuration', 'questions', 0, 'key')
+    source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    legacy_proposal = source.proposal.deep_dup
+    legacy_proposal['source_ownership'] = { 'question_keys' => legacy_proposal.fetch('generated_question_keys') }
+    source.update!(proposal: legacy_proposal)
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Legacy draft', source_type: 'document',
+                                                                    body: 'Customers need an active tax registration.',
+                                                                    reviewed_configuration: first.fetch('configuration') } }, as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.dig('configuration', 'questions').pluck('key')).not_to include(old_key)
+  end
+
+  it 'retires unchanged scalar ownership snapshots from the prior extractor format' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Scalar draft', source_type: 'document',
+                                         body: 'Customers need a retail registration.' } }, as: :json
+    first = response.parsed_body
+    old_key = first.dig('configuration', 'questions', 0, 'key')
+    source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    source.update!(proposal: source.proposal.merge(
+      'source_ownership' => {
+        'question_keys' => [old_key],
+        'questions' => { old_key => first.dig('configuration', 'questions', 0) },
+        'rules' => { old_key => first.dig('configuration', 'rules', 0) }
+      }
+    ))
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Scalar draft', source_type: 'document',
+                                                                    body: 'Customers need an active tax registration.',
+                                                                    reviewed_configuration: first.fetch('configuration') } }, as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.dig('configuration', 'questions').pluck('key')).not_to include(old_key)
+  end
+
+  it 'preserves an owner-edited canonical sales-call agreement during source correction' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Call draft', source_type: 'document',
+                                         body: 'We coach founders. A sales call requires their agreement.' } }, as: :json
+    first = response.parsed_body
+    reviewed = first.fetch('configuration').deep_dup
+    question = reviewed.fetch('questions').sole
+    rule = reviewed.fetch('rules').sole
+    question['prompt'] = 'May we arrange a call with you?'
+    question['required'] = false
+    rule['enabled'] = false
+    source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    legacy_proposal = source.proposal.deep_dup
+    key = legacy_proposal.fetch('generated_question_keys').sole
+    legacy_proposal['source_ownership'] = {
+      'question_keys' => [key],
+      'questions' => { key => legacy_proposal.dig('configuration', 'questions').sole },
+      'rules' => { key => legacy_proposal.dig('configuration', 'rules').sole }
+    }
+    source.update!(proposal: legacy_proposal)
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Call draft', source_type: 'document',
+                                                                    body: 'We answer founder questions.',
+                                                                    reviewed_configuration: reviewed } }, as: :json
+
+    corrected = response.parsed_body
+    persisted = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    expect(corrected.fetch('version')).to eq(2)
+    expect(corrected.dig('configuration', 'questions')).to include(question)
+    expect(corrected.dig('configuration', 'rules')).to include(rule)
+    expect(persisted.proposal.dig('source_ownership', 'questions')).to eq({})
+    expect(persisted.proposal.dig('source_ownership', 'rules')).to eq({})
+    expect(persisted.history.last).to include('event' => 'corrected', 'version' => 2)
+  end
+
+  it 'preserves an owner-appended rule sharing a source-owned field during correction' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Call draft', source_type: 'document',
+                                         body: 'We coach founders. A sales call requires their agreement.' } }, as: :json
+    first = response.parsed_body
+    reviewed = first.fetch('configuration').deep_dup
+    reviewed['rules'] << reviewed.fetch('rules').sole.merge('dimension' => 'owner_review', 'priority' => 1)
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Call draft', source_type: 'document',
+                                                                    body: 'We answer founder questions.',
+                                                                    reviewed_configuration: reviewed } }, as: :json
+
+    corrected = response.parsed_body
+    expect(corrected.dig('configuration', 'questions').pluck('key')).to include('sales_call_agreement')
+    expect(corrected.dig('configuration', 'rules').count { |rule| rule['field'] == 'sales_call_agreement' }).to eq(2)
   end
 
   it 'replaces published source-owned requirements while preserving independent Offer edits' do
