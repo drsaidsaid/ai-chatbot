@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_19_001000) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -191,7 +191,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["account_id"], name: "index_ai_account_cost_allocations_on_account_id"
     t.index ["recorded_by_platform_app_id"], name: "idx_on_recorded_by_platform_app_id_fb2d37397d"
     t.check_constraint "amount >= 0::numeric", name: "ai_cost_allocations_nonnegative_amount"
-    t.check_constraint "category::text = ANY (ARRAY['hosting'::character varying, 'payment_processing'::character varying, 'support'::character varying]::text[])", name: "ai_cost_allocations_category"
+    t.check_constraint "category::text = ANY (ARRAY['hosting'::character varying::text, 'payment_processing'::character varying::text, 'support'::character varying::text])", name: "ai_cost_allocations_category"
     t.check_constraint "period_ended_on >= period_started_on", name: "ai_cost_allocations_period"
     t.exclusion_constraint "account_id WITH =, category WITH =, currency WITH =, daterange(period_started_on, period_ended_on, '[]'::text) WITH &&", using: :gist, name: "ai_cost_allocations_no_overlap"
   end
@@ -363,10 +363,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["ai_orchestration_intent_id"], name: "index_ai_reply_usages_on_ai_orchestration_intent_id", unique: true
     t.index ["ai_subscription_id"], name: "index_ai_reply_usages_on_ai_subscription_id"
     t.index ["reconciled_by_platform_app_id"], name: "index_ai_reply_usages_on_reconciled_by_platform_app_id"
-    t.check_constraint "allowance_source::text = ANY (ARRAY['included'::character varying, 'top_up'::character varying]::text[])", name: "ai_reply_usages_source"
+    t.check_constraint "allowance_source::text = ANY (ARRAY['included'::character varying::text, 'top_up'::character varying::text])", name: "ai_reply_usages_source"
     t.check_constraint "expected_delivery_parts > 0", name: "ai_reply_usages_positive_parts"
     t.check_constraint "period_ends_at > period_started_at", name: "ai_reply_usages_forward_period"
-    t.check_constraint "status::text = ANY (ARRAY['reserved'::character varying, 'settled'::character varying, 'released'::character varying, 'partially_delivered'::character varying, 'partial_failure_closed'::character varying]::text[])", name: "ai_reply_usages_status"
+    t.check_constraint "status::text = ANY (ARRAY['reserved'::character varying::text, 'settled'::character varying::text, 'released'::character varying::text, 'partially_delivered'::character varying::text, 'partial_failure_closed'::character varying::text])", name: "ai_reply_usages_status"
   end
 
   create_table "ai_service_plans", force: :cascade do |t|
@@ -388,7 +388,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.check_constraint "(top_up_price IS NULL) = (top_up_ai_replies IS NULL)", name: "ai_service_plans_complete_top_up_terms"
     t.check_constraint "included_ai_replies > 0", name: "ai_service_plans_positive_allowance"
     t.check_constraint "monthly_price > 0::numeric", name: "ai_service_plans_positive_price"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying, 'archived'::character varying]::text[])", name: "ai_service_plans_status"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'published'::character varying::text, 'archived'::character varying::text])", name: "ai_service_plans_status"
     t.check_constraint "top_up_ai_replies IS NULL OR top_up_ai_replies > 0", name: "ai_service_plans_positive_top_up_allowance"
     t.check_constraint "top_up_price IS NULL OR top_up_price > 0::numeric", name: "ai_service_plans_positive_top_up_price"
   end
@@ -407,8 +407,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["account_id"], name: "index_ai_subscription_alerts_on_account_id"
     t.index ["ai_subscription_id", "period_started_at", "kind"], name: "idx_ai_subscription_alerts_period_kind", unique: true
     t.index ["ai_subscription_id"], name: "index_ai_subscription_alerts_on_ai_subscription_id"
-    t.check_constraint "kind::text = ANY (ARRAY['allowance_exhausted'::character varying, 'subscription_renewal_due'::character varying]::text[])", name: "ai_subscription_alerts_kind"
-    t.check_constraint "status::text = ANY (ARRAY['open'::character varying, 'resolved'::character varying]::text[])", name: "ai_subscription_alerts_status"
+    t.check_constraint "kind::text = ANY (ARRAY['allowance_exhausted'::character varying::text, 'subscription_renewal_due'::character varying::text])", name: "ai_subscription_alerts_kind"
+    t.check_constraint "status::text = ANY (ARRAY['open'::character varying::text, 'resolved'::character varying::text])", name: "ai_subscription_alerts_status"
   end
 
   create_table "ai_subscription_requests", force: :cascade do |t|
@@ -430,8 +430,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["ai_service_plan_id"], name: "index_ai_subscription_requests_on_ai_service_plan_id"
     t.index ["expected_current_plan_id"], name: "index_ai_subscription_requests_on_expected_current_plan_id"
     t.index ["requested_by_id"], name: "index_ai_subscription_requests_on_requested_by_id"
-    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying, 'renewal'::character varying, 'upgrade'::character varying, 'top_up'::character varying]::text[])", name: "ai_subscription_requests_purpose"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'confirmed'::character varying, 'canceled'::character varying]::text[])", name: "ai_subscription_requests_status"
+    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying::text, 'renewal'::character varying::text, 'upgrade'::character varying::text, 'top_up'::character varying::text])", name: "ai_subscription_requests_purpose"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'confirmed'::character varying::text, 'canceled'::character varying::text])", name: "ai_subscription_requests_status"
   end
 
   create_table "ai_subscriptions", force: :cascade do |t|
@@ -453,7 +453,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.check_constraint "included_ai_replies > 0", name: "ai_subscriptions_positive_allowance"
     t.check_constraint "paid_through_at >= renews_at", name: "ai_subscriptions_paid_through_period"
     t.check_constraint "renewal_anchor_day >= 1 AND renewal_anchor_day <= 31", name: "ai_subscriptions_valid_anchor_day"
-    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'canceled'::character varying, 'review_required'::character varying]::text[])", name: "ai_subscriptions_status"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'canceled'::character varying::text, 'review_required'::character varying::text])", name: "ai_subscriptions_status"
     t.check_constraint "top_up_ai_replies >= 0", name: "ai_subscriptions_nonnegative_topups"
   end
 
@@ -643,6 +643,29 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["lead_qualification_id"], name: "index_bookings_on_lead_qualification_id"
     t.index ["offer_id"], name: "index_bookings_on_offer_id"
     t.exclusion_constraint "account_id WITH =, calendar_id WITH =, tsrange(starts_at, ends_at, '[)'::text) WITH &&", where: "status = ANY (ARRAY[0, 3, 4])", using: :gist, name: "index_bookings_on_active_slot_overlap"
+  end
+
+  create_table "business_setup_sources", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "offer_id", null: false
+    t.bigint "knowledge_document_id"
+    t.bigint "published_by_id"
+    t.string "title", null: false
+    t.string "source_type", null: false
+    t.text "body", null: false
+    t.jsonb "proposal", default: {}, null: false
+    t.jsonb "history", default: [], null: false
+    t.integer "status", default: 0, null: false
+    t.integer "version", default: 1, null: false
+    t.integer "published_offer_version"
+    t.datetime "published_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "offer_id", "updated_at"], name: "idx_on_account_id_offer_id_updated_at_bc0c76c810"
+    t.index ["account_id"], name: "index_business_setup_sources_on_account_id"
+    t.index ["knowledge_document_id"], name: "index_business_setup_sources_on_knowledge_document_id"
+    t.index ["offer_id"], name: "index_business_setup_sources_on_offer_id"
+    t.index ["published_by_id"], name: "index_business_setup_sources_on_published_by_id"
   end
 
   create_table "calls", force: :cascade do |t|
@@ -1945,18 +1968,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
-  create_table "offer_configuration_revisions", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.bigint "offer_id", null: false
-    t.integer "version", null: false
-    t.jsonb "snapshot", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_offer_configuration_revisions_on_account_id"
-    t.index ["offer_id", "version"], name: "index_offer_configuration_revisions_on_offer_id_and_version", unique: true
-    t.index ["offer_id"], name: "index_offer_configuration_revisions_on_offer_id"
-  end
-
   create_table "offer_commercial_proposals", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "offer_id", null: false
@@ -2009,6 +2020,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["id", "offer_id", "account_id"], name: "idx_offer_commercial_term_scope", unique: true
     t.index ["offer_id"], name: "index_offer_commercial_terms_on_offer_id", unique: true
     t.index ["published_revision_id"], name: "index_offer_commercial_terms_on_published_revision_id", unique: true
+  end
+
+  create_table "offer_configuration_revisions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "offer_id", null: false
+    t.integer "version", null: false
+    t.jsonb "snapshot", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_offer_configuration_revisions_on_account_id"
+    t.index ["offer_id", "version"], name: "index_offer_configuration_revisions_on_offer_id_and_version", unique: true
+    t.index ["offer_id"], name: "index_offer_configuration_revisions_on_offer_id"
   end
 
   create_table "outbox_effect_receipts", force: :cascade do |t|
@@ -2305,7 +2328,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
     t.index ["ai_subscription_request_id"], name: "idx_subscription_payments_on_request", unique: true
     t.index ["confirmed_by_platform_app_id"], name: "idx_subscription_payments_on_platform_app"
     t.check_constraint "amount > 0::numeric", name: "subscription_payments_positive_amount"
-    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying, 'renewal'::character varying, 'upgrade'::character varying, 'top_up'::character varying]::text[])", name: "subscription_payments_purpose"
+    t.check_constraint "purpose::text = ANY (ARRAY['new_subscription'::character varying::text, 'renewal'::character varying::text, 'upgrade'::character varying::text, 'top_up'::character varying::text])", name: "subscription_payments_purpose"
   end
 
   create_table "taggings", id: :serial, force: :cascade do |t|
@@ -2591,6 +2614,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
   add_foreign_key "bookings", "messages", column: "agreement_message_id"
   add_foreign_key "bookings", "qualification_evidences", column: "agreement_evidence_id"
   add_foreign_key "bookings", "users", column: "assignee_id"
+  add_foreign_key "business_setup_sources", "accounts"
+  add_foreign_key "business_setup_sources", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "business_setup_sources", "ai_lead_employee_offers", column: ["offer_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_business_setup_sources_offer_scope"
+  add_foreign_key "business_setup_sources", "knowledge_documents"
+  add_foreign_key "business_setup_sources", "knowledge_documents", column: ["knowledge_document_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_business_setup_sources_document_scope"
+  add_foreign_key "business_setup_sources", "users", column: "published_by_id"
   add_foreign_key "campaign_recipients", "accounts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
@@ -2646,8 +2675,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
   add_foreign_key "meta_whatsapp_webhook_events", "channel_whatsapp"
   add_foreign_key "meta_whatsapp_webhook_events", "conversations"
   add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
-  add_foreign_key "offer_configuration_revisions", "accounts"
-  add_foreign_key "offer_configuration_revisions", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "offer_commercial_proposals", "accounts"
   add_foreign_key "offer_commercial_proposals", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "offer_commercial_proposals", "ai_lead_employee_offers", column: ["offer_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_commercial_proposals_offer_scope"
@@ -2664,6 +2691,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_000300) do
   add_foreign_key "offer_commercial_terms", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "offer_commercial_terms", "ai_lead_employee_offers", column: ["offer_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_commercial_terms_offer_scope"
   add_foreign_key "offer_commercial_terms", "offer_commercial_term_revisions", column: ["published_revision_id", "id", "offer_id", "account_id"], primary_key: ["id", "commercial_term_id", "offer_id", "account_id"], name: "fk_offer_commercial_terms_published_scope"
+  add_foreign_key "offer_configuration_revisions", "accounts"
+  add_foreign_key "offer_configuration_revisions", "ai_lead_employee_offers", column: "offer_id"
   add_foreign_key "outbox_effect_receipts", "outbox_events", on_delete: :cascade
   add_foreign_key "outbox_events", "accounts"
   add_foreign_key "qualification_budget_ranges", "accounts"

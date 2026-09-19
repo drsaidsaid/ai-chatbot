@@ -532,9 +532,360 @@ it('uses the per-Offer API from the existing settings tab without fetching unrel
   });
   await flushPromises();
   expect(wrapper.findComponent(OfferConfigurationPanel).exists()).toBe(true);
-  expect(axios.get.mock.calls.map(([url]) => url)).toEqual([
-    expect.stringContaining('/qualification_offers'),
-  ]);
+  expect(axios.get.mock.calls.map(([url]) => url)).toEqual(
+    expect.arrayContaining([
+      expect.stringContaining('/qualification_offers'),
+      expect.stringContaining('/qualification_offers/9/setup_sources'),
+    ])
+  );
+});
+
+it('keeps guided setup notes proposed until the owner explicitly publishes the reviewed version', async () => {
+  const proposal = {
+    id: 22,
+    title: 'Online Profits notes',
+    status: 'proposed',
+    version: 1,
+    proposed_facts: ['Online Profits helps founders.'],
+    proposed_rules: ['A sales call requires confirmed fit.'],
+    unknowns: ['A current price is still needed.'],
+    configuration: {
+      qualification_mode: 'disabled',
+      next_step: { kind: 'purchase_link' },
+      questions: [
+        {
+          key: 'setup_fit_registration',
+          meaning: 'Current registration number',
+          purpose: 'action_eligibility',
+        },
+      ],
+      rules: [
+        {
+          field: 'setup_fit_registration',
+          kind: 'requirement',
+          dimension: 'action_eligibility',
+          priority: 0,
+        },
+      ],
+    },
+  };
+  axios.post.mockImplementation(url =>
+    Promise.resolve({
+      data: url.endsWith('/publish')
+        ? { ...proposal, status: 'published', published_offer_version: 4 }
+        : proposal,
+    })
+  );
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper
+    .get('[data-testid="business-setup-section"] textarea')
+    .setValue(
+      'Online Profits helps founders. A sales call requires confirmed fit.'
+    );
+  await wrapper.get('[data-testid="propose-business-setup"]').trigger('click');
+  await flushPromises();
+
+  expect(wrapper.text()).toContain('Nothing is live yet.');
+  expect(wrapper.text()).toContain('A current price is still needed.');
+  expect(wrapper.text()).toContain('Disabled');
+  expect(wrapper.text()).toContain('Share a purchase link');
+  expect(wrapper.text()).toContain('Action eligibility');
+  expect(wrapper.text()).not.toContain('setup_fit_registration');
+  expect(wrapper.text()).not.toContain('purchase_link');
+  expect(wrapper.text()).not.toContain('action_eligibility');
+  expect(axios.post).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9/setup_sources'),
+    expect.objectContaining({
+      source: expect.objectContaining({
+        source_type: 'pasted_prose',
+        reviewed_configuration: expect.objectContaining({
+          version: 3,
+          qualification_mode: 'enabled',
+        }),
+      }),
+    })
+  );
+
+  await wrapper.get('[data-testid="publish-business-setup"]').trigger('click');
+  await flushPromises();
+
+  expect(axios.post).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9/setup_sources/22/publish'),
+    { expected_source_version: 1, expected_offer_version: 3 }
+  );
+});
+
+it('reopens a persisted setup draft with its full proposed configuration and saves a versioned correction', async () => {
+  const persisted = {
+    id: 31,
+    title: 'Persisted setup',
+    source_type: 'document',
+    body: 'Retailers need an active registration.',
+    status: 'proposed',
+    version: 4,
+    proposed_facts: [],
+    proposed_rules: ['Retailers need an active registration.'],
+    unknowns: [],
+    configuration: {
+      ...offer(),
+      qualification_mode: 'enabled',
+      next_step: { kind: 'enquiry' },
+      questions: [
+        {
+          key: 'setup_fit_registration',
+          meaning: 'Active registration',
+          answer_type: 'boolean',
+          prompt: 'Do you have an active registration?',
+          position: 0,
+          enabled: true,
+          required: true,
+          purpose: 'fit',
+        },
+      ],
+      rules: [],
+    },
+  };
+  axios.get.mockImplementation(url =>
+    Promise.resolve({
+      data: url.endsWith('/setup_sources') ? [persisted] : [offer()],
+    })
+  );
+  axios.patch.mockResolvedValue({
+    data: { ...persisted, version: 5, body: 'Corrected registration rule.' },
+  });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="reopen-business-setup"]').trigger('click');
+  expect(
+    wrapper.get('[data-testid="business-setup-section"] textarea').element.value
+  ).toBe('Retailers need an active registration.');
+  expect(wrapper.get('[data-testid="qualification-mode"]').element.value).toBe(
+    'enabled'
+  );
+  expect(wrapper.text()).toContain('Active registration');
+
+  await wrapper
+    .get('[data-testid="business-setup-section"] textarea')
+    .setValue('Corrected registration rule.');
+  await wrapper.get('[data-testid="correct-business-setup"]').trigger('click');
+  await flushPromises();
+
+  expect(axios.patch).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9/setup_sources/31'),
+    expect.objectContaining({
+      expected_source_version: 4,
+      source: expect.objectContaining({
+        body: 'Corrected registration rule.',
+        reviewed_configuration: expect.objectContaining({
+          qualification_mode: 'enabled',
+          next_step: { kind: 'enquiry' },
+        }),
+      }),
+    })
+  );
+});
+
+it('starts a new proposed correction from a published setup while keeping its history visible', async () => {
+  const published = {
+    id: 32,
+    title: 'Published setup',
+    source_type: 'document',
+    body: 'Published registration guidance.',
+    status: 'published',
+    version: 2,
+    proposed_facts: ['Published registration guidance.'],
+    proposed_rules: [],
+    unknowns: [],
+    configuration: { ...offer(), qualification_mode: 'disabled' },
+    history: [
+      { version: 1, body: 'Original registration guidance.' },
+      { version: 2, body: 'Published registration guidance.' },
+    ],
+  };
+  axios.get.mockImplementation(url =>
+    Promise.resolve({
+      data: url.endsWith('/setup_sources') ? [published] : [offer()],
+    })
+  );
+  axios.post.mockResolvedValue({
+    data: {
+      ...published,
+      id: 33,
+      status: 'proposed',
+      version: 1,
+      body: 'Corrected registration guidance.',
+    },
+  });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  expect(wrapper.text()).toContain('Original registration guidance.');
+  await wrapper
+    .get('[data-testid="edit-published-business-setup"]')
+    .trigger('click');
+  expect(
+    wrapper.get('[data-testid="business-setup-section"] textarea').element.value
+  ).toBe('Published registration guidance.');
+  expect(wrapper.get('[data-testid="qualification-mode"]').element.value).toBe(
+    'enabled'
+  );
+  expect(wrapper.get('[data-testid="test-business-setup"]').exists()).toBe(
+    true
+  );
+
+  await wrapper
+    .get('[data-testid="business-setup-section"] textarea')
+    .setValue('Corrected registration guidance.');
+  await wrapper.get('[data-testid="propose-business-setup"]').trigger('click');
+  await flushPromises();
+
+  expect(axios.post).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9/setup_sources'),
+    expect.objectContaining({
+      source: expect.objectContaining({
+        body: 'Corrected registration guidance.',
+        reviewed_configuration: expect.objectContaining({
+          qualification_mode: 'enabled',
+          version: 3,
+        }),
+      }),
+    })
+  );
+});
+
+it('runs a published setup with the entered question through the no-send Test Center API', async () => {
+  const published = {
+    id: 22,
+    title: 'Published notes',
+    status: 'published',
+    version: 2,
+    proposed_facts: ['We help founders.'],
+    proposed_rules: [],
+    unknowns: [],
+  };
+  axios.get.mockImplementation(url =>
+    Promise.resolve({
+      data: url.endsWith('/setup_sources') ? [published] : [offer()],
+    })
+  );
+  axios.post.mockResolvedValue({
+    data: {
+      id: 71,
+      scenario_key: 'business_setup_context',
+      status: 'completed',
+      steps: [
+        {
+          selected_answer: 'Online Profits helps founders.',
+          source_references: [{ id: 44, type: 'knowledge_document' }],
+          blocked_reason: null,
+        },
+      ],
+    },
+  });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper
+    .get('[data-testid="business-setup-question"]')
+    .setValue('Who is this service for?');
+  await wrapper.get('[data-testid="test-business-setup"]').trigger('click');
+  await flushPromises();
+
+  expect(axios.post).toHaveBeenCalledWith(
+    expect.stringContaining('/evaluation_sandbox/runs'),
+    {
+      scenario_key: 'business_setup_context',
+      business_setup_source_id: 22,
+      question: 'Who is this service for?',
+    }
+  );
+  expect(wrapper.text()).toContain('no-send Test Center run completed');
+});
+
+it('shows a completed-but-blocked setup run as blocked rather than as a successful answer', async () => {
+  const published = {
+    id: 22,
+    title: 'Published notes',
+    status: 'published',
+    version: 2,
+    proposed_facts: ['We help founders.'],
+    proposed_rules: [],
+    unknowns: [],
+  };
+  axios.get.mockImplementation(url =>
+    Promise.resolve({
+      data: url.endsWith('/setup_sources') ? [published] : [offer()],
+    })
+  );
+  axios.post.mockResolvedValue({
+    data: {
+      id: 72,
+      scenario_key: 'business_setup_context',
+      status: 'completed',
+      steps: [
+        {
+          selected_answer: null,
+          source_references: [],
+          blocked_reason: 'provider_configuration_changed',
+        },
+      ],
+    },
+  });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper
+    .get('[data-testid="business-setup-question"]')
+    .setValue('Who is this service for?');
+  await wrapper.get('[data-testid="test-business-setup"]').trigger('click');
+  await flushPromises();
+
+  expect(wrapper.text()).toContain('managed AI service changed during the run');
+  expect(wrapper.text()).not.toContain('provider_configuration_changed');
+  expect(wrapper.text()).not.toContain('no-send Test Center run completed');
+});
+
+it('shows a failed setup run truthfully and clears its result when switching Offers', async () => {
+  const secondOffer = { ...offer(), id: 10, name: 'Second Offer' };
+  const published = {
+    id: 22,
+    title: 'Published notes',
+    status: 'published',
+    version: 2,
+    proposed_facts: ['We help founders.'],
+    proposed_rules: [],
+    unknowns: [],
+    configuration: {
+      qualification_mode: 'not_configured',
+      next_step: { kind: 'answer_only' },
+    },
+  };
+  axios.get.mockImplementation(url =>
+    Promise.resolve({
+      data: url.endsWith('/setup_sources')
+        ? [published]
+        : [offer(), secondOffer],
+    })
+  );
+  axios.post.mockResolvedValue({
+    data: { id: 72, scenario_key: 'business_setup_context', status: 'failed' },
+  });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper
+    .get('[data-testid="business-setup-question"]')
+    .setValue('Who is this for?');
+  await wrapper.get('[data-testid="test-business-setup"]').trigger('click');
+  await flushPromises();
+  expect(wrapper.get('[role="alert"]').text()).toContain('did not complete');
+
+  await wrapper.get('[data-testid="offer-select"]').setValue('10');
+  await flushPromises();
+  expect(wrapper.text()).not.toContain('did not complete');
 });
 
 it('updates existing money-rule currency without converting amounts and retains a rejected draft', async () => {

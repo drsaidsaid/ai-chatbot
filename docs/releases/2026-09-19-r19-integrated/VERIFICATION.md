@@ -1,0 +1,9 @@
+# R19 combined acceptance
+
+Canonical baseline5834d354fcadad4f5825582dab9db5de098fa1b1; candidate d3d5b1fb789f497dd1dddb99fdd31722e48a8840. Only schema-version header needed manual merge resolution; latest migration20260919001000 retained, newer R12/R13 tables preserved.
+
+Candidate tests/reviews and build are recorded in ../2026-09-19-r19/verification-manifest.md. Root in-app browser verified three business setup examples, draft corrections, explicit publication, Swahili no-qualification, current Offer version preservation on published-source replacement, visible history and390px no horizontal overflow. Final run8 in synthetic DB ale_r19_browser_final_20260919 returned a synthetic grounded_answer referencing verified Knowledge5 and Offer version6, sender_invoked false. This is runtime-path proof, not real model quality. Generic legal-advice run9 showed truthful no-grounded-answer status; it is not human-review proof. Worker guarded sensitive-question proof separately created review evidence.
+
+Combined migration: fresh isolated ale_r19_combined_20260919 loaded exact canonical baseline schema, then applied R19 migration successfully. Logs /tmp/r19-combined-schema.log and /tmp/r19-combined-migrate.log. Combined focused runtime:84 examples,0 failures (/tmp/r19-combined-rspec.log). Combined Offer UI:19 tests passed (/tmp/r19-combined-vitest.log). Production Vite build exit0 in3m19s (/tmp/r19-combined-vite.log), existing chunk-size warnings only. Normal candidate hooks made formatting changes and a local parameter rename; root reviewed that delta. Prior independent standards/spec review evidence is preserved in coordinator execution-state; final bounded UI fixes were reviewed and exercised by root.
+
+No live providers, sends, deployment or paid comparisons. Full pilot requires R14 and bounded live validation.

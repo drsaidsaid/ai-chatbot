@@ -49,6 +49,7 @@ class Api::V1::Accounts::EvaluationSandboxesController < Api::V1::Accounts::Base
       user: Current.user,
       scenario_key: params.require(:scenario_key),
       knowledge_document: contextual_knowledge_document,
+      business_setup_source: contextual_business_setup_source,
       question: params[:question]
     ).perform
 
@@ -106,6 +107,15 @@ class Api::V1::Accounts::EvaluationSandboxesController < Api::V1::Accounts::Base
     return if params[:knowledge_document_id].blank?
 
     current_account.knowledge_documents.find(params[:knowledge_document_id])
+  end
+
+  def contextual_business_setup_source
+    return if params[:business_setup_source_id].blank?
+
+    source = current_account.business_setup_sources.published.find(params[:business_setup_source_id])
+    raise ActiveRecord::RecordNotFound unless source.current_published_offer?
+
+    source
   end
 
   def sandbox_payload

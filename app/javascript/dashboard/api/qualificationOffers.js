@@ -32,6 +32,29 @@ class QualificationOffersAPI extends ApiClient {
       `${this.url}/${offerId}/commercial_proposals/${proposalId}/${action}`
     );
   }
+
+  setupSources(offerId) {
+    return axios.get(`${this.url}/${offerId}/setup_sources`);
+  }
+
+  createSetupSource(offerId, source) {
+    return axios.post(`${this.url}/${offerId}/setup_sources`, { source });
+  }
+
+  updateSetupSource(offerId, sourceId, source) {
+    const { expected_source_version, ...attributes } = source;
+    return axios.patch(`${this.url}/${offerId}/setup_sources/${sourceId}`, {
+      source: attributes,
+      expected_source_version,
+    });
+  }
+
+  publishSetupSource(offerId, sourceId, versions) {
+    return axios.post(
+      `${this.url}/${offerId}/setup_sources/${sourceId}/publish`,
+      versions
+    );
+  }
 }
 
 export default new QualificationOffersAPI();

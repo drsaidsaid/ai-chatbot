@@ -96,6 +96,7 @@ class Account < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :lead_qualification_decisions, dependent: :destroy_async
   has_many :lead_qualifications, dependent: :destroy_async
   has_many :qualification_offers, class_name: 'AiLeadEmployee::Offer', dependent: :restrict_with_exception
+  has_many :business_setup_sources, class_name: 'AiLeadEmployee::BusinessSetupSource', dependent: :restrict_with_exception
   has_many :offer_commercial_terms, class_name: 'AiLeadEmployee::OfferCommercialTerm', dependent: :restrict_with_exception
   has_many :offer_commercial_term_revisions, class_name: 'AiLeadEmployee::OfferCommercialTermRevision', dependent: :restrict_with_exception
   has_many :offer_commercial_proposals, class_name: 'AiLeadEmployee::OfferCommercialProposal', dependent: :restrict_with_exception
