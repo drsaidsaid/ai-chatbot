@@ -4,6 +4,7 @@ import { createStore } from 'vuex';
 import InboxConversationCockpit from '../InboxConversationCockpit.vue';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
+import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
 
 vi.mock('dashboard/api/inbox/conversation', () => ({
   default: {
@@ -15,6 +16,13 @@ vi.mock('dashboard/api/inbox/conversation', () => ({
 vi.mock('dashboard/api/inboxConversations', () => ({
   default: {
     get: vi.fn(),
+  },
+}));
+
+vi.mock('dashboard/api/humanReviewRequests', () => ({
+  default: {
+    get: vi.fn(),
+    show: vi.fn(),
   },
 }));
 
@@ -454,6 +462,7 @@ const deferred = () => {
 
 describe('InboxConversationCockpit', () => {
   beforeEach(() => {
+    HumanReviewRequestsAPI.get.mockResolvedValue({ data: [] });
     InboxConversationsAPI.get.mockImplementation(params => {
       if (params?.queue === 'review') {
         return Promise.resolve({
@@ -524,6 +533,20 @@ describe('InboxConversationCockpit', () => {
     await flushPromises();
     expect(router.currentRoute.value.name).toBe('inbox_conversation');
     expect(wrapper.text()).toContain('Reply composer');
+  });
+
+  it('clears a stale review id when opening another conversation from the review queue', async () => {
+    const { wrapper, router } = await mountCockpit({
+      list: true,
+      query: { queue: 'review', review_id: '8' },
+    });
+
+    await wrapper
+      .get('button[aria-label="Open Ravi Review 202"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.query).toEqual({ queue: 'review' });
   });
 
   it('restores focus to the selected row without refetching an unchanged list', async () => {

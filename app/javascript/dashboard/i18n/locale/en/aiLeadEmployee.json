@@ -717,6 +717,9 @@
       "PROPOSE_KNOWLEDGE": "Propose this answer as reusable knowledge",
       "REPLY_PENDING": "Reply is awaiting delivery confirmation and review is resolved.",
       "REPLY_ACCEPTED": "Reply delivery was accepted and review is resolved.",
+      "REPLY_SENT": "The provider reports the reply as sent and the review is resolved.",
+      "REPLY_DELIVERED": "The reply was delivered and the review is resolved.",
+      "REPLY_READ": "The reply was read and the review is resolved.",
       "REPLY_UNKNOWN": "Reply delivery is unknown. Check the provider outcome before sending another reply.",
       "REPLY_FAILED": "Reply delivery failed. Review the delivery outcome before retrying.",
       "REPLY_CANCELED": "Reply delivery was canceled. Review the delivery outcome before sending another reply.",
@@ -735,6 +738,27 @@
       "PROPOSAL_ANSWER_PLACEHOLDER": "Reusable answer for administrator review (never copies a private note)",
       "PROPOSAL_TITLE_PLACEHOLDER": "Knowledge proposal title",
       "OPEN_PROPOSAL": "Open draft knowledge proposal",
+      "REJECTED": "This review was rejected and no reply or reusable knowledge was created.",
+      "FEEDBACK_TITLE": "Handoff configuration feedback",
+      "FEEDBACK_EFFECT": "Record poor-fit or not-ready evidence for administrator review. This suggestion does not change qualification or handoff rules.",
+      "FEEDBACK_SUGGESTION_PLACEHOLDER": "Describe the configuration change an administrator should review",
+      "FEEDBACK_PROPOSE": "Propose configuration feedback",
+      "FEEDBACK_SAVED": "Configuration feedback saved for administrator review.",
+      "FEEDBACK_REVIEWED": "Configuration feedback review recorded. No rules were changed.",
+      "FEEDBACK_ERROR": "Configuration feedback could not be saved.",
+      "FEEDBACK_EVIDENCE": "Source evidence: {evidence}",
+      "FEEDBACK_STATUS": "Review status: {status}",
+      "FEEDBACK_MARK_REVIEWED": "Mark reviewed",
+      "FEEDBACK_DISMISS": "Dismiss suggestion",
+      "FEEDBACK_CATEGORY": {
+        "POOR_FIT": "Poor fit",
+        "NOT_READY": "Not ready"
+      },
+      "FEEDBACK_STATE": {
+        "PENDING": "Pending administrator review",
+        "REVIEWED": "Reviewed",
+        "DISMISSED": "Dismissed"
+      },
       "LEGACY_LINK_ERROR": "This review could not be opened. Refresh and try again.",
       "FIELD": {
         "QUESTION": "Question",
@@ -749,7 +773,21 @@
         "CONFLICTING_KNOWLEDGE": "Conflicting knowledge",
         "SENSITIVE_QUESTION": "Sensitive question",
         "QUALIFICATION_BLOCKER": "Qualification blocker",
-        "ANGRY_QUESTION": "Angry lead"
+        "ANGRY_QUESTION": "Angry lead",
+        "UNSUPPORTED_MEDIA": "Unsupported media",
+        "SOURCE_UNVERIFIED": "Source unverified",
+        "PROVIDER_FAILED": "Provider failed",
+        "STALE_KNOWLEDGE": "Stale knowledge",
+        "DELIVERY_UNKNOWN": "Delivery outcome unknown",
+        "HUMAN_REQUESTED": "Human requested"
+      },
+      "SOURCE": {
+        "FAQ": "Frequently asked question",
+        "OFFER": "Offer",
+        "PRICING": "Pricing",
+        "OBJECTION": "Objection handling",
+        "POLICY": "Policy",
+        "REFUND": "Refund"
       }
     },
     "KNOWLEDGE": {

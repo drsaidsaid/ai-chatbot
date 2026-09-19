@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_13_000100) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_19_000100) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -2140,6 +2140,32 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000100) do
     t.index ["account_id", "metric", "date"], name: "index_rollup_timeseries"
   end
 
+  create_table "review_configuration_suggestions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "human_review_request_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "offer_id"
+    t.bigint "source_message_id", null: false
+    t.bigint "proposed_by_user_id", null: false
+    t.bigint "reviewed_by_user_id"
+    t.integer "category", null: false
+    t.integer "status", default: 0, null: false
+    t.text "suggestion", null: false
+    t.text "evidence", null: false
+    t.text "decision_note"
+    t.datetime "reviewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status", "created_at"], name: "idx_review_configuration_suggestions_queue"
+    t.index ["account_id"], name: "index_review_configuration_suggestions_on_account_id"
+    t.index ["conversation_id"], name: "index_review_configuration_suggestions_on_conversation_id"
+    t.index ["human_review_request_id"], name: "idx_on_human_review_request_id_a17ab52b60", unique: true
+    t.index ["offer_id"], name: "index_review_configuration_suggestions_on_offer_id"
+    t.index ["proposed_by_user_id"], name: "index_review_configuration_suggestions_on_proposed_by_user_id"
+    t.index ["reviewed_by_user_id"], name: "index_review_configuration_suggestions_on_reviewed_by_user_id"
+    t.index ["source_message_id"], name: "index_review_configuration_suggestions_on_source_message_id"
+  end
+
   create_table "sla_events", force: :cascade do |t|
     t.bigint "applied_sla_id", null: false
     t.bigint "conversation_id", null: false
@@ -2539,6 +2565,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000100) do
   add_foreign_key "qualification_hard_rules", "accounts"
   add_foreign_key "qualification_questions", "accounts"
   add_foreign_key "qualification_score_ranges", "accounts"
+  add_foreign_key "review_configuration_suggestions", "accounts"
+  add_foreign_key "review_configuration_suggestions", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "review_configuration_suggestions", "conversations"
+  add_foreign_key "review_configuration_suggestions", "human_review_requests"
+  add_foreign_key "review_configuration_suggestions", "messages", column: "source_message_id"
+  add_foreign_key "review_configuration_suggestions", "users", column: "proposed_by_user_id"
+  add_foreign_key "review_configuration_suggestions", "users", column: "reviewed_by_user_id"
   add_foreign_key "subscription_payment_confirmations", "accounts"
   add_foreign_key "subscription_payment_confirmations", "ai_subscription_requests"
   add_foreign_key "subscription_payment_confirmations", "platform_apps", column: "confirmed_by_platform_app_id"

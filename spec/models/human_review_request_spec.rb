@@ -58,4 +58,31 @@ RSpec.describe HumanReviewRequest do
     expect(review_lock).not_to be_nil
     expect(conversation_lock).to be < review_lock
   end
+
+  it 'takes knowledge authority and Account locks before Conversation when proposing knowledge' do
+    review_request.resolve_with!(answer: 'Private operator note', operator: operator, resolution_kind: 'internal_note')
+    queries = []
+    subscriber = lambda do |_name, _start, _finish, _id, payload|
+      queries << payload[:sql]
+    end
+
+    ActiveSupport::Notifications.subscribed(subscriber, 'sql.active_record') do
+      review_request.propose_knowledge!(
+        proposer: operator,
+        source_kind: 'refund',
+        title: 'Refund guidance',
+        answer: 'Refund requests are assessed under the published policy.'
+      )
+    end
+
+    authority_lock = queries.index { |sql| sql.include?('pg_advisory_xact_lock') }
+    account_lock = queries.index { |sql| sql.include?('FROM "accounts"') && sql.include?('FOR KEY SHARE') }
+    conversation_lock = queries.index { |sql| sql.include?('FROM "conversations"') && sql.include?('FOR NO KEY UPDATE') }
+    review_lock = queries.index { |sql| sql.include?('FROM "human_review_requests"') && sql.include?('FOR UPDATE') }
+
+    expect([authority_lock, account_lock, conversation_lock, review_lock]).to all(be_present)
+    expect(authority_lock).to be < account_lock
+    expect(account_lock).to be < conversation_lock
+    expect(conversation_lock).to be < review_lock
+  end
 end

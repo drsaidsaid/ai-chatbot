@@ -110,7 +110,7 @@ RSpec.describe 'Human Review Requests API', type: :request do
     expect(request_record.knowledge_item).to be_nil
   end
 
-  it 'reports the canonical delivery state instead of claiming a public reply was sent' do
+  it 'reports a late provider failure even when outbound acceptance remains recorded' do
     post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/resolve",
          headers: agent.create_new_auth_token,
          params: { answer: 'We will review the request.', resolution_kind: 'send_reply' },
@@ -123,15 +123,33 @@ RSpec.describe 'Human Review Requests API', type: :request do
       conversation: conversation,
       message: request_record.reload.human_answer_message,
       observed_control_version: conversation.control_version,
-      state: :failed,
-      failure_code: 'provider_rejected'
+      state: :accepted,
+      provider_message_id: 'wamid.accepted',
+      accepted_at: Time.current
     )
+    Whatsapp::MessageStatusProjector.new(
+      message: request_record.human_answer_message.reload,
+      status: {
+        status: 'failed',
+        timestamp: 1.minute.from_now.to_i.to_s,
+        errors: [{ code: 13_101 }]
+      }
+    ).perform
+
+    expect(request_record.human_answer_message.whatsapp_outbound_delivery.reload).to be_accepted
 
     get "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}",
         headers: agent.create_new_auth_token,
         as: :json
 
     expect(response.parsed_body).to include('reply_outcome' => 'reply_delivery_failed')
+    expect(response.parsed_body.fetch('reply_delivery')).to include(
+      'outcome' => 'reply_delivery_failed',
+      'provider_status' => 'failed',
+      'authority_state' => 'accepted',
+      'failure_code' => '13101',
+      'recoverable' => false
+    )
   end
 
   it 'records a private resolution without queuing a Lead reply, then proposes one offer-scoped draft separately', :aggregate_failures do
@@ -265,6 +283,65 @@ RSpec.describe 'Human Review Requests API', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
     expect(request_record.reload).to be_resolved
     expect(request_record.knowledge_item).to be_nil
+  end
+
+  it 'captures poor-fit feedback for administrator review without changing rules or exposing a private note', :aggregate_failures do
+    offer = AiLeadEmployee::Offer.create!(
+      account: account,
+      name: 'Growth coaching',
+      currency: 'TZS',
+      configuration: {
+        'qualification_mode' => 'enabled',
+        'questions' => [],
+        'budget_ranges' => [],
+        'rules' => [{ 'kind' => 'hard_rule', 'field' => 'region', 'operator' => 'eq', 'value' => 'TZ' }],
+        'score_weights' => {},
+        'score_thresholds' => { 'qualified' => 60, 'highly_qualified' => 80 }
+      }
+    )
+    conversation.update!(offer: offer)
+    request_record.update!(question: 'This Lead may be a poor fit because they are outside the configured region.')
+    original_configuration = offer.configuration.deep_dup
+
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/resolve",
+         headers: agent.create_new_auth_token,
+         params: { answer: 'Private note: do not expose this text.', resolution_kind: 'internal_note' },
+         as: :json
+
+    2.times do
+      post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_configuration_suggestion",
+           headers: agent.create_new_auth_token,
+           params: { category: 'poor_fit', suggestion: 'Review whether the configured region rule is still correct.' },
+           as: :json
+      expect(response).to have_http_status(:success)
+    end
+
+    suggestion = request_record.reload.configuration_suggestion
+    expect(ReviewConfigurationSuggestion.where(human_review_request: request_record).count).to eq(1)
+    expect(suggestion).to have_attributes(
+      status: 'pending',
+      category: 'poor_fit',
+      offer_id: offer.id,
+      source_message_id: lead_message.id,
+      evidence: request_record.question
+    )
+    expect(suggestion.evidence).not_to include('Private note')
+    expect(offer.reload.configuration).to eq(original_configuration)
+
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/review_configuration_suggestion",
+         headers: agent.create_new_auth_token,
+         params: { outcome: 'reviewed' },
+         as: :json
+    expect(response).to have_http_status(:unauthorized)
+
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/review_configuration_suggestion",
+         headers: admin.create_new_auth_token,
+         params: { outcome: 'reviewed', decision_note: 'Review during the next configuration update.' },
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(suggestion.reload).to have_attributes(status: 'reviewed', reviewed_by_user_id: admin.id)
+    expect(offer.reload.configuration).to eq(original_configuration)
   end
 
   it 'does not expose or resolve another operator\'s assigned review' do

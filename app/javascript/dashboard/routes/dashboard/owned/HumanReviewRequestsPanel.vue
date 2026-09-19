@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
@@ -17,19 +17,23 @@ const isLoading = ref(false);
 const resolvingId = ref(null);
 const resolutionForms = ref({});
 const resolutionResults = ref({});
-const sourceOptions = [
-  'faq',
-  'offer',
-  'pricing',
-  'objection',
-  'policy',
-  'refund',
-];
+const sourceOptions = computed(() => [
+  { value: 'faq', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.FAQ') },
+  { value: 'offer', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.OFFER') },
+  { value: 'pricing', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.PRICING') },
+  { value: 'objection', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.OBJECTION') },
+  { value: 'policy', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.POLICY') },
+  { value: 'refund', label: t('AI_LEAD_EMPLOYEE.REVIEWS.SOURCE.REFUND') },
+]);
+let loadRequest = 0;
 
 const replyOutcomeMessage = outcome => {
   const messages = {
     reply_pending_delivery: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_PENDING'),
     reply_delivery_accepted: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_ACCEPTED'),
+    reply_delivery_sent: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_SENT'),
+    reply_delivery_delivered: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_DELIVERED'),
+    reply_delivery_read: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_READ'),
     reply_delivery_unknown: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_UNKNOWN'),
     reply_delivery_failed: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_FAILED'),
     reply_delivery_canceled: t('AI_LEAD_EMPLOYEE.REVIEWS.REPLY_CANCELED'),
@@ -50,13 +54,34 @@ const reasonLabel = reason => {
       'AI_LEAD_EMPLOYEE.REVIEWS.REASON.QUALIFICATION_BLOCKER'
     ),
     angry_question: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.ANGRY_QUESTION'),
+    unsupported_media: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.UNSUPPORTED_MEDIA'),
+    source_unverified: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.SOURCE_UNVERIFIED'),
+    provider_failed: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.PROVIDER_FAILED'),
+    stale_knowledge: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.STALE_KNOWLEDGE'),
+    delivery_unknown: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.DELIVERY_UNKNOWN'),
+    human_requested: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.HUMAN_REQUESTED'),
   };
   return labels[reason] || reason.replaceAll('_', ' ');
 };
 
+const feedbackStatusLabel = status => {
+  const labels = {
+    pending: t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_STATE.PENDING'),
+    reviewed: t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_STATE.REVIEWED'),
+    dismissed: t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_STATE.DISMISSED'),
+  };
+  return labels[status] || status;
+};
+
 const visibleRequests = computed(() =>
   reviewRequests.value.filter(request => {
-    if (props.reviewId) return Number(request.id) === Number(props.reviewId);
+    if (props.reviewId) {
+      return (
+        Number(request.id) === Number(props.reviewId) &&
+        (!props.conversationId ||
+          Number(request.conversation_id) === Number(props.conversationId))
+      );
+    }
     return (
       !props.conversationId ||
       Number(request.conversation_id) === Number(props.conversationId)
@@ -65,23 +90,36 @@ const visibleRequests = computed(() =>
 );
 
 const loadReviewRequests = async () => {
+  loadRequest += 1;
+  const requestNumber = loadRequest;
   isLoading.value = true;
   try {
     const response = props.reviewId
       ? await HumanReviewRequestsAPI.show(props.reviewId)
       : await HumanReviewRequestsAPI.get();
     const data = props.reviewId ? [response.data] : response.data;
+    if (requestNumber !== loadRequest) return;
     reviewRequests.value = data;
+    resolutionResults.value = Object.fromEntries(
+      data
+        .filter(request => ['resolved', 'rejected'].includes(request.status))
+        .map(request => [request.id, request])
+    );
     data.forEach(request => {
       resolutionForms.value[request.id] ||= {
-        answer: '',
-        proposal_answer: '',
+        answer: request.operator_answer || '',
+        proposal_answer:
+          request.resolution_kind === 'send_reply'
+            ? request.operator_answer || ''
+            : '',
+        feedback_category: 'poor_fit',
+        feedback_suggestion: '',
         source_kind: request.reason === 'sensitive_question' ? 'policy' : 'faq',
         title: request.question?.slice(0, 80) || '',
       };
     });
   } finally {
-    isLoading.value = false;
+    if (requestNumber === loadRequest) isLoading.value = false;
   }
 };
 
@@ -122,12 +160,46 @@ const proposeKnowledge = async request => {
   }
 };
 
+const proposeConfigurationSuggestion = async request => {
+  resolvingId.value = request.id;
+  try {
+    const { data } =
+      await HumanReviewRequestsAPI.proposeConfigurationSuggestion(request.id, {
+        category: resolutionForms.value[request.id].feedback_category,
+        suggestion: resolutionForms.value[request.id].feedback_suggestion,
+      });
+    resolutionResults.value[request.id] = data;
+    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_SAVED'));
+  } catch {
+    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_ERROR'));
+  } finally {
+    resolvingId.value = null;
+  }
+};
+
+const reviewConfigurationSuggestion = async (request, outcome) => {
+  resolvingId.value = request.id;
+  try {
+    const { data } = await HumanReviewRequestsAPI.reviewConfigurationSuggestion(
+      request.id,
+      { outcome }
+    );
+    resolutionResults.value[request.id] = data;
+    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_REVIEWED'));
+  } catch {
+    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_ERROR'));
+  } finally {
+    resolvingId.value = null;
+  }
+};
+
 const conversationPath = request =>
   `/app/accounts/${route.params.accountId}/conversations/${request.conversation_display_id}?queue=review&review_id=${request.id}`;
 const knowledgePath = request =>
   `/app/accounts/${route.params.accountId}/knowledge?knowledge_item_id=${request.knowledge_item_id}`;
 
 onMounted(loadReviewRequests);
+watch(() => [props.reviewId, props.conversationId], loadReviewRequests);
 </script>
 
 <template>
@@ -205,8 +277,9 @@ onMounted(loadReviewRequests);
       </template>
       <template
         v-else-if="
+          resolutionResults[request.id].status === 'resolved' &&
           resolutionResults[request.id].knowledge_proposal_outcome ===
-          'not_requested'
+            'not_requested'
         "
       >
         <p class="text-xs text-n-slate-11">
@@ -234,10 +307,10 @@ onMounted(loadReviewRequests);
           >
             <option
               v-for="source in sourceOptions"
-              :key="source"
-              :value="source"
+              :key="source.value"
+              :value="source.value"
             >
-              {{ source }}
+              {{ source.label }}
             </option>
           </select>
         </div>
@@ -254,12 +327,112 @@ onMounted(loadReviewRequests);
         </button>
       </template>
       <a
-        v-else
+        v-else-if="resolutionResults[request.id].status === 'resolved'"
         class="w-fit text-n-blue-text underline"
         :href="knowledgePath(resolutionResults[request.id])"
       >
         {{ t('AI_LEAD_EMPLOYEE.REVIEWS.OPEN_PROPOSAL') }}
       </a>
+      <p v-else class="text-xs text-n-slate-11">
+        {{ t('AI_LEAD_EMPLOYEE.REVIEWS.REJECTED') }}
+      </p>
+      <section
+        v-if="resolutionResults[request.id]?.status === 'resolved'"
+        class="grid gap-2 border-t border-n-weak pt-3"
+      >
+        <p class="font-medium">
+          {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_TITLE') }}
+        </p>
+        <template
+          v-if="
+            resolutionResults[request.id].configuration_suggestion_outcome ===
+            'not_requested'
+          "
+        >
+          <p class="text-xs text-n-slate-11">
+            {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_EFFECT') }}
+          </p>
+          <select
+            v-model="resolutionForms[request.id].feedback_category"
+            class="rounded-md border border-n-weak bg-n-background px-3 py-2"
+          >
+            <option value="poor_fit">
+              {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_CATEGORY.POOR_FIT') }}
+            </option>
+            <option value="not_ready">
+              {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_CATEGORY.NOT_READY') }}
+            </option>
+          </select>
+          <textarea
+            v-model="resolutionForms[request.id].feedback_suggestion"
+            rows="3"
+            class="rounded-md border border-n-weak bg-n-background px-3 py-2"
+            :placeholder="
+              t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_SUGGESTION_PLACEHOLDER')
+            "
+          />
+          <button
+            type="button"
+            class="w-fit rounded-lg border border-n-weak px-3 py-2 text-sm font-medium disabled:opacity-50"
+            :disabled="
+              resolvingId === request.id ||
+              !resolutionForms[request.id].feedback_suggestion
+            "
+            @click="proposeConfigurationSuggestion(request)"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_PROPOSE') }}
+          </button>
+        </template>
+        <template v-else>
+          <p class="text-xs text-n-slate-11">
+            {{
+              t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_EVIDENCE', {
+                evidence:
+                  resolutionResults[request.id].configuration_suggestion
+                    ?.evidence,
+              })
+            }}
+          </p>
+          <p>
+            {{
+              resolutionResults[request.id].configuration_suggestion?.suggestion
+            }}
+          </p>
+          <div
+            v-if="
+              resolutionResults[request.id]
+                .can_review_configuration_suggestion &&
+              resolutionResults[request.id].configuration_suggestion_outcome ===
+                'pending'
+            "
+            class="flex gap-2"
+          >
+            <button
+              type="button"
+              class="rounded-lg border border-n-weak px-3 py-2 text-sm font-medium"
+              @click="reviewConfigurationSuggestion(request, 'reviewed')"
+            >
+              {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_MARK_REVIEWED') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-n-weak px-3 py-2 text-sm font-medium"
+              @click="reviewConfigurationSuggestion(request, 'dismissed')"
+            >
+              {{ t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_DISMISS') }}
+            </button>
+          </div>
+          <p v-else class="text-xs text-n-slate-11">
+            {{
+              t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_STATUS', {
+                status: feedbackStatusLabel(
+                  resolutionResults[request.id].configuration_suggestion_outcome
+                ),
+              })
+            }}
+          </p>
+        </template>
+      </section>
     </article>
   </section>
 </template>

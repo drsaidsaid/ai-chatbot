@@ -51,6 +51,7 @@ class HumanReviewRequest < ApplicationRecord
   belongs_to :human_answer_message, class_name: 'Message', optional: true
   belongs_to :knowledge_item, optional: true
   belongs_to :assigned_user, class_name: 'User', optional: true
+  has_one :configuration_suggestion, class_name: 'ReviewConfigurationSuggestion', dependent: :restrict_with_exception
 
   enum reason: {
     no_approved_knowledge: 0,
@@ -111,7 +112,7 @@ class HumanReviewRequest < ApplicationRecord
   end
 
   def propose_knowledge!(proposer:, source_kind:, title:, answer: nil)
-    with_authorized_review_lock(proposer) do |locked_conversation|
+    with_authorized_review_lock(proposer, lock_knowledge_authority: true) do |locked_conversation|
       return knowledge_item if knowledge_item.present?
 
       unless resolved? && human_answer_message.present?
@@ -132,6 +133,29 @@ class HumanReviewRequest < ApplicationRecord
     end
   end
 
+  def propose_configuration_suggestion!(proposer:, category:, suggestion:)
+    with_authorized_review_lock(proposer) do |locked_conversation|
+      return configuration_suggestion if configuration_suggestion.present?
+
+      unless resolved?
+        errors.add(:base, 'must be resolved before handoff feedback can be proposed')
+        raise ActiveRecord::RecordInvalid, self
+      end
+
+      create_configuration_suggestion!(
+        account: account,
+        conversation: locked_conversation,
+        offer: locked_conversation.offer,
+        source_message: lead_message,
+        proposed_by_user: proposer,
+        category: category,
+        suggestion: suggestion,
+        evidence: question,
+        status: :pending
+      )
+    end
+  end
+
   private
 
   def resolution_message(answer:, operator:, resolution_kind:, existing_message:, locked_conversation:)
@@ -147,8 +171,13 @@ class HumanReviewRequest < ApplicationRecord
     )
   end
 
-  def with_authorized_review_lock(actor)
+  def with_authorized_review_lock(actor, lock_knowledge_authority: false)
     ApplicationRecord.transaction do
+      if lock_knowledge_authority
+        AiLeadEmployee::KnowledgeAuthorityLock.acquire_for_answer!(account_id)
+      else
+        Account.where(id: account_id).lock('FOR KEY SHARE').load
+      end
       locked_conversation = Conversation.where(account_id: account_id, id: conversation_id)
                                         .lock('FOR NO KEY UPDATE').first!
       self.class.where(account_id: account_id, id: id).lock.first!

@@ -387,13 +387,16 @@ const loadDashboard = async () => {
 };
 const openConversation = row => {
   if (!row?.conversation_display_id) return;
+  const query = Object.fromEntries(
+    Object.entries(route.query).filter(([key]) => key !== 'review_id')
+  );
   router.push({
     name: props.inboxId ? 'conversation_through_inbox' : 'inbox_conversation',
     params: {
       ...listRoute.value.params,
       conversation_id: row.conversation_display_id,
     },
-    query: route.query,
+    query,
   });
 };
 

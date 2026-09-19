@@ -199,6 +199,8 @@ Rails.application.routes.draw do
               post :reject
               post :resolve
               post :propose_knowledge
+              post :propose_configuration_suggestion
+              post :review_configuration_suggestion
             end
           end
           resource :ai_provider_connection, only: [:show]

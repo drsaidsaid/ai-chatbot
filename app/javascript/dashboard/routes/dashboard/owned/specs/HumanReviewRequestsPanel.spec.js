@@ -11,6 +11,8 @@ vi.mock('dashboard/api/humanReviewRequests', () => ({
     show: vi.fn(),
     resolve: vi.fn(),
     proposeKnowledge: vi.fn(),
+    proposeConfigurationSuggestion: vi.fn(),
+    reviewConfigurationSuggestion: vi.fn(),
   },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -25,7 +27,7 @@ const review = {
 };
 const proposeKnowledgeLabel = 'Propose this answer as reusable knowledge';
 
-const mountPanel = async () => {
+const mountPanel = async ({ conversationId = 12, reviewId = 8 } = {}) => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -37,7 +39,7 @@ const mountPanel = async () => {
   );
   await router.isReady();
   const wrapper = mount(HumanReviewRequestsPanel, {
-    props: { conversationId: 12, reviewId: 8 },
+    props: { conversationId, reviewId },
     global: {
       plugins: [
         router,
@@ -58,6 +60,7 @@ describe('HumanReviewRequestsPanel', () => {
         ...review,
         status: 'resolved',
         knowledge_proposal_outcome: 'not_requested',
+        configuration_suggestion_outcome: 'not_requested',
       },
     });
     HumanReviewRequestsAPI.proposeKnowledge.mockResolvedValue({
@@ -66,6 +69,20 @@ describe('HumanReviewRequestsPanel', () => {
         status: 'resolved',
         knowledge_item_id: 31,
         knowledge_proposal_outcome: 'draft_proposed',
+        configuration_suggestion_outcome: 'not_requested',
+      },
+    });
+    HumanReviewRequestsAPI.proposeConfigurationSuggestion.mockResolvedValue({
+      data: {
+        ...review,
+        status: 'resolved',
+        knowledge_proposal_outcome: 'not_requested',
+        configuration_suggestion_outcome: 'pending',
+        configuration_suggestion: {
+          category: 'poor_fit',
+          suggestion: 'Review the configured fit rule.',
+          evidence: 'Can I get a refund?',
+        },
       },
     });
   });
@@ -109,5 +126,91 @@ describe('HumanReviewRequestsPanel', () => {
       })
     );
     expect(wrapper.text()).toContain('Open draft knowledge proposal');
+  });
+
+  it('restores a resolved review directly from its persisted response', async () => {
+    HumanReviewRequestsAPI.show.mockResolvedValue({
+      data: {
+        ...review,
+        status: 'resolved',
+        resolution_kind: 'internal_note',
+        operator_answer: 'Private operator note',
+        knowledge_proposal_outcome: 'not_requested',
+        configuration_suggestion_outcome: 'not_requested',
+      },
+    });
+
+    const wrapper = await mountPanel();
+
+    expect(wrapper.text()).toContain(proposeKnowledgeLabel);
+    expect(wrapper.text()).not.toContain('Save private note and resolve');
+    expect(wrapper.get('textarea').element.value).toBe('Private operator note');
+  });
+
+  it('reloads when the selected review changes and hides a review from another conversation', async () => {
+    const secondReview = {
+      ...review,
+      id: 9,
+      question: 'Can we speak next month?',
+      conversation_id: 13,
+      conversation_display_id: 43,
+      status: 'resolved',
+      resolution_kind: 'internal_note',
+      operator_answer: 'Follow up next month.',
+      knowledge_proposal_outcome: 'not_requested',
+      configuration_suggestion_outcome: 'not_requested',
+    };
+    HumanReviewRequestsAPI.show
+      .mockResolvedValueOnce({ data: review })
+      .mockResolvedValueOnce({ data: secondReview });
+    const wrapper = await mountPanel();
+
+    await wrapper.setProps({ reviewId: 9, conversationId: 13 });
+    await flushPromises();
+
+    expect(HumanReviewRequestsAPI.show).toHaveBeenLastCalledWith(9);
+    expect(wrapper.text()).toContain('Can we speak next month?');
+
+    await wrapper.setProps({ conversationId: 12 });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('Can we speak next month?');
+  });
+
+  it('records handoff feedback as a separate reviewable suggestion', async () => {
+    const wrapper = await mountPanel();
+    await wrapper
+      .get('textarea')
+      .setValue('Private note that must remain internal.');
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Save private note and resolve')
+      .trigger('click');
+    await flushPromises();
+
+    const feedback = wrapper.find(
+      'textarea[placeholder="Describe the configuration change an administrator should review"]'
+    );
+    await feedback.setValue('Review the configured fit rule.');
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Propose configuration feedback')
+      .trigger('click');
+    await flushPromises();
+
+    expect(
+      HumanReviewRequestsAPI.proposeConfigurationSuggestion
+    ).toHaveBeenCalledWith(8, {
+      category: 'poor_fit',
+      suggestion: 'Review the configured fit rule.',
+    });
+    expect(
+      HumanReviewRequestsAPI.proposeConfigurationSuggestion.mock.calls[0][1]
+    ).not.toEqual(
+      expect.objectContaining({
+        suggestion: expect.stringContaining('Private note'),
+      })
+    );
+    expect(wrapper.text()).toContain('Pending administrator review');
   });
 });
