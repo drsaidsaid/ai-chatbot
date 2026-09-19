@@ -17,7 +17,7 @@ class AiLeadEmployee::HandoffAlertRecipients
   attr_reader :account, :alert_type
 
   def alert_routes
-    Array(account.settings&.dig('ai_lead_employee', 'alert_routes', alert_type))
+    Array(account.reload.settings&.dig('ai_lead_employee', 'alert_routes', alert_type))
   end
 
   def recipient_for(route, assignee)
@@ -45,7 +45,7 @@ class AiLeadEmployee::HandoffAlertRecipients
 
   def verified_alert_phone(route)
     recipient = normalized_recipient(route.to_h['recipient'])
-    account.users.find do |user|
+    account.users.reload.find do |user|
       normalized_recipient(user.custom_attributes&.dig('whatsapp_alert_phone')) == recipient
     end&.custom_attributes&.dig('whatsapp_alert_phone')
   end

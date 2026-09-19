@@ -110,6 +110,8 @@ class Whatsapp::OutboundEligibility
 
   def qualification_failure(alert)
     attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
+    return if alert.alert? && alert.origin_id.blank?
+
     origin = alert.alert? ? Conversation.find_by(account_id: @delivery.account_id, id: alert.origin_id) : @conversation
     return 'qualification_context_invalid' unless origin
 

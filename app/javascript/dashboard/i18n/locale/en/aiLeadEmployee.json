@@ -748,6 +748,8 @@
       "PROPOSAL_SAVED": "Draft knowledge proposal saved for administrator approval.",
       "PROPOSAL_ERROR": "The review is resolved, but the knowledge proposal still needs attention.",
       "ASSIGNED": "Assigned to {name}",
+      "ASSIGN_OPERATOR": "Assigned Human Operator",
+      "SELECT_TEAM_MEMBER": "Select a team member",
       "REASON_ASSIGNED": "{reason} · Assigned to {name}",
       "UNASSIGNED": "Unassigned",
       "OPEN_CONVERSATION": "Open conversation #{id}",

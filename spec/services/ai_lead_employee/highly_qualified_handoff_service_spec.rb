@@ -118,12 +118,32 @@ RSpec.describe AiLeadEmployee::HighlyQualifiedHandoffService do
     expect(alert_messages.pluck(:content).join("\n")).to include(
       "https://inbox.example.test/app/accounts/#{account.id}/conversations/#{conversation.display_id}",
       'Problem: need more leads',
-      'Budget signal: $2500',
+      'Budget: $2500',
       'Decision authority: owner'
     )
     result.handoff.alert_deliveries.each do |delivery|
       expect(SendReplyJob).to have_received(:perform_later).with(delivery['message_id'])
     end
+  end
+
+  it 'uses the configured Offer question label for arbitrary evidence fields' do
+    offer = AiLeadEmployee::Offer.create!(
+      account: account,
+      name: 'Growth audit',
+      currency: 'USD',
+      configuration: {
+        'questions' => [{ 'key' => 'preferred_channel', 'label' => 'Preferred contact channel', 'enabled' => true, 'position' => 1 }]
+      }
+    )
+    qualification.update!(offer: offer, evidence_snapshot: qualification.evidence_snapshot.merge(
+      'preferred_channel' => { 'value' => 'Voice note' }
+    ))
+
+    alert_text = AiLeadEmployee::HandoffAlertText.new(
+      account: account, conversation: conversation, qualification: qualification.reload
+    ).to_s
+
+    expect(alert_text).to include('Preferred contact channel: Voice note')
   end
 
   it 'deduplicates retried handoff events and alert routes while retrying failed alert messages' do

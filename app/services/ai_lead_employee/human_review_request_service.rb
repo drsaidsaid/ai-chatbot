@@ -16,17 +16,18 @@ class AiLeadEmployee::HumanReviewRequestService
   def perform
     request, created = find_or_create_request
 
-    deliver_alerts!(request) if created
+    ensure_assignment!(request)
+    deliver_alerts!(request)
     Result.new(request: request, created: created)
   rescue ActiveRecord::RecordNotUnique
-    Result.new(
-      request: conversation.account.human_review_requests.find_by!(
-        conversation: conversation,
-        lead_message: lead_message,
-        reason: reason
-      ),
-      created: false
+    request = conversation.account.human_review_requests.find_by!(
+      conversation: conversation,
+      lead_message: lead_message,
+      reason: reason
     )
+    ensure_assignment!(request)
+    deliver_alerts!(request)
+    Result.new(request: request, created: false)
   end
 
   private
@@ -48,9 +49,12 @@ class AiLeadEmployee::HumanReviewRequestService
       request.save!
     end
 
-    request.assign_to!(default_owner) if created && default_owner
-
     [request, created]
+  end
+
+  def ensure_assignment!(request)
+    current_owner = conversation.reload.assignee
+    request.assign_to!(current_owner || default_owner) if request.assigned_user_id != (current_owner || default_owner)&.id
   end
 
   def deliver_alerts!(request)

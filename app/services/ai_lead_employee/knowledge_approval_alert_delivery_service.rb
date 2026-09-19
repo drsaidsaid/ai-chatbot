@@ -21,6 +21,15 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
     knowledge_item
   end
 
+  def current_deliveries
+    Array(knowledge_item.metadata['knowledge_approval_alert_deliveries']).filter_map do |delivery|
+      message = account.messages.find_by(id: delivery['message_id'])
+      next unless message
+
+      delivery_payload(delivery['recipient'], message).merge(recoverable: recoverable?(message))
+    end
+  end
+
   private
 
   attr_reader :account, :enqueue, :knowledge_item
@@ -37,9 +46,24 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
   end
 
   def queue_message(message, previous_delivery, message_ids)
-    return unless message.source_id.blank? && (message.failed? || previous_delivery.blank?)
+    return unless queueable?(message, previous_delivery)
+    return unless reset_failed_delivery(message)
 
     message_ids << message.id
+  end
+
+  def queueable?(message, previous_delivery)
+    return false if message.source_id.present?
+    return true if message.failed? || previous_delivery.blank?
+
+    message.whatsapp_outbound_delivery&.state&.in?(%w[failed canceled])
+  end
+
+  def reset_failed_delivery(message)
+    delivery = message.whatsapp_outbound_delivery
+    return true if delivery.blank? || delivery.pending?
+
+    Whatsapp::KnowledgeApprovalAlertRetry.new(delivery).perform
   end
 
   def default_owner
@@ -83,9 +107,20 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
 
   def delivery_status(message)
     return 'sent' if message.source_id.present?
+
+    delivery = message.whatsapp_outbound_delivery
+    return delivery.state if delivery&.state&.in?(%w[failed canceled unknown])
     return 'failed' if message.failed?
 
     'queued'
+  end
+
+  def recoverable?(message)
+    delivery = message.whatsapp_outbound_delivery
+    return false if message.source_id.present?
+    return delivery.attempts < Whatsapp::OutboundDelivery::MAX_CLAIM_ATTEMPTS if delivery&.state&.in?(%w[failed canceled])
+
+    message.failed? && (delivery.blank? || delivery.pending?)
   end
 
   def whatsapp_channel

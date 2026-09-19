@@ -81,14 +81,14 @@ class HumanReviewRequest < ApplicationRecord # rubocop:disable Metrics/ClassLeng
 
   def assign_to!(user)
     transaction do
-      Conversation.where(account_id: account_id, id: conversation_id).lock('FOR NO KEY UPDATE').first!
+      locked_conversation = Conversation.where(account_id: account_id, id: conversation_id).lock('FOR NO KEY UPDATE').first!
       with_lock do
         previous_assignee_id = assigned_user_id
-        return self if previous_assignee_id == user&.id
+        return self if previous_assignee_id == user&.id && locked_conversation.assignee_id == user&.id
 
-        Conversations::AssignmentService.new(conversation: conversation, assignee_id: user&.id).perform
+        Conversations::AssignmentService.new(conversation: locked_conversation, assignee_id: user&.id).perform
         update!(assigned_user: user)
-        audit_assignment!(previous_assignee_id)
+        audit_assignment!(previous_assignee_id) if previous_assignee_id != assigned_user_id
       end
     end
     self

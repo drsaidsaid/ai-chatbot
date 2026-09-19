@@ -90,4 +90,45 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
       'assigned_user_id' => [nil, owner.id]
     )
   end
+
+  it 'recovers assignment and alert delivery when a prior attempt committed only the review row' do
+    owner = create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700000099' })
+    account.update!(settings: { 'ai_lead_employee' => { 'human_operator_id' => owner.id,
+                                                        'alert_routes' => { described_class::ALERT_TYPE => [{ 'type' => 'assignee' }] } } })
+    existing = create(:human_review_request, account: account, conversation: conversation, lead_message: message,
+                                             reason: :no_approved_knowledge, assigned_user: nil,
+                                             alert_recipients: [], alert_deliveries: [])
+
+    result = described_class.new(conversation: conversation, lead_message: message, reason: :no_approved_knowledge).perform
+
+    expect(result.created).to be(false)
+    expect(existing.reload.assigned_user).to eq(owner)
+    expect(conversation.reload.assignee).to eq(owner)
+    expect(existing.alert_deliveries.sole).to include('recipient' => '255700000099', 'status' => 'queued')
+  end
+
+  it 'rejects a queued assignee alert after the conversation is reassigned' do
+    owner = create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700000099' })
+    replacement = create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700000098' })
+    account.update!(settings: { 'ai_lead_employee' => { 'human_operator_id' => owner.id,
+                                                        'alert_routes' => { described_class::ALERT_TYPE => [{ 'type' => 'assignee' }] } } })
+    request = described_class.new(conversation: conversation, lead_message: message, reason: :no_approved_knowledge).perform.request
+    alert = account.messages.find(request.alert_deliveries.sole.fetch('message_id'))
+
+    Conversations::AssignmentService.new(conversation: conversation.reload, assignee_id: replacement.id).perform
+
+    expect(Whatsapp::OutboundAlertAuthority.new(alert.reload).failure_code).to eq('control_changed')
+  end
+
+  it 'suppresses a review alert outside the WhatsApp customer response window' do
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).and_return(true)
+    request = described_class.new(conversation: conversation, lead_message: message, reason: :no_approved_knowledge).perform.request
+    alert = account.messages.find(request.alert_deliveries.sole.fetch('message_id'))
+    provider_request = stub_request(:post, %r{https://graph.facebook.com/v\d+\.\d+/[^/]+/messages})
+
+    SendReplyJob.perform_now(alert.id)
+
+    expect(provider_request).not_to have_been_requested
+    expect(alert.reload.content_attributes.dig('whatsapp_delivery', 'failure_code')).to eq('message_window_closed')
+  end
 end

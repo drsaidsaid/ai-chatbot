@@ -28,6 +28,7 @@ vi.mock('dashboard/api/knowledgeItems', () => ({
     approve: vi.fn(),
     reject: vi.fn(),
     deactivate: vi.fn(),
+    retryAlerts: vi.fn(),
   },
 }));
 
@@ -159,6 +160,19 @@ describe('KnowledgeItemsPanel', () => {
     });
     KnowledgeItemsAPI.deactivate.mockResolvedValue({
       data: { ...approvedAnswer, status: 'inactive' },
+    });
+    KnowledgeItemsAPI.retryAlerts.mockResolvedValue({
+      data: {
+        ...approvedAnswer,
+        alert_deliveries: [
+          {
+            message_id: 77,
+            recipient: '255700123456',
+            status: 'queued',
+            recoverable: false,
+          },
+        ],
+      },
     });
     HumanReviewRequestsAPI.get.mockResolvedValue({ data: [reviewRequest] });
     HumanReviewRequestsAPI.resolve.mockResolvedValue({
@@ -341,6 +355,42 @@ describe('KnowledgeItemsPanel', () => {
       .trigger('click');
     await flushPromises();
     expect(KnowledgeItemsAPI.reject).toHaveBeenCalledWith(6);
+  });
+
+  it('shows current alert failure state and retries the existing delivery', async () => {
+    KnowledgeItemsAPI.get.mockResolvedValue({
+      data: [
+        {
+          ...approvedAnswer,
+          alert_deliveries: [
+            {
+              message_id: 77,
+              recipient: '255700123456',
+              status: 'failed',
+              error: 'temporary provider failure',
+              recoverable: true,
+            },
+          ],
+        },
+      ],
+    });
+    const wrapper = await mountComponent();
+
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Approved Answers')
+      .trigger('click');
+    expect(wrapper.text()).toContain('255700123456: failed');
+    expect(wrapper.text()).toContain('temporary provider failure');
+
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Retry failed alert')
+      .trigger('click');
+    await flushPromises();
+
+    expect(KnowledgeItemsAPI.retryAlerts).toHaveBeenCalledWith(2);
+    expect(wrapper.text()).toContain('255700123456: queued');
   });
 
   it('saves a document for one selected Offer', async () => {

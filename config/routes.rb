@@ -184,6 +184,7 @@ Rails.application.routes.draw do
               post :approve
               post :reject
               post :deactivate
+              post :retry_alerts
             end
           end
           resources :knowledge_documents, only: [:index, :show, :create, :update, :destroy] do

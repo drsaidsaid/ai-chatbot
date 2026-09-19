@@ -148,12 +148,17 @@ class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::Base
   def payload(request)
     base_payload(request).merge(
       resolution_payload(request),
+      assignable_users: assignable_users,
       alert_recipients: request.alert_recipients,
       alert_deliveries: request.alert_deliveries,
       created_at: request.created_at,
       resolved_at: request.resolved_at,
       rejected_at: request.rejected_at
     )
+  end
+
+  def assignable_users
+    current_account.users.order(:name, :id).map { |user| { id: user.id, name: user.name } }
   end
 
   def base_payload(request)

@@ -419,8 +419,8 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
   end
 
   def configure_domain_alert_routes(type)
-    recipient = @alert_recipient ||= create(:user, account: @channel.account,
-                                                   custom_attributes: { 'whatsapp_alert_phone' => '255700000094' })
+    recipient = create(:user, account: @channel.account,
+                              custom_attributes: { 'whatsapp_alert_phone' => '255700000094' })
     @channel.account.update!(settings: @channel.account.settings.deep_merge(
       'ai_lead_employee' => {
         'alert_routes' => { type => [{ 'type' => 'whatsapp', 'recipient' => recipient.custom_attributes['whatsapp_alert_phone'] }] }

@@ -18,6 +18,10 @@ class KnowledgeItemsAPI extends ApiClient {
   deactivate(id) {
     return axios.post(`${this.url}/${id}/deactivate`);
   }
+
+  retryAlerts(id) {
+    return axios.post(`${this.url}/${id}/retry_alerts`);
+  }
 }
 
 export default new KnowledgeItemsAPI();

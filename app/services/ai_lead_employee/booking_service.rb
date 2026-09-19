@@ -449,6 +449,7 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
     evidence = qualification&.evidence_snapshot.to_h
     [
       'Call booked with Hot Lead',
+      "Open: #{conversation_url}",
       "Lead: #{conversation.contact.name} #{conversation.contact.phone_number} #{conversation.contact.email}".squish,
       "When: #{booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z')}",
       "Summary: #{qualification&.reasons.to_a.join('; ').presence || @eligibility.offer&.name || 'Booked call'}",
@@ -462,6 +463,12 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
     qualification&.evidence_snapshot.to_h.slice('problem', 'urgency', 'budget', 'decision_authority').map do |signal, evidence|
       "#{signal.humanize}: #{evidence['value']}"
     end.join('; ')
+  end
+
+  def conversation_url
+    base_url = ENV.fetch('FRONTEND_URL', '').presence
+    path = "/app/accounts/#{account.id}/conversations/#{conversation.display_id}?queue=bookings"
+    base_url ? "#{base_url.delete_suffix('/')}#{path}" : path
   end
 
   def qualification_snapshot

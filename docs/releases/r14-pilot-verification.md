@@ -2,7 +2,7 @@
 
 Worktree: `/Users/ghalyasaid/.codex/worktrees/r14-alerts-pilot/AI Chatbot`
 Branch: `codex/r14-alerts-pilot`
-Baseline: `5834d354fcadad4f5825582dab9db5de098fa1b1`
+Integrated baseline: `6c5b86590b5e19a9c8b850ad8fa6157893d8e02e` (initial work began from `5834d354fcadad4f5825582dab9db5de098fa1b1`)
 
 ## Completed validation
 
@@ -69,4 +69,21 @@ Candidate was rebased from `5834d354fcadad4f5825582dab9db5de098fa1b1` onto integ
 - Review alert text includes its canonical review-queue conversation link.
 - Focused authorization and delivery tests: 17 examples, 0 failures. Focused RuboCop and diff checks passed.
 
-Remaining acceptance work: manual reassignment UI, current delivery-status/retry presentation for knowledge alerts, and replacing legacy hard-coded Handoff Alert summary fields with the amended R14 context are not complete in this commit.
+## Final amended-contract completion
+
+- Added administrator-only manual Review reassignment in the Review queue. It uses the canonical assignment endpoint, locks and synchronizes the Review Request and Conversation, preserves a later manual Conversation assignment during replay, and records assignment audit history.
+- Added current knowledge-approval alert state to the approval UI and an administrator retry action. Retry resets the existing terminal outbound delivery under canonical authority locks and reuses the same Message, so it cannot create a duplicate alert.
+- Handoff summaries now render every populated evidence field and use the published Offer question label when one exists. They retain qualification reasons, owner, contact, and the canonical Conversation link without depending on the original fixed interview vocabulary.
+- Booking preparation alerts now include the canonical Booking queue link.
+- Review and knowledge alerts have explicit outside-window coverage. Both pass through launch, alert authority, template, and WhatsApp response-window eligibility; plain-text delivery is suppressed with `message_window_closed` outside the window.
+- Direct WhatsApp routes reload current settings and Business Account membership at creation and dispatch. A stale cached Account cannot retain a removed recipient or miss a newly saved authorized route.
+- Crash/replay coverage proves a committed Review row with no assignment or delivery is reconciled idempotently. Dispatch rejects a stale Review assignee after Conversation reassignment.
+
+Final focused evidence:
+
+- Ruby alert/configuration/Review/knowledge/handoff/Booking paths: 39 examples, 0 failures.
+- Vue Review and knowledge paths: 2 files, 14 tests, 0 failures.
+- Dedicated PostgreSQL alert authority and concurrency suite: 11 examples, 0 failures, 0 pending.
+- Focused RuboCop: no offenses. Focused ESLint: no errors; existing Knowledge panel formatting warnings remain. `git diff --check`: clean.
+
+The coordinator prohibited another Vite build or browser run for this completion phase. The previously recorded integrated build passed at commit `7ef34819`; no real alert delivery, deployment, push, or integration was performed.

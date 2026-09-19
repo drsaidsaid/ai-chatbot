@@ -102,10 +102,18 @@ class Whatsapp::OutboundAlertAuthority
   def record_current?
     current = record.is_a?(Booking) ? record.confirmed? : record.open?
     return false unless current
-    return true if record.is_a?(HumanReviewRequest) || record.assignee_id.nil?
+    return review_request_current? if record.is_a?(HumanReviewRequest)
+    return true if record.assignee_id.nil?
 
     record.assignee_id == record.conversation.assignee_id &&
       AccountUser.exists?(account_id: @message.account_id, user_id: record.assignee_id)
+  end
+
+  def review_request_current?
+    return true if record.assigned_user_id.nil?
+
+    record.assigned_user_id == record.conversation.assignee_id &&
+      AccountUser.exists?(account_id: @message.account_id, user_id: record.assigned_user_id)
   end
 
   def current_recipients
@@ -162,7 +170,7 @@ class Whatsapp::OutboundAlertAuthority
 
   def verified_alert_phone(route, account)
     recipient = normalize(route.to_h['recipient'])
-    account.users.find do |user|
+    account.users.reload.find do |user|
       normalize(user.custom_attributes['whatsapp_alert_phone']) == recipient
     end&.custom_attributes&.dig('whatsapp_alert_phone')
   end
