@@ -1,7 +1,9 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
+import { createI18n } from 'vue-i18n';
 import HumanReviewRequestsPanel from '../HumanReviewRequestsPanel.vue';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
+import messages from 'dashboard/i18n/locale/en/aiLeadEmployee.json';
 
 vi.mock('dashboard/api/humanReviewRequests', () => ({
   default: {
@@ -21,6 +23,7 @@ const review = {
   conversation_display_id: 42,
   assigned_user: { name: 'Asha' },
 };
+const proposeKnowledgeLabel = 'Propose this answer as reusable knowledge';
 
 const mountPanel = async () => {
   const router = createRouter({
@@ -35,7 +38,12 @@ const mountPanel = async () => {
   await router.isReady();
   const wrapper = mount(HumanReviewRequestsPanel, {
     props: { conversationId: 12, reviewId: 8 },
-    global: { plugins: [router] },
+    global: {
+      plugins: [
+        router,
+        createI18n({ legacy: false, locale: 'en', messages: { en: messages } }),
+      ],
+    },
   });
   await flushPromises();
   return wrapper;
@@ -66,7 +74,7 @@ describe('HumanReviewRequestsPanel', () => {
     const wrapper = await mountPanel();
 
     expect(wrapper.text()).toContain('Assigned to Asha');
-    expect(wrapper.text()).not.toContain('Propose reusable knowledge');
+    expect(wrapper.text()).not.toContain(proposeKnowledgeLabel);
 
     await wrapper
       .get('textarea')
@@ -81,7 +89,7 @@ describe('HumanReviewRequestsPanel', () => {
       answer: 'I will review your refund request.',
       resolution_kind: 'internal_note',
     });
-    expect(wrapper.text()).toContain('Propose reusable knowledge');
+    expect(wrapper.text()).toContain(proposeKnowledgeLabel);
 
     await wrapper
       .findAll('textarea')[1]
@@ -89,7 +97,7 @@ describe('HumanReviewRequestsPanel', () => {
 
     await wrapper
       .findAll('button')
-      .find(button => button.text() === 'Propose reusable knowledge')
+      .find(button => button.text() === proposeKnowledgeLabel)
       .trigger('click');
     await flushPromises();
 
