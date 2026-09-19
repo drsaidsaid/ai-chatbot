@@ -87,14 +87,15 @@ class HumanReviewRequest < ApplicationRecord
   end
 
   def resolve_with!(answer:, operator:, resolution_kind:, existing_message: nil)
-    with_lock do
+    with_authorized_review_lock(operator) do |locked_conversation|
       return self if resolved?
 
       message = resolution_message(
         answer: answer,
         operator: operator,
         resolution_kind: resolution_kind,
-        existing_message: existing_message
+        existing_message: existing_message,
+        locked_conversation: locked_conversation
       )
       validate_human_answer!(message)
 
@@ -110,7 +111,7 @@ class HumanReviewRequest < ApplicationRecord
   end
 
   def propose_knowledge!(proposer:, source_kind:, title:, answer: nil)
-    with_lock do
+    with_authorized_review_lock(proposer) do |locked_conversation|
       return knowledge_item if knowledge_item.present?
 
       unless resolved? && human_answer_message.present?
@@ -124,7 +125,7 @@ class HumanReviewRequest < ApplicationRecord
         answer: proposal_answer(answer),
         source_kind: source_kind,
         status: :draft,
-        metadata: proposal_metadata(proposer)
+        metadata: proposal_metadata(proposer, locked_conversation)
       )
       update!(knowledge_item: item, proposed_source_kind: item.source_kind)
       item
@@ -133,10 +134,10 @@ class HumanReviewRequest < ApplicationRecord
 
   private
 
-  def resolution_message(answer:, operator:, resolution_kind:, existing_message:)
+  def resolution_message(answer:, operator:, resolution_kind:, existing_message:, locked_conversation:)
     return existing_message if existing_message
 
-    conversation.messages.create!(
+    locked_conversation.messages.create!(
       account: account,
       inbox: conversation.inbox,
       sender: operator,
@@ -146,6 +147,25 @@ class HumanReviewRequest < ApplicationRecord
     )
   end
 
+  def with_authorized_review_lock(actor)
+    ApplicationRecord.transaction do
+      locked_conversation = Conversation.where(account_id: account_id, id: conversation_id)
+                                        .lock('FOR NO KEY UPDATE').first!
+      self.class.where(account_id: account_id, id: id).lock.first!
+      reload
+      authorize_mutation!(actor, locked_conversation)
+      yield locked_conversation
+    end
+  end
+
+  def authorize_mutation!(actor, locked_conversation)
+    membership = AccountUser.where(account_id: account_id, user_id: actor&.id).lock.first
+    return if membership&.administrator?
+    return if membership.present? && locked_conversation.assignee_id == actor.id
+
+    raise Pundit::NotAuthorizedError
+  end
+
   def validate_human_answer!(human_answer_message)
     return if human_answer_message.sender.is_a?(User)
 
@@ -153,13 +173,13 @@ class HumanReviewRequest < ApplicationRecord
     raise ActiveRecord::RecordInvalid, self
   end
 
-  def proposal_metadata(proposer)
+  def proposal_metadata(proposer, locked_conversation)
     {
       proposed_from_human_review_request_id: id,
       proposed_by_user_id: proposer&.id,
       source_message_id: proposal_source_message_id,
       source_conversation_id: conversation_id,
-      offer_ids: conversation.offer_id ? [conversation.offer_id] : []
+      offer_ids: locked_conversation.offer_id ? [locked_conversation.offer_id] : []
     }.compact
   end
 
