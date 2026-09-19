@@ -9,7 +9,7 @@ class AiLeadEmployee::OrchestrationIntentRecorder
   end
 
   def perform
-    return create_unsupported_media_review if unsupported_media_message? && live_ai_enabled?
+    return create_unsupported_media_review if unsupported_media_message?
     return unless eligible_message?
 
     intent = find_or_create_intent
@@ -25,7 +25,7 @@ class AiLeadEmployee::OrchestrationIntentRecorder
     persisted_incoming_whatsapp_text? &&
       supported_content? &&
       account_scope_consistent? &&
-      conversation_allows_ai?
+      live_ai_enabled?
   end
 
   def persisted_incoming_whatsapp_text?
@@ -54,11 +54,12 @@ class AiLeadEmployee::OrchestrationIntentRecorder
     message.account_id == message.conversation.account_id
   end
 
-  def conversation_allows_ai?
-    message.conversation.ai_active? &&
-      message.conversation.open? &&
-      message.conversation.assignee_id.blank? &&
-      live_ai_enabled?
+  def conversation_allows_ai?(conversation)
+    conversation.ai_active? &&
+      conversation.open? &&
+      conversation.assignee_id.blank? &&
+      live_ai_enabled? &&
+      message.id > conversation.ai_resume_after_message_id
   end
 
   def live_ai_enabled?
@@ -66,20 +67,28 @@ class AiLeadEmployee::OrchestrationIntentRecorder
   end
 
   def find_or_create_intent
-    existing_intent = AiLeadEmployee::OrchestrationIntent.find_by(account: message.account, idempotency_key: idempotency_key)
-    return existing_intent if existing_intent.present?
+    @created_intent = false
+    conversation = message.conversation.reload
 
-    @created_intent = true
-    AiLeadEmployee::OrchestrationIntent.create!(
-      account: message.account,
-      conversation: message.conversation,
-      triggering_message: message,
-      observed_control_version: message.conversation.control_version,
-      idempotency_key: idempotency_key
-    )
+    conversation.with_lock do
+      return unless conversation_allows_ai?(conversation)
+
+      key = idempotency_key(conversation)
+      existing_intent = AiLeadEmployee::OrchestrationIntent.find_by(account: message.account, idempotency_key: key)
+      return existing_intent if existing_intent.present?
+
+      @created_intent = true
+      AiLeadEmployee::OrchestrationIntent.create!(
+        account: message.account,
+        conversation: conversation,
+        triggering_message: message,
+        observed_control_version: conversation.control_version,
+        idempotency_key: key
+      )
+    end
   rescue ActiveRecord::RecordNotUnique
     @created_intent = false
-    AiLeadEmployee::OrchestrationIntent.find_by!(account: message.account, idempotency_key: idempotency_key)
+    AiLeadEmployee::OrchestrationIntent.find_by!(account: message.account, idempotency_key: idempotency_key(conversation))
   end
 
   def enqueue_intent(intent)
@@ -87,16 +96,22 @@ class AiLeadEmployee::OrchestrationIntentRecorder
   end
 
   def create_unsupported_media_review
-    AiLeadEmployee::HumanReviewRequestService.new(
-      conversation: message.conversation,
-      lead_message: message,
-      reason: 'unsupported_media',
-      enqueue_alerts: enqueue_review_alerts
-    ).perform
+    conversation = message.conversation.reload
+
+    conversation.with_lock do
+      return unless conversation_allows_ai?(conversation)
+
+      AiLeadEmployee::HumanReviewRequestService.new(
+        conversation: conversation,
+        lead_message: message,
+        reason: 'unsupported_media',
+        enqueue_alerts: enqueue_review_alerts
+      ).perform
+    end
     nil
   end
 
-  def idempotency_key
-    "ai-orchestration/#{message.account_id}/#{message.conversation_id}/#{message.id}/#{message.conversation.control_version}"
+  def idempotency_key(conversation)
+    "ai-orchestration/#{message.account_id}/#{message.conversation_id}/#{message.id}/#{conversation.control_version}"
   end
 end

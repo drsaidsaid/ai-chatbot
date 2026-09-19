@@ -83,25 +83,25 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def toggle_status
-    # FIXME: move this logic into a service object
     if bot_handoff?
-      @conversation.bot_handoff!
-      Conversations::ControlService.new(conversation: @conversation).handoff_requested!
+      service = Conversations::ControlService.new(conversation: @conversation, actor: Current.user)
+      event = service.handoff_requested!
+      AiLeadEmployee::BotHandoffDispatchJob.perform_later(event.id)
+    elsif Current.user.is_a?(User)
+      transition_human_status!(requested_status)
     elsif params[:status].present?
       set_conversation_status
       @status = @conversation.save!
     else
       @status = @conversation.toggle_status
     end
-    Conversations::ControlService.new(conversation: @conversation).close! if @conversation.resolved?
-    handle_human_open if @conversation.open? && Current.user.is_a?(User)
+  rescue Conversations::ControlService::InvalidTransition => e
+    render_could_not_create_error(e.message)
   end
 
   def pause_ai = control_ai!(:pause_ai!)
   def resume_ai = control_ai!(:resume_ai!)
   def handoff_ai = control_ai!(:handoff_requested!)
-
-  def bot_handoff? = Current.user.is_a?(AgentBot) && @conversation.status == 'pending' && params[:status] == 'open'
 
   def toggle_priority
     @conversation.toggle_priority(params[:priority])
@@ -178,10 +178,6 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   def set_conversation_status
     @conversation.status = params[:status]
     @conversation.snoozed_until = parse_date_time(params[:snoozed_until].to_s) if params[:snoozed_until]
-  end
-
-  def handle_human_open
-    Conversations::ControlService.new(conversation: @conversation).human_takeover!(operator: Current.user.agent? ? Current.user : nil)
   end
 
   def conversation

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_13_000100) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -1203,6 +1203,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
     t.integer "control_version", default: 0, null: false
     t.bigint "offer_id"
     t.bigint "offer_selection_version", default: 0, null: false
+    t.bigint "ai_resume_after_message_id", default: 0, null: false
     t.index ["account_id", "display_id"], name: "index_conversations_on_account_id_and_display_id", unique: true
     t.index ["account_id", "id"], name: "index_conversations_on_id_and_account_id"
     t.index ["account_id", "inbox_id", "status", "assignee_id"], name: "conv_acid_inbid_stat_asgnid_idx"
@@ -1921,6 +1922,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
     t.index ["offer_id"], name: "index_offer_configuration_revisions_on_offer_id"
   end
 
+  create_table "outbox_effect_receipts", force: :cascade do |t|
+    t.bigint "outbox_event_id", null: false
+    t.string "consumer", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["outbox_event_id", "consumer"], name: "index_outbox_effect_receipts_on_event_and_consumer", unique: true
+    t.index ["outbox_event_id"], name: "index_outbox_effect_receipts_on_outbox_event_id"
+  end
+
   create_table "outbox_events", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "aggregate_type", null: false
@@ -2516,6 +2526,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
   add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
   add_foreign_key "offer_configuration_revisions", "accounts"
   add_foreign_key "offer_configuration_revisions", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "outbox_effect_receipts", "outbox_events", on_delete: :cascade
   add_foreign_key "outbox_events", "accounts"
   add_foreign_key "qualification_budget_ranges", "accounts"
   add_foreign_key "qualification_evidences", "accounts"

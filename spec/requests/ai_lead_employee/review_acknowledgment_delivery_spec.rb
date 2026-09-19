@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require_relative '../../support/r11_task_owned_database_guard'
 
 RSpec.describe 'Review acknowledgment delivery', type: :request do
   self.use_transactional_tests = false
@@ -9,6 +10,10 @@ RSpec.describe 'Review acknowledgment delivery', type: :request do
     create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
   end
   let(:account) { channel.account }
+  let(:subscription) do
+    create(:ai_subscription, account: account, period_started_at: Time.current.beginning_of_day,
+                             renews_at: 1.month.from_now.beginning_of_day, renewal_anchor_day: Time.current.day)
+  end
   let(:admin) { create(:user, :administrator, account: account) }
   let(:conversation) do
     create(:conversation, account: account, inbox: channel.inbox, control_state: :ai_active, control_version: 4,
@@ -91,6 +96,7 @@ RSpec.describe 'Review acknowledgment delivery', type: :request do
     it "keeps the #{route} Review, acknowledgment and operator alert committed when the alert queue fails", :aggregate_failures do
       account.update!(settings: account.settings.merge('ai_review_alert_recipients' => ['255700111290']))
       if route == 'provider_failure'
+        subscription
         incoming.update!(content: 'Do you offer AI employees?')
         create(:knowledge_item, account: account, question: incoming.content)
         create(:ai_provider_connection, account: account, model: 'openai/gpt-4o-mini')
@@ -228,6 +234,7 @@ RSpec.describe 'Review acknowledgment delivery', type: :request do
   end
 
   it 'keeps the replacement claim failure and acknowledgment when an expired worker returns later', :aggregate_failures do
+    subscription
     incoming.update!(content: 'Do you offer AI employees?')
     create(:knowledge_item, account: account, question: incoming.content)
     create(:ai_provider_connection, account: account, model: 'openai/gpt-4o-mini')
@@ -285,8 +292,13 @@ RSpec.describe 'Review acknowledgment delivery', type: :request do
   end
 
   def clean_committed_fixtures
-    raise 'Rails test database required' unless Rails.env.test?
+    raise 'Review acknowledgment fixtures require Rails test environment' unless Rails.env.test?
 
+    R11TaskOwnedDatabaseGuard.verify!(
+      database_name: ActiveRecord::Base.connection_db_config.database,
+      allowed_database: ENV.fetch('R11_REVIEW_ACK_DATABASE', nil),
+      truncate_opt_in: ENV.fetch('R11_REVIEW_ACK_ALLOW_TRUNCATE', nil)
+    )
     database = ActiveRecord::Base.connection
     tables = database.tables - %w[schema_migrations ar_internal_metadata installation_configs]
     database.execute("TRUNCATE #{tables.map { |table| database.quote_table_name(table) }.join(', ')} CASCADE")

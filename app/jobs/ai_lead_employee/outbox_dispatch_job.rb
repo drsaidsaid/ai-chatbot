@@ -3,7 +3,8 @@
 class AiLeadEmployee::OutboxDispatchJob < ApplicationJob
   EVENT_TYPES = [
     AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOX_EVENT_TYPE,
-    AiLeadEmployee::FollowUpDeliveryService::OUTBOX_EVENT_TYPE
+    AiLeadEmployee::FollowUpDeliveryService::OUTBOX_EVENT_TYPE,
+    Conversations::ControlService::BOT_HANDOFF_EVENT_TYPE
   ].freeze
 
   queue_as :high
@@ -17,6 +18,18 @@ class AiLeadEmployee::OutboxDispatchJob < ApplicationJob
   private
 
   def dispatch(event)
+    return AiLeadEmployee::BotHandoffDispatchJob.perform_now(event.id) if bot_handoff?(event)
+
+    dispatch_message_delivery(event)
+  rescue ActiveRecord::RecordNotFound, KeyError
+    event.update!(state: :failed, failure_class: 'InvalidDelivery', failed_at: Time.current)
+  rescue StandardError
+    # The Message delivery owns retry/uncertainty. A queue batch must keep making
+    # progress after one record fails, without granting a second provider attempt.
+    Rails.logger.warn("[WHATSAPP OUTBOUND] outbox_recovery_pending event_id=#{event.id}")
+  end
+
+  def dispatch_message_delivery(event)
     message = event.account.messages.find(event.payload.fetch('message_id'))
     unless event.aggregate_type == 'Message' && event.aggregate_id == message.id && message.whatsapp_outbound_delivery
       event.update!(state: :failed, failure_class: 'InvalidDelivery', failed_at: Time.current)
@@ -26,11 +39,9 @@ class AiLeadEmployee::OutboxDispatchJob < ApplicationJob
     SendReplyJob.perform_now(message.id)
     delivery = message.whatsapp_outbound_delivery.reload
     delivery.reconcile!
-  rescue ActiveRecord::RecordNotFound, KeyError
-    event.update!(state: :failed, failure_class: 'InvalidDelivery', failed_at: Time.current)
-  rescue StandardError
-    # The Message delivery owns retry/uncertainty. A queue batch must keep making
-    # progress after one record fails, without granting a second provider attempt.
-    Rails.logger.warn("[WHATSAPP OUTBOUND] outbox_recovery_pending event_id=#{event.id}")
+  end
+
+  def bot_handoff?(event)
+    event.event_type == Conversations::ControlService::BOT_HANDOFF_EVENT_TYPE
   end
 end

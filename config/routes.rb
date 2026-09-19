@@ -255,6 +255,7 @@ Rails.application.routes.draw do
               post :toggle_status
               post :pause_ai
               post :resume_ai
+              post :handoff_ai
               post :toggle_priority
               post :toggle_typing_status
               post :update_last_seen

@@ -10,7 +10,7 @@ module Whatsapp::IncomingMessageIdentifierHelper
       contact_attributes: contact_attributes
     )
     @contact = @contact_inbox.contact
-    update_whatsapp_identifiers(source_ids: source_ids, phone_number: contact_attributes[:phone_number])
+    defer_whatsapp_identifier_update(source_ids: source_ids, phone_number: contact_attributes[:phone_number])
   end
 
   def set_contact_from_message
@@ -26,8 +26,12 @@ module Whatsapp::IncomingMessageIdentifierHelper
       contact_attributes: attrs
     )
     @contact = @contact_inbox.contact
-    update_whatsapp_identifiers(source_ids: source_ids, username: contact_params.dig(:profile, :username), phone_number: attrs[:phone_number])
-    update_contact_with_profile_name(contact_params)
+    defer_whatsapp_identifier_update(
+      source_ids: source_ids,
+      username: contact_params.dig(:profile, :username),
+      phone_number: attrs[:phone_number],
+      profile: contact_params
+    )
   end
 
   def find_or_create_contact_inbox(source_ids:, contact_attributes:)
@@ -84,6 +88,18 @@ module Whatsapp::IncomingMessageIdentifierHelper
   def update_whatsapp_identifiers(source_ids: [], username: nil, phone_number: nil)
     Whatsapp::IdentifierSyncService.new(contact_inbox: @contact_inbox, contact: @contact).perform(source_ids: source_ids, username: username,
                                                                                                   phone_number: phone_number)
+  end
+
+  # Existing Contacts are updated only after the Conversation lock is held.
+  # Durable ingress already owns Channel before it reaches that lock, preserving
+  # the Channel → Conversation → Contact order shared with qualification work.
+  def defer_whatsapp_identifier_update(source_ids: [], username: nil, phone_number: nil, profile: nil)
+    @deferred_whatsapp_source_ids = Array(@deferred_whatsapp_source_ids).concat(source_ids).compact_blank.uniq
+    @deferred_whatsapp_username ||= username.presence
+    @deferred_whatsapp_phone_number ||= phone_number.presence
+    # rubocop:disable Style/OrAssignment
+    @deferred_contact_profile = profile unless @deferred_contact_profile
+    # rubocop:enable Style/OrAssignment
   end
 
   def update_whatsapp_identifiers_from_status(status)

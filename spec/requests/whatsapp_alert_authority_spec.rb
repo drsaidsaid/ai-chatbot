@@ -6,6 +6,8 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
   self.use_transactional_tests = false
 
   before do
+    skip 'Dedicated R07 current database and explicit fixture cleanup opt-in required' unless committed_fixture_database?
+
     clean_committed_fixtures
     @workers = []
     @release = Queue.new
@@ -28,9 +30,11 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
   end
 
   after do
-    @release << true
-    ActiveRecord::Base.connection.execute('SELECT pg_advisory_unlock_all()')
-    @workers.each(&:join)
+    @release << true if @release
+    ActiveRecord::Base.connection.execute('SELECT pg_advisory_unlock_all()') if committed_fixture_database?
+    Array(@workers).each(&:join)
+    next unless committed_fixture_database?
+
     ActiveRecord::Base.connection.execute('DROP TRIGGER IF EXISTS r04_pause_alert_authorization ON whatsapp_outbound_deliveries')
     ActiveRecord::Base.connection.execute('DROP FUNCTION IF EXISTS r04_pause_alert_authorization()')
     ActiveRecord::Base.connection.execute('DROP TRIGGER IF EXISTS r04_pause_ingress ON messages')
@@ -39,16 +43,23 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
     ActiveRecord::Base.connection.execute('DROP FUNCTION IF EXISTS r04_pause_booking_preparation()')
     ActiveRecord::Base.connection.execute('DROP TRIGGER IF EXISTS r04_pause_review_insert ON human_review_requests')
     ActiveRecord::Base.connection.execute('DROP FUNCTION IF EXISTS r04_pause_review_insert()')
-    clean_committed_fixtures
+    ActiveRecord::Base.connection.execute('DROP TRIGGER IF EXISTS r04_pause_echo_ingress ON messages')
+    ActiveRecord::Base.connection.execute('DROP FUNCTION IF EXISTS r04_pause_echo_ingress()')
+    clean_committed_fixtures if committed_fixture_database?
   end
 
   def clean_committed_fixtures
-    raise 'Rails test database required' unless Rails.env.test?
+    raise 'Dedicated R07 current database and explicit fixture cleanup opt-in required' unless committed_fixture_database?
 
     database = ActiveRecord::Base.connection
     tables = database.tables - %w[schema_migrations ar_internal_metadata installation_configs]
     database.execute("TRUNCATE #{tables.map { |table| database.quote_table_name(table) }.join(', ')} CASCADE")
     clear_enqueued_jobs
+  end
+
+  def committed_fixture_database?
+    Rails.env.test? && ENV['ALE_R07_CURRENT_DB'] == '1' &&
+      ActiveRecord::Base.connection_db_config.database == 'ale_r07_current_20260913_spec'
   end
 
   def approve_launch!
@@ -87,6 +98,22 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
     Timeout.timeout(10) do
       loop do
         return worker.value unless worker.alive?
+
+        blocked = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+          SELECT EXISTS (SELECT 1 FROM pg_stat_activity
+          WHERE application_name = '#{name}' AND cardinality(pg_blocking_pids(pid)) > 0)
+        SQL
+        return if blocked
+
+        sleep 0.01
+      end
+    end
+  end
+
+  def await_blocked!(worker, name)
+    Timeout.timeout(10) do
+      loop do
+        raise "#{name} completed before reaching its PostgreSQL lock wait" unless worker.alive?
 
         blocked = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
           SELECT EXISTS (SELECT 1 FROM pg_stat_activity
@@ -334,6 +361,45 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
     expect(Whatsapp::WebhookEvent.find_by!(provider_message_id: 'wamid.AUTH.INGRESS')).to be_processed
     expect(@alert.reload.whatsapp_outbound_delivery).to be_accepted
     expect(@provider_request).to have_been_requested.once
+  end
+
+  it 'makes queued dispatch observe a direct coexistence-echo takeover before provider authorization' do
+    connection = ActiveRecord::Base.connection
+    connection.execute('SELECT pg_advisory_lock(94021)')
+    connection.execute(<<~SQL.squish)
+      CREATE FUNCTION r04_pause_echo_ingress() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN IF NEW.source_id = 'wamid.ECHO.ATOMIC' THEN PERFORM pg_advisory_xact_lock(94021); END IF; RETURN NEW; END $$;
+      CREATE TRIGGER r04_pause_echo_ingress BEFORE INSERT ON messages FOR EACH ROW EXECUTE FUNCTION r04_pause_echo_ingress();
+    SQL
+    echo = start_worker('r07-direct-echo') do
+      Whatsapp::IncomingMessageWhatsappCloudService.new(
+        inbox: @channel.inbox,
+        params: coexistence_echo_payload,
+        outgoing_echo: true
+      ).perform
+    end
+    await_blocked!(echo, 'r07-direct-echo')
+    dispatch = start_worker('r07-queued-dispatch') { SendReplyJob.perform_now(@alert.id) }
+    await_blocked!(dispatch, 'r07-queued-dispatch')
+    connection.execute('SELECT pg_advisory_unlock(94021)')
+    echo.value
+    dispatch.value
+
+    expect(@conversation.reload).to be_human_active
+    expect(@alert.reload.whatsapp_outbound_delivery).to be_canceled
+    expect(@provider_request).not_to have_been_requested
+  end
+
+  def coexistence_echo_payload
+    recipient = @conversation.contact_inbox.source_id
+    {
+      object: 'whatsapp_business_account',
+      entry: [{ changes: [{ field: 'smb_message_echoes', value: {
+        message_echoes: [{ from: @channel.phone_number.delete_prefix('+'), to: recipient,
+                           id: 'wamid.ECHO.ATOMIC', timestamp: Time.current.to_i.to_s,
+                           type: 'text', text: { body: 'Handled in WhatsApp.' } }]
+      } }] }]
+    }.with_indifferent_access
   end
 
   def record_signed_ingress

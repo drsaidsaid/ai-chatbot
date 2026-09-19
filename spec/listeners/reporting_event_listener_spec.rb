@@ -269,6 +269,20 @@ describe ReportingEventListener do
   end
 
   describe '#conversation_bot_handoff' do
+    it 'applies an outbox reporting effect only once when delivery repeats' do
+      outbox_event = OutboxEvent.create!(account: account, aggregate: conversation,
+                                         event_type: Conversations::ControlService::BOT_HANDOFF_EVENT_TYPE,
+                                         idempotency_key: "reporting-receipt/#{conversation.id}")
+      event = Events::Base.new('conversation.bot_handoff', Time.zone.now,
+                               conversation: conversation, outbox_event_id: outbox_event.id)
+      allow(listener).to receive(:record_bot_handoff)
+
+      2.times { listener.conversation_bot_handoff(event) }
+
+      expect(listener).to have_received(:record_bot_handoff).once
+      expect(OutboxEffectReceipt.where(outbox_event: outbox_event, consumer: described_class.name).count).to eq(1)
+    end
+
     it 'creates conversation_bot_handoff event only once' do
       expect(account.reporting_events.where(name: 'conversation_bot_handoff').count).to be 0
       event = Events::Base.new('conversation.bot_handoff', Time.zone.now, conversation: conversation)

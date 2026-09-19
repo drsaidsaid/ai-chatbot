@@ -1,6 +1,9 @@
 # Mostly modeled after the intial implementation of the service based on 360 Dialog
 # https://docs.360dialog.com/whatsapp-api/whatsapp-api/media
 # https://developers.facebook.com/docs/whatsapp/api/media/
+# The canonical persistence override extends the existing ingress service; the
+# extracted lock helper keeps the ordering boundary local to this class.
+# rubocop:disable Metrics/ClassLength
 class Whatsapp::IncomingMessageBaseService
   include ::Whatsapp::IncomingMessageServiceHelpers
   include ::Whatsapp::IncomingMessageIdentifierHelper
@@ -78,7 +81,7 @@ class Whatsapp::IncomingMessageBaseService
     create_message(message, source_id: message[:id])
     @message.content = I18n.t('conversations.messages.whatsapp.unsupported_message')
     @message.content_attributes = @message.content_attributes.merge(is_unsupported: true)
-    @message.save!
+    persist_inbound_message!
   end
 
   def create_contact_messages(message)
@@ -86,7 +89,7 @@ class Whatsapp::IncomingMessageBaseService
       # Pass source_id from parent message since contact objects don't have :id
       create_message(contact, source_id: message[:id], content_attributes_source: message)
       attach_contact(contact)
-      @message.save!
+      persist_inbound_message!
     end
   end
 
@@ -94,7 +97,7 @@ class Whatsapp::IncomingMessageBaseService
     create_message(message, source_id: message[:id])
     attach_files
     attach_location if message_type == 'location'
-    @message.save!
+    persist_inbound_message!
   end
 
   def set_contact
@@ -168,6 +171,32 @@ class Whatsapp::IncomingMessageBaseService
     )
   end
 
+  # The enclosing inbound transaction keeps this lock until the Message commits.
+  # Resume records its inbound boundary under the same lock, so Message IDs are
+  # compared only after their persistence has been serialized with that transition.
+  # Deferred identity writes also keep durable ingress in Channel → Conversation
+  # → Contact order before qualification can take the Contact lock.
+  def persist_inbound_message!
+    @conversation.with_lock do
+      synchronize_deferred_contact_identifiers!
+      @message.save!
+    end
+  end
+
+  def synchronize_deferred_contact_identifiers!
+    return if @deferred_contact_identifiers_synchronized
+
+    if @contact_inbox.present?
+      update_whatsapp_identifiers(
+        source_ids: @deferred_whatsapp_source_ids || [],
+        username: @deferred_whatsapp_username,
+        phone_number: @deferred_whatsapp_phone_number
+      )
+    end
+    update_contact_with_profile_name(@deferred_contact_profile) if @deferred_contact_profile.present?
+    @deferred_contact_identifiers_synchronized = true
+  end
+
   def message_content_attributes(message)
     content_attrs = outgoing_echo ? { external_echo: true } : {}
     content_attrs[:in_reply_to] = @in_reply_to_message_id if @in_reply_to_message_id.present?
@@ -227,5 +256,6 @@ class Whatsapp::IncomingMessageBaseService
     @contact.name == phone_number || @contact.name == formatted_phone_number
   end
 end
+# rubocop:enable Metrics/ClassLength
 
 Whatsapp::IncomingMessageBaseService.prepend_mod_with('Whatsapp::IncomingMessageBaseService')

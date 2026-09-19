@@ -142,6 +142,41 @@ Assignment, human reply, pause, and resolution events are authoritative even whe
 an AI job was queued earlier. A queued job must not infer permission from the state
 that existed when it was created.
 
+Public takeover and resolution write Inbox Conversation Status and Control State
+through one actor-aware service transaction. The service locks the Conversation,
+rechecks current account membership and assignment, invalidates pending work, and
+then persists status, assignment and the incremented control version. A resolved
+Conversation cannot be paused, resumed, or handed off even if legacy data has an
+inconsistent Control State. Handoff begins only from AI Active.
+Pending and snoozed status changes use the same locked actor recheck. Bot handoff
+creates one uniquely keyed Outbox Event in the state transition transaction. Its
+locked dispatch job can retry without repeating the transition or incrementing
+the control version. Notification and reporting listeners claim a unique receipt
+for their Outbox Event and consumer in the same database transaction as their
+effect, so replay after a worker interruption cannot apply an effect twice. The
+scheduled outbox dispatcher recovers a committed handoff when its immediate job
+enqueue is lost. An asynchronous dispatcher rejection is recorded as a failed
+attempt and leaves the event pending for recovery.
+The authenticated Agent Bot, its active Inbox association and its exact
+Conversation assignment are rechecked under the same Conversation lock before
+the transition. Dispatch uses the Outbox Event creation time, preserving the
+handoff occurrence time when scheduled recovery runs later.
+
+Explicit resume from Human Active clears the Human Operator assignment as it
+returns the Conversation to AI Active. This preserves the assigned-only access
+boundary: a Team Member returns to their permitted Inbox list after handing the
+Conversation back, while an administrator can continue to inspect it. The locked
+transition records the highest persisted Inbound Message ID as the resume boundary.
+Canonical WhatsApp inbound persistence takes that same Conversation lock at its
+final Message save and holds it through the enclosing transaction commit; the
+locked recorder admits only a Message with a greater ID. This serializes a resume
+against canonical inbound persistence, so tied timestamps, delayed recording, and
+a replay of pre-resume input cannot create fresh work. The guarantee begins at the
+application persistence boundary, not at Meta arrival time or a provider timestamp.
+Previously canceled orchestration and delivery records remain terminal. Only a
+later eligible Inbound Message may record work under the new control version, and
+Automated Contact Consent remains an independent dispatch requirement.
+
 ## 6. Draft PostgreSQL Schema
 
 The following sections describe the domain responsibilities, not replacement DDL. The authoritative physical schema is `db/schema.rb` and its migrations: CE records use integer/bigint identifiers and `account_id`, with `Account`, `AccountUser`, `Contact`, `Conversation` and `Message` retained. Do not introduce parallel `business_accounts`, memberships or Lead identity tables from these conceptual names. Timestamps use UTC; business display and booking rules use the Business Account timezone.
