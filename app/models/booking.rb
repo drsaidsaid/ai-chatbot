@@ -52,23 +52,29 @@ class Booking < ApplicationRecord
   belongs_to :account
   belongs_to :contact
   belongs_to :conversation
-  belongs_to :lead_qualification
+  belongs_to :lead_qualification, optional: true
+  belongs_to :offer, class_name: 'AiLeadEmployee::Offer', optional: true
+  belongs_to :agreement_evidence, class_name: 'QualificationEvidence', optional: true
+  belongs_to :agreement_message, class_name: 'Message', optional: true
   belongs_to :assignee, class_name: 'User', optional: true
 
-  enum status: {
+  enum :status, {
     confirmed: 0,
     canceled: 1,
-    completed: 2
+    completed: 2,
+    pending: 3,
+    provider_unknown: 4
   }
 
   validates :calendar_id, :provider, :starts_at, :ends_at, :timezone, :status, presence: true
   validates :starts_at, uniqueness: { scope: [:account_id, :calendar_id], conditions: -> { confirmed } }
   validates :idempotency_key, uniqueness: { scope: :account_id }, allow_blank: true
+  validates :attendee_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validate :ends_after_start
   validate :active_slot_does_not_overlap
   validate :records_belong_to_account
 
-  scope :active, -> { confirmed }
+  scope :active, -> { where(status: %i[confirmed pending provider_unknown]) }
 
   private
 
@@ -79,15 +85,15 @@ class Booking < ApplicationRecord
   end
 
   def records_belong_to_account
-    errors.add(:contact, 'must belong to the same account') if contact.present? && contact.account_id != account_id
-    errors.add(:conversation, 'must belong to the same account') if conversation.present? && conversation.account_id != account_id
-    return unless lead_qualification.present? && lead_qualification.account_id != account_id
-
-    errors.add(:lead_qualification, 'must belong to the same account')
+    %i[contact conversation lead_qualification offer agreement_evidence agreement_message].each do |association|
+      record = public_send(association)
+      errors.add(association, 'must belong to the same account') if record.present? && record.account_id != account_id
+    end
   end
 
   def active_slot_does_not_overlap
-    return unless confirmed? && starts_at.present? && ends_at.present? && account_id.present? && calendar_id.present?
+    return unless status.in?(%w[confirmed pending
+                                provider_unknown]) && starts_at.present? && ends_at.present? && account_id.present? && calendar_id.present?
 
     overlapping_booking = Booking.active
                                  .where(account_id: account_id, calendar_id: calendar_id)

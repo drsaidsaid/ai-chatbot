@@ -13,6 +13,7 @@ import MessagesView from 'dashboard/components/widgets/conversation/MessagesView
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
+import bookingsAPI from 'dashboard/api/bookings';
 import HumanReviewRequestsPanel from 'dashboard/routes/dashboard/owned/HumanReviewRequestsPanel.vue';
 import LeadHandoffFeedbackPanel from './LeadHandoffFeedbackPanel.vue';
 
@@ -80,6 +81,16 @@ const actionStatus = ref('');
 const actionError = ref('');
 const activeDetailTab = ref('summary');
 const isMobileBriefOpen = ref(false);
+const bookingDialogOpen = ref(false);
+const bookingDialogMode = ref('book');
+const bookingSlots = ref([]);
+const bookingTimezone = ref('UTC');
+const selectedBookingSlot = ref('');
+const bookingEmail = ref('');
+const includeBookingEmail = ref(false);
+const bookingRequestKey = ref('');
+const bookingError = ref('');
+const isBooking = ref(false);
 
 const currentChat = useMapGetter('getSelectedChat');
 const currentRole = useMapGetter('getCurrentRole');
@@ -433,6 +444,81 @@ const loadConversation = async displayId => {
     if (request === conversationRequest) conversationError.value = true;
   } finally {
     if (request === conversationRequest) isLoadingConversation.value = false;
+  }
+};
+
+const openSlotDialog = async mode => {
+  bookingDialogMode.value = mode;
+  bookingError.value = '';
+  bookingSlots.value = [];
+  selectedBookingSlot.value = '';
+  bookingRequestKey.value = `booking-${currentChat.value.id}-${Date.now()}`;
+  bookingDialogOpen.value = true;
+  try {
+    const { data } = await bookingsAPI.availableSlots({ days: 14 });
+    bookingSlots.value = data.slots || [];
+    bookingTimezone.value = data.configuration?.timezone || 'UTC';
+    if (mode === 'book') {
+      bookingSlots.value = bookingSlots.value.filter(
+        slot =>
+          new Date(slot).getTime() ===
+          new Date(nextAction.value.agreed_starts_at).getTime()
+      );
+    }
+    selectedBookingSlot.value = bookingSlots.value[0] || '';
+    if (data.provider_state !== 'connected') {
+      bookingError.value = `Calendar unavailable: ${data.error_code || data.provider_state}`;
+    } else if (!bookingSlots.value.length) {
+      bookingError.value = 'No available times in the next 14 days.';
+    }
+  } catch (error) {
+    bookingError.value =
+      error.response?.data?.error || 'Unable to load available times.';
+  }
+};
+const openBookingDialog = () => openSlotDialog('book');
+const openProposalDialog = () => openSlotDialog('propose');
+
+const submitBooking = async () => {
+  if (!selectedBookingSlot.value || isBooking.value) return;
+  isBooking.value = true;
+  bookingError.value = '';
+  try {
+    if (bookingDialogMode.value === 'propose') {
+      await bookingsAPI.propose({
+        conversation_id: currentChat.value.id,
+        starts_at: selectedBookingSlot.value,
+        idempotency_key: bookingRequestKey.value,
+      });
+      bookingDialogOpen.value = false;
+      useAlert('Available time offered in the conversation.');
+      await loadConversation(selectedDisplayId.value);
+      return;
+    }
+    const response = await bookingsAPI.create({
+      conversation_id: currentChat.value.id,
+      starts_at: selectedBookingSlot.value,
+      agreed_starts_at: nextAction.value.agreed_starts_at,
+      agreement_message_id: nextAction.value.agreement_message_id,
+      idempotency_key: bookingRequestKey.value,
+      attendee_email_voluntarily_supplied: includeBookingEmail.value,
+      ...(includeBookingEmail.value
+        ? { attendee_email: bookingEmail.value }
+        : {}),
+    });
+    bookingDialogOpen.value = false;
+    useAlert(
+      response.status === 202
+        ? 'Calendar confirmation is pending reconciliation.'
+        : 'Call booked and confirmation queued.'
+    );
+    await loadConversation(selectedDisplayId.value);
+    await loadDashboard();
+  } catch (error) {
+    bookingError.value =
+      error.response?.data?.error || 'Unable to book this time.';
+  } finally {
+    isBooking.value = false;
   }
 };
 
@@ -1123,6 +1209,31 @@ onMounted(() => {
                 </div>
               </div>
               <div class="mt-4 flex flex-wrap gap-2">
+                <button
+                  v-if="nextAction.kind === 'offer_call_times'"
+                  type="button"
+                  data-testid="mobile-offer-call-time-action"
+                  class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white"
+                  @click="openProposalDialog"
+                >
+                  <Icon icon="i-lucide-calendar-clock" class="size-4" />
+                  {{ nextAction.label }}
+                </button>
+                <RouterLink
+                  v-if="nextAction.kind === 'reconcile_booking'"
+                  :to="
+                    accountScopedRoute(
+                      'owned_bookings_index',
+                      {},
+                      { booking_id: nextAction.booking_id }
+                    )
+                  "
+                  data-testid="mobile-reconcile-booking-action"
+                  class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white"
+                >
+                  <Icon icon="i-lucide-refresh-cw" class="size-4" />
+                  {{ nextAction.label }}
+                </RouterLink>
                 <a
                   v-if="nextAction.kind === 'answer_review'"
                   href="#conversation-composer"
@@ -1302,6 +1413,41 @@ onMounted(() => {
                 </div>
               </div>
               <div class="mt-3 flex flex-wrap justify-end gap-2">
+                <button
+                  v-if="nextAction.kind === 'offer_call_times'"
+                  type="button"
+                  data-testid="offer-call-time-action"
+                  class="inline-flex h-9 items-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white"
+                  @click="openProposalDialog"
+                >
+                  <Icon icon="i-lucide-calendar-clock" class="size-4" />
+                  {{ nextAction.label }}
+                </button>
+                <button
+                  v-if="nextAction.kind === 'book_call'"
+                  type="button"
+                  data-testid="book-call-action"
+                  class="inline-flex h-9 items-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white"
+                  @click="openBookingDialog"
+                >
+                  <Icon icon="i-lucide-calendar-plus" class="size-4" />
+                  {{ nextAction.label }}
+                </button>
+                <RouterLink
+                  v-if="nextAction.kind === 'reconcile_booking'"
+                  :to="
+                    accountScopedRoute(
+                      'owned_bookings_index',
+                      {},
+                      { booking_id: nextAction.booking_id }
+                    )
+                  "
+                  data-testid="reconcile-booking-action"
+                  class="inline-flex h-9 items-center gap-2 rounded-lg bg-n-brand px-3 text-sm font-medium text-white"
+                >
+                  <Icon icon="i-lucide-refresh-cw" class="size-4" />
+                  {{ nextAction.label }}
+                </RouterLink>
                 <a
                   v-if="nextAction.kind === 'answer_review'"
                   href="#conversation-composer"
@@ -1564,5 +1710,88 @@ onMounted(() => {
         </section>
       </div>
     </aside>
+    <div
+      v-if="bookingDialogOpen"
+      class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.ARIA')"
+    >
+      <form
+        class="w-full max-w-md rounded-xl bg-n-solid-1 p-5 shadow-xl"
+        @submit.prevent="submitBooking"
+      >
+        <h2 class="text-lg font-semibold text-n-slate-12">
+          {{
+            bookingDialogMode === 'book'
+              ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.BOOK_TITLE')
+              : t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.PROPOSE_TITLE')
+          }}
+        </h2>
+        <p class="mt-1 text-sm text-n-slate-11">
+          {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.DESCRIPTION') }}
+        </p>
+        <label class="mt-4 grid gap-1 text-sm">
+          <span>{{
+            t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.AVAILABLE_TIME')
+          }}</span>
+          <select
+            v-model="selectedBookingSlot"
+            class="h-10 rounded-lg border border-n-weak px-3"
+            :disabled="!bookingSlots.length"
+          >
+            <option v-for="slot in bookingSlots" :key="slot" :value="slot">
+              {{ formatTime(slot, bookingTimezone) }}
+            </option>
+          </select>
+        </label>
+        <label
+          v-if="bookingDialogMode === 'book'"
+          class="mt-4 flex items-center gap-2 text-sm"
+        >
+          <input v-model="includeBookingEmail" type="checkbox" />
+          {{
+            t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.VOLUNTARY_EMAIL')
+          }}
+        </label>
+        <input
+          v-if="bookingDialogMode === 'book' && includeBookingEmail"
+          v-model="bookingEmail"
+          type="email"
+          required
+          :placeholder="
+            t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.EMAIL_PLACEHOLDER')
+          "
+          class="mt-2 h-10 w-full rounded-lg border border-n-weak px-3"
+        />
+        <p v-if="bookingError" class="mt-3 text-sm text-n-ruby-11">
+          {{ bookingError }}
+        </p>
+        <div class="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            class="h-9 rounded-lg border border-n-weak px-3 text-sm"
+            @click="bookingDialogOpen = false"
+          >
+            {{ t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.CANCEL') }}
+          </button>
+          <button
+            type="submit"
+            class="h-9 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:opacity-50"
+            :disabled="isBooking || !selectedBookingSlot"
+          >
+            {{
+              isBooking
+                ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.SAVING')
+                : bookingDialogMode === 'book'
+                  ? t('AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.CONFIRM')
+                  : t(
+                      'AI_LEAD_EMPLOYEE.INBOX_COCKPIT.BOOKING_DIALOG.SEND_PROPOSAL'
+                    )
+            }}
+          </button>
+        </div>
+      </form>
+    </div>
   </section>
 </template>

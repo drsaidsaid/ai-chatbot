@@ -29,7 +29,7 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
       conversation_id: booking.conversation_id,
       lead_qualification_id: booking.lead_qualification_id,
       assignee_id: booking.assignee_id,
-      status: booking.status,
+      status: effective_status(booking),
       starts_at: booking.starts_at.iso8601,
       ends_at: booking.ends_at.iso8601,
       timezone: booking.timezone,
@@ -40,6 +40,8 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
       meeting_link: meeting_link_for(booking),
       provider: booking.provider,
       provider_event_id: booking.provider_event_id,
+      provider_state: booking.provider_state,
+      provider_error_code: booking.provider_error_code,
       calendar_id: booking.calendar_id,
       calendar_state: calendar_state_for(booking),
       whatsapp_state: whatsapp_state_for(booking),
@@ -55,14 +57,23 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
 
   attr_reader :account, :user, :params, :configuration
 
-  def filtered_bookings # rubocop:disable Metrics/AbcSize,Metrics/CyclomaticComplexity
+  def filtered_bookings # rubocop:disable Metrics/AbcSize
     scope = visible_bookings.includes(:contact, :conversation, :assignee)
     scope = scope.where(starts_at: range_start...range_end)
-    scope = scope.where(status: params[:status]) if Booking.statuses.key?(params[:status].to_s)
+    scope = apply_status_filter(scope)
     scope = scope.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
     scope = scope.where(timezone: params[:timezone]) if params[:timezone].present?
     scope = scope.select { |booking| offer_for(booking) == params[:offer] } if params[:offer].present?
     scope.respond_to?(:order) ? scope.order(:starts_at, :id) : scope.sort_by { |booking| [booking.starts_at, booking.id] }
+  end
+
+  def apply_status_filter(scope)
+    status = params[:status].to_s
+    return scope if status.blank? || !Booking.statuses.key?(status)
+    return scope.where(provider_state: 'unknown').or(scope.where(status: :provider_unknown)) if status == 'provider_unknown'
+    return scope.where(status: :confirmed, provider_state: 'confirmed') if status == 'confirmed'
+
+    scope.where(status: status)
   end
 
   def access
@@ -169,10 +180,12 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
         'duration_minutes',
         'buffer_before_minutes',
         'buffer_after_minutes',
-        'minimum_notice_minutes'
-      ),
+        'minimum_notice_minutes',
+        'exceptions'
+      ).merge('connected' => result.provider_state == 'connected'),
       slots: result.slots.map { |slot| availability_slot_payload(slot) },
-      provider_state: configuration['connected'] ? 'connected' : 'failed'
+      provider_state: result.provider_state,
+      error_code: result.error_code
     }
   end
 
@@ -217,6 +230,13 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
     account.settings&.dig('ai_lead_employee', 'team_capacity_limit').presence || 20
   end
 
+  def effective_status(booking)
+    return 'provider_unknown' if booking.provider_state == 'unknown'
+    return 'pending' if booking.provider_state.in?(%w[pending creating failed])
+
+    booking.status
+  end
+
   def call_type_for(booking)
     booking.calendar_event_payload['call_type'].presence || 'product_demo'
   end
@@ -232,10 +252,13 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
   end
 
   def meeting_link_for(booking)
+    return unless booking.provider_state == 'confirmed'
+
     booking.calendar_event_payload['meeting_link'].presence || "https://wa.me/#{booking.contact.phone_number.to_s.delete_prefix('+')}"
   end
 
   def calendar_state_for(booking)
+    return booking.provider_state if booking.provider_state.in?(%w[pending creating unknown failed canceled])
     return booking.calendar_event_payload['calendar_state'] if booking.calendar_event_payload['calendar_state'].present?
     return 'no_invite' if booking.provider_event_id.blank?
     return 'invited' if booking.calendar_invitation_sent_at.blank?
@@ -244,7 +267,11 @@ class AiLeadEmployee::BookingsWorkspaceService # rubocop:disable Metrics/ClassLe
   end
 
   def whatsapp_state_for(booking)
-    booking.confirmation_message_id.present? ? 'confirmed' : 'awaiting'
+    message_id = Integer(booking.confirmation_message_id, exception: false)
+    return 'awaiting' unless message_id
+
+    delivery = account.messages.find_by(id: message_id)&.whatsapp_outbound_delivery
+    delivery&.state || 'queued'
   end
 
   def preparation_state_for(booking)

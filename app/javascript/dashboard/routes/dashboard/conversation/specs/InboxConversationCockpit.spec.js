@@ -7,6 +7,7 @@ import InboxConversationsAPI from 'dashboard/api/inboxConversations';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
 import LeadHandoffsAPI from 'dashboard/api/leadHandoffs';
 import ReviewConfigurationSuggestionsAPI from 'dashboard/api/reviewConfigurationSuggestions';
+import bookingsAPI from 'dashboard/api/bookings';
 
 vi.mock('dashboard/api/inbox/conversation', () => ({
   default: {
@@ -37,6 +38,14 @@ vi.mock('dashboard/api/leadHandoffs', () => ({
 
 vi.mock('dashboard/api/reviewConfigurationSuggestions', () => ({
   default: { get: vi.fn(), review: vi.fn() },
+}));
+
+vi.mock('dashboard/api/bookings', () => ({
+  default: {
+    availableSlots: vi.fn(),
+    create: vi.fn(),
+    propose: vi.fn(),
+  },
 }));
 
 vi.mock('dashboard/composables', () => ({
@@ -204,6 +213,11 @@ const routes = [
   {
     path: '/accounts/:accountId/test-center',
     name: 'owned_test_center_index',
+    component: {},
+  },
+  {
+    path: '/accounts/:accountId/bookings',
+    name: 'owned_bookings_index',
     component: {},
   },
 ];
@@ -537,6 +551,15 @@ describe('InboxConversationCockpit', () => {
     ConversationApi.search.mockResolvedValue({
       data: { payload: [{ id: 101 }] },
     });
+    bookingsAPI.availableSlots.mockResolvedValue({
+      data: {
+        slots: ['2026-08-31T06:00:00Z', '2026-08-31T06:30:00Z'],
+        provider_state: 'connected',
+        configuration: { timezone: 'Africa/Dar_es_Salaam' },
+      },
+    });
+    bookingsAPI.create.mockResolvedValue({ status: 201, data: {} });
+    bookingsAPI.propose.mockResolvedValue({ status: 201, data: {} });
   });
 
   afterEach(() => {
@@ -723,6 +746,105 @@ describe('InboxConversationCockpit', () => {
     expect(
       wrapper.find('[data-testid="confirm-booking-action"]').exists()
     ).toBe(false);
+  });
+
+  it('routes an unresolved provider result to reconciliation before another booking action', async () => {
+    ConversationApi.show.mockResolvedValueOnce({
+      data: {
+        ...conversationPayload,
+        cockpit: {
+          ...conversationPayload.cockpit,
+          next_action: {
+            kind: 'reconcile_booking',
+            label: 'Reconcile calendar result',
+            booking_id: 27,
+          },
+        },
+      },
+    });
+    const { wrapper } = await mountCockpit();
+
+    const action = wrapper.get('[data-testid="reconcile-booking-action"]');
+    expect(action.text()).toBe('Reconcile calendar result');
+    expect(action.attributes('href')).toContain('booking_id=27');
+    expect(wrapper.find('[data-testid="book-call-action"]').exists()).toBe(
+      false
+    );
+    expect(
+      wrapper.find('[data-testid="offer-call-time-action"]').exists()
+    ).toBe(false);
+  });
+
+  it('offers a provider-backed time through the canonical proposal endpoint', async () => {
+    ConversationApi.show.mockResolvedValueOnce({
+      data: {
+        ...conversationPayload,
+        cockpit: {
+          ...conversationPayload.cockpit,
+          booking: null,
+          next_action: {
+            kind: 'offer_call_times',
+            label: 'Offer an available time',
+          },
+        },
+      },
+    });
+    const { wrapper } = await mountCockpit();
+
+    await wrapper
+      .get('[data-testid="offer-call-time-action"]')
+      .trigger('click');
+    await flushPromises();
+    await wrapper.get('[role="dialog"] form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(bookingsAPI.propose).toHaveBeenCalledWith({
+      conversation_id: 101,
+      starts_at: '2026-08-31T06:00:00Z',
+      idempotency_key: expect.stringMatching(/^booking-101-/),
+    });
+  });
+
+  it('books only the exact agreed time and sends an email only after voluntary confirmation', async () => {
+    ConversationApi.show.mockResolvedValueOnce({
+      data: {
+        ...conversationPayload,
+        cockpit: {
+          ...conversationPayload.cockpit,
+          booking: null,
+          next_action: {
+            kind: 'book_call',
+            label: 'Book agreed time',
+            agreed_starts_at: '2026-08-31T06:30:00Z',
+            agreement_message_id: 77,
+          },
+        },
+      },
+    });
+    bookingsAPI.create.mockResolvedValueOnce({ status: 202, data: {} });
+    const { wrapper } = await mountCockpit();
+
+    await wrapper.get('[data-testid="book-call-action"]').trigger('click');
+    await flushPromises();
+    const dialog = wrapper.get('[role="dialog"]');
+    expect(dialog.findAll('option')).toHaveLength(1);
+    expect(dialog.get('option').attributes('value')).toBe(
+      '2026-08-31T06:30:00Z'
+    );
+    await dialog.get('input[type="checkbox"]').setValue(true);
+    await dialog.get('input[type="email"]').setValue('lead@example.test');
+    await dialog.get('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(bookingsAPI.create).toHaveBeenCalledWith({
+      conversation_id: 101,
+      starts_at: '2026-08-31T06:30:00Z',
+      agreed_starts_at: '2026-08-31T06:30:00Z',
+      agreement_message_id: 77,
+      idempotency_key: expect.stringMatching(/^booking-101-/),
+      attendee_email_voluntarily_supplied: true,
+      attendee_email: 'lead@example.test',
+    });
   });
 
   it('offers the review action without showing booking details for a Review Request', async () => {

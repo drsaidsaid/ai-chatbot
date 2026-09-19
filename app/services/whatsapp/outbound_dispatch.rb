@@ -84,7 +84,7 @@ class Whatsapp::OutboundDispatch
                                       alert_authority: @outbound_alert_authority).failure_code
   end
 
-  def with_authority_locks(&) # rubocop:disable Metrics/AbcSize
+  def with_authority_locks(&) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     @message.reload
     @outbound_alert_authority = Whatsapp::OutboundAlertAuthority.new(@message)
     origin_id = @outbound_alert_authority.origin_id
@@ -105,10 +105,21 @@ class Whatsapp::OutboundDispatch
       # Prelock them at their rank; eligibility only reuses the owned rows.
       provider_connection = AiLeadEmployee::AiProviderConnection.where(account_id: @delivery.account_id).lock.first
       membership = AccountUser.where(account_id: @delivery.account_id, user_id: @message.sender_id).lock.first if @message.sender_type == 'User'
-      @authority_records = { provider_connection: provider_connection, membership: membership }.freeze
+      confirmation_booking = booking_confirmation_authority
+      @authority_records = {
+        provider_connection: provider_connection, membership: membership,
+        confirmation_booking: confirmation_booking
+      }.freeze
       @outbound_alert_authority.lock_record!
       Whatsapp::DeliveryLifecycle.with(deliveries: Whatsapp::OutboundDelivery.where(id: @delivery.id), &)
     end
+  end
+
+  def booking_confirmation_authority
+    attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
+    return unless attributes['delivery_type'] == 'booking_confirmation'
+
+    Booking.where(account_id: @delivery.account_id, id: attributes['booking_id']).lock.first
   end
 
   def greeting_ready?(owner) # rubocop:disable Metrics/CyclomaticComplexity

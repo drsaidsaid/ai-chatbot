@@ -90,6 +90,7 @@ class Whatsapp::OutboundEligibility
 
   def automation_failure # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     return 'control_changed' unless @conversation.open? && @conversation.control_version == @delivery.observed_control_version
+    return booking_confirmation_failure if booking_confirmation?
     return 'launch_not_approved' unless AiLeadEmployee::LaunchGate.live_ai_enabled?(@delivery.account)
 
     alert = alert_authority
@@ -132,6 +133,22 @@ class Whatsapp::OutboundEligibility
 
   def automation_prerequisite_failure
     lead_automation_failure || AiLeadEmployee::ReplyAllowance.delivery_failure_code(message: @message)
+  end
+
+  def booking_confirmation?
+    @message.additional_attributes.dig('ai_lead_employee', 'delivery_type') == 'booking_confirmation'
+  end
+
+  def booking_confirmation_failure # rubocop:disable Metrics/CyclomaticComplexity
+    booking_id = @message.additional_attributes.dig('ai_lead_employee', 'booking_id')
+    booking = @authority_records[:confirmation_booking]
+    return 'booking_confirmation_invalid' unless booking&.id.to_s == booking_id.to_s
+    return 'booking_confirmation_invalid' unless booking.conversation_id == @conversation.id &&
+                                                 booking.contact_id == @conversation.contact_id
+    return 'booking_confirmation_invalid' unless booking&.confirmed? && booking.provider_state == 'confirmed'
+    return 'booking_confirmation_superseded' unless booking.confirmation_message_id.to_s == @message.id.to_s
+
+    nil
   end
 
   def qualification_dependent?(attributes)

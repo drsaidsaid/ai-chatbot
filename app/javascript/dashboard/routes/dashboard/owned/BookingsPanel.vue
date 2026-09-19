@@ -149,8 +149,10 @@ const clearFilters = () => {
 };
 
 const moveRange = direction => {
-  const base = filters.from ? new Date(filters.from) : new Date();
-  base.setDate(base.getDate() + direction * filters.days);
+  const base = new Date(
+    meta.value.range?.from || filters.from || new Date().toISOString()
+  );
+  base.setUTCDate(base.getUTCDate() + direction * filters.days);
   applyFilter({ from: base.toISOString() });
 };
 
@@ -207,6 +209,27 @@ const submitAction = async () => {
       useAlert(t('AI_LEAD_EMPLOYEE.BOOKINGS.CANCELED'));
     }
     closeDialog();
+    await loadBookings();
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.error || t('AI_LEAD_EMPLOYEE.BOOKINGS.SAVE_ERROR');
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+const reconcileBooking = async () => {
+  if (!selectedBooking.value || isSaving.value) return;
+  isSaving.value = true;
+  errorMessage.value = '';
+  try {
+    const { data } = await bookingsAPI.reconcile(selectedBooking.value.id);
+    selectedBooking.value = data;
+    useAlert(
+      data.provider_state === 'confirmed'
+        ? 'Calendar result reconciled.'
+        : 'Calendar result is still unknown.'
+    );
     await loadBookings();
   } catch (error) {
     errorMessage.value =
@@ -283,6 +306,12 @@ const capacityLabel = computed(() =>
 
 const activeBookingId = computed(() => selectedBooking.value?.id);
 
+const canMutateSelectedBooking = computed(
+  () =>
+    selectedBooking.value?.provider_state !== 'unknown' &&
+    selectedBooking.value?.status !== 'canceled'
+);
+
 const timeRange = booking =>
   `${formatDateTime(booking.starts_at, {
     hour: 'numeric',
@@ -320,7 +349,16 @@ const labelFor = (group, value) => {
 const statusClass = value => {
   if (['confirmed', 'ready'].includes(value))
     return 'text-n-teal-11 bg-n-teal-3';
-  if (['awaiting', 'invited', 'in_progress'].includes(value))
+  if (
+    [
+      'awaiting',
+      'invited',
+      'in_progress',
+      'pending',
+      'creating',
+      'unknown',
+    ].includes(value)
+  )
     return 'text-n-amber-11 bg-n-amber-3';
   if (
     [
@@ -329,6 +367,7 @@ const statusClass = value => {
       'not_started',
       'needs_attention',
       'canceled',
+      'failed',
     ].includes(value)
   )
     return 'text-n-ruby-11 bg-n-ruby-3';
@@ -337,7 +376,16 @@ const statusClass = value => {
 
 const dotClass = value => {
   if (['confirmed', 'ready'].includes(value)) return 'bg-n-teal-9';
-  if (['awaiting', 'invited', 'in_progress'].includes(value))
+  if (
+    [
+      'awaiting',
+      'invited',
+      'in_progress',
+      'pending',
+      'creating',
+      'unknown',
+    ].includes(value)
+  )
     return 'bg-n-amber-9';
   if (
     [
@@ -346,6 +394,7 @@ const dotClass = value => {
       'not_started',
       'needs_attention',
       'canceled',
+      'failed',
     ].includes(value)
   )
     return 'bg-n-ruby-9';
@@ -821,8 +870,18 @@ onMounted(loadBookings);
                 {{ labelFor('PROVIDER_STATE', availability.provider_state) }}
               </span>
             </div>
+            <p
+              v-if="availability.error_code"
+              class="mt-3 rounded-md bg-n-ruby-2 p-3 text-sm text-n-ruby-11"
+            >
+              {{
+                t('AI_LEAD_EMPLOYEE.BOOKINGS.CALENDAR_UNAVAILABLE', {
+                  error: humanize(availability.error_code),
+                })
+              }}
+            </p>
             <div
-              v-if="!availability.slots?.length"
+              v-if="!availability.error_code && !availability.slots?.length"
               class="mt-4 rounded-md border border-dashed border-n-weak p-4 text-sm text-n-slate-11"
             >
               {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.NO_SLOTS') }}
@@ -932,6 +991,7 @@ onMounted(loadBookings);
                 </dt>
                 <dd>
                   <span
+                    data-testid="selected-booking-status"
                     class="rounded px-2 py-1 text-xs"
                     :class="statusClass(selectedBooking.status)"
                   >
@@ -1086,6 +1146,17 @@ onMounted(loadBookings);
           </section>
         </div>
         <footer class="shrink-0 border-t border-n-weak p-4">
+          <button
+            v-if="selectedBooking.provider_state === 'unknown'"
+            type="button"
+            data-testid="reconcile-booking-action"
+            class="mb-2 inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-n-amber-6 text-sm font-medium text-n-amber-11"
+            :disabled="isSaving"
+            @click="reconcileBooking"
+          >
+            <Icon icon="i-lucide-refresh-cw" class="size-4" />
+            {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.RECONCILE') }}
+          </button>
           <a
             :href="selectedBooking.conversation.path"
             class="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md bg-n-brand px-3 text-sm font-medium text-white focus-visible:ring-2 focus-visible:ring-n-blue-7"
@@ -1093,7 +1164,10 @@ onMounted(loadBookings);
             <Icon icon="i-lucide-message-circle" class="size-4" />
             {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.OPEN_CONVERSATION') }}
           </a>
-          <div class="mt-2 grid grid-cols-2 gap-2">
+          <div
+            v-if="canMutateSelectedBooking"
+            class="mt-2 grid grid-cols-2 gap-2"
+          >
             <button
               type="button"
               class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-n-weak text-sm text-n-slate-12 hover:bg-n-slate-2 focus-visible:ring-2 focus-visible:ring-n-blue-7"
@@ -1140,7 +1214,10 @@ onMounted(loadBookings);
           <dt class="text-xs uppercase text-n-slate-10">
             {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.FIELD.STATUS') }}
           </dt>
-          <dd class="mt-1 font-medium text-n-slate-12">
+          <dd
+            data-testid="mobile-selected-booking-status"
+            class="mt-1 font-medium text-n-slate-12"
+          >
             {{ labelFor('STATUS', selectedBooking.status) }}
           </dd>
         </div>
@@ -1203,7 +1280,17 @@ onMounted(loadBookings);
       >
         {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.OPEN_CONVERSATION') }}
       </a>
-      <div class="mt-3 grid grid-cols-2 gap-2">
+      <button
+        v-if="selectedBooking.provider_state === 'unknown'"
+        type="button"
+        data-testid="mobile-reconcile-booking-action"
+        class="mt-2 h-9 w-full rounded-md border border-n-amber-6 px-3 text-sm font-medium text-n-amber-11"
+        :disabled="isSaving"
+        @click="reconcileBooking"
+      >
+        {{ t('AI_LEAD_EMPLOYEE.BOOKINGS.RECONCILE') }}
+      </button>
+      <div v-if="canMutateSelectedBooking" class="mt-3 grid grid-cols-2 gap-2">
         <button
           type="button"
           class="h-9 rounded-md border border-n-weak px-3 text-sm font-medium text-n-slate-12"

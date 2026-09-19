@@ -8,6 +8,7 @@ vi.mock('dashboard/api/bookings', () => ({
     get: vi.fn(),
     reschedule: vi.fn(),
     cancel: vi.fn(),
+    reconcile: vi.fn(),
   },
 }));
 
@@ -84,6 +85,7 @@ vi.mock('vue-i18n', () => ({
         'AI_LEAD_EMPLOYEE.BOOKINGS.AVAILABILITY_RULES': 'Availability rules',
         'AI_LEAD_EMPLOYEE.BOOKINGS.AVAILABLE_SLOTS': 'Available slots',
         'AI_LEAD_EMPLOYEE.BOOKINGS.SLOT_SOURCE': 'Rule-backed slot',
+        'AI_LEAD_EMPLOYEE.BOOKINGS.RECONCILE': 'Reconcile calendar result',
         'AI_LEAD_EMPLOYEE.BOOKINGS.PREVIOUS_PAGE': 'Previous page',
         'AI_LEAD_EMPLOYEE.BOOKINGS.NEXT_PAGE': 'Next page',
         'AI_LEAD_EMPLOYEE.BOOKINGS.EMPTY_VALUE': 'Not captured',
@@ -116,6 +118,9 @@ vi.mock('vue-i18n', () => ({
       if (key === 'AI_LEAD_EMPLOYEE.BOOKINGS.CALL_STARTS') {
         return `Call starts at ${params.time}`;
       }
+      if (key === 'AI_LEAD_EMPLOYEE.BOOKINGS.CALENDAR_UNAVAILABLE') {
+        return `Google Calendar could not be checked (${params.error}). Reconnect it in Booking settings, then retry availability.`;
+      }
 
       return labels[key] || key;
     },
@@ -138,6 +143,7 @@ const booking = {
   booked_channel: 'WhatsApp',
   meeting_link: 'https://wa.me/255712345678',
   provider: 'Google',
+  provider_state: 'confirmed',
   calendar_state: 'confirmed',
   whatsapp_state: 'confirmed',
   preparation_state: 'ready',
@@ -172,7 +178,10 @@ const apiResponse = overrides => ({
       total_count: 1,
       capacity_booked: 14,
       capacity_limit: 20,
-      range: { label: 'Aug 24 - Aug 30, 2026' },
+      range: {
+        from: '2026-08-24T00:00:00Z',
+        label: 'Aug 24 - Aug 30, 2026',
+      },
     },
     filter_options: {
       statuses: ['confirmed'],
@@ -234,6 +243,7 @@ describe('BookingsPanel', () => {
     bookingsAPI.cancel.mockResolvedValue({
       data: { ...booking, status: 'canceled' },
     });
+    bookingsAPI.reconcile.mockResolvedValue({ data: booking });
   });
 
   it('renders the agenda with filters and selected booking detail', async () => {
@@ -268,6 +278,20 @@ describe('BookingsPanel', () => {
     expect(wrapper.text()).toContain('Rule-backed slot');
   });
 
+  it('advances a default range from the server canonical boundary', async () => {
+    const { wrapper, router } = await mountComponent();
+
+    await wrapper.get('button[aria-label="Next range"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.query.from).toBe(
+      '2026-08-31T00:00:00.000Z'
+    );
+    expect(bookingsAPI.get).toHaveBeenLastCalledWith(
+      expect.objectContaining({ from: '2026-08-31T00:00:00.000Z', days: 7 })
+    );
+  });
+
   it('opens reschedule and cancel dialogs that call booking mutations', async () => {
     const { wrapper } = await mountComponent();
 
@@ -292,5 +316,127 @@ describe('BookingsPanel', () => {
       5,
       expect.objectContaining({ reason: 'Lead asked to pause' })
     );
+  });
+
+  it('shows provider availability errors instead of presenting them as no open times', async () => {
+    bookingsAPI.get.mockResolvedValue(
+      apiResponse({
+        availability: {
+          provider_state: 'connection_error',
+          error_code: 'provider_unreachable',
+          configuration: { provider: 'Google' },
+          slots: [],
+        },
+      })
+    );
+    const { wrapper } = await mountComponent();
+
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Availability')
+      .trigger('click');
+    expect(wrapper.text()).toContain('Google Calendar could not be checked');
+    expect(wrapper.text()).not.toContain('AI_LEAD_EMPLOYEE.BOOKINGS.NO_SLOTS');
+  });
+
+  it('offers explicit reconciliation for a provider-unknown booking', async () => {
+    const unknownBooking = {
+      ...booking,
+      status: 'provider_unknown',
+      provider_state: 'unknown',
+      calendar_state: 'unknown',
+      meeting_link: null,
+    };
+    bookingsAPI.get.mockResolvedValue(
+      apiResponse({
+        bookings: [unknownBooking],
+        selected_booking: unknownBooking,
+        calendar: [{ date: '2026-08-27', bookings: [unknownBooking] }],
+      })
+    );
+    bookingsAPI.reconcile.mockResolvedValueOnce({ data: booking });
+    const { wrapper } = await mountComponent();
+
+    expect(wrapper.get('[data-testid="selected-booking-status"]').text()).toBe(
+      'Provider Unknown'
+    );
+    expect(
+      wrapper
+        .findAll('button')
+        .some(button =>
+          ['Reschedule', 'Cancel booking'].includes(button.text())
+        )
+    ).toBe(false);
+
+    await wrapper
+      .get('[data-testid="reconcile-booking-action"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(bookingsAPI.reconcile).toHaveBeenCalledWith(5);
+  });
+
+  it('hides terminal booking mutations after cancellation', async () => {
+    const canceledBooking = {
+      ...booking,
+      status: 'canceled',
+      provider_state: 'canceled',
+      calendar_state: 'canceled',
+    };
+    bookingsAPI.get.mockResolvedValue(
+      apiResponse({
+        bookings: [canceledBooking],
+        selected_booking: canceledBooking,
+        calendar: [{ date: '2026-08-27', bookings: [canceledBooking] }],
+      })
+    );
+    const { wrapper } = await mountComponent();
+
+    expect(
+      wrapper
+        .findAll('button')
+        .some(button =>
+          ['Reschedule', 'Cancel booking'].includes(button.text())
+        )
+    ).toBe(false);
+  });
+
+  it('hides terminal booking mutations in the mobile detail', async () => {
+    const canceledBooking = {
+      ...booking,
+      status: 'canceled',
+      provider_state: 'canceled',
+      calendar_state: 'canceled',
+    };
+    bookingsAPI.get.mockResolvedValue(
+      apiResponse({
+        bookings: [canceledBooking],
+        selected_booking: canceledBooking,
+        calendar: [{ date: '2026-08-27', bookings: [canceledBooking] }],
+      })
+    );
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+
+    try {
+      const { wrapper } = await mountComponent();
+      await wrapper
+        .findAll('button')
+        .find(button => button.text().includes('Meta Demo Lead'))
+        .trigger('click');
+
+      expect(
+        wrapper.get('[data-testid="mobile-selected-booking-status"]').text()
+      ).toBe('Canceled');
+      expect(
+        wrapper
+          .findAll('button')
+          .some(button =>
+            ['Reschedule', 'Cancel booking'].includes(button.text())
+          )
+      ).toBe(false);
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
   });
 });

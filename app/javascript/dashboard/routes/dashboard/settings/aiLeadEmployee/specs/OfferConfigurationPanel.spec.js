@@ -65,6 +65,7 @@ beforeEach(() => {
         Promise.resolve({ data: { ...payload.offer, version: 4 } })
       ),
     post: vi.fn(),
+    delete: vi.fn(),
   });
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -246,6 +247,79 @@ it('offers a stable boolean field for explicit sales-call agreement', async () =
       purpose: 'action_eligibility',
     })
   );
+});
+
+it('edits Google-backed availability and disconnects without exposing credentials', async () => {
+  axios.get.mockImplementation(url =>
+    url.includes('booking_configuration')
+      ? Promise.resolve({
+          data: {
+            connected: true,
+            calendar_id: 'sales@example.test',
+            timezone: 'Africa/Dar_es_Salaam',
+            duration_minutes: 30,
+            minimum_notice_minutes: 120,
+            buffer_before_minutes: 10,
+            buffer_after_minutes: 15,
+            working_days: [1, 2, 3, 4, 5],
+            allowed_hours: { start: '09:00', end: '17:00' },
+            exceptions: [],
+            connection: {
+              status: 'connected',
+              connected: true,
+              calendar_id: 'sales@example.test',
+            },
+          },
+        })
+      : Promise.resolve({
+          data: { questions: [], budget_ranges: [], follow_up: {} },
+        })
+  );
+  axios.patch.mockImplementation((_url, payload) =>
+    Promise.resolve({ data: payload })
+  );
+  axios.delete.mockResolvedValue({
+    data: {
+      status: 'disconnected',
+      connected: false,
+      calendar_id: 'sales@example.test',
+    },
+  });
+  const wrapper = mount(SettingsShell, {
+    props: { section: 'booking_business_hours' },
+    global: { stubs: { RouterLink: true, Icon: true } },
+  });
+  await flushPromises();
+
+  expect(wrapper.text()).toContain('Connected to sales@example.test');
+  await wrapper
+    .findAll('button')
+    .find(button => button.text() === 'Add date')
+    .trigger('click');
+  await wrapper.get('input[type="date"]').setValue('2026-12-25');
+  await wrapper
+    .findAll('button')
+    .find(button => button.text() === 'Save changes')
+    .trigger('click');
+  await flushPromises();
+
+  expect(axios.patch).toHaveBeenCalledWith(
+    expect.stringContaining('booking_configuration'),
+    expect.objectContaining({
+      calendar_id: 'sales@example.test',
+      exceptions: [{ date: '2026-12-25', unavailable: true }],
+    })
+  );
+
+  await wrapper
+    .findAll('button')
+    .find(button => button.text() === 'Disconnect')
+    .trigger('click');
+  await flushPromises();
+  expect(axios.delete).toHaveBeenCalledWith(
+    expect.stringContaining('google_calendar_connection')
+  );
+  expect(wrapper.text()).toContain('Connect a calendar before offering times.');
 });
 
 it('drops a hidden link when the owner changes to a non-link next step', async () => {
