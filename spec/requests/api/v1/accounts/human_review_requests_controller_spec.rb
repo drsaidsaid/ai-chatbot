@@ -110,7 +110,33 @@ RSpec.describe 'Human Review Requests API', type: :request do
     expect(request_record.knowledge_item).to be_nil
   end
 
+  it 'reports the canonical delivery state instead of claiming a public reply was sent' do
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/resolve",
+         headers: agent.create_new_auth_token,
+         params: { answer: 'We will review the request.', resolution_kind: 'send_reply' },
+         as: :json
+
+    expect(response.parsed_body).to include('reply_outcome' => 'reply_pending_delivery')
+
+    Whatsapp::OutboundDelivery.create!(
+      account: account,
+      conversation: conversation,
+      message: request_record.reload.human_answer_message,
+      observed_control_version: conversation.control_version,
+      state: :failed,
+      failure_code: 'provider_rejected'
+    )
+
+    get "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}",
+        headers: agent.create_new_auth_token,
+        as: :json
+
+    expect(response.parsed_body).to include('reply_outcome' => 'reply_delivery_failed')
+  end
+
   it 'records a private resolution without queuing a Lead reply, then proposes one offer-scoped draft separately', :aggregate_failures do
+    request_record.update!(question: 'Can I get a refund?')
+
     post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/resolve",
          headers: agent.create_new_auth_token,
          params: {
@@ -130,17 +156,30 @@ RSpec.describe 'Human Review Requests API', type: :request do
 
     post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_knowledge",
          headers: agent.create_new_auth_token,
-         params: { source_kind: 'refund', title: 'Refund review guidance' },
+         params: {
+           source_kind: 'refund',
+           title: 'Refund review guidance',
+           answer: 'Refund requests are assessed under the published policy.'
+         },
          as: :json
 
     expect(response).to have_http_status(:success)
     proposal = request_record.reload.knowledge_item
     expect(proposal).to be_draft
+    expect(proposal.answer).to eq('Refund requests are assessed under the published policy.')
     expect(proposal.metadata).to include(
       'offer_ids' => [],
-      'proposed_from_human_review_request_id' => request_record.id,
-      'source_message_id' => request_record.human_answer_message_id
+      'proposed_from_human_review_request_id' => request_record.id
     )
+    expect(proposal.metadata).not_to have_key('source_message_id')
+
+    proposal.approve!
+    answer = AiLeadEmployee::KnowledgeAnswerService.new(
+      account: account,
+      question: 'Can I get a refund?'
+    ).perform
+    expect(answer.answer).to eq('Refund requests are assessed under the published policy.')
+    expect(answer.answer).not_to include('operator review')
     expect(response.parsed_body).to include('knowledge_proposal_outcome' => 'draft_proposed')
   end
 
@@ -159,7 +198,7 @@ RSpec.describe 'Human Review Requests API', type: :request do
     end
 
     expect(request_record.reload.human_answer_message).not_to be_private
-    expect(conversation.messages.where(content: params[:answer])).to have(1).item
+    expect(conversation.messages.where(content: params[:answer]).count).to eq(1)
 
     2.times do
       post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_knowledge",
@@ -169,13 +208,22 @@ RSpec.describe 'Human Review Requests API', type: :request do
       expect(response).to have_http_status(:success)
     end
 
-    expect(KnowledgeItem.where("metadata ->> 'proposed_from_human_review_request_id' = ?", request_record.id.to_s)).to have(1).item
+    expect(
+      KnowledgeItem.where(
+        "metadata ->> 'proposed_from_human_review_request_id' = ?",
+        request_record.id.to_s
+      ).count
+    ).to eq(1)
   end
 
   it 'keeps the resolved review recoverable when reusable knowledge cannot yet be proposed', :aggregate_failures do
     post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_knowledge",
          headers: agent.create_new_auth_token,
-         params: { source_kind: 'refund', title: 'Refund policy' },
+         params: {
+           source_kind: 'refund',
+           title: 'Refund policy',
+           answer: 'Refund requests are assessed under the published policy.'
+         },
          as: :json
 
     expect(response).to have_http_status(:unprocessable_entity)
@@ -192,11 +240,31 @@ RSpec.describe 'Human Review Requests API', type: :request do
 
     post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_knowledge",
          headers: agent.create_new_auth_token,
-         params: { source_kind: 'refund', title: 'Refund policy' },
+         params: {
+           source_kind: 'refund',
+           title: 'Refund policy',
+           answer: 'Refund requests are assessed under the published policy.'
+         },
          as: :json
 
     expect(response).to have_http_status(:success)
     expect(request_record.reload.knowledge_item).to be_draft
+  end
+
+  it 'rejects an unsupported knowledge source without losing the resolved review' do
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/resolve",
+         headers: agent.create_new_auth_token,
+         params: { answer: 'A team member will review the refund request.', resolution_kind: 'internal_note' },
+         as: :json
+
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_knowledge",
+         headers: agent.create_new_auth_token,
+         params: { source_kind: 'unsupported', title: 'Refund policy', answer: 'Safe reusable answer.' },
+         as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(request_record.reload).to be_resolved
+    expect(request_record.knowledge_item).to be_nil
   end
 
   it 'does not expose or resolve another operator\'s assigned review' do
@@ -206,7 +274,7 @@ RSpec.describe 'Human Review Requests API', type: :request do
         headers: other_operator.create_new_auth_token,
         as: :json
 
-    expect(response).to have_http_status(:not_found)
+    expect(response).to have_http_status(:unauthorized)
   end
 
   it 'supports administrator assignment and assigned operator rejection from the Review workspace', :aggregate_failures do

@@ -4,7 +4,12 @@ import HumanReviewRequestsPanel from '../HumanReviewRequestsPanel.vue';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
 
 vi.mock('dashboard/api/humanReviewRequests', () => ({
-  default: { get: vi.fn(), resolve: vi.fn(), proposeKnowledge: vi.fn() },
+  default: {
+    get: vi.fn(),
+    show: vi.fn(),
+    resolve: vi.fn(),
+    proposeKnowledge: vi.fn(),
+  },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 
@@ -20,9 +25,13 @@ const review = {
 const mountPanel = async () => {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/app/accounts/:accountId/conversations/:id', component: {} }],
+    routes: [
+      { path: '/app/accounts/:accountId/conversations/:id', component: {} },
+    ],
   });
-  await router.push('/app/accounts/1/conversations/42?queue=review&review_id=8');
+  await router.push(
+    '/app/accounts/1/conversations/42?queue=review&review_id=8'
+  );
   await router.isReady();
   const wrapper = mount(HumanReviewRequestsPanel, {
     props: { conversationId: 12, reviewId: 8 },
@@ -35,12 +44,21 @@ const mountPanel = async () => {
 describe('HumanReviewRequestsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    HumanReviewRequestsAPI.get.mockResolvedValue({ data: [review] });
+    HumanReviewRequestsAPI.show.mockResolvedValue({ data: review });
     HumanReviewRequestsAPI.resolve.mockResolvedValue({
-      data: { ...review, status: 'resolved', knowledge_proposal_outcome: 'not_requested' },
+      data: {
+        ...review,
+        status: 'resolved',
+        knowledge_proposal_outcome: 'not_requested',
+      },
     });
     HumanReviewRequestsAPI.proposeKnowledge.mockResolvedValue({
-      data: { ...review, status: 'resolved', knowledge_item_id: 31, knowledge_proposal_outcome: 'draft_proposed' },
+      data: {
+        ...review,
+        status: 'resolved',
+        knowledge_item_id: 31,
+        knowledge_proposal_outcome: 'draft_proposed',
+      },
     });
   });
 
@@ -50,7 +68,9 @@ describe('HumanReviewRequestsPanel', () => {
     expect(wrapper.text()).toContain('Assigned to Asha');
     expect(wrapper.text()).not.toContain('Propose reusable knowledge');
 
-    await wrapper.get('textarea').setValue('I will review your refund request.');
+    await wrapper
+      .get('textarea')
+      .setValue('I will review your refund request.');
     await wrapper
       .findAll('button')
       .find(button => button.text() === 'Save private note and resolve')
@@ -64,6 +84,10 @@ describe('HumanReviewRequestsPanel', () => {
     expect(wrapper.text()).toContain('Propose reusable knowledge');
 
     await wrapper
+      .findAll('textarea')[1]
+      .setValue('Refund requests are assessed under the published policy.');
+
+    await wrapper
       .findAll('button')
       .find(button => button.text() === 'Propose reusable knowledge')
       .trigger('click');
@@ -71,7 +95,10 @@ describe('HumanReviewRequestsPanel', () => {
 
     expect(HumanReviewRequestsAPI.proposeKnowledge).toHaveBeenCalledWith(
       8,
-      expect.objectContaining({ source_kind: 'policy' })
+      expect.objectContaining({
+        source_kind: 'policy',
+        answer: 'Refund requests are assessed under the published policy.',
+      })
     );
     expect(wrapper.text()).toContain('Open draft knowledge proposal');
   });

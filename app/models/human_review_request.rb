@@ -109,7 +109,7 @@ class HumanReviewRequest < ApplicationRecord
     self
   end
 
-  def propose_knowledge!(proposer:, source_kind:, title:)
+  def propose_knowledge!(proposer:, source_kind:, title:, answer: nil)
     with_lock do
       return knowledge_item if knowledge_item.present?
 
@@ -121,7 +121,7 @@ class HumanReviewRequest < ApplicationRecord
       item = account.knowledge_items.create!(
         title: title.presence || question.truncate(80),
         question: question,
-        answer: human_answer_message.content,
+        answer: proposal_answer(answer),
         source_kind: source_kind,
         status: :draft,
         metadata: proposal_metadata(proposer)
@@ -157,10 +157,22 @@ class HumanReviewRequest < ApplicationRecord
     {
       proposed_from_human_review_request_id: id,
       proposed_by_user_id: proposer&.id,
-      source_message_id: human_answer_message_id,
+      source_message_id: proposal_source_message_id,
       source_conversation_id: conversation_id,
       offer_ids: conversation.offer_id ? [conversation.offer_id] : []
     }.compact
+  end
+
+  def proposal_source_message_id
+    human_answer_message_id unless human_answer_message.private?
+  end
+
+  def proposal_answer(answer)
+    return answer if answer.present?
+    return human_answer_message.content unless human_answer_message.private?
+
+    errors.add(:base, 'requires a separate reusable answer when the resolution is private')
+    raise ActiveRecord::RecordInvalid, self
   end
 
   def messages_belong_to_conversation

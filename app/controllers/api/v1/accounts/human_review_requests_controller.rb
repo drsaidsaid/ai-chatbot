@@ -28,8 +28,9 @@ class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::Base
   def propose_knowledge
     @review_request.propose_knowledge!(
       proposer: Current.user,
-      source_kind: proposal_params[:source_kind],
-      title: proposal_params[:title]
+      source_kind: proposal_source_kind,
+      title: proposal_params[:title],
+      answer: proposal_params[:answer]
     )
     render json: payload(@review_request.reload)
   rescue ActiveRecord::RecordInvalid => e
@@ -59,7 +60,15 @@ class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::Base
   end
 
   def proposal_params
-    params.permit(:source_kind, :title)
+    params.permit(:source_kind, :title, :answer)
+  end
+
+  def proposal_source_kind
+    source_kind = proposal_params[:source_kind].to_s
+    return source_kind if KnowledgeItem.source_kinds.key?(source_kind)
+
+    @review_request.errors.add(:source_kind, 'is not supported')
+    raise ActiveRecord::RecordInvalid, @review_request
   end
 
   def assign_params
@@ -124,7 +133,10 @@ class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::Base
     return 'not_resolved' unless request.resolved?
     return 'private_note_saved' if request.resolution_kind == 'internal_note'
 
-    'reply_queued'
+    delivery = request.human_answer_message&.whatsapp_outbound_delivery
+    return 'reply_pending_delivery' unless delivery
+
+    "reply_delivery_#{delivery.state}"
   end
 
   def knowledge_proposal_outcome(request)

@@ -3,6 +3,7 @@ import UnavailablePage from './UnavailablePage.vue';
 import OwnedWorkspacePage from './OwnedWorkspacePage.vue';
 import AiProviderSettingsPage from './AiProviderSettingsPage.vue';
 import LeadsDirectoryPage from './LeadsDirectoryPage.vue';
+import LegacyReviewRedirect from './LegacyReviewRedirect.vue';
 import { ROLES } from 'dashboard/constants/permissions.js';
 
 const ownedSurfaceRoute = ({ path, name, surface, permissions = ROLES }) => ({
@@ -48,11 +49,9 @@ export const routes = [
   },
   {
     path: frontendURL('accounts/:accountId/reviews/:reviewId'),
-    redirect: to => ({
-      name: 'home',
-      params: to.params,
-      query: { ...to.query, queue: 'review', review_id: to.params.reviewId },
-    }),
+    name: 'owned_review_legacy_redirect',
+    component: LegacyReviewRedirect,
+    meta: { permissions: ROLES },
   },
   ownedSurfaceRoute({
     path: 'knowledge',
