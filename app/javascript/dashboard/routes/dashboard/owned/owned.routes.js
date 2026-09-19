@@ -46,6 +46,14 @@ export const routes = [
     name: 'owned_reviews_index',
     redirect: redirectToInboxQueue('review'),
   },
+  {
+    path: frontendURL('accounts/:accountId/reviews/:reviewId'),
+    redirect: to => ({
+      name: 'home',
+      params: to.params,
+      query: { ...to.query, queue: 'review', review_id: to.params.reviewId },
+    }),
+  },
   ownedSurfaceRoute({
     path: 'knowledge',
     name: 'owned_knowledge_index',

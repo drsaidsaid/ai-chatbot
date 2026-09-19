@@ -86,52 +86,64 @@ class HumanReviewRequest < ApplicationRecord
     update!(status: :rejected, operator_answer: operator_answer, resolution_kind: 'rejected', rejected_at: Time.current)
   end
 
-  def resolve!(human_answer_message:, proposer:, propose_knowledge:, source_kind:, title:)
-    validate_human_answer!(human_answer_message)
+  def resolve_with!(answer:, operator:, resolution_kind:, existing_message: nil)
+    with_lock do
+      return self if resolved?
 
-    transaction do
-      item = proposed_knowledge_item(
-        human_answer_message: human_answer_message,
-        proposer: proposer,
-        propose_knowledge: propose_knowledge,
-        source_kind: source_kind,
-        title: title
+      message = resolution_message(
+        answer: answer,
+        operator: operator,
+        resolution_kind: resolution_kind,
+        existing_message: existing_message
       )
+      validate_human_answer!(message)
 
       update!(
-        resolution_attributes(
-          human_answer_message: human_answer_message,
-          knowledge_item: item,
-          source_kind: source_kind,
-          propose_knowledge: propose_knowledge
-        )
+        human_answer_message: message,
+        operator_answer: message.content,
+        resolution_kind: resolution_kind,
+        status: :resolved,
+        resolved_at: Time.current
       )
+    end
+    self
+  end
+
+  def propose_knowledge!(proposer:, source_kind:, title:)
+    with_lock do
+      return knowledge_item if knowledge_item.present?
+
+      unless resolved? && human_answer_message.present?
+        errors.add(:base, 'must be resolved before reusable knowledge can be proposed')
+        raise ActiveRecord::RecordInvalid, self
+      end
+
+      item = account.knowledge_items.create!(
+        title: title.presence || question.truncate(80),
+        question: question,
+        answer: human_answer_message.content,
+        source_kind: source_kind,
+        status: :draft,
+        metadata: proposal_metadata(proposer)
+      )
+      update!(knowledge_item: item, proposed_source_kind: item.source_kind)
+      item
     end
   end
 
   private
 
-  def proposed_knowledge_item(human_answer_message:, proposer:, propose_knowledge:, source_kind:, title:)
-    return unless ActiveModel::Type::Boolean.new.cast(propose_knowledge)
+  def resolution_message(answer:, operator:, resolution_kind:, existing_message:)
+    return existing_message if existing_message
 
-    propose_knowledge_item(
-      proposer: proposer,
-      source_kind: source_kind,
-      title: title,
-      answer: human_answer_message.content
+    conversation.messages.create!(
+      account: account,
+      inbox: conversation.inbox,
+      sender: operator,
+      message_type: :outgoing,
+      private: resolution_kind == 'internal_note',
+      content: answer
     )
-  end
-
-  def resolution_attributes(human_answer_message:, knowledge_item:, source_kind:, propose_knowledge:)
-    {
-      human_answer_message: human_answer_message,
-      knowledge_item: knowledge_item,
-      proposed_source_kind: knowledge_item&.source_kind || source_kind,
-      operator_answer: human_answer_message.content,
-      resolution_kind: ActiveModel::Type::Boolean.new.cast(propose_knowledge) ? 'approved_answer_proposed' : 'answered',
-      status: :resolved,
-      resolved_at: Time.current
-    }
   end
 
   def validate_human_answer!(human_answer_message)
@@ -141,18 +153,14 @@ class HumanReviewRequest < ApplicationRecord
     raise ActiveRecord::RecordInvalid, self
   end
 
-  def propose_knowledge_item(proposer:, source_kind:, title:, answer:)
-    account.knowledge_items.create!(
-      title: title.presence || question.truncate(80),
-      question: question,
-      answer: answer,
-      source_kind: source_kind,
-      status: :draft,
-      metadata: {
-        proposed_from_human_review_request_id: id,
-        proposed_by_user_id: proposer&.id
-      }.compact
-    )
+  def proposal_metadata(proposer)
+    {
+      proposed_from_human_review_request_id: id,
+      proposed_by_user_id: proposer&.id,
+      source_message_id: human_answer_message_id,
+      source_conversation_id: conversation_id,
+      offer_ids: conversation.offer_id ? [conversation.offer_id] : []
+    }.compact
   end
 
   def messages_belong_to_conversation

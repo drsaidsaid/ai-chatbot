@@ -18,6 +18,10 @@ class HumanReviewRequestsAPI extends ApiClient {
   reject(id, data) {
     return axios.post(`${this.url}/${id}/reject`, data);
   }
+
+  proposeKnowledge(id, data) {
+    return axios.post(`${this.url}/${id}/propose_knowledge`, data);
+  }
 }
 
 export default new HumanReviewRequestsAPI();

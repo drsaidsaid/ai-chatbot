@@ -1,53 +1,28 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
 
-const { t } = useI18n();
-const route = useRoute();
+const props = defineProps({
+  conversationId: { type: [String, Number], default: null },
+  reviewId: { type: [String, Number], default: null },
+});
 
+const route = useRoute();
 const reviewRequests = ref([]);
 const isLoading = ref(false);
 const resolvingId = ref(null);
 const resolutionForms = ref({});
-const sourceOptions = [
-  'faq',
-  'offer',
-  'pricing',
-  'objection',
-  'policy',
-  'supporting_document',
-];
+const resolutionResults = ref({});
+const sourceOptions = ['faq', 'offer', 'pricing', 'objection', 'policy', 'refund'];
 
-const sourceLabels = computed(() => ({
-  faq: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.FAQ'),
-  offer: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.OFFER'),
-  pricing: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.PRICING'),
-  objection: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.OBJECTION'),
-  policy: t('AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.POLICY'),
-  supporting_document: t(
-    'AI_LEAD_EMPLOYEE.KNOWLEDGE.SOURCE.SUPPORTING_DOCUMENT'
-  ),
-}));
-const reasonLabels = computed(() => ({
-  no_approved_knowledge: t(
-    'AI_LEAD_EMPLOYEE.REVIEWS.REASON.NO_APPROVED_KNOWLEDGE'
-  ),
-  conflicting_knowledge: t(
-    'AI_LEAD_EMPLOYEE.REVIEWS.REASON.CONFLICTING_KNOWLEDGE'
-  ),
-  sensitive_question: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.SENSITIVE_QUESTION'),
-  qualification_blocker: t(
-    'AI_LEAD_EMPLOYEE.REVIEWS.REASON.QUALIFICATION_BLOCKER'
-  ),
-  angry_question: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.ANGRY_QUESTION'),
-  unsupported_media: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.UNSUPPORTED_MEDIA'),
-  source_unverified: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.SOURCE_UNVERIFIED'),
-  provider_failed: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.PROVIDER_FAILED'),
-  stale_knowledge: t('AI_LEAD_EMPLOYEE.REVIEWS.REASON.STALE_KNOWLEDGE'),
-}));
+const visibleRequests = computed(() =>
+  reviewRequests.value.filter(request => {
+    if (props.reviewId) return Number(request.id) === Number(props.reviewId);
+    return !props.conversationId || Number(request.conversation_id) === Number(props.conversationId);
+  })
+);
 
 const loadReviewRequests = async () => {
   isLoading.value = true;
@@ -56,10 +31,9 @@ const loadReviewRequests = async () => {
     reviewRequests.value = data;
     data.forEach(request => {
       resolutionForms.value[request.id] ||= {
-        human_answer_message_id: '',
-        propose_knowledge: true,
-        source_kind: 'faq',
-        title: '',
+        answer: '',
+        source_kind: request.reason === 'sensitive_question' ? 'policy' : 'faq',
+        title: request.question?.slice(0, 80) || '',
       };
     });
   } finally {
@@ -67,111 +41,121 @@ const loadReviewRequests = async () => {
   }
 };
 
-const resolveReviewRequest = async request => {
+const resolveReviewRequest = async (request, resolutionKind) => {
   resolvingId.value = request.id;
   try {
-    await HumanReviewRequestsAPI.resolve(
-      request.id,
-      resolutionForms.value[request.id]
+    const { data } = await HumanReviewRequestsAPI.resolve(request.id, {
+      answer: resolutionForms.value[request.id].answer,
+      resolution_kind: resolutionKind,
+    });
+    resolutionResults.value[request.id] = data;
+    useAlert(
+      resolutionKind === 'send_reply'
+        ? 'Reply queued for the Lead and review resolved.'
+        : 'Private note saved and review resolved.'
     );
-    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.RESOLVED'));
-    await loadReviewRequests();
   } catch {
-    useAlert(t('AI_LEAD_EMPLOYEE.REVIEWS.RESOLVE_ERROR'));
+    useAlert('The review could not be resolved. Nothing was sent.');
+  } finally {
+    resolvingId.value = null;
+  }
+};
+
+const proposeKnowledge = async request => {
+  resolvingId.value = request.id;
+  try {
+    const { data } = await HumanReviewRequestsAPI.proposeKnowledge(request.id, {
+      source_kind: resolutionForms.value[request.id].source_kind,
+      title: resolutionForms.value[request.id].title,
+    });
+    resolutionResults.value[request.id] = data;
+    useAlert('Draft knowledge proposal saved for administrator approval.');
+  } catch {
+    useAlert('The review is resolved, but the knowledge proposal still needs attention.');
   } finally {
     resolvingId.value = null;
   }
 };
 
 const conversationPath = request =>
-  `/app/accounts/${route.params.accountId}/conversations/${request.conversation_display_id}`;
+  `/app/accounts/${route.params.accountId}/conversations/${request.conversation_display_id}?queue=review&review_id=${request.id}`;
+const knowledgePath = request =>
+  `/app/accounts/${route.params.accountId}/knowledge?knowledge_item_id=${request.knowledge_item_id}`;
 
 onMounted(loadReviewRequests);
 </script>
 
+<!-- eslint-disable vue/no-bare-strings-in-template -->
 <template>
-  <section class="mt-6 overflow-x-auto border border-n-weak bg-n-solid-1">
-    <div
-      class="grid min-w-[760px] grid-cols-[1.1fr_0.8fr_0.9fr_1.4fr] gap-3 border-b border-n-weak px-4 py-3 text-xs font-medium uppercase text-n-slate-11"
-    >
-      <span>{{ t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.QUESTION') }}</span>
-      <span>{{ t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.REASON') }}</span>
-      <span>{{ t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.CONVERSATION') }}</span>
-      <span>{{ t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.RESOLUTION') }}</span>
-    </div>
+  <section class="mt-6 border border-n-weak bg-n-solid-1">
     <div v-if="isLoading" class="px-4 py-6 text-sm text-n-slate-11">
-      {{ t('AI_LEAD_EMPLOYEE.REVIEWS.LOADING') }}
+      Loading review requests
     </div>
-    <div
-      v-else-if="!reviewRequests.length"
-      class="px-4 py-6 text-sm text-n-slate-11"
-    >
-      {{ t('AI_LEAD_EMPLOYEE.REVIEWS.EMPTY') }}
+    <div v-else-if="!visibleRequests.length" class="px-4 py-6 text-sm text-n-slate-11">
+      No review requests are waiting for this conversation.
     </div>
-    <div v-else>
-      <div
-        v-for="request in reviewRequests"
-        :key="request.id"
-        class="grid min-w-[760px] grid-cols-[1.1fr_0.8fr_0.9fr_1.4fr] gap-3 border-b border-n-weak px-4 py-4 text-sm text-n-slate-12"
-      >
-        <p class="min-w-0 break-words">
-          {{ request.question }}
+    <article v-for="request in visibleRequests" :key="request.id" class="grid gap-3 border-b border-n-weak p-4 text-sm text-n-slate-12">
+      <div>
+        <p class="font-medium">{{ request.question }}</p>
+        <p class="mt-1 text-xs text-n-slate-11">
+          {{ request.reason.replaceAll('_', ' ') }} · Assigned to {{ request.assigned_user?.name || 'Unassigned' }}
         </p>
-        <span>{{ reasonLabels[request.reason] }}</span>
-        <a class="text-n-blue-text underline" :href="conversationPath(request)">
-          {{
-            t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.CONVERSATION_NUMBER', {
-              id: request.conversation_display_id,
-            })
-          }}
+        <a class="mt-2 inline-flex text-n-blue-text underline" :href="conversationPath(request)">
+          Open conversation #{{ request.conversation_display_id }}
         </a>
-        <form
-          class="grid gap-2"
-          @submit.prevent="resolveReviewRequest(request)"
-        >
-          <input
-            v-model="resolutionForms[request.id].human_answer_message_id"
-            required
-            inputmode="numeric"
-            class="rounded-md border border-n-weak bg-n-background px-3 py-2"
-            :placeholder="t('AI_LEAD_EMPLOYEE.REVIEWS.FIELD.ANSWER_MESSAGE_ID')"
-          />
-          <label class="flex items-center gap-2 text-sm text-n-slate-12">
-            <input
-              v-model="resolutionForms[request.id].propose_knowledge"
-              type="checkbox"
-              class="rounded border-n-weak"
-            />
-            {{ t('AI_LEAD_EMPLOYEE.REVIEWS.PROPOSE_KNOWLEDGE') }}
-          </label>
-          <div class="grid gap-2 sm:grid-cols-2">
-            <input
-              v-model="resolutionForms[request.id].title"
-              class="rounded-md border border-n-weak bg-n-background px-3 py-2"
-              :placeholder="t('AI_LEAD_EMPLOYEE.KNOWLEDGE.FIELD.TITLE')"
-            />
-            <select
-              v-model="resolutionForms[request.id].source_kind"
-              class="rounded-md border border-n-weak bg-n-background px-3 py-2"
-            >
-              <option
-                v-for="source in sourceOptions"
-                :key="source"
-                :value="source"
-              >
-                {{ sourceLabels[source] }}
-              </option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            class="inline-flex h-8 items-center justify-center rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="resolvingId === request.id"
-          >
-            {{ t('AI_LEAD_EMPLOYEE.REVIEWS.RESOLVE') }}
-          </button>
-        </form>
       </div>
-    </div>
+      <textarea
+        v-model="resolutionForms[request.id].answer"
+        :disabled="Boolean(resolutionResults[request.id])"
+        rows="4"
+        class="rounded-md border border-n-weak bg-n-background px-3 py-2"
+        placeholder="Write the customer reply or private resolution note"
+      />
+      <template v-if="!resolutionResults[request.id]">
+        <p class="text-xs text-n-slate-11">
+          Send reply delivers this text to the Lead. Save private note keeps it inside your team.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-lg bg-n-brand px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            :disabled="resolvingId === request.id || !resolutionForms[request.id].answer"
+            @click="resolveReviewRequest(request, 'send_reply')"
+          >
+            Send reply and resolve
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-n-weak px-3 py-2 text-sm font-medium disabled:opacity-50"
+            :disabled="resolvingId === request.id || !resolutionForms[request.id].answer"
+            @click="resolveReviewRequest(request, 'internal_note')"
+          >
+            Save private note and resolve
+          </button>
+        </div>
+      </template>
+      <template v-else-if="resolutionResults[request.id].knowledge_proposal_outcome === 'not_requested'">
+        <p class="text-xs text-n-slate-11">
+          Reusable knowledge is optional and stays unavailable until an administrator approves this separate draft.
+        </p>
+        <div class="grid gap-2 sm:grid-cols-2">
+          <input v-model="resolutionForms[request.id].title" class="rounded-md border border-n-weak bg-n-background px-3 py-2" placeholder="Knowledge proposal title" />
+          <select v-model="resolutionForms[request.id].source_kind" class="rounded-md border border-n-weak bg-n-background px-3 py-2">
+            <option v-for="source in sourceOptions" :key="source" :value="source">{{ source }}</option>
+          </select>
+        </div>
+        <button
+          type="button"
+          class="w-fit rounded-lg border border-n-weak px-3 py-2 text-sm font-medium disabled:opacity-50"
+          :disabled="resolvingId === request.id"
+          @click="proposeKnowledge(request)"
+        >
+          Propose reusable knowledge
+        </button>
+      </template>
+      <a v-else class="w-fit text-n-blue-text underline" :href="knowledgePath(resolutionResults[request.id])">
+        Open draft knowledge proposal
+      </a>
+    </article>
   </section>
 </template>

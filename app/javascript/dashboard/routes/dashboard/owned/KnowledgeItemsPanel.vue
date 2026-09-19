@@ -214,7 +214,15 @@ const loadDocuments = async () => {
 const loadApprovedAnswers = async () => {
   const { data } = await KnowledgeItemsAPI.get();
   approvedAnswers.value = data;
-  selectedAnswerId.value ||= data[0]?.id || null;
+  const requestedItemId = Number(route.query.knowledge_item_id || 0);
+  const requestedItem = data.find(item => item.id === requestedItemId);
+  if (requestedItem) {
+    selectedAnswerId.value = requestedItem.id;
+    activeTab.value =
+      requestedItem.status === 'approved' ? 'approved_answers' : 'drafts';
+  } else {
+    selectedAnswerId.value ||= data[0]?.id || null;
+  }
 };
 const loadOffers = async () => {
   const { data } = await OffersAPI.get();

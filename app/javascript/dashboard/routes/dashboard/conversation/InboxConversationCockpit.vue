@@ -13,6 +13,7 @@ import MessagesView from 'dashboard/components/widgets/conversation/MessagesView
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
+import HumanReviewRequestsPanel from 'dashboard/routes/dashboard/owned/HumanReviewRequestsPanel.vue';
 
 const props = defineProps({
   inboxId: {
@@ -111,6 +112,7 @@ const detailTabs = computed(() => [
 ]);
 
 const selectedDisplayId = computed(() => Number(props.conversationId || 0));
+const selectedReviewId = computed(() => Number(route.query.review_id || 0));
 
 const selectedRow = computed(() => {
   if (!rows.value.length) return null;
@@ -1391,6 +1393,11 @@ onMounted(() => {
           </section>
         </template>
       </MessagesView>
+      <HumanReviewRequestsPanel
+        v-if="activeQueue === 'review' && currentChat?.id"
+        :conversation-id="currentChat.id"
+        :review-id="selectedReviewId || null"
+      />
     </main>
 
     <aside
