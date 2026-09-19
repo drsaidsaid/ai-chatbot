@@ -667,7 +667,7 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
     expect(intent.outbound_message).to be_present
   end
 
-  it 'ends repeated abandoned model work with one local review instead of an unlimited recovery loop' do
+  it 'ends repeated abandoned model work with one Review acknowledgment without another model attempt' do
     conversation.update!(control_state: :ai_active, assignee: nil)
     approve_launch!
     incoming = create(:message, account: channel.account, inbox: channel.inbox, conversation: conversation,
@@ -679,7 +679,10 @@ RSpec.describe 'Canonical WhatsApp outgoing delivery', type: :request do
 
     expect(intent.reload).to have_attributes(state: 'failed', failure_class: 'claim_recovery_exhausted', attempts: 3)
     expect(HumanReviewRequest.where(lead_message: incoming, reason: :provider_failed).count).to eq(1)
-    expect(conversation.messages.outgoing.count).to eq(0)
+    expect(conversation.messages.outgoing.count).to eq(1)
+    expect(intent.outbound_message.content).to eq(
+      'I cannot give you a confirmed answer yet. I have recorded your question for the team to review.'
+    )
   end
 
   it 'reconciles a late acknowledgement from the original owner and resolves the unknown review' do

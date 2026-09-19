@@ -1,34 +1,40 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::SafeConversationReplyService
-  KNOWLEDGE_GAP_REASON = 'no_approved_knowledge'
-
-  SWAHILI_QUESTION_TRANSLATIONS = {
-    'What is your name?' => 'Jina lako ni nani?',
-    'What type of business do you run?' => 'Unaendesha biashara ya aina gani?',
-    'What problem are you trying to solve right now?' =>
-      'Unajaribu kutatua changamoto gani kwa sasa?',
-    'How many leads or inquiries do you handle each month?' =>
-      'Unapata leads au maulizo mangapi kwa mwezi?',
-    'How soon do you want this solved?' => 'Ungependa hili litatuliwe ndani ya muda gani?',
-    'What budget range have you set aside for this?' => 'Umetenga bajeti ya kiwango gani kwa hili?',
-    'Are you the person who decides on this purchase?' =>
-      'Je, wewe ndiye unayefanya uamuzi wa kununua?',
-    'What is the best email or phone number for follow-up?' =>
-      'Ni barua pepe au namba gani bora kwa ajili ya kufuatilia?'
+  KNOWLEDGE_GAP_REASONS = %w[no_approved_knowledge conflicting_knowledge source_unverified stale_knowledge].freeze
+  CONVERSATION_REPLIES = {
+    english: {
+      language_question: 'Yes, I can continue in English or Swahili.',
+      greeting: 'Hello. How can I help with this business today?',
+      acknowledgment: 'Thank you.',
+      qualification_answer: 'Thanks for those details.',
+      scope_clarification: 'Are you asking about this business or one of its Offers?',
+      generic_safe: 'Could you tell me what you need about this business?'
+    },
+    swahili: {
+      language_question: 'Ndiyo, ninaweza kuendelea kwa Kiswahili au Kiingereza.',
+      greeting: 'Habari. Ninaweza kusaidia kuhusu biashara hii leo?',
+      acknowledgment: 'Asante.',
+      qualification_answer: 'Asante kwa maelezo.',
+      scope_clarification: 'Je, unauliza kuhusu biashara hii au mojawapo ya Ofa zake?',
+      generic_safe: 'Unaweza kueleza unachohitaji kuhusu biashara hii?'
+    }
   }.freeze
 
-  def initialize(message:, refusal_reason:, qualification_result:)
+  def initialize(message:, qualification_result:, refusal_reason: nil, classification: nil)
     @message = message.to_s
     @refusal_reason = refusal_reason.to_s
     @qualification_result = qualification_result
+    @classification = classification
   end
 
   def perform
-    return if refusal_reason != KNOWLEDGE_GAP_REASON
-    return if classification.risky?
+    return unrelated_reply if classification.intent == :unrelated
+    return personalized_strategy_reply if classification.intent == :personalized_strategy && knowledge_gap?
+    return knowledge_gap_reply if knowledge_gap?
+    return unless classification.safe_conversation?
 
-    [base_reply, localized_next_question].compact_blank.join("\n\n")
+    [conversation_reply, useful_next_question].compact_blank.join("\n\n")
   end
 
   private
@@ -39,45 +45,38 @@ class AiLeadEmployee::SafeConversationReplyService
     @classification ||= AiLeadEmployee::ConversationIntentClassifier.new(message: message).perform
   end
 
-  def base_reply
-    return localized_language_reply if classification.intent == :language_question
-    return localized_greeting_reply if classification.intent == :greeting
-
-    swahili? ? swahili_knowledge_gap_reply : english_knowledge_gap_reply
+  def knowledge_gap?
+    KNOWLEDGE_GAP_REASONS.include?(refusal_reason)
   end
 
-  def localized_language_reply
-    return 'Ndiyo, ninaweza kuendelea kwa Kiswahili au Kiingereza.' if swahili?
-
-    'Yes, I can continue in English or Swahili.'
+  def conversation_reply
+    replies = CONVERSATION_REPLIES.fetch(swahili? ? :swahili : :english)
+    replies.fetch(classification.intent, replies.fetch(:generic_safe))
   end
 
-  def localized_greeting_reply
-    return 'Habari. Ninaweza kukusanya taarifa chache ili timu yetu ikusaidie.' if swahili?
+  def knowledge_gap_reply
+    return 'Bado sina jibu lililoidhinishwa. Nimeweka swali lako kwa timu ili ilipitie.' if swahili?
 
-    'Hello. I can collect a few details so our team can help you.'
+    'I do not have an approved answer for that yet. I have recorded your question for the team to review.'
   end
 
-  def english_knowledge_gap_reply
-    [
-      'I do not have an approved answer for that yet, so I will flag it for review.',
-      'I can still collect a few details so the team can help you properly.'
-    ].join(' ')
+  def personalized_strategy_reply
+    return 'Siwezi kutengeneza mkakati binafsi kutoka taarifa ambazo hazijaidhinishwa. Nimeweka swali lako kwa timu ili ilipitie.' if swahili?
+
+    'I cannot create a personalized strategy from unapproved information. I have recorded your question for the team to review.'
   end
 
-  def swahili_knowledge_gap_reply
-    [
-      'Bado sina jibu lililoidhinishwa kwa swali hilo, kwa hiyo nitalipeleka kwa ukaguzi.',
-      'Naweza kuendelea kukusanya taarifa chache ili timu ikusaidie vizuri.'
-    ].join(' ')
+  def unrelated_reply
+    return 'Ninaweza kusaidia kwa maswali kuhusu biashara hii na Ofa zake.' if swahili?
+
+    'I can help with questions about this business and its Offers.'
   end
 
-  def localized_next_question
-    question = qualification_result&.next_question
-    return if question.blank?
-    return SWAHILI_QUESTION_TRANSLATIONS.fetch(question, question) if swahili?
+  def useful_next_question
+    return unless classification.intent.in?(%i[qualification_answer personalized_strategy])
+    return unless qualification_result&.qualification_mode == 'enabled'
 
-    question
+    qualification_result.next_question
   end
 
   def swahili?

@@ -1,14 +1,16 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Icon from 'next/icon/Icon.vue';
 import KnowledgeDocumentsAPI from 'dashboard/api/knowledgeDocuments';
 import KnowledgeItemsAPI from 'dashboard/api/knowledgeItems';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
+import OffersAPI from 'dashboard/api/qualificationOffers';
 
 const route = useRoute();
+const router = useRouter();
 const { t } = useI18n();
 
 const tabs = computed(() => [
@@ -30,13 +32,13 @@ const answerKinds = [
 const activeTab = ref('documents');
 const documents = ref([]);
 const approvedAnswers = ref([]);
+const offers = ref([]);
 const reviewRequests = ref([]);
 const selectedDocumentId = ref(null);
 const selectedAnswerId = ref(null);
 const selectedReviewId = ref(null);
 const isLoading = ref(false);
 const isSaving = ref(false);
-const isTesting = ref(false);
 const documentSearch = ref('');
 const answerSearch = ref('');
 const reviewFilter = ref('all');
@@ -45,8 +47,6 @@ const showRevisionHistory = ref(false);
 const showImport = ref(false);
 const showNewAnswer = ref(false);
 const hasUnsavedDocumentChanges = ref(false);
-const testQuestion = ref(t('AI_LEAD_EMPLOYEE.KNOWLEDGE.DEFAULT_TEST_QUESTION'));
-const testResult = ref(null);
 const saveError = ref('');
 
 const documentForm = reactive({
@@ -67,8 +67,13 @@ const answerForm = reactive({
   question: '',
   answer: '',
   source_kind: 'pricing',
+  metadata: { language: '', offer_ids: [] },
 });
 const reviewForms = reactive({});
+const answerVisibleInTab = answer =>
+  activeTab.value === 'drafts'
+    ? answer.status !== 'approved'
+    : answer.status === 'approved';
 
 const selectedDocument = computed(
   () =>
@@ -80,11 +85,10 @@ const selectedAnswer = computed(
   () =>
     approvedAnswers.value.find(
       answer =>
-        answer.id === selectedAnswerId.value &&
-        (activeTab.value !== 'drafts' || answer.status === 'draft')
+        answer.id === selectedAnswerId.value && answerVisibleInTab(answer)
     ) ||
     (activeTab.value === 'drafts'
-      ? approvedAnswers.value.find(answer => answer.status === 'draft')
+      ? approvedAnswers.value.find(answerVisibleInTab)
       : null) ||
     null
 );
@@ -105,7 +109,7 @@ const filteredDocuments = computed(() => {
 const filteredAnswers = computed(() => {
   const query = answerSearch.value.trim().toLowerCase();
   return approvedAnswers.value
-    .filter(answer => activeTab.value !== 'drafts' || answer.status === 'draft')
+    .filter(answerVisibleInTab)
     .filter(
       answer =>
         !query ||
@@ -182,7 +186,6 @@ const selectDocument = document => {
   selectedDocumentId.value = document.id;
   syncDocumentForm(document);
   showPreview.value = false;
-  testResult.value = null;
 };
 
 const ensureReviewForm = request => {
@@ -213,6 +216,10 @@ const loadApprovedAnswers = async () => {
   approvedAnswers.value = data;
   selectedAnswerId.value ||= data[0]?.id || null;
 };
+const loadOffers = async () => {
+  const { data } = await OffersAPI.get();
+  offers.value = data;
+};
 const loadReviewRequests = async () => {
   const { data } = await HumanReviewRequestsAPI.get();
   reviewRequests.value = data;
@@ -223,7 +230,7 @@ const loadWorkspace = async () => {
   isLoading.value = true;
   saveError.value = '';
   try {
-    await Promise.all([loadDocuments(), loadApprovedAnswers()]);
+    await Promise.all([loadDocuments(), loadApprovedAnswers(), loadOffers()]);
   } catch {
     saveError.value = 'Could not load Knowledge workspace.';
   } finally {
@@ -272,9 +279,10 @@ const saveDocument = async () => {
   if (!selectedDocument.value) return;
   isSaving.value = true;
   try {
+    const payload = JSON.parse(JSON.stringify(documentForm));
     const { data } = await KnowledgeDocumentsAPI.update(
       selectedDocument.value.id,
-      documentForm
+      payload
     );
     documents.value = documents.value.map(document =>
       document.id === data.id ? data : document
@@ -311,15 +319,16 @@ const archiveDocument = async () => {
   );
   selectDocument(data);
 };
-const runDocumentTest = async () => {
+const openDocumentTestCenter = () => {
   if (!selectedDocument.value) return;
-  isTesting.value = true;
-  const { data } = await KnowledgeDocumentsAPI.test(
-    selectedDocument.value.id,
-    testQuestion.value
-  );
-  testResult.value = data;
-  isTesting.value = false;
+  router.push({
+    name: 'owned_test_center_index',
+    params: { accountId: route.params.accountId },
+    query: {
+      tab: 'scenarios',
+      knowledge_document_id: selectedDocument.value.id,
+    },
+  });
 };
 const updateDocumentField = (key, value) => {
   documentForm[key] = value;
@@ -328,7 +337,8 @@ const updateDocumentField = (key, value) => {
 const createAnswer = async () => {
   isSaving.value = true;
   try {
-    const { data } = await KnowledgeItemsAPI.create(answerForm);
+    const payload = JSON.parse(JSON.stringify(answerForm));
+    const { data } = await KnowledgeItemsAPI.create(payload);
     approvedAnswers.value.unshift(data);
     selectedAnswerId.value = data.id;
     Object.assign(answerForm, {
@@ -336,6 +346,7 @@ const createAnswer = async () => {
       question: '',
       answer: '',
       source_kind: 'pricing',
+      metadata: { language: '', offer_ids: [] },
     });
     showNewAnswer.value = false;
   } catch (error) {
@@ -350,6 +361,13 @@ const applyAnswerLifecycle = async (answer, action) => {
   approvedAnswers.value = approvedAnswers.value.map(item =>
     item.id === data.id ? data : item
   );
+};
+const setDocumentOffer = value => {
+  updateDocumentField('offer_ids', value ? [Number(value)] : []);
+  if (value) updateDocumentField('general_question_access', false);
+};
+const setAnswerOffer = value => {
+  answerForm.metadata.offer_ids = value ? [Number(value)] : [];
 };
 const resolveReview = async request => {
   await HumanReviewRequestsAPI.resolve(request.id, reviewForms[request.id]);
@@ -777,18 +795,24 @@ onMounted(loadWorkspace);
             </button>
           </label>
           <div class="border-t border-n-weak pt-5">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-semibold text-n-slate-12"
-                >Applies to</span
-              ><button
-                type="button"
-                class="text-n-blue-text"
-                aria-label="Edit applicable offers"
+            <label class="grid gap-2 text-sm font-semibold text-n-slate-12">
+              Applies to
+              <select
+                class="h-10 rounded-lg border border-n-weak bg-n-background px-3 font-normal"
+                aria-label="Document Offer scope"
+                :value="documentForm.offer_ids[0] || ''"
+                @change="setDocumentOffer($event.target.value)"
               >
-                <Icon icon="i-lucide-pencil" class="size-4" />
-              </button>
-            </div>
-            <p class="mt-2 text-sm text-n-slate-11">All offers</p>
+                <option value="">All offers</option>
+                <option
+                  v-for="offer in offers"
+                  :key="offer.id"
+                  :value="offer.id"
+                >
+                  {{ offer.name }}
+                </option>
+              </select>
+            </label>
           </div>
           <label
             class="flex items-center justify-between gap-4 border-t border-n-weak pt-5 text-sm text-n-slate-12"
@@ -860,27 +884,11 @@ onMounted(loadWorkspace);
             <button
               type="button"
               class="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-n-weak px-3 py-3 text-sm font-semibold"
-              @click="runDocumentTest"
+              @click="openDocumentTestCenter"
             >
-              <Icon icon="i-lucide-flask-conical" class="size-4" />{{
-                isTesting ? 'Testing...' : 'Test this document'
-              }}
+              <Icon icon="i-lucide-flask-conical" class="size-4" />Try this
+              answer in Test Center
             </button>
-            <input
-              v-model="testQuestion"
-              class="mt-3 h-10 w-full rounded-lg border border-n-weak bg-n-background px-3 text-sm"
-              aria-label="Document test question"
-            />
-            <p
-              v-if="testResult"
-              class="mt-3 rounded-lg bg-n-background p-3 text-sm leading-6 text-n-slate-11"
-            >
-              {{
-                testResult.answered
-                  ? testResult.answer
-                  : `Needs Review: ${testResult.refusal_reason}`
-              }}
-            </p>
           </div>
         </div>
       </aside>
@@ -925,6 +933,26 @@ onMounted(loadWorkspace);
           >
             <option v-for="kind in answerKinds" :key="kind" :value="kind">
               {{ answerKindLabel(kind) }}
+            </option>
+          </select>
+          <select
+            v-model="answerForm.metadata.language"
+            aria-label="Approved Answer language"
+            class="h-10 rounded-lg border border-n-weak px-3 text-sm"
+          >
+            <option value="">Any language</option>
+            <option value="english">English</option>
+            <option value="swahili">Swahili</option>
+          </select>
+          <select
+            aria-label="Approved Answer Offer scope"
+            class="h-10 rounded-lg border border-n-weak px-3 text-sm"
+            :value="answerForm.metadata.offer_ids[0] || ''"
+            @change="setAnswerOffer($event.target.value)"
+          >
+            <option value="">All offers</option>
+            <option v-for="offer in offers" :key="offer.id" :value="offer.id">
+              {{ offer.name }}
             </option>
           </select>
           <input

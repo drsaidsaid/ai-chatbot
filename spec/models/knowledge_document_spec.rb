@@ -24,6 +24,13 @@ RSpec.describe KnowledgeDocument do
     document.publish!(editor: admin)
     expect(document).to be_published
     expect(document.published_at).to be_present
+    expect(document.revisions.last).to include(
+      'event' => 'published',
+      'body' => 'Company context and services',
+      'used_by_ai_employee' => true,
+      'general_question_access' => true,
+      'content_digest' => document.published_content_digest
+    )
 
     document.archive!(editor: admin)
     expect(document).to be_archived

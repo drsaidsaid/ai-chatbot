@@ -127,8 +127,7 @@ RSpec.describe 'AI orchestration after uncertain provider accounting', type: :jo
   end
 
   def expect_no_classified_provider_output(records, failure_class, usage_status)
-    expect(records.fetch(:conversation).messages.outgoing).to be_empty
-    expect(OutboxEvent.where(account: records.fetch(:account))).to be_empty
+    expect_only_review_acknowledgment(records)
     expect(records.fetch(:connection).usages.sole).to have_attributes(
       status: usage_status,
       failure_class: usage_status == 'failed' ? failure_class : nil
@@ -145,10 +144,27 @@ RSpec.describe 'AI orchestration after uncertain provider accounting', type: :jo
   end
 
   def expect_no_provider_output(records)
-    expect(records.fetch(:conversation).messages.outgoing).to be_empty
-    expect(OutboxEvent.where(account: records.fetch(:account))).to be_empty
+    expect_only_review_acknowledgment(records)
     expect(records.fetch(:connection).usages.sole).to have_attributes(status: 'reserved')
     expect(records.fetch(:intent).ai_reply_usage.reload).to be_released
+  end
+
+  def expect_only_review_acknowledgment(records)
+    intent = records.fetch(:intent).reload
+    acknowledgment = records.fetch(:conversation).messages.outgoing.sole
+    expect(acknowledgment).to eq(intent.outbound_message)
+    expect_review_acknowledgment_authority(acknowledgment, intent)
+    expect(OutboxEvent.where(account: records.fetch(:account)).sole.aggregate).to eq(acknowledgment)
+  end
+
+  def expect_review_acknowledgment_authority(acknowledgment, intent)
+    expect(acknowledgment.content).to include('recorded your question for the team to review')
+    expect(acknowledgment.content).not_to include('Yes, we build AI employees.')
+    expect(acknowledgment.additional_attributes.fetch('ai_lead_employee')).to include(
+      'outbound_intent_status' => 'review_acknowledgment', 'review_request_id' => intent.review_request_id
+    )
+    expect(acknowledgment.additional_attributes.dig('ai_lead_employee', 'ai_reply_usage_id')).to be_nil
+    expect(acknowledgment.whatsapp_outbound_delivery.ai_reply_usage_id).to be_nil
   end
 
   def run_and_recover(records)

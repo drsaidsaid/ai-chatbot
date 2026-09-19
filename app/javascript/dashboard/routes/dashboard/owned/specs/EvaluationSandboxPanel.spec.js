@@ -3,6 +3,7 @@ import { nextTick } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import EvaluationSandboxPanel from '../EvaluationSandboxPanel.vue';
 import EvaluationSandboxAPI from 'dashboard/api/evaluationSandbox';
+import KnowledgeDocumentsAPI from 'dashboard/api/knowledgeDocuments';
 
 vi.mock('dashboard/api/evaluationSandbox', () => ({
   default: {
@@ -14,6 +15,12 @@ vi.mock('dashboard/api/evaluationSandbox', () => ({
     updateLaunchGate: vi.fn(),
     approveLaunch: vi.fn(),
     proposeKnowledge: vi.fn(),
+  },
+}));
+
+vi.mock('dashboard/api/knowledgeDocuments', () => ({
+  default: {
+    show: vi.fn(),
   },
 }));
 
@@ -91,6 +98,16 @@ vi.mock('vue-i18n', () => ({
           'AI_LEAD_EMPLOYEE.TEST_CENTER.HISTORICAL_RESULT_FILTER':
             'Historical result filter',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE': 'Knowledge',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_CONTEXT':
+            'Knowledge document context',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_CONTEXT_LOAD_ERROR':
+            'Knowledge context could not be loaded.',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_QUESTION':
+            'Knowledge test question',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_QUESTION_PLACEHOLDER':
+            'Ask a question this document should answer',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_TEST_ERROR':
+            'Knowledge test could not be run.',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_VERSION': 'Knowledge version',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.LAST_RESULT': 'Last result',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.LAST_TESTED': 'Last tested',
@@ -146,6 +163,8 @@ vi.mock('vue-i18n', () => ({
             'Reviewer grading is stored with configuration, knowledge, model, expected result, and actual result.',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.REVIEW_PATH': 'Review path: {reason}',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.RUNNING': 'Running...',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.TESTING': 'Testing...',
+          'AI_LEAD_EMPLOYEE.TEST_CENTER.TRY_THIS_ANSWER': 'Try this answer',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_AGAIN': 'Run again',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_ERROR':
             'Scenario could not be run.',
@@ -207,11 +226,13 @@ vi.mock('vue-i18n', () => ({
             'WhatsApp simulation',
           'AI_LEAD_EMPLOYEE.TEST_CENTER.WHAT_IT_CHECKS': 'What it checks',
         }[key] || key;
-      return Object.entries(params).reduce(
-        (text, [param, value]) =>
-          text.replace(new RegExp(`\\{${param}\\}`, 'g'), value),
-        message
-      );
+      return Object.entries(params)
+        .reduce(
+          (text, [param, value]) =>
+            text.replace(new RegExp(`\\{${param}\\}`, 'g'), value),
+          message
+        )
+        .replace(/\{[^}]+\}/g, '');
     },
   }),
 }));
@@ -317,7 +338,7 @@ const payload = {
   },
 };
 
-const mountComponent = async () => {
+const mountComponent = async (path = '/app/accounts/1/test-center') => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -328,7 +349,7 @@ const mountComponent = async () => {
       },
     ],
   });
-  router.push('/app/accounts/1/test-center');
+  router.push(path);
   await router.isReady();
 
   const wrapper = mount(EvaluationSandboxPanel, {
@@ -371,6 +392,139 @@ describe('EvaluationSandboxPanel', () => {
         },
       },
     });
+    KnowledgeDocumentsAPI.show.mockResolvedValue({
+      data: {
+        id: 42,
+        title: 'Refund policy document',
+        status: 'published',
+      },
+    });
+  });
+
+  it('loads and tests the knowledge document identified by the contextual shortcut', async () => {
+    const contextualRun = {
+      ...run,
+      id: 9,
+      scenario_key: 'knowledge_document_context',
+      scenario_name: 'Knowledge document: Refund policy document',
+      steps: [
+        {
+          ...run.steps[0],
+          selected_answer: 'Refunds are unavailable after enrollment.',
+          sources: [{ title: 'Refund policy document' }],
+        },
+      ],
+    };
+    EvaluationSandboxAPI.runScenario.mockResolvedValueOnce({
+      data: contextualRun,
+    });
+    EvaluationSandboxAPI.runs.mockResolvedValueOnce({ data: [contextualRun] });
+    const { wrapper } = await mountComponent(
+      '/app/accounts/1/test-center?tab=scenarios&knowledge_document_id=42'
+    );
+
+    expect(KnowledgeDocumentsAPI.show).toHaveBeenCalledWith('42');
+    expect(wrapper.text()).toContain('Refund policy document');
+
+    await wrapper
+      .get('input[aria-label="Knowledge test question"]')
+      .setValue('Can I get a refund?');
+    await wrapper
+      .get('[data-testid="run-knowledge-document-test"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(EvaluationSandboxAPI.runScenario).toHaveBeenCalledWith(
+      'knowledge_document_context',
+      {
+        knowledge_document_id: '42',
+        question: 'Can I get a refund?',
+      }
+    );
+    expect(
+      wrapper
+        .get('[data-testid="test-center-tab-results"]')
+        .attributes('aria-selected')
+    ).toBe('true');
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Open transcript')
+      .trigger('click');
+    await flushPromises();
+    expect(wrapper.text()).toContain(
+      'Refunds are unavailable after enrollment.'
+    );
+  });
+
+  it('renders evidence and setup values from the evaluation run payload contract', async () => {
+    const contextualRun = {
+      ...run,
+      id: 10,
+      scenario_key: 'knowledge_document_context',
+      scenario_name: 'Knowledge document: Synthetic onboarding guide',
+      expected_results: { key: 'knowledge_document_context' },
+      model_identifier: 'deterministic-v1-sandbox',
+      provider_snapshot: {
+        provider: 'openrouter',
+        model: 'synthetic/r11-browser',
+        status: 'active',
+        configuration_version: 1,
+      },
+      steps: [
+        {
+          ...run.steps[0],
+          selected_answer:
+            'The onboarding guide maps an inquiry to the first setup call.',
+          source_references: [
+            {
+              id: 42,
+              title: 'Synthetic onboarding guide',
+              source_kind: 'document',
+              type: 'knowledge_document',
+              status: 'verified',
+            },
+          ],
+        },
+      ],
+    };
+    EvaluationSandboxAPI.get.mockResolvedValue({
+      data: { ...payload, runs: [contextualRun] },
+    });
+    EvaluationSandboxAPI.runs.mockResolvedValue({ data: [contextualRun] });
+
+    const { wrapper } = await mountComponent();
+    const setupValue = label =>
+      wrapper.findAll('dt').find(item => item.text() === label).element
+        .nextElementSibling.textContent;
+
+    expect(wrapper.text()).toContain('Sources: Synthetic onboarding guide');
+    expect(setupValue('Offer')).toBe('None');
+    expect(setupValue('Starting channel')).toBe('None');
+    expect(setupValue('Model')).toBe('synthetic/r11-browser');
+  });
+
+  it('renders a nested evaluation review reason in the transcript', async () => {
+    const reviewRun = {
+      ...run,
+      id: 11,
+      steps: [
+        {
+          ...run.steps[0],
+          review_request_reason: undefined,
+          refusal_reason: undefined,
+          review_request: { reason: 'no_approved_knowledge' },
+          selected_answer:
+            'I do not have an approved answer for that yet. I have recorded your question for the team to review.',
+        },
+      ],
+    };
+    EvaluationSandboxAPI.get.mockResolvedValue({
+      data: { ...payload, runs: [reviewRun] },
+    });
+
+    const { wrapper } = await mountComponent();
+
+    expect(wrapper.text()).toContain('Review path: No Approved Knowledge');
   });
 
   it('renders scenarios with filters and a simulation transcript', async () => {

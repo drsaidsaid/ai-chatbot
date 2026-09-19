@@ -7,20 +7,13 @@ RSpec.describe 'Qualification Configuration API', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:agent) { create(:user, account: account, role: :agent) }
 
-  it 'shows the complete default question list for a new account' do
+  it 'does not synthesize qualification questions for a new account' do
     get "/api/v1/accounts/#{account.id}/qualification_configuration",
         headers: admin.create_new_auth_token,
         as: :json
 
     expect(response).to have_http_status(:success)
-    expect(response.parsed_body['questions'].first).to include(
-      'id' => nil,
-      'signal' => 'name',
-      'prompt' => 'What is your name?',
-      'position' => 0,
-      'enabled' => true
-    )
-    expect(response.parsed_body['questions'].pluck('signal')).to include('business_type', 'budget', 'contact_details')
+    expect(response.parsed_body['questions']).to eq([])
   end
 
   it 'lets an admin configure questions and budget ranges with a version bump' do
@@ -51,7 +44,7 @@ RSpec.describe 'Qualification Configuration API', type: :request do
     expect(response).to have_http_status(:success)
     expect(response.parsed_body['version']).to eq(2)
     expect(response.parsed_body['questions'].pluck('prompt')).to eq(
-      ['What is your name?', 'What budget range works?', 'What is the main blocker?']
+      ['What budget range works?', 'What is the main blocker?']
     )
     expect(question.reload.enabled).to be(false)
     expect(account.qualification_budget_ranges.first.label).to eq('$500 - $1,500')

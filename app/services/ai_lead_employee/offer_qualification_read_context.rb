@@ -90,11 +90,10 @@ class AiLeadEmployee::OfferQualificationReadContext
 
   def next_question(qualification)
     return if qualification_question_suppressed?
+    return unless offers_configured?
 
     snapshot = qualification&.evidence_snapshot || {}
     return next_offer_question(snapshot) if offer
-
-    AiLeadEmployee::QualificationService.next_question_for(account: @account, evidence_snapshot: snapshot)
   end
 
   def legacy_payload(qualification)

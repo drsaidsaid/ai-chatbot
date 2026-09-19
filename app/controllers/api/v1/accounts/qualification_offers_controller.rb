@@ -40,7 +40,7 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
                                                 :key, :meaning, :answer_type, :prompt, :position, :enabled, :required,
                                                 :period, :purpose, { options: [] }
                                               ],
-                                              next_step: [:kind],
+                                              next_step: [:kind, :prompt, :url],
                                               budget_ranges: [:label, :minimum, :maximum, :position, :enabled],
                                               score_weights: {}, score_thresholds: [:qualified, :highly_qualified]).to_h
     permitted.merge('rules' => rule_params)

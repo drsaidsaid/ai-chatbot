@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::LeadUpdateService
-  EDITABLE_EVIDENCE_SIGNALS = QualificationQuestion::SIGNALS.keys.freeze
-
   def initialize(account:, user:, contact:, attributes:, conversation_scope: nil)
     @account = account
     @user = user
@@ -10,7 +8,6 @@ class AiLeadEmployee::LeadUpdateService
     @attributes = attributes.to_h.with_indifferent_access
     @conversation_scope = conversation_scope
     @changed_fields = {}
-    @changed_evidence_signals = []
   end
 
   def perform
@@ -22,8 +19,6 @@ class AiLeadEmployee::LeadUpdateService
       reject_unscoped_offer_evidence!
       update_contact!
       update_assignee!
-      record_evidence!
-      recompute_qualification!
       audit_update!
     end
 
@@ -32,12 +27,17 @@ class AiLeadEmployee::LeadUpdateService
 
   private
 
-  attr_reader :account, :user, :contact, :attributes, :conversation_scope, :changed_fields, :changed_evidence_signals
+  attr_reader :account, :user, :contact, :attributes, :conversation_scope, :changed_fields
 
   def reject_unscoped_offer_evidence!
-    return unless attributes[:evidence].present? && account.qualification_offers.exists?
+    return if attributes[:evidence].blank?
 
-    contact.errors.add(:base, 'Choose an Offer and Conversation and use the Offer evidence editor for this correction')
+    message = if account.qualification_offers.exists?
+                'Choose an Offer and Conversation and use the Offer evidence editor for this correction'
+              else
+                'Configure an Offer before editing qualification evidence'
+              end
+    contact.errors.add(:base, message)
     raise ActiveRecord::RecordInvalid, contact
   end
 
@@ -94,43 +94,15 @@ class AiLeadEmployee::LeadUpdateService
     changed_fields['assignee_id'] = [previous_assignee_id, latest_conversation.assignee_id]
   end
 
-  def record_evidence!
-    evidence_attributes.each do |signal, value|
-      next if value.blank?
-
-      AiLeadEmployee::QualificationService.record_human_evidence!(
-        contact: contact,
-        conversation: latest_conversation,
-        user: user,
-        signal: signal,
-        value: value
-      )
-      changed_evidence_signals << signal
-    end
-  end
-
-  def evidence_attributes
-    attributes.fetch(:evidence, {}).to_h.with_indifferent_access.slice(*EDITABLE_EVIDENCE_SIGNALS)
-  end
-
-  def recompute_qualification!
-    return if changed_evidence_signals.blank? || latest_conversation.blank?
-
-    AiLeadEmployee::QualificationService.new(conversation: latest_conversation).perform
-  end
-
   def audit_update!
-    return if changed_fields.blank? && changed_evidence_signals.blank?
+    return if changed_fields.blank?
 
     Audited::Audit.create!(
       auditable: contact,
       associated: account,
       user: user,
       action: 'update',
-      audited_changes: changed_fields.merge(
-        'ai_lead_employee_action' => 'lead_edit',
-        'evidence_signals' => changed_evidence_signals
-      ),
+      audited_changes: changed_fields.merge('ai_lead_employee_action' => 'lead_edit'),
       version: next_audit_version,
       created_at: Time.current
     )

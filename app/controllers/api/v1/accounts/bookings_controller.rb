@@ -65,8 +65,13 @@ class Api::V1::Accounts::BookingsController < Api::V1::Accounts::BaseController
     access = AiLeadEmployee::AccessScope.new(account: current_account, user: current_user)
     raise Pundit::NotAuthorizedError unless access.complete_contact?(conversation.contact)
 
-    @lead_qualification ||= access.qualification(conversation.contact) ||
-                            AiLeadEmployee::QualificationService.new(conversation: conversation).perform.qualification
+    @lead_qualification ||= access.qualification(conversation.contact) || configured_offer_qualification
+  end
+
+  def configured_offer_qualification
+    return unless current_account.qualification_offers.exists?
+
+    AiLeadEmployee::QualificationService.new(conversation: conversation).perform.qualification
   end
 
   def availability_from

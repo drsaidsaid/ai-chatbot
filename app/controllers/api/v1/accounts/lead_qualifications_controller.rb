@@ -14,12 +14,7 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
   def evidence
     return record_offer_evidence if params[:offer_id].present? || current_account.qualification_offers.exists?
 
-    authorize lead_qualification_for_evidence, :evidence?
-
-    evidence = record_legacy_evidence
-    AiLeadEmployee::QualificationService.new(conversation: latest_conversation).perform
-
-    render json: qualification_payload(access.qualification(contact) || empty_qualification).merge(evidence_id: evidence.id)
+    render json: { error: 'Configure an Offer before recording qualification evidence' }, status: :unprocessable_entity
   end
 
   private
@@ -48,13 +43,6 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
     access.conversations.where(contact: contact).find_by!(display_id: params.require(:conversation_id))
   end
 
-  def record_legacy_evidence
-    AiLeadEmployee::QualificationService.record_human_evidence!(
-      contact: contact, conversation: latest_conversation, user: Current.user,
-      signal: params.require(:signal), value: params.require(:value)
-    )
-  end
-
   def read_context
     @read_context ||= AiLeadEmployee::OfferQualificationReadContext.new(account: current_account, user: Current.user, offer_id: params[:offer_id])
   end
@@ -69,10 +57,6 @@ class Api::V1::Accounts::LeadQualificationsController < Api::V1::Accounts::BaseC
 
   def latest_conversation
     @latest_conversation ||= access.conversations.where(contact: contact).order(last_activity_at: :desc, id: :desc).first
-  end
-
-  def lead_qualification_for_evidence
-    contact.lead_qualification || LeadQualification.new(account: current_account, contact: contact)
   end
 
   def qualification_payload(qualification) # rubocop:disable Metrics/CyclomaticComplexity

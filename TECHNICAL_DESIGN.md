@@ -365,6 +365,28 @@ Conversation before sending.
 
 ### Knowledge and Human Review
 
+R11 classifies the current public Lead request before qualification and handoff
+side effects. Transactional complaint/refund/support and explicit human requests
+enter Review; unrelated topics receive a direct boundary. Other safe conversation
+replies use model-free copy. Questions that require business facts retrieve only
+approved, current, language-compatible shared or selected-Offer sources.
+
+Approval appends immutable answer content to `approval_revisions`; document
+revisions retain content, visibility, Offer scope, sensitive topics and a digest.
+The provider receives bounded public Conversation context through the triggering
+message and an explicit instruction to treat that content as data. Private notes
+never enter this prompt. Provider output is checked against the approved answer
+for amounts, links, guarantees and eligibility claims. A refusal, unsupported
+claim or relevant knowledge gap creates a Review instead of publishing the text.
+
+Review, acknowledgment Message and outbox identities commit together before
+enqueue. Configured operator alerts are also persisted before enqueue, so a queue
+failure does not erase the customer disposition. Final WhatsApp admission checks
+current control, consent, launch, window and selected Offer configuration. A
+queued answer cannot survive an Offer selection or configuration revision change.
+Approved Offer configuration alone supplies qualification questions and enquiry,
+purchase, appointment or sales-call progression.
+
 #### `knowledge_documents`
 
 - `business_account_id`, optional `offer_id`, category, title, source type, content or storage reference, authority priority, version, status, and approval metadata.

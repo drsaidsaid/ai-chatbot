@@ -3,13 +3,19 @@
 # rubocop:disable Metrics/ClassLength, Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity
 class AiLeadEmployee::Evaluation::SandboxRunner
   PROMPT_VERSION = 'ai-orchestration-v1'
+  KNOWLEDGE_DOCUMENT_SCENARIO_KEY = 'knowledge_document_context'
 
   Result = Struct.new(:run, keyword_init: true)
 
-  def initialize(account:, user:, scenario_key:)
+  def initialize(account:, user:, scenario_key:, knowledge_document: nil, question: nil)
     @account = account
     @user = user
-    @scenario = AiLeadEmployee::Evaluation::ScenarioCatalog.find!(scenario_key)
+    @knowledge_document = knowledge_document
+    if knowledge_document.present? && scenario_key != KNOWLEDGE_DOCUMENT_SCENARIO_KEY
+      raise AiLeadEmployee::Evaluation::ScenarioCatalog::ScenarioNotFound, scenario_key
+    end
+
+    @scenario = contextual_document_scenario(question) || AiLeadEmployee::Evaluation::ScenarioCatalog.find!(scenario_key)
     @simulation_identifier = "evaluation-#{scenario[:key]}-#{SecureRandom.hex(6)}"
   end
 
@@ -22,7 +28,25 @@ class AiLeadEmployee::Evaluation::SandboxRunner
 
   private
 
-  attr_reader :account, :user, :scenario, :simulation_identifier
+  attr_reader :account, :user, :scenario, :simulation_identifier, :knowledge_document
+
+  def contextual_document_scenario(question)
+    return if knowledge_document.blank?
+    raise ArgumentError, 'Question is required for a Knowledge Document test' if question.blank?
+
+    {
+      key: KNOWLEDGE_DOCUMENT_SCENARIO_KEY,
+      name: "Knowledge document: #{knowledge_document.title}",
+      description: 'The selected Knowledge Document answers the contextual test question through AI Orchestration.',
+      knowledge_document_id: knowledge_document.id,
+      messages: [{
+        event_id: "knowledge-document-#{knowledge_document.id}-#{SecureRandom.hex(4)}",
+        type: 'text',
+        body: question.to_s,
+        expected: { no_real_send: true }
+      }]
+    }
+  end
 
   def simulate_with_rollback
     result = nil
@@ -53,7 +77,8 @@ class AiLeadEmployee::Evaluation::SandboxRunner
       intent: intent,
       enqueue_deliveries: false,
       enforce_launch_gate: false,
-      provider_purpose: 'evaluation'
+      provider_purpose: 'evaluation',
+      knowledge_document_scope: knowledge_document
     ).perform
     finalize_step(step_payload(index, event_id, message_payload, processed_intent))
   end
@@ -76,9 +101,54 @@ class AiLeadEmployee::Evaluation::SandboxRunner
       status: :open,
       control_state: :ai_active,
       additional_attributes: { 'evaluation_sandbox' => true, 'simulation_identifier' => simulation_identifier },
-      last_activity_at: Time.current
+      last_activity_at: Time.current,
+      offer: contextual_offer || scenario_offer
     )
     { inbox: inbox, contact: contact, contact_inbox: contact_inbox, conversation: conversation }
+  end
+
+  def contextual_offer
+    return if knowledge_document.blank?
+
+    account.qualification_offers.enabled_in_order.find_by(id: Array(knowledge_document.offer_ids))
+  end
+
+  def scenario_offer
+    return unless scenario[:messages].any? { |message| message[:configured_offer] }
+
+    AiLeadEmployee::Offer.create!(
+      account: account,
+      name: 'Evaluation sales qualification',
+      currency: 'USD',
+      enabled: true,
+      configuration: booking_conflict_offer_configuration
+    )
+  end
+
+  def booking_conflict_offer_configuration
+    question_keys = %w[problem urgency budget decision_authority]
+    {
+      'qualification_mode' => 'enabled',
+      'next_step' => { 'kind' => 'answer_only' },
+      'questions' => question_keys.each_with_index.map { |key, index| evaluation_question(key, index) },
+      'budget_ranges' => [],
+      'rules' => [],
+      'score_weights' => question_keys.index_with(25),
+      'score_thresholds' => { 'qualified' => 40, 'highly_qualified' => 60 }
+    }
+  end
+
+  def evaluation_question(key, position)
+    {
+      'key' => key,
+      'meaning' => key.humanize,
+      'answer_type' => key == 'budget' ? 'money' : 'text',
+      'prompt' => "Please provide #{key.humanize.downcase}.",
+      'position' => position,
+      'enabled' => true,
+      'required' => true,
+      'purpose' => 'fit'
+    }
   end
 
   def whatsapp_inbox
@@ -86,13 +156,10 @@ class AiLeadEmployee::Evaluation::SandboxRunner
   end
 
   def create_sandbox_inbox!
-    channel = Channel::Whatsapp.new(
+    channel = Channel::Api.create!(
       account: account,
-      phone_number: "+1555#{SecureRandom.random_number(1_000_000_000).to_s.rjust(9, '0')}",
-      provider: 'whatsapp_cloud',
-      provider_config: { 'phone_number_id' => "sandbox-#{SecureRandom.hex(4)}", 'source' => 'embedded_signup' }
+      additional_attributes: { 'evaluation_sandbox' => true }
     )
-    channel.save!(validate: false)
     Inbox.create!(account: account, channel: channel, name: 'Evaluation Sandbox', timezone: 'UTC')
   end
 
@@ -126,7 +193,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
     conversation.update!(control_state: :human_active) if message_payload[:takeover_before_ai]
     create_coexistence_echo!(conversation) if message_payload[:coexistence_echo_before_ai]
     tenant_mismatch!(intent) if message_payload[:tenant_mismatch_before_ai]
-    create_booking_conflict!(conversation) if message_payload[:force_booking_conflict]
+    create_booking_conflict! if message_payload[:force_booking_conflict]
   end
 
   def create_coexistence_echo!(conversation)
@@ -168,7 +235,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
     # rubocop:enable Rails/SkipsModelValidations
   end
 
-  def create_booking_conflict!(conversation)
+  def create_booking_conflict!
     busy_slots = (0...7).map do |offset|
       date = Time.current.utc.to_date + offset.days
       {
@@ -176,28 +243,22 @@ class AiLeadEmployee::Evaluation::SandboxRunner
         'end' => Time.utc(date.year, date.month, date.day, 10).iso8601
       }
     end
-    account.update!(
-      settings: account.settings.to_h.deep_merge(
-        'ai_lead_employee' => {
-          'booking' => {
-            'connected' => true,
-            'minimum_notice_minutes' => 0,
-            'working_days' => (0..6).to_a,
-            'allowed_hours' => { 'start' => '09:00', 'end' => '10:00' },
-            'busy_slots' => busy_slots
-          }
+    settings = account.settings.to_h.deep_merge(
+      'ai_lead_employee' => {
+        'booking' => {
+          'connected' => true,
+          'minimum_notice_minutes' => 0,
+          'working_days' => (0..6).to_a,
+          'allowed_hours' => { 'start' => '09:00', 'end' => '10:00' },
+          'busy_slots' => busy_slots
         }
-      )
+      }
     )
-    LeadQualification.find_or_create_by!(account: account, contact: conversation.contact) do |record|
-      record.quality = :highly_qualified
-      record.follow_up_state = :human_review
-      record.score = 80
-      record.reasons = []
-      record.missing_signals = []
-      record.evidence_snapshot = {}
-      record.last_evaluated_at = Time.current
-    end
+    # The sandbox rolls this direct fixture mutation back. Account save callbacks
+    # would enqueue unrelated production-side work during the simulation.
+    # rubocop:disable Rails/SkipsModelValidations
+    account.update_columns(settings: settings)
+    # rubocop:enable Rails/SkipsModelValidations
   end
 
   def step_payload(index, event_id, message_payload, intent)
@@ -210,6 +271,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
       'lead_message' => message_payload[:body],
       'expected' => message_payload.fetch(:expected, {}).to_h.stringify_keys,
       'selected_answer' => selected_answer(intent),
+      'response_kind' => intent.decision['status'],
       'source_references' => intent.source_references,
       'evidence' => evidence_payload(intent.conversation),
       'qualification' => qualification_payload(qualification),
@@ -284,7 +346,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
                     'duplicate_ignored' => false,
                     'opt_out_recorded' => true,
                     'sender_invoked' => false,
-                    'configuration_version' => qualification.configuration_version,
+                    'configuration_version' => qualification&.configuration_version || configuration_version,
                     'knowledge_versions' => knowledge_snapshot['items'],
                     'provider_model' => provider_snapshot['model'],
                     'prompt_version' => PROMPT_VERSION
@@ -368,6 +430,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
   def serious_issue_count(steps)
     steps.count do |step|
       step['selected_answer'].present? &&
+        step['response_kind'] == AiLeadEmployee::Orchestration::DecisionPlaceholder::OUTBOUND_INTENT_STATUS &&
         step['source_references'].blank? &&
         step['review_request'].blank? &&
         step['message_type'] == 'text'
@@ -408,7 +471,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
       passed: false,
       review_status: :pending_review,
       messages: scenario[:messages],
-      steps: [{ 'error' => error.message }],
+      steps: [{ 'error' => error.message, 'error_class' => error.class.name }],
       metrics: { 'serious_issue_count' => 1 },
       expected_results: scenario,
       configuration_snapshot: configuration_snapshot,
@@ -493,7 +556,12 @@ class AiLeadEmployee::Evaluation::SandboxRunner
         item.slice(:id, :title, :question, :source_kind, :status, :approved_at,
                    :updated_at).as_json.merge('source_reference' => item.source_reference)
       end
-      { 'version' => Digest::SHA256.hexdigest(items.to_json), 'items' => items }
+      documents = account.knowledge_documents.published.order(:id).map do |document|
+        document.slice(:id, :title, :status, :published_at, :published_content_digest,
+                       :updated_at).as_json.merge('source_reference' => document.source_reference)
+      end
+      snapshot = { 'items' => items, 'documents' => documents }
+      snapshot.merge('version' => Digest::SHA256.hexdigest(snapshot.to_json))
     end
   end
 

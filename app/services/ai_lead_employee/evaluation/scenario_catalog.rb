@@ -7,8 +7,8 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
   SCENARIOS = [
     {
       key: 'approved_answer',
-      name: 'Approved answer with qualification',
-      description: 'The AI Employee answers only from approved Knowledge Items and asks the next qualification question.',
+      name: 'Approved answer without configured qualification',
+      description: 'The AI Employee answers only from approved Knowledge Items without starting an unconfigured interview.',
       required: true,
       messages: [
         {
@@ -17,10 +17,10 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
           body: 'Do you offer AI employees? I run an agency.',
           expected: {
             refusal_reason: nil,
-            quality: 'low_qualified',
+            quality: nil,
             handoff_decision: 'continue_ai',
             booking_decision: 'not_eligible',
-            follow_up_decision: 'schedule_incomplete_qualification',
+            follow_up_decision: 'not_eligible',
             no_real_send: true
           }
         }
@@ -29,7 +29,7 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
     {
       key: 'safe_swahili_language_question',
       name: 'Safe Swahili language question',
-      description: 'A safe Swahili greeting or language question receives a conversational response and continues qualification.',
+      description: 'A safe Swahili greeting or language question receives a conversational response without requiring Review.',
       required: true,
       messages: [
         {
@@ -38,7 +38,7 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
           body: 'Habari, unaongea Kiswahili?',
           language: 'sw',
           expected: {
-            review_request_reason: 'no_approved_knowledge',
+            review_request_reason: nil,
             blocked_reason: nil,
             handoff_decision: 'continue_ai',
             no_real_send: true
@@ -49,7 +49,7 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
     {
       key: 'unknown_safe_question',
       name: 'Unknown safe question gets a response',
-      description: 'A safe new question does not stay silent; it receives a bounded fallback and keeps qualification moving.',
+      description: 'An ambiguous question is clarified before the confirmed Business question opens Review.',
       required: true,
       messages: [
         {
@@ -58,9 +58,22 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
           body: 'I am interested but I am not sure where to start.',
           language: 'en',
           expected: {
-            review_request_reason: 'no_approved_knowledge',
+            selected_answer: 'Are you asking about this business or one of its Offers?',
+            review_request_reason: nil,
             blocked_reason: nil,
             handoff_decision: 'continue_ai',
+            no_real_send: true
+          }
+        },
+        {
+          event_id: 'unknown-safe-question-2',
+          type: 'text',
+          body: 'Yes, your business.',
+          language: 'en',
+          expected: {
+            review_request_reason: 'no_approved_knowledge',
+            blocked_reason: 'no_approved_knowledge',
+            handoff_decision: 'blocked',
             no_real_send: true
           }
         }
@@ -78,7 +91,7 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
           body: 'What is your price, refund policy, and guarantee?',
           expected: {
             review_request_present: true,
-            selected_answer: nil,
+            selected_answer: 'I cannot give you a confirmed answer yet. I have recorded your question for the team to review.',
             no_real_send: true
           }
         }
@@ -163,6 +176,7 @@ class AiLeadEmployee::Evaluation::ScenarioCatalog
           type: 'text',
           body: 'I need more leads now. I am the owner of the agency and can spend $2500.',
           force_booking_conflict: true,
+          configured_offer: true,
           expected: { quality: 'highly_qualified', booking_decision: 'booking_unavailable', no_real_send: true }
         }
       ]

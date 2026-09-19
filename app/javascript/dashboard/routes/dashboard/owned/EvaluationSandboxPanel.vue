@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Icon from 'next/icon/Icon.vue';
 import EvaluationSandboxAPI from 'dashboard/api/evaluationSandbox';
+import KnowledgeDocumentsAPI from 'dashboard/api/knowledgeDocuments';
 
 const route = useRoute();
 const router = useRouter();
@@ -63,6 +64,15 @@ const labels = computed(() => ({
     'AI_LEAD_EMPLOYEE.TEST_CENTER.HISTORICAL_RESULT_FILTER'
   ),
   KNOWLEDGE: t('AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE'),
+  KNOWLEDGE_CONTEXT: t('AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_CONTEXT'),
+  KNOWLEDGE_CONTEXT_LOAD_ERROR: t(
+    'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_CONTEXT_LOAD_ERROR'
+  ),
+  KNOWLEDGE_QUESTION: t('AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_QUESTION'),
+  KNOWLEDGE_QUESTION_PLACEHOLDER: t(
+    'AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_QUESTION_PLACEHOLDER'
+  ),
+  KNOWLEDGE_TEST_ERROR: t('AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_TEST_ERROR'),
   KNOWLEDGE_VERSION: t('AI_LEAD_EMPLOYEE.TEST_CENTER.KNOWLEDGE_VERSION'),
   LAST_RESULT: t('AI_LEAD_EMPLOYEE.TEST_CENTER.LAST_RESULT'),
   LAST_TESTED: t('AI_LEAD_EMPLOYEE.TEST_CENTER.LAST_TESTED'),
@@ -111,6 +121,8 @@ const labels = computed(() => ({
   ),
   REVIEW_PATH: t('AI_LEAD_EMPLOYEE.TEST_CENTER.REVIEW_PATH'),
   RUNNING: t('AI_LEAD_EMPLOYEE.TEST_CENTER.RUNNING'),
+  TESTING: t('AI_LEAD_EMPLOYEE.TEST_CENTER.TESTING'),
+  TRY_THIS_ANSWER: t('AI_LEAD_EMPLOYEE.TEST_CENTER.TRY_THIS_ANSWER'),
   RUN_AGAIN: t('AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_AGAIN'),
   RUN_ERROR: t('AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_ERROR'),
   RUN_FAILED: t('AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_FAILED'),
@@ -181,6 +193,8 @@ const translate = (key, params = {}) => {
       return t('AI_LEAD_EMPLOYEE.TEST_CENTER.NEXT_QUESTION_VALUE', params);
     case 'QUALITY_SCORE':
       return t('AI_LEAD_EMPLOYEE.TEST_CENTER.QUALITY_SCORE', params);
+    case 'REVIEW_PATH':
+      return t('AI_LEAD_EMPLOYEE.TEST_CENTER.REVIEW_PATH', params);
     case 'RUN_META':
       return t('AI_LEAD_EMPLOYEE.TEST_CENTER.RUN_META', params);
     case 'SCENARIO_COUNT':
@@ -247,6 +261,9 @@ const launchGate = ref({});
 const filterOptions = ref({ results: defaultResults });
 const selectedScenarioKey = ref(route.query.scenario_key?.toString() || '');
 const selectedRunId = ref(route.query.run_id?.toString() || '');
+const knowledgeDocument = ref(null);
+const knowledgeTestQuestion = ref('');
+const isTestingKnowledge = ref(false);
 const isLoading = ref(false);
 const isRunning = ref(false);
 const isSaving = ref(false);
@@ -508,6 +525,21 @@ const loadSandbox = async () => {
   }
 };
 
+const loadKnowledgeContext = async () => {
+  const documentId = route.query.knowledge_document_id?.toString();
+  knowledgeDocument.value = null;
+  knowledgeTestQuestion.value = '';
+  if (!documentId) return;
+
+  try {
+    const { data } = await KnowledgeDocumentsAPI.show(documentId);
+    knowledgeDocument.value = data;
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.error || label('KNOWLEDGE_CONTEXT_LOAD_ERROR');
+  }
+};
+
 const loadRuns = async () => {
   isLoading.value = true;
   errorMessage.value = '';
@@ -582,14 +614,17 @@ const replaceRun = run => {
   syncGrades(run);
 };
 
-const runScenario = async scenarioKey => {
+async function executeScenario(scenarioKey, context = {}) {
   const key = scenarioKey || selectedScenarioKey.value;
   if (!key) return;
 
   isRunning.value = true;
   errorMessage.value = '';
   try {
-    const { data } = await EvaluationSandboxAPI.runScenario(key);
+    const request = Object.keys(context).length
+      ? EvaluationSandboxAPI.runScenario(key, context)
+      : EvaluationSandboxAPI.runScenario(key);
+    const { data } = await request;
     replaceRun(data);
     activeTab.value = 'results';
     replaceQuery({ tab: 'results', scenario_key: key, run_id: data.id });
@@ -600,7 +635,27 @@ const runScenario = async scenarioKey => {
   } finally {
     isRunning.value = false;
   }
+}
+
+const runKnowledgeDocumentTest = async () => {
+  const documentId = route.query.knowledge_document_id?.toString();
+  if (!documentId || !knowledgeTestQuestion.value.trim()) return;
+
+  isTestingKnowledge.value = true;
+  try {
+    await executeScenario('knowledge_document_context', {
+      knowledge_document_id: documentId,
+      question: knowledgeTestQuestion.value.trim(),
+    });
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.error || label('KNOWLEDGE_TEST_ERROR');
+  } finally {
+    isTestingKnowledge.value = false;
+  }
 };
+
+const runScenario = scenarioKey => executeScenario(scenarioKey);
 
 const saveGrades = async () => {
   if (!selectedRun.value) return;
@@ -679,21 +734,30 @@ const proposeKnowledge = async () => {
 
 watch(
   () => route.query,
-  () => {
+  (query, previousQuery) => {
     hydrateFromRoute();
     if (activeTab.value === 'results') loadRuns();
+    if (query.knowledge_document_id !== previousQuery?.knowledge_document_id) {
+      loadKnowledgeContext();
+    }
   }
 );
 
-onMounted(loadSandbox);
+onMounted(() => {
+  loadSandbox();
+  loadKnowledgeContext();
+});
 
 const systemStepText = step => {
   if (step.duplicate_ignored) return label('DUPLICATE_IGNORED');
   if (step.blocked_by_control_state) return label('CONTROL_BLOCKED');
-  return label('REVIEW_PATH').replace(
-    '{reason}',
-    humanize(step.review_request_reason || step.refusal_reason)
-  );
+  return translate('REVIEW_PATH', {
+    reason: humanize(
+      step.review_request_reason ||
+        step.review_request?.reason ||
+        step.refusal_reason
+    ),
+  });
 };
 
 const gradeNotesLabel = key =>
@@ -711,6 +775,9 @@ const scenarioRowLabel = row =>
       row.name || row.scenario_name || row.title || label('SELECT_SCENARIO'),
   });
 
+const sourcesForStep = step =>
+  Array.isArray(step.source_references) ? step.source_references : step.sources;
+
 const sourcesLabel = sources =>
   translate('SOURCES_VALUE', {
     sources:
@@ -719,6 +786,15 @@ const sourcesLabel = sources =>
         .filter(Boolean)
         .join(', ') || label('NONE'),
   });
+
+const offerLabel = run => run.expected_results?.offer || label('NONE');
+
+const startingChannelLabel = run => run.starting_channel || label('NONE');
+
+const modelLabel = run =>
+  run.provider_snapshot?.model ||
+  run.steps?.find(step => step.provider_model)?.provider_model ||
+  label('NONE');
 
 const checkCountLabel = run =>
   translate('CHECK_COUNT', {
@@ -832,6 +908,35 @@ const liveAiStateLabel = () =>
     <p v-if="isLoading" class="mt-4 text-sm text-n-slate-11">
       {{ label('LOADING') }}
     </p>
+
+    <form
+      v-if="knowledgeDocument"
+      class="mt-5 rounded-lg border border-n-weak bg-n-solid-1 p-5"
+      @submit.prevent="runKnowledgeDocumentTest"
+    >
+      <p class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+        {{ label('KNOWLEDGE_CONTEXT') }}
+      </p>
+      <h2 class="mt-1 text-base font-semibold text-n-slate-12">
+        {{ knowledgeDocument.title }}
+      </h2>
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        <input
+          v-model="knowledgeTestQuestion"
+          :aria-label="label('KNOWLEDGE_QUESTION')"
+          class="h-10 min-w-0 flex-1 rounded-md border border-n-weak bg-n-background px-3 text-sm text-n-slate-12"
+          :placeholder="label('KNOWLEDGE_QUESTION_PLACEHOLDER')"
+        />
+        <button
+          type="submit"
+          data-testid="run-knowledge-document-test"
+          class="h-10 rounded-md bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-60"
+          :disabled="isTestingKnowledge || !knowledgeTestQuestion.trim()"
+        >
+          {{ isTestingKnowledge ? label('TESTING') : label('TRY_THIS_ANSWER') }}
+        </button>
+      </div>
+    </form>
 
     <section
       v-if="activeTab === 'scenarios'"
@@ -1177,6 +1282,7 @@ const liveAiStateLabel = () =>
                   step.duplicate_ignored ||
                   step.blocked_by_control_state ||
                   step.review_request_reason ||
+                  step.review_request?.reason ||
                   step.refusal_reason
                 "
                 class="max-w-[82%] rounded-lg border border-n-amber-5 bg-n-amber-2 p-3 text-sm text-n-amber-11"
@@ -1249,7 +1355,7 @@ const liveAiStateLabel = () =>
                     {{ handoffBookingLabel(step) }}
                   </dd>
                   <dd class="mt-2 break-words text-n-slate-11">
-                    {{ sourcesLabel(step.sources) }}
+                    {{ sourcesLabel(sourcesForStep(step)) }}
                   </dd>
                 </div>
               </dl>
@@ -1305,10 +1411,7 @@ const liveAiStateLabel = () =>
                 <div>
                   <dt class="text-n-slate-11">{{ label('OFFER') }}</dt>
                   <dd class="font-medium text-n-slate-12">
-                    {{
-                      selectedRun.expected_results?.offer ||
-                      label('DEFAULT_OFFER')
-                    }}
+                    {{ offerLabel(selectedRun) }}
                   </dd>
                 </div>
                 <div>
@@ -1316,7 +1419,7 @@ const liveAiStateLabel = () =>
                     {{ label('STARTING_CHANNEL') }}
                   </dt>
                   <dd class="font-medium text-n-slate-12">
-                    {{ label('WHATSAPP_SIMULATION') }}
+                    {{ startingChannelLabel(selectedRun) }}
                   </dd>
                 </div>
                 <div>
@@ -1334,7 +1437,7 @@ const liveAiStateLabel = () =>
                 <div>
                   <dt class="text-n-slate-11">{{ label('MODEL') }}</dt>
                   <dd class="font-medium text-n-slate-12">
-                    {{ selectedRun.model_identifier }}
+                    {{ modelLabel(selectedRun) }}
                   </dd>
                 </div>
                 <div>

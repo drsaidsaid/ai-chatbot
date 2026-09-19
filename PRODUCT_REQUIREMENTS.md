@@ -244,6 +244,21 @@ Basic human assistance is available separately from a qualified sales appointmen
 
 ### Out-of-Scope and Sensitive Topics
 
+R11 applies an answer-first conversation policy. Approved buying questions are
+answered before the system decides whether one current Offer question or next
+step is useful. Qualification remains optional and no default sales interview is
+invented. Human-help, complaint, refund and support requests reach Review without
+sales qualification. A relevant unknown receives a truthful English or Swahili
+acknowledgment only after its Review is persisted; the acknowledgment makes no
+callback or timing promise. Unrelated topics receive a polite business boundary
+without creating a false Review.
+
+Grounded answers use approved shared knowledge and knowledge for the selected
+Offer, filtered by validity and language. Published Offer configuration controls
+qualification and progression to enquiry, purchase, appointment or sales-call
+steps. Personalized strategy remains within approved business material or an
+applicable configured Offer; the service does not provide unbounded consulting.
+
 The agent must escalate instead of improvising on:
 
 - Legal or medical advice.

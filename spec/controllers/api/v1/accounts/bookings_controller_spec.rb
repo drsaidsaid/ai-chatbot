@@ -93,6 +93,24 @@ RSpec.describe 'Bookings API', type: :request do
     end
   end
 
+  it 'does not synthesize a qualification when no Offer criteria or decision exists' do
+    conversation.contact.lead_qualification.destroy!
+    expect(AiLeadEmployee::QualificationService).not_to receive(:new)
+
+    post "/api/v1/accounts/#{account.id}/bookings",
+         headers: agent.create_new_auth_token,
+         params: {
+           conversation_id: conversation.id,
+           starts_at: '2026-08-31T06:00:00Z',
+           idempotency_key: 'no-offer-request'
+         },
+         as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['error']).to include('Highly Qualified')
+    expect(LeadQualification.where(account: account, contact: contact)).to be_empty
+  end
+
   it 'lists tenant-scoped agenda bookings with detail, calendar, availability, and filters' do
     booking = create(
       :booking,
@@ -181,6 +199,7 @@ RSpec.describe 'Bookings API', type: :request do
 
     get "/api/v1/accounts/#{account.id}/bookings",
         headers: agent.create_new_auth_token,
+        params: { from: assigned_booking.starts_at.beginning_of_week.iso8601 },
         as: :json
 
     expect(response).to have_http_status(:success)

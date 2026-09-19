@@ -48,6 +48,8 @@ class KnowledgeDocument < ApplicationRecord
   validates :body, presence: true, unless: :import_failed?
   validate :last_editor_belongs_to_account
   before_validation :record_initial_published_content_digest, on: :create
+  before_save :lock_knowledge_authority!
+  before_destroy :lock_knowledge_authority!
 
   scope :search, lambda { |query|
     next all if query.blank?
@@ -95,10 +97,18 @@ class KnowledgeDocument < ApplicationRecord
       published_content_digest.present? &&
       ActiveSupport::SecurityUtils.secure_compare(published_content_digest, content_digest) &&
       used_by_ai_employee? &&
-      general_question_access?
+      available_to_answer?
   end
 
   private
+
+  def available_to_answer?
+    general_question_access? || offer_ids.present?
+  end
+
+  def lock_knowledge_authority!
+    AiLeadEmployee::KnowledgeAuthorityLock.acquire!(account_id)
+  end
 
   def content_digest
     Digest::SHA256.hexdigest(
@@ -115,7 +125,13 @@ class KnowledgeDocument < ApplicationRecord
       {
         event: event,
         title: title,
+        body: body,
         status: status,
+        used_by_ai_employee: used_by_ai_employee,
+        general_question_access: general_question_access,
+        offer_ids: Array(offer_ids),
+        sensitive_topics: Array(sensitive_topics),
+        content_digest: content_digest,
         editor_id: editor&.id,
         editor_name: editor&.name,
         recorded_at: Time.current.iso8601

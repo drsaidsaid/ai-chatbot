@@ -73,6 +73,9 @@ it('saves explicit qualification mode, question purpose, requirement dimension a
   await wrapper.get('[data-testid="qualification-mode"]').setValue('enabled');
   await wrapper.get('[data-testid="next-step"]').setValue('sales_call');
   await wrapper
+    .get('[data-testid="next-step-prompt"]')
+    .setValue('Would you like to discuss this Offer?');
+  await wrapper
     .get('[data-testid="question-purpose-0"]')
     .setValue('action_eligibility');
   await wrapper.get('[data-testid="add-rule"]').trigger('click');
@@ -85,7 +88,10 @@ it('saves explicit qualification mode, question purpose, requirement dimension a
 
   expect(axios.patch.mock.calls[0][1].offer).toMatchObject({
     qualification_mode: 'enabled',
-    next_step: { kind: 'sales_call' },
+    next_step: {
+      kind: 'sales_call',
+      prompt: 'Would you like to discuss this Offer?',
+    },
     questions: [expect.objectContaining({ purpose: 'action_eligibility' })],
     rules: [
       expect.objectContaining({
@@ -118,6 +124,27 @@ it('offers a stable boolean field for explicit sales-call agreement', async () =
       purpose: 'action_eligibility',
     })
   );
+});
+
+it('drops a hidden link when the owner changes to a non-link next step', async () => {
+  const saved = offer();
+  saved.next_step = {
+    kind: 'purchase_link',
+    prompt: 'Enroll here:',
+    url: 'https://example.test/enroll',
+  };
+  axios.get.mockResolvedValue({ data: [saved] });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="next-step"]').setValue('enquiry');
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(axios.patch.mock.calls[0][1].offer.next_step).toEqual({
+    kind: 'enquiry',
+    prompt: 'Enroll here:',
+  });
 });
 
 it('edits one Offer while preserving exact human currency units and its revision', async () => {

@@ -15,6 +15,10 @@ class AiLeadEmployee::OfferEvidenceRecorder
     observations.filter_map { |signal, value| record_observation!(signal, value) }
   end
 
+  def answers_pending_question?
+    processable_message? && observations.present?
+  end
+
   private
 
   attr_reader :conversation, :offer, :incoming_message

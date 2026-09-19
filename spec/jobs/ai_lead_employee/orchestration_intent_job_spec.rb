@@ -162,7 +162,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     expect(OutboxEvent.count).to eq(0)
   end
 
-  it 'atomically records qualification, a grounded AI answer, the next question, verified Source References, and outbox event once under retry' do # rubocop:disable RSpec/ExampleLength, RSpec/MultipleExpectations
+  it 'atomically records a grounded answer without restoring legacy qualification defaults' do # rubocop:disable RSpec/MultipleExpectations
     knowledge_item = create(:knowledge_item, account: account, question: 'Do you offer AI employees?', answer: 'Yes, we build AI employees.')
     create(:qualification_question, account: account, signal: :problem, prompt: 'What problem should we solve?', position: 1)
     triggering_message.update!(content: 'Do you offer AI employees? I run an agency.')
@@ -206,23 +206,19 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       inbox_id: whatsapp_channel.inbox.id,
       conversation_id: conversation.id,
       message_type: 'outgoing',
-      content: "Yes, we build AI employees for qualified businesses.\n\nWhat problem should we solve?",
+      content: 'Yes, we build AI employees for qualified businesses.',
       private: false
     )
-    expect(contact.lead_qualification).to have_attributes(quality: 'low_qualified')
-    expect(contact.lead_qualification.evidence_snapshot).to include('business_type')
+    expect(contact.lead_qualification).to be_nil
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'orchestration_intent_id')).to eq(intent.id)
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'outbound_intent_status')).to eq('grounded_answer')
     expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'source_references').first['id']).to eq(knowledge_item.id)
-    expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification')).to include(
-      'quality' => 'low_qualified',
-      'next_question' => 'What problem should we solve?'
-    )
+    expect(outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification')).to be_nil
     expect_outbox_state(outbox_event, outbound_message)
     expect(AiLeadEmployee::OutboxDispatchJob).to have_received(:perform_later).with(outbox_event.id).once
   end
 
-  it 'explains unsupported human requests through durable orchestration without creating a sales handoff' do
+  it 'records human-help requests without requiring sales qualification' do
     account.update!(
       settings: {
         'ai_lead_employee' => {
@@ -237,17 +233,16 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     described_class.perform_now(intent.id)
 
     outbound_message = intent.reload.outbound_message
-    expect(outbound_message.content).to eq(
-      "I need to qualify the request before handing this to a Human Operator.\n\nWhat problem should we solve?"
-    )
-    expect(intent).to have_attributes(state: 'completed')
-    expect(contact.lead_qualification).to be_unqualified
+    expect(outbound_message.content).to eq('I have recorded your request for human help.')
+    expect(intent).to have_attributes(state: 'blocked', blocked_reason: 'human_requested')
+    expect(intent.review_request).to have_attributes(reason: 'human_requested', status: 'open')
+    expect(contact.lead_qualification).to be_nil
     expect(conversation.reload).to be_ai_active
     expect(LeadHandoff.count).to eq(0)
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
-  it 'creates one highly qualified handoff from current qualification evidence instead of an AI answer' do
+  it 'does not infer a fixed qualification interview or handoff when no Offer is configured' do
     operator = create(:user, :administrator, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700000001' })
     account.update!(
       settings: {
@@ -264,11 +259,12 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     described_class.perform_now(intent.id)
     described_class.perform_now(intent.id)
 
-    expect(intent.reload).to have_attributes(state: 'completed', outbound_message_id: nil)
-    expect(contact.lead_qualification).to be_highly_qualified
-    expect(LeadHandoff.where(account: account, conversation: conversation).count).to eq(1)
-    expect(conversation.reload).to have_attributes(assignee: operator, control_state: 'human_active')
-    expect(SendReplyJob).to have_received(:perform_later).once
+    expect(intent.reload).to have_attributes(state: 'completed')
+    expect(intent.outbound_message.content).to eq('Thanks for those details.')
+    expect(contact.lead_qualification).to be_nil
+    expect(LeadHandoff.where(account: account, conversation: conversation).count).to eq(0)
+    expect(conversation.reload).to have_attributes(assignee: nil, control_state: 'ai_active')
+    expect(SendReplyJob).not_to have_received(:perform_later)
   end
 
   it 'creates one Review Request and a conservative outbound reply for unknown non-risky questions' do # rubocop:disable RSpec/MultipleExpectations
@@ -286,14 +282,10 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       reason: 'no_approved_knowledge',
       status: 'open'
     )
-    expect(intent).to have_attributes(state: 'completed', blocked_reason: nil)
-    expect(intent.decision).to include(
-      'status' => 'knowledge_gap_reply',
-      'refusal_reason' => 'no_approved_knowledge',
-      'review_request_id' => review_request.id
-    )
+    expect(intent).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    expect(intent.decision.fetch('acknowledgment')).to include('review_request_id' => review_request.id)
     expect(intent.outbound_message.content).to include('I do not have an approved answer for that yet')
-    expect(intent.outbound_message.content).to include('What type of business do you run?')
+    expect(intent.outbound_message.content).not_to include('What type of business do you run?')
     expect(conversation.messages.outgoing.count).to eq(1)
     expect(OutboxEvent.count).to eq(1)
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
@@ -305,16 +297,16 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
     described_class.perform_now(intent.id)
 
     expect(intent.reload).to have_attributes(state: 'completed', blocked_reason: nil)
-    expect(intent.decision).to include('status' => 'knowledge_gap_reply')
+    expect(intent.decision).to include('status' => 'conversation_reply')
     expect(intent.outbound_message.content).to include('Ndiyo, ninaweza kuendelea kwa Kiswahili au Kiingereza.')
-    expect(intent.outbound_message.content).to include('Unaendesha biashara ya aina gani?')
+    expect(intent.outbound_message.content).not_to include('Unaendesha biashara ya aina gani?')
     expect(
       HumanReviewRequest.where(
         conversation: conversation,
         lead_message: triggering_message,
         reason: :no_approved_knowledge
       ).count
-    ).to eq(1)
+    ).to eq(0)
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
@@ -354,6 +346,10 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       intent.update!(state: :pending, attempts: 0, blocked_reason: nil, blocked_at: nil, review_request: nil)
       HumanReviewRequest.delete_all
       KnowledgeItem.where(account: account).delete_all
+      OutboxEvent.delete_all
+      intent.update!(outbound_message: nil)
+      Whatsapp::OutboundDelivery.where(message_id: conversation.messages.outgoing.select(:id)).delete_all
+      conversation.messages.outgoing.delete_all
       triggering_message.update!(content: 'Do you offer AI employees?')
       setup.call
 
@@ -364,8 +360,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       end.to change(HumanReviewRequest.where(reason: reason), :count).by(1)
 
       expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: reason.to_s)
-      expect(conversation.messages.outgoing.count).to eq(0)
-      expect(OutboxEvent.count).to eq(0)
+      expect(conversation.messages.outgoing.count).to eq(1)
+      expect(OutboxEvent.count).to eq(1)
     end
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
@@ -386,8 +382,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
 
     expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'source_unverified')
     expect(intent.review_request).to have_attributes(reason: 'source_unverified', status: 'open')
-    expect(conversation.messages.outgoing.count).to eq(0)
-    expect(OutboxEvent.count).to eq(0)
+    expect(conversation.messages.outgoing.count).to eq(1)
+    expect(OutboxEvent.count).to eq(1)
   end
 
   it 're-runs the sending boundary after provider completion before creating the outbound message' do
@@ -428,8 +424,8 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentJob do
       failure_class: 'timeout'
     )
     expect(intent.review_request).to have_attributes(reason: 'provider_failed', status: 'open')
-    expect(conversation.messages.outgoing.count).to eq(0)
-    expect(OutboxEvent.count).to eq(0)
+    expect(conversation.messages.outgoing.count).to eq(1)
+    expect(OutboxEvent.count).to eq(1)
   end
 
   def expect_outbox_state(outbox_event, outbound_message)

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'uri'
+
 class AiLeadEmployee::OfferConfigurationWriter
   class Conflict < StandardError; end
 
@@ -149,8 +151,21 @@ class AiLeadEmployee::OfferConfigurationWriter
     next_step = attributes.fetch('next_step', { 'kind' => 'answer_only' })
     raise ArgumentError, 'Next step must be an object' unless next_step.is_a?(Hash)
     raise ArgumentError, 'Unsupported next step' unless AiLeadEmployee::Offer::NEXT_STEP_KINDS.include?(next_step['kind'])
+    raise ArgumentError, 'Next-step prompt is too long' if next_step['prompt'].to_s.length > 240
 
-    next_step.slice('kind')
+    validate_next_step_url!(next_step)
+
+    next_step.slice('kind', 'prompt', 'url').compact_blank
+  end
+
+  def validate_next_step_url!(next_step)
+    return if next_step['url'].blank?
+    raise ArgumentError, 'Only purchase and appointment next steps may include a link' unless next_step['kind'].in?(%w[purchase_link appointment])
+
+    uri = URI.parse(next_step['url'].to_s)
+    raise ArgumentError, 'Next-step link must use HTTP or HTTPS' unless uri.is_a?(URI::HTTP) && uri.host.present?
+  rescue URI::InvalidURIError
+    raise ArgumentError, 'Next-step link must use HTTP or HTTPS'
   end
 
   def normalized_thresholds

@@ -1,0 +1,11 @@
+{
+  "source_commit": "6f0b3fdd7a608014b4d5f1aa5736bf4f25b70c5d",
+  "parent": "1aa85090f638c6140aa42939a8d1355762452ab4",
+  "branch": "codex/r11-emergency-conversation-repair-20260910",
+  "normal_hooks_exit_code": 0,
+  "reviewed_ruby_files_verified_after_hooks": 18,
+  "pre_receipt_artifact_files_verified": 11,
+  "working_tree_clean_after_source_commit": true,
+  "full_r11_complete": false,
+  "release_acceptance": false
+}

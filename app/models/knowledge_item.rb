@@ -28,6 +28,8 @@
 #  fk_rails_...  (account_id => accounts.id)
 #
 class KnowledgeItem < ApplicationRecord
+  AUTHORITY_METADATA_KEYS = %w[offer_ids language expires_at stale].freeze
+
   belongs_to :account
 
   enum source_kind: {
@@ -49,6 +51,8 @@ class KnowledgeItem < ApplicationRecord
   }
 
   validates :title, :question, :answer, :source_kind, :status, presence: true
+  before_save :lock_knowledge_authority!
+  before_destroy :lock_knowledge_authority!
 
   scope :usable_by_ai_employee, -> { approved.where(deactivated_at: nil) }
   scope :sensitive_claims, -> { where(source_kind: [:pricing, :refund, :guarantee, :eligibility, :policy]) }
@@ -70,14 +74,27 @@ class KnowledgeItem < ApplicationRecord
     approved? &&
       deactivated_at.blank? &&
       approved_at.present? &&
-      updated_at <= approved_at + 1.second &&
+      approved_revision_current? &&
       source_reference.present? &&
       !stale?
   end
 
   def approve!
     now = Time.current
-    self.metadata = metadata.merge('source_reference' => next_source_reference(now))
+    reference = next_source_reference(now)
+    revision = {
+      'title' => title,
+      'question' => question,
+      'answer' => answer,
+      'source_kind' => source_kind,
+      'approved_at' => now.iso8601(6),
+      'source_reference' => reference,
+      'authority_metadata' => authority_metadata
+    }
+    self.metadata = metadata.merge(
+      'source_reference' => reference,
+      'approval_revisions' => Array(metadata['approval_revisions']) + [revision]
+    )
     update!(status: :approved, approved_at: now, rejected_at: nil, deactivated_at: nil, updated_at: now)
   end
 
@@ -94,6 +111,22 @@ class KnowledgeItem < ApplicationRecord
   end
 
   private
+
+  def approved_revision_current?
+    revision = Array(metadata['approval_revisions']).last
+    return updated_at <= approved_at + 1.second if revision.blank?
+
+    revision.values_at('title', 'question', 'answer', 'source_kind', 'source_reference', 'authority_metadata') ==
+      [title, question, answer, source_kind, source_reference, authority_metadata]
+  end
+
+  def authority_metadata
+    metadata.slice(*AUTHORITY_METADATA_KEYS).deep_dup
+  end
+
+  def lock_knowledge_authority!
+    AiLeadEmployee::KnowledgeAuthorityLock.acquire!(account_id)
+  end
 
   def approval_source_reference(approved_at)
     "knowledge_item:#{id}:approved_at:#{approved_at.iso8601}"

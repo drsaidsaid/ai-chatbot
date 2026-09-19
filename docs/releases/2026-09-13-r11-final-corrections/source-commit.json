@@ -1,0 +1,23 @@
+{
+  "source_commit": "2d44916c4d09e8150e5773dca23c4c8d3a9f13c4",
+  "parent_commit": "6a325896a1a2b53dd2f772b529a72fe5e9c081ad",
+  "correction_base": "c91767a66ee25cbcb56b025f2b2b3d25d37eadc9",
+  "branch": "codex/r11-emergency-conversation-repair-20260910",
+  "committed_at": "2026-09-13T07:35:54+03:00",
+  "final_delta_examples": 6,
+  "affected_ruby_examples": 253,
+  "focused_ruby_examples": 266,
+  "impacted_ruby_examples": 325,
+  "ruby_failures": 0,
+  "concurrency_examples": 3,
+  "concurrency_rerun_for_final_delta": false,
+  "validator_guard_examples": 12,
+  "validator_guard_rerun": false,
+  "rubocop_files": 30,
+  "rubocop_offenses": 0,
+  "specification_review": "clear",
+  "engineering_standards_review": "clear",
+  "combined_acceptance_owner": "R26",
+  "pushed": false,
+  "deployed": false
+}

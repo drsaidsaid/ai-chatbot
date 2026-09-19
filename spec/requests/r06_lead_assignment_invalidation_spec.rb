@@ -27,7 +27,7 @@ RSpec.describe 'Lead assignment access invalidation', type: :request do
     expect(response.parsed_body.dig('assignee', 'id')).to eq(colleague.id)
   end
 
-  it 'preserves access invalidation when assignment and qualification evidence are edited together' do
+  it 'does not reassign access when an unscoped qualification evidence edit is rejected' do
     expected_event = { event: 'access.changed', data: { account_id: account.id } }
     old_recipient = member.pubsub_token
     new_recipient = colleague.pubsub_token
@@ -38,11 +38,11 @@ RSpec.describe 'Lead assignment access invalidation', type: :request do
             headers: auth_headers,
             params: { lead: { assignee_id: colleague.id, business_name: 'Demo workflow', evidence: { budget: '500 per month' } } },
             as: :json
-    end.to have_broadcasted_to(old_recipient).with(expected_event)
-                                             .and have_broadcasted_to(new_recipient).with(expected_event)
-    expect(response).to have_http_status(:ok)
-    expect(response.parsed_body['business_name']).to eq('Demo workflow')
-    expect(response.body).to include('500 per month')
+    end.not_to have_broadcasted_to(old_recipient).with(expected_event)
+    expect(ActionCable.server.pubsub.broadcasts(new_recipient)).to be_empty
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(conversation.reload.assignee).to eq(member)
+    expect(conversation.contact.reload.additional_attributes['company_name']).to be_nil
   end
 
   it 'keeps both operators views valid when the Lead edit rolls back' do

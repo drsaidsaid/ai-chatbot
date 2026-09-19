@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 
+require_relative 'information_request'
+
 class AiLeadEmployee::LanguageDetector
-  SWAHILI_TOKENS = %w[
-    biashara habari hali jina karibu kama kuhusu kujua kuongea lugha maelezo
-    mambo msaada naitwa naomba nataka ndio ndiyo nini sawa tafadhali unaongea
-  ].freeze
+  SWAHILI_TOKENS = (%w[
+    asante biashara habari hali jina karibu kama kuhusu kujua kuongea lugha maelezo
+    kujiunga mambo malalamiko mnakubali mnasafirisha msaada mtandaoni nahitaji naitwa naomba nataka ndio ndiyo nimelipa
+    hapana huduma je jinsi labda lini mna mnafundisha naam naweza ndiyo ndivyo ni ninaweza ningependa nini sawa
+    sijui simaanishi siwezi tafadhali unaongea utapeli wapi
+  ] + AiLeadEmployee::InformationRequest::SWAHILI_LANGUAGE_TOKENS).uniq.freeze
 
   def self.detect(content)
     new(content).detect

@@ -148,7 +148,10 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
 
       expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_failure', failure_class: failure_class.to_s)
       expect(intent.review_request).to have_attributes(reason: 'provider_failed', status: 'open')
-      expect(intent.conversation.messages.outgoing.where(private: false)).to be_empty
+      expect(intent.conversation.messages.outgoing.where(private: false).sole).to eq(intent.outbound_message)
+      expect(intent.outbound_message.content).to eq(
+        'I cannot give you a confirmed answer yet. I have recorded your question for the team to review.'
+      )
     end
 
     conversation, intent = provider_failure_fixture('wamid.PROVIDER.SOURCE.UNVERIFIED')
@@ -166,7 +169,10 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
 
     expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'source_unverified')
     expect(intent.review_request).to have_attributes(reason: 'source_unverified', status: 'open')
-    expect(conversation.messages.outgoing.where(private: false)).to be_empty
+    expect(conversation.messages.outgoing.where(private: false).sole).to eq(intent.outbound_message)
+    expect(intent.outbound_message.content).to eq(
+      'I cannot give you a confirmed answer yet. I have recorded your question for the team to review.'
+    )
   end
 
   it 'denies cross-tenant access to launch proof records and configuration', :aggregate_failures do
@@ -388,7 +394,7 @@ RSpec.describe 'End-to-end canonical launch proof', type: :request do
   end
 
   def expected_ai_employee_reply
-    "#{provider_response.content}\n\nWhat type of business do you run?"
+    provider_response.content
   end
 
   def reconcile_delivery_statuses(outbound_message)
