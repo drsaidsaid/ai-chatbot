@@ -18,6 +18,7 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
   let(:message) { create(:message, account: account, conversation: conversation, inbox: channel.inbox, content: 'Can you guarantee results?') }
 
   before do
+    allow(ActiveRecord).to receive(:after_all_transactions_commit).and_yield
     allow(SendReplyJob).to receive(:perform_later)
     allow(Meta::Whatsapp::TextMessageClient).to receive(:new)
   end

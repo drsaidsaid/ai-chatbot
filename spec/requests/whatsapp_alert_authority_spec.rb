@@ -163,12 +163,62 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
       end.value
     end
 
-    result = AiLeadEmployee::HumanReviewRequestService.new(
-      conversation: @conversation, lead_message: lead_message, reason: :no_approved_knowledge
-    ).perform
+    result = nil
+    ApplicationRecord.transaction do
+      result = AiLeadEmployee::HumanReviewRequestService.new(
+        conversation: @conversation, lead_message: lead_message, reason: :no_approved_knowledge
+      ).perform
+    end
 
     expect(observed).to eq([true, result.request.alert_deliveries.sole['message_id']])
     expect(SendReplyJob).to have_received(:perform_later).once
+  end
+
+  it 'drops Review dispatch publication when an enclosing transaction rolls back' do
+    lead_message = create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                                    message_type: :incoming, content: 'A rolled back question', provider_created_at: Time.current)
+    allow(SendReplyJob).to receive(:perform_later)
+
+    ApplicationRecord.transaction do
+      AiLeadEmployee::HumanReviewRequestService.new(
+        conversation: @conversation, lead_message: lead_message, reason: :no_approved_knowledge
+      ).perform
+      raise ActiveRecord::Rollback
+    end
+
+    expect(HumanReviewRequest.where(lead_message: lead_message, reason: :no_approved_knowledge)).to be_empty
+    expect(Message.where("additional_attributes #>> '{ai_lead_employee,review_request_id}' IS NOT NULL").where.not(id: @alert.id)).to be_empty
+    expect(SendReplyJob).not_to have_received(:perform_later)
+  end
+
+  it 'restarts knowledge reconciliation when unlocked metadata discovers a new alert Conversation' do
+    configure_domain_alert_routes(AiLeadEmployee::KnowledgeApprovalAlertDeliveryService::ALERT_TYPE)
+    item = create(:knowledge_item, account: @channel.account, status: :draft, approved_at: nil, metadata: {})
+    stale_service = AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item, enqueue: false)
+    first_snapshot = Queue.new
+    snapshot_release = Queue.new
+    locked_sets = Queue.new
+    first_call = true
+    allow(stale_service).to receive(:lock_alert_conversations!).and_wrap_original do |method, conversation_ids|
+      locked_sets << conversation_ids
+      if first_call
+        first_call = false
+        first_snapshot << true
+        snapshot_release.pop
+      end
+      method.call(conversation_ids)
+    end
+    stale_worker = start_worker('r14-stale-knowledge-snapshot') { stale_service.perform }
+    Timeout.timeout(10) { first_snapshot.pop }
+    AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item.reload, enqueue: false).perform
+    alert = Message.find(item.reload.metadata.fetch('knowledge_approval_alert_deliveries').sole.fetch('message_id'))
+    snapshot_release << true
+    stale_worker.value
+
+    expect([locked_sets.pop, locked_sets.pop]).to eq([[], [alert.conversation_id]])
+    expect(Message.where("additional_attributes #>> '{ai_lead_employee,knowledge_item_id}' = ?", item.id.to_s).count).to eq(1)
+  ensure
+    snapshot_release << true if snapshot_release
   end
 
   it 'serializes a knowledge retry with dispatch using Conversation then approval authority' do

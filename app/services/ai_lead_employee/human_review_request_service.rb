@@ -65,7 +65,13 @@ class AiLeadEmployee::HumanReviewRequestService
       request.reload
       persist_alert_deliveries!(request, locked_conversation)
     end
-    message_ids.uniq.each { |message_id| SendReplyJob.perform_later(message_id) if enqueue_alerts }
+    enqueue_after_commit(message_ids.uniq) if enqueue_alerts
+  end
+
+  def enqueue_after_commit(message_ids)
+    ActiveRecord.after_all_transactions_commit do
+      message_ids.each { |message_id| SendReplyJob.perform_later(message_id) }
+    end
   end
 
   def persist_alert_deliveries!(request, locked_conversation)

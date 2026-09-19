@@ -15,12 +15,16 @@ class Whatsapp::KnowledgeApprovalAlertRetry
     end
   end
 
+  def retryable_now?
+    retryable_delivery? && Whatsapp::OutboundAlertAuthority.new(delivery.message).failure_code.nil?
+  end
+
   private
 
   attr_reader :delivery
 
   def retry_locked(authority)
-    return false unless retryable?
+    return false unless retryable_delivery?
 
     failure = authority.failure_code
     if failure
@@ -35,7 +39,7 @@ class Whatsapp::KnowledgeApprovalAlertRetry
     true
   end
 
-  def retryable?
+  def retryable_delivery?
     delivery.state.in?(%w[failed canceled]) &&
       delivery.attempts < Whatsapp::OutboundDelivery::MAX_CLAIM_ATTEMPTS &&
       delivery.message.reload.source_id.blank? &&

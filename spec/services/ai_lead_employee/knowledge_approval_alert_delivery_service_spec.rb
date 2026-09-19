@@ -71,4 +71,27 @@ RSpec.describe AiLeadEmployee::KnowledgeApprovalAlertDeliveryService do
     expect(stale_item.metadata['knowledge_approval_alert_deliveries']).to be_blank
     expect(SendReplyJob).not_to have_received(:perform_later)
   end
+
+  it 'does not advertise retry after approval or recipient authorization removal' do
+    channel = create(:channel_whatsapp, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    account = channel.account
+    operator = create(:user, account: account, custom_attributes: { 'whatsapp_alert_phone' => '+255700123456' })
+    account.update!(settings: { 'ai_lead_employee' => { 'human_operator_id' => operator.id,
+                                                        'alert_routes' => { described_class::ALERT_TYPE => [{ 'type' => 'assignee' }] } } })
+    item = create(:knowledge_item, account: account, status: :draft, approved_at: nil, metadata: {})
+    allow(SendReplyJob).to receive(:perform_later)
+    service = described_class.new(knowledge_item: item)
+    service.perform
+    message = account.messages.find(item.reload.metadata.fetch('knowledge_approval_alert_deliveries').sole.fetch('message_id'))
+    message.update!(status: :failed, external_error: 'provider rejected')
+    message.whatsapp_outbound_delivery.update!(state: :failed, failure_code: 'provider_rejected', attempts: 1)
+    expect(service.current_deliveries.sole).to include(recoverable: true)
+
+    item.approve!
+    expect(service.current_deliveries.sole).to include(recoverable: false)
+
+    item.update!(status: :draft, approved_at: nil)
+    AccountUser.find_by!(account: account, user: operator).destroy!
+    expect(service.current_deliveries.sole).to include(recoverable: false)
+  end
 end

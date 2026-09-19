@@ -2,6 +2,7 @@
 
 class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
   ALERT_TYPE = 'knowledge_approval'
+  LockSetChanged = Class.new(StandardError)
 
   def initialize(knowledge_item:, enqueue: true)
     @knowledge_item = knowledge_item
@@ -12,18 +13,7 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
   def perform
     return knowledge_item unless whatsapp_channel
 
-    knowledge_item.reload
-    message_ids = ApplicationRecord.transaction do
-      lock_existing_alert_conversations!
-      knowledge_item.lock!
-      knowledge_item.reload
-      next [] unless knowledge_item.draft?
-
-      queued_ids = []
-      deliveries = recipients.map { |recipient| deliver_to_recipient(recipient, queued_ids) }
-      knowledge_item.update!(metadata: knowledge_item.metadata.merge('knowledge_approval_alert_deliveries' => deliveries))
-      queued_ids
-    end
+    message_ids = reconcile_deliveries!
     message_ids.uniq.each { |id| SendReplyJob.perform_later(id) if enqueue }
     knowledge_item
   end
@@ -41,9 +31,32 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
 
   attr_reader :account, :enqueue, :knowledge_item
 
-  def lock_existing_alert_conversations!
+  def reconcile_deliveries!
+    knowledge_item.reload
+    locked_conversation_ids = delivery_conversation_ids
+    ApplicationRecord.transaction(requires_new: true) do
+      lock_alert_conversations!(locked_conversation_ids)
+      knowledge_item.lock!
+      knowledge_item.reload
+      raise LockSetChanged unless (delivery_conversation_ids - locked_conversation_ids).empty?
+      next [] unless knowledge_item.draft?
+
+      queued_ids = []
+      deliveries = recipients.map { |recipient| deliver_to_recipient(recipient, queued_ids) }
+      knowledge_item.update!(metadata: knowledge_item.metadata.merge('knowledge_approval_alert_deliveries' => deliveries))
+      queued_ids
+    end
+  rescue LockSetChanged
+    retry
+  end
+
+  def delivery_conversation_ids
     message_ids = Array(knowledge_item.metadata['knowledge_approval_alert_deliveries']).filter_map { |delivery| delivery['message_id'] }
     conversation_ids = account.messages.reorder(nil).where(id: message_ids).distinct.pluck(:conversation_id)
+    conversation_ids.sort
+  end
+
+  def lock_alert_conversations!(conversation_ids)
     Conversation.where(account_id: account.id, id: conversation_ids).order(:id).lock('FOR NO KEY UPDATE').load
   end
 
@@ -130,11 +143,21 @@ class AiLeadEmployee::KnowledgeApprovalAlertDeliveryService
   end
 
   def recoverable?(message)
-    delivery = message.whatsapp_outbound_delivery
     return false if message.source_id.present?
-    return delivery.attempts < Whatsapp::OutboundDelivery::MAX_CLAIM_ATTEMPTS if delivery&.state&.in?(%w[failed canceled])
 
-    message.failed? && (delivery.blank? || delivery.pending?)
+    delivery = message.whatsapp_outbound_delivery
+    return Whatsapp::KnowledgeApprovalAlertRetry.new(delivery).retryable_now? if terminal_delivery?(delivery)
+
+    recoverable_pending_message?(message, delivery)
+  end
+
+  def terminal_delivery?(delivery)
+    delivery&.state&.in?(%w[failed canceled])
+  end
+
+  def recoverable_pending_message?(message, delivery)
+    message.failed? && (delivery.blank? || delivery.pending?) &&
+      Whatsapp::OutboundAlertAuthority.new(message).failure_code.nil?
   end
 
   def whatsapp_channel
