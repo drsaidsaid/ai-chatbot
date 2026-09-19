@@ -404,6 +404,36 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(proposal.dig('configuration', 'rules')).to be_empty
   end
 
+  it 'keeps explanatory fit negations out of requirements and asks owners to clarify alternative qualifications' do
+    post source_url, headers: headers, params: {
+      source: {
+        title: 'Owner-approved pilot notes', source_type: 'pasted_prose', body: <<~NOTES
+          Online Profits University offers 12 months of mentoring to help people build an expert-based business using their expertise to solve problems online through products or services.
+          A suitable lead has no business yet, or monthly business revenue below TZS 1,000,000. They are willing to build an expert-based business and invest in mentoring. Business revenue is different from salary, profit and available budget.
+          Ask naturally about missing business facts, their goal, their obstacle and readiness to speak. Do not repeat information already supplied. Fit does not automatically mean willingness to speak or buy. A sales call requires their agreement. The team will arrange calls manually during this pilot.
+          The current programme price needs a team quote. Do not quote historical promotions or future prices. Growth goals are aspirations, not guaranteed results.
+        NOTES
+      }
+    }, as: :json
+
+    proposal = response.parsed_body
+    questions = proposal.dig('configuration', 'questions')
+    rules = proposal.dig('configuration', 'rules')
+
+    expect(questions).to include(
+      include('key' => 'sales_call_agreement', 'answer_type' => 'boolean',
+              'prompt' => 'Would you like a sales call?', 'purpose' => 'action_eligibility')
+    )
+    expect(rules).to include(
+      include('field' => 'sales_call_agreement', 'operator' => 'eq', 'value' => true,
+              'dimension' => 'action_eligibility')
+    )
+    expect(questions.pluck('meaning').join(' ')).not_to include('Fit does not automatically mean willingness')
+    expect(proposal.fetch('proposed_rules').join(' ')).not_to include('Fit does not automatically mean willingness')
+    expect(proposal.fetch('unknowns').join(' ')).to include('qualification alternatives')
+    expect(proposal.fetch('unknowns').join(' ')).not_to include('monetary statement could not')
+  end
+
   it 'computes missing links and ambiguous actions after prose inference' do
     post source_url, headers: headers,
                      params: { source: { title: 'Purchase', source_type: 'document',

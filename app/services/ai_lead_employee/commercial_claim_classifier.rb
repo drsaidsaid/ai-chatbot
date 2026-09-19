@@ -7,7 +7,9 @@ class AiLeadEmployee::CommercialClaimClassifier
   HARD_EXCLUDED_CONTEXT = /\b(lead|customer|client)\s+budget\b|
                            \b(platform\s+subscription|AI\s+reply\s+credit|Meta\s+charge|ad\s+spend)\b/ix
   FINANCIAL_CONTEXT = /\b(revenue|salary|income)\b/i
-  FINANCIAL_METRIC = /\b(?:revenue|salary|income)\s+(?:is|are|was|were|of|totals?|equals?)\b/i
+  FINANCIAL_METRIC = /\b(?:revenue|salary|income)\s+
+                       (?:is|are|was|were|of|totals?|equals?|below|above|under|over|
+                       less\s+than|more\s+than|at\s+least|up\s+to)\b/ix
   COMMERCIAL_SUBJECT = /\b(coaching|consulting|course|service|training|program(?:me)?|product|offer|package|plan|huduma|mafunzo)\b/i
   CONFIDENT_NAMED_FINANCIAL_OFFER = /\b(?:revenue|salary|income)\s+#{COMMERCIAL_SUBJECT}[^.!?]*#{PRICE_WORDS}/io
   SUBJECT_PRICE_BEFORE_FINANCIAL = /#{COMMERCIAL_SUBJECT}[^.!?]*#{PRICE_WORDS}[^.!?]*#{FINANCIAL_CONTEXT}/io
