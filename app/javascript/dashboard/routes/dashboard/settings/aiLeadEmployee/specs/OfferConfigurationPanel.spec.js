@@ -42,6 +42,9 @@ const offer = () => ({
   rules: [],
   score_weights: { budget: 20 },
   score_thresholds: { qualified: 60, highly_qualified: 80 },
+  commercial_terms_draft: null,
+  published_commercial_terms: null,
+  commercial_proposals: [],
 });
 
 const mountPanel = () =>
@@ -102,6 +105,125 @@ it('saves explicit qualification mode, question purpose, requirement dimension a
   });
 });
 
+it('saves and explicitly publishes readable Offer commercial terms', async () => {
+  axios.patch.mockImplementation((_url, payload) =>
+    Promise.resolve({
+      data: {
+        ...offer(),
+        commercial_terms_draft: {
+          ...payload.commercial_terms,
+          draft_version: 1,
+        },
+      },
+    })
+  );
+  axios.post.mockImplementation(() =>
+    Promise.resolve({
+      data: {
+        ...offer(),
+        version: 4,
+        commercial_terms_draft: {
+          amount: '1250.00',
+          currency: 'USD',
+          quote_required: false,
+          timezone: 'Africa/Dar_es_Salaam',
+          draft_version: 1,
+        },
+        published_commercial_terms: {
+          amount: '1250.00',
+          currency: 'USD',
+          quote_required: false,
+          timezone: 'Africa/Dar_es_Salaam',
+          revision: 1,
+        },
+      },
+    })
+  );
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="commercial-amount"]').setValue('1250.00');
+  await wrapper.get('[data-testid="commercial-currency"]').setValue('USD');
+  await wrapper
+    .get('[data-testid="commercial-timezone"]')
+    .setValue('Africa/Dar_es_Salaam');
+  await wrapper.get('[data-testid="save-commercial-terms"]').trigger('click');
+  await flushPromises();
+
+  expect(axios.patch).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9/commercial_terms'),
+    expect.objectContaining({
+      commercial_terms: expect.objectContaining({
+        amount: '1250.00',
+        currency: 'USD',
+        timezone: 'Africa/Dar_es_Salaam',
+      }),
+    })
+  );
+
+  await wrapper
+    .get('[data-testid="publish-commercial-terms"]')
+    .trigger('click');
+  await flushPromises();
+
+  expect(axios.post).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9/commercial_terms/publish'),
+    { draft_version: 1 }
+  );
+  expect(wrapper.text()).toContain('USD 1250.00');
+});
+
+it('clears a displayed Lead preview when publishing a newer commercial revision', async () => {
+  const pricedOffer = offer();
+  pricedOffer.commercial_terms_draft = {
+    amount: '900.00',
+    currency: 'USD',
+    quote_required: false,
+    timezone: 'UTC',
+    draft_version: 2,
+  };
+  pricedOffer.published_commercial_terms = {
+    amount: '1250.00',
+    currency: 'USD',
+    quote_required: false,
+    timezone: 'UTC',
+    revision: 1,
+  };
+  axios.get.mockResolvedValue({ data: [pricedOffer] });
+  axios.post.mockImplementation(url =>
+    url.endsWith('/preview')
+      ? Promise.resolve({ data: { answer: 'Published answer: USD 1250.00' } })
+      : Promise.resolve({
+          data: {
+            ...pricedOffer,
+            version: 4,
+            published_commercial_terms: {
+              ...pricedOffer.published_commercial_terms,
+              amount: '900.00',
+              revision: 2,
+            },
+          },
+        })
+  );
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  const previewButton = wrapper
+    .findAll('button')
+    .find(button => button.text().includes('Preview Lead answer'));
+  await previewButton.trigger('click');
+  await flushPromises();
+  expect(wrapper.text()).toContain('Published answer: USD 1250.00');
+
+  await wrapper
+    .get('[data-testid="publish-commercial-terms"]')
+    .trigger('click');
+  await flushPromises();
+
+  expect(wrapper.text()).not.toContain('Published answer: USD 1250.00');
+  expect(wrapper.text()).toContain('USD 900.00');
+});
+
 it('offers a stable boolean field for explicit sales-call agreement', async () => {
   const wrapper = mountPanel();
   await flushPromises();
@@ -148,6 +270,10 @@ it('drops a hidden link when the owner changes to a non-link next step', async (
 });
 
 it('edits one Offer while preserving exact human currency units and its revision', async () => {
+  const editableOffer = offer();
+  delete editableOffer.commercial_terms_draft;
+  delete editableOffer.published_commercial_terms;
+  delete editableOffer.commercial_proposals;
   const wrapper = mountPanel();
   await flushPromises();
   expect(wrapper.get('[data-testid="budget-minimum-0"]').element.value).toBe(
@@ -160,7 +286,7 @@ it('edits one Offer while preserving exact human currency units and its revision
   expect(axios.patch).toHaveBeenCalledWith(
     expect.stringContaining('/qualification_offers/9'),
     {
-      offer: { ...offer(), name: 'Support for teams' },
+      offer: { ...editableOffer, name: 'Support for teams' },
     }
   );
   expect(wrapper.text()).toContain('Revision 4');

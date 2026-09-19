@@ -258,6 +258,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       question: business_question,
       offer: selected_offer,
       language: classification.language,
+      promotion_eligible: promotion_eligible,
       document_scope: @knowledge_document_scope
     ).perform
   end
@@ -402,7 +403,9 @@ class AiLeadEmployee::Orchestration::IntentProcessor
         source_references: source_references,
         qualification: qualification_result_payload(qualification_result),
         qualification_context: qualification_result&.qualification_context,
-        offer_context: AiLeadEmployee::OfferAnswerContext.capture(conversation: conversation, offer: selected_offer)
+        offer_context: AiLeadEmployee::OfferAnswerContext.capture(
+          conversation: conversation, offer: selected_offer, sources: source_references
+        )
       }.merge(provider_delivery_authority(provider_response)).merge(reply_usage_authority(provider_response))
     }
   end
@@ -511,6 +514,10 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def selected_offer
     account.qualification_offers.enabled_in_order.find_by(id: conversation.offer_id)
+  end
+
+  def promotion_eligible
+    AiLeadEmployee::PromotionEligibility.new(conversation: conversation, offer: selected_offer).value
   end
 
   def persisted_scope_resolution?

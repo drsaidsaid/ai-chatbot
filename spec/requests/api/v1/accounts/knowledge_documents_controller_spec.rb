@@ -79,4 +79,190 @@ RSpec.describe 'Knowledge Documents API', type: :request do
     expect(indexed_document['body'].length).to eq(body.length)
     expect(indexed_document['body']).to end_with('controlled. ')
   end
+
+  it 'creates a conflict-review proposal without replacing the published Offer price' do
+    offer = AiLeadEmployee::Offer.create!(account: account, name: 'Growth coaching', currency: 'USD', enabled: true)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: offer, expected_version: term.draft_version, editor: admin)
+
+    post "/api/v1/accounts/#{account.id}/knowledge_documents/import",
+         headers: admin.create_new_auth_token,
+         params: {
+           title: 'Old coaching brochure',
+           body: 'The published price for Growth coaching is USD 900.00.',
+           source: 'manual_import',
+           offer_id: offer.id
+         },
+         as: :json
+
+    expect(response).to have_http_status(:created)
+    proposal = response.parsed_body.fetch('commercial_proposals').sole
+    expect(proposal).to include(
+      'status' => 'conflict_review',
+      'proposed_terms' => include('amount' => '900.00', 'currency' => 'USD'),
+      'conflict_details' => include('published_amount' => '1250.00')
+    )
+    expect(offer.reload.payload.dig('published_commercial_terms', 'amount')).to eq('1250.00')
+
+    post "/api/v1/accounts/#{account.id}/qualification_offers/#{offer.id}/commercial_proposals/#{proposal.fetch('id')}/approve",
+         headers: admin.create_new_auth_token,
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.dig('commercial_terms_draft', 'amount')).to eq('900.00')
+    expect(response.parsed_body.dig('published_commercial_terms', 'amount')).to eq('1250.00')
+  end
+
+  it 'does not confuse Lead budgets or platform subscription prices with an Offer price' do
+    offer = AiLeadEmployee::Offer.create!(account: account, name: 'Growth coaching', currency: 'USD', enabled: true)
+
+    post "/api/v1/accounts/#{account.id}/knowledge_documents/import",
+         headers: admin.create_new_auth_token,
+         params: {
+           title: 'Commercial notes',
+           body: 'The Lead budget is USD 500. The platform subscription plan costs USD 20 per month.',
+           offer_id: offer.id
+         },
+         as: :json
+
+    expect(response).to have_http_status(:created)
+    expect(response.parsed_body.fetch('commercial_proposals')).to be_empty
+    expect(offer.reload.commercial_term).to be_nil
+  end
+
+  it 'extracts standard and promotional facts from authored document revisions for approval' do
+    offer = AiLeadEmployee::Offer.create!(account: account, name: 'Growth coaching', currency: 'USD', enabled: true)
+
+    post "/api/v1/accounts/#{account.id}/knowledge_documents",
+         headers: admin.create_new_auth_token,
+         params: {
+           title: 'Growth coaching prices',
+           body: 'The standard price is USD 1250.00. The promotional price is USD 1000.00.',
+           offer_ids: [offer.id],
+           general_question_access: false
+         },
+         as: :json
+
+    expect(response).to have_http_status(:created)
+    document_id = response.parsed_body.fetch('id')
+    first = response.parsed_body.fetch('commercial_proposals').sole
+    expect(first.fetch('proposed_terms')).to include(
+      'amount' => '1250.00', 'promotion_amount' => '1000.00',
+      'proposal_kinds' => contain_exactly('standard', 'promotion')
+    )
+
+    patch "/api/v1/accounts/#{account.id}/knowledge_documents/#{document_id}",
+          headers: admin.create_new_auth_token,
+          params: {
+            title: 'Growth coaching prices',
+            body: 'The standard price is USD 1300.00.',
+            offer_ids: [offer.id],
+            general_question_access: false
+          },
+          as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.fetch('commercial_proposals').length).to eq(2)
+  end
+
+  it 'preserves and flags contradictory prices even when no price is published' do
+    offer = AiLeadEmployee::Offer.create!(account: account, name: 'Growth coaching', currency: 'USD', enabled: true)
+
+    post "/api/v1/accounts/#{account.id}/knowledge_documents/import",
+         headers: admin.create_new_auth_token,
+         params: {
+           title: 'Contradictory brochure',
+           body: 'The standard price is USD 1250.00. The standard price is USD 1300.00.',
+           offer_id: offer.id
+         },
+         as: :json
+
+    proposal = response.parsed_body.fetch('commercial_proposals').sole
+    expect(proposal.fetch('status')).to eq('conflict_review')
+    expect(proposal.dig('conflict_details', 'reason')).to include('contradictory')
+    expect(proposal.dig('proposed_terms', 'candidates')).to contain_exactly(
+      include('proposal_kind' => 'standard', 'amount' => '1250.00', 'currency' => 'USD'),
+      include('proposal_kind' => 'standard', 'amount' => '1300.00', 'currency' => 'USD')
+    )
+  end
+
+  it 'flags every conflicting fact when a later candidate matches the published price' do
+    offer = AiLeadEmployee::Offer.create!(account: account, name: 'Growth coaching', currency: 'USD', enabled: true)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: offer, expected_version: term.draft_version, editor: admin)
+
+    post "/api/v1/accounts/#{account.id}/knowledge_documents/import",
+         headers: admin.create_new_auth_token,
+         params: {
+           title: 'Mixed brochure revisions',
+           body: 'The standard price was USD 900.00. The standard price is USD 1250.00.',
+           offer_id: offer.id
+         },
+         as: :json
+
+    proposal = response.parsed_body.fetch('commercial_proposals').sole
+    expect(proposal.fetch('status')).to eq('conflict_review')
+    expect(proposal.dig('proposed_terms', 'candidates')).to contain_exactly(
+      include('amount' => '900.00', 'currency' => 'USD'),
+      include('amount' => '1250.00', 'currency' => 'USD')
+    )
+  end
+
+  it 'preserves and flags two distinct prices written in one sentence' do
+    offer = AiLeadEmployee::Offer.create!(account: account, name: 'Growth coaching', currency: 'USD', enabled: true)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: offer, expected_version: term.draft_version, editor: admin)
+
+    post "/api/v1/accounts/#{account.id}/knowledge_documents/import",
+         headers: admin.create_new_auth_token,
+         params: {
+           title: 'Ambiguous price sentence',
+           body: 'The standard price is USD 1250.00 or USD 900.00.',
+           offer_id: offer.id
+         },
+         as: :json
+
+    proposal = response.parsed_body.fetch('commercial_proposals').sole
+    expect(proposal.fetch('status')).to eq('conflict_review')
+    expect(proposal.dig('proposed_terms', 'candidates')).to contain_exactly(
+      include('amount' => '1250.00', 'currency' => 'USD'),
+      include('amount' => '900.00', 'currency' => 'USD')
+    )
+  end
+
+  it 'does not silently redenominate an existing standard price from a cross-currency promotion' do
+    offer = AiLeadEmployee::Offer.create!(account: account, name: 'Growth coaching', currency: 'USD', enabled: true)
+    term = AiLeadEmployee::CommercialTerms.save_draft!(
+      offer: offer,
+      attributes: { amount: '1250.00', currency: 'USD', quote_required: false, timezone: 'UTC' }
+    )
+    AiLeadEmployee::CommercialTerms.publish!(offer: offer, expected_version: term.draft_version, editor: admin)
+
+    post "/api/v1/accounts/#{account.id}/knowledge_documents/import",
+         headers: admin.create_new_auth_token,
+         params: {
+           title: 'Promotion in another currency',
+           body: 'The promotional price is TZS 100000.00.',
+           offer_id: offer.id
+         },
+         as: :json
+    proposal = response.parsed_body.fetch('commercial_proposals').sole
+
+    post "/api/v1/accounts/#{account.id}/qualification_offers/#{offer.id}/commercial_proposals/#{proposal.fetch('id')}/approve",
+         headers: admin.create_new_auth_token,
+         as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body.fetch('error')).to include('currency')
+    expect(offer.reload.commercial_term.draft_payload).to include('amount' => '1250.00', 'currency' => 'USD')
+  end
 end

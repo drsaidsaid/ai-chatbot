@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_12_001000) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -259,6 +259,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
     t.index ["account_id", "enabled", "position"], name: "idx_ai_lead_offers_on_account_enabled_position"
     t.index ["account_id", "name"], name: "index_ai_lead_employee_offers_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_ai_lead_employee_offers_on_account_id"
+    t.index ["id", "account_id"], name: "idx_ai_offer_account_scope", unique: true
   end
 
   create_table "ai_orchestration_intents", force: :cascade do |t|
@@ -1549,6 +1550,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
     t.string "published_content_digest"
     t.index ["account_id", "status", "updated_at"], name: "idx_on_account_id_status_updated_at_092c73be75"
     t.index ["account_id"], name: "index_knowledge_documents_on_account_id"
+    t.index ["id", "account_id"], name: "idx_knowledge_document_account_scope", unique: true
     t.index ["last_editor_id"], name: "index_knowledge_documents_on_last_editor_id"
   end
 
@@ -1919,6 +1921,60 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
     t.index ["account_id"], name: "index_offer_configuration_revisions_on_account_id"
     t.index ["offer_id", "version"], name: "index_offer_configuration_revisions_on_offer_id_and_version", unique: true
     t.index ["offer_id"], name: "index_offer_configuration_revisions_on_offer_id"
+  end
+
+  create_table "offer_commercial_proposals", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "offer_id", null: false
+    t.bigint "knowledge_document_id", null: false
+    t.bigint "reviewed_by_id"
+    t.integer "status", default: 0, null: false
+    t.string "source_digest", null: false
+    t.jsonb "proposed_terms", null: false
+    t.jsonb "conflict_details", default: {}, null: false
+    t.datetime "reviewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status"], name: "idx_offer_commercial_proposals_account_status"
+    t.index ["account_id"], name: "index_offer_commercial_proposals_on_account_id"
+    t.index ["knowledge_document_id", "offer_id", "source_digest"], name: "idx_offer_commercial_proposals_document_offer", unique: true
+    t.index ["knowledge_document_id"], name: "index_offer_commercial_proposals_on_knowledge_document_id"
+    t.index ["offer_id"], name: "index_offer_commercial_proposals_on_offer_id"
+    t.index ["reviewed_by_id"], name: "index_offer_commercial_proposals_on_reviewed_by_id"
+  end
+
+  create_table "offer_commercial_term_revisions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "offer_id", null: false
+    t.bigint "commercial_term_id", null: false
+    t.bigint "published_by_id"
+    t.integer "revision", null: false
+    t.jsonb "snapshot", null: false
+    t.string "content_digest", null: false
+    t.datetime "published_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "published_at"], name: "idx_offer_commercial_revisions_account_time"
+    t.index ["account_id"], name: "index_offer_commercial_term_revisions_on_account_id"
+    t.index ["commercial_term_id"], name: "index_offer_commercial_term_revisions_on_commercial_term_id"
+    t.index ["id", "commercial_term_id", "offer_id", "account_id"], name: "idx_offer_commercial_revision_scope", unique: true
+    t.index ["offer_id", "revision"], name: "idx_offer_commercial_revisions_unique", unique: true
+    t.index ["offer_id"], name: "index_offer_commercial_term_revisions_on_offer_id"
+    t.index ["published_by_id"], name: "index_offer_commercial_term_revisions_on_published_by_id"
+  end
+
+  create_table "offer_commercial_terms", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "offer_id", null: false
+    t.jsonb "draft", default: {}, null: false
+    t.integer "draft_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "published_revision_id"
+    t.index ["account_id"], name: "index_offer_commercial_terms_on_account_id"
+    t.index ["id", "offer_id", "account_id"], name: "idx_offer_commercial_term_scope", unique: true
+    t.index ["offer_id"], name: "index_offer_commercial_terms_on_offer_id", unique: true
+    t.index ["published_revision_id"], name: "index_offer_commercial_terms_on_published_revision_id", unique: true
   end
 
   create_table "outbox_events", force: :cascade do |t|
@@ -2516,6 +2572,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_000900) do
   add_foreign_key "meta_whatsapp_webhook_events", "inboxes"
   add_foreign_key "offer_configuration_revisions", "accounts"
   add_foreign_key "offer_configuration_revisions", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "offer_commercial_proposals", "accounts"
+  add_foreign_key "offer_commercial_proposals", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "offer_commercial_proposals", "ai_lead_employee_offers", column: ["offer_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_commercial_proposals_offer_scope"
+  add_foreign_key "offer_commercial_proposals", "knowledge_documents"
+  add_foreign_key "offer_commercial_proposals", "knowledge_documents", column: ["knowledge_document_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_commercial_proposals_document_scope"
+  add_foreign_key "offer_commercial_proposals", "users", column: "reviewed_by_id"
+  add_foreign_key "offer_commercial_term_revisions", "accounts"
+  add_foreign_key "offer_commercial_term_revisions", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "offer_commercial_term_revisions", "ai_lead_employee_offers", column: ["offer_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_commercial_revisions_offer_scope"
+  add_foreign_key "offer_commercial_term_revisions", "offer_commercial_terms", column: "commercial_term_id"
+  add_foreign_key "offer_commercial_term_revisions", "offer_commercial_terms", column: ["commercial_term_id", "offer_id", "account_id"], primary_key: ["id", "offer_id", "account_id"], name: "fk_commercial_revisions_term_scope"
+  add_foreign_key "offer_commercial_term_revisions", "users", column: "published_by_id"
+  add_foreign_key "offer_commercial_terms", "accounts"
+  add_foreign_key "offer_commercial_terms", "ai_lead_employee_offers", column: "offer_id"
+  add_foreign_key "offer_commercial_terms", "ai_lead_employee_offers", column: ["offer_id", "account_id"], primary_key: ["id", "account_id"], name: "fk_commercial_terms_offer_scope"
+  add_foreign_key "offer_commercial_terms", "offer_commercial_term_revisions", column: ["published_revision_id", "id", "offer_id", "account_id"], primary_key: ["id", "commercial_term_id", "offer_id", "account_id"], name: "fk_offer_commercial_terms_published_scope"
   add_foreign_key "outbox_events", "accounts"
   add_foreign_key "qualification_budget_ranges", "accounts"
   add_foreign_key "qualification_evidences", "accounts"

@@ -29,10 +29,17 @@ const fields = computed(() => ({
     (draft.value?.questions || []).map(question => [question.key, question])
   ),
 }));
+const booleanQuestions = computed(() =>
+  (draft.value?.questions || []).filter(
+    question => question.enabled && question.answer_type === 'boolean'
+  )
+);
 const loading = ref(true);
 const saving = ref(false);
 const error = ref('');
 const status = ref('');
+const pricingPreview = ref(null);
+const previewPromotionEligible = ref(false);
 const conflicts = reactive({});
 const conflicted = computed(() => Boolean(conflicts[draft.value?.id]));
 const label = key => t(`AI_LEAD_EMPLOYEE.OFFERS.${key}`);
@@ -40,8 +47,26 @@ const inputClass =
   'h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12';
 const buttonClass =
   'min-h-9 rounded-lg border border-n-weak px-3 text-sm text-n-slate-12 disabled:opacity-40';
+const blankCommercialTerms = currency => ({
+  amount: '',
+  currency: currency || 'TZS',
+  quote_required: false,
+  effective_from: '',
+  effective_until: '',
+  timezone: 'Africa/Dar_es_Salaam',
+  conditions: '',
+  pricing_url: '',
+  promotion_amount: '',
+  promotion_starts_at: '',
+  promotion_ends_at: '',
+  promotion_conditions: '',
+  promotion_requires_confirmation: false,
+  promotion_eligibility_field: '',
+});
 const selectDraft = key => {
   draft.value = drafts[key];
+  pricingPreview.value = null;
+  previewPromotionEligible.value = false;
   error.value = '';
   status.value = '';
 };
@@ -57,6 +82,8 @@ const newOffer = () => {
     rules: [],
     score_weights: {},
     score_thresholds: { qualified: 60, highly_qualified: 80 },
+    commercial_terms: blankCommercialTerms('TZS'),
+    commercial_proposals: [],
   };
   selectDraft('new');
 };
@@ -142,6 +169,10 @@ const orderedDraft = offer => ({
   questions: [...offer.questions]
     .sort((left, right) => left.position - right.position)
     .map(question => ({ purpose: 'fit', ...question })),
+  commercial_terms: {
+    ...blankCommercialTerms(offer.currency),
+    ...(offer.commercial_terms_draft || {}),
+  },
 });
 
 const load = async () => {
@@ -168,6 +199,10 @@ const save = async () => {
   status.value = '';
   try {
     const payload = { offer: JSON.parse(JSON.stringify(draft.value)) };
+    delete payload.offer.commercial_terms;
+    delete payload.offer.commercial_terms_draft;
+    delete payload.offer.published_commercial_terms;
+    delete payload.offer.commercial_proposals;
     if (
       !['purchase_link', 'appointment'].includes(payload.offer.next_step.kind)
     )
@@ -190,6 +225,77 @@ const save = async () => {
   } catch (exception) {
     if (exception.response?.status === 409) conflicts[draft.value.id] = true;
     error.value = exception.response?.data?.error || label('SAVE_ERROR');
+  } finally {
+    saving.value = false;
+  }
+};
+const replaceDraft = data => {
+  drafts[data.id] = orderedDraft(data);
+  draft.value = drafts[data.id];
+};
+const saveCommercialTerms = async () => {
+  if (saving.value || !draft.value?.id) return;
+  saving.value = true;
+  error.value = '';
+  status.value = '';
+  try {
+    const commercialTerms = JSON.parse(
+      JSON.stringify(draft.value.commercial_terms)
+    );
+    const draftVersion = commercialTerms.draft_version;
+    delete commercialTerms.draft_version;
+    const { data } = await OffersAPI.saveCommercialTerms(draft.value.id, {
+      commercial_terms: commercialTerms,
+      draft_version: draftVersion,
+    });
+    replaceDraft(data);
+    status.value = label('COMMERCIAL_DRAFT_SAVED');
+  } catch (exception) {
+    error.value =
+      exception.response?.data?.error || label('COMMERCIAL_SAVE_ERROR');
+  } finally {
+    saving.value = false;
+  }
+};
+const publishCommercialTerms = async () => {
+  if (saving.value || !draft.value?.commercial_terms?.draft_version) return;
+  saving.value = true;
+  error.value = '';
+  try {
+    const { data } = await OffersAPI.publishCommercialTerms(
+      draft.value.id,
+      draft.value.commercial_terms.draft_version
+    );
+    replaceDraft(data);
+    pricingPreview.value = null;
+    status.value = label('COMMERCIAL_PUBLISHED');
+  } catch (exception) {
+    error.value =
+      exception.response?.data?.error || label('COMMERCIAL_PUBLISH_ERROR');
+  } finally {
+    saving.value = false;
+  }
+};
+const previewCommercialTerms = async () => {
+  if (!draft.value?.id) return;
+  const { data } = await OffersAPI.previewCommercialTerms(draft.value.id, {
+    promotion_eligible: previewPromotionEligible.value,
+  });
+  pricingPreview.value = data;
+};
+const reviewCommercialProposal = async (proposal, action) => {
+  if (saving.value) return;
+  saving.value = true;
+  try {
+    const { data } = await OffersAPI.reviewCommercialProposal(
+      draft.value.id,
+      proposal.id,
+      action
+    );
+    replaceDraft(data);
+  } catch (exception) {
+    error.value =
+      exception.response?.data?.error || label('COMMERCIAL_SAVE_ERROR');
   } finally {
     saving.value = false;
   }
@@ -276,6 +382,286 @@ onMounted(load);
           <input v-model="draft.enabled" type="checkbox" />
           {{ label('ENABLED') }}
         </label>
+        <section
+          v-if="draft.id"
+          class="grid gap-4 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
+          data-testid="commercial-terms-section"
+        >
+          <div class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-start">
+            <div>
+              <h3 class="text-base font-semibold text-n-slate-12">
+                {{ label('COMMERCIAL_TERMS') }}
+              </h3>
+              <p class="mt-1 text-sm leading-6 text-n-slate-11">
+                {{ label('COMMERCIAL_TERMS_HELP') }}
+              </p>
+            </div>
+            <span
+              class="w-fit rounded-full bg-n-slate-3 px-3 py-1 text-xs font-medium text-n-slate-11"
+            >
+              {{
+                draft.published_commercial_terms
+                  ? label('COMMERCIAL_PUBLISHED_STATE')
+                  : label('COMMERCIAL_NOT_PUBLISHED')
+              }}
+            </span>
+          </div>
+          <div
+            v-if="draft.published_commercial_terms"
+            class="rounded-lg border border-n-weak bg-n-background p-3 text-sm text-n-slate-12"
+            data-testid="published-commercial-summary"
+          >
+            <strong>{{ label('CURRENT_PUBLISHED_PRICE') }}:</strong>
+            <template v-if="draft.published_commercial_terms.quote_required">
+              {{ label('QUOTE_REQUIRED') }}
+            </template>
+            <template v-else>
+              {{ draft.published_commercial_terms.currency }}
+              {{ draft.published_commercial_terms.amount }}
+            </template>
+            <span class="text-n-slate-11">
+              · {{ label('COMMERCIAL_REVISION') }}
+              {{ draft.published_commercial_terms.revision }}
+            </span>
+          </div>
+          <label class="flex items-center gap-2 text-sm text-n-slate-12">
+            <input
+              v-model="draft.commercial_terms.quote_required"
+              type="checkbox"
+              data-testid="commercial-quote-required"
+            />
+            {{ label('QUOTE_REQUIRED') }}
+          </label>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label
+              v-if="!draft.commercial_terms.quote_required"
+              class="grid gap-1 text-sm"
+            >
+              {{ label('PUBLISHED_AMOUNT') }}
+              <input
+                v-model="draft.commercial_terms.amount"
+                required
+                inputmode="decimal"
+                :class="inputClass"
+                data-testid="commercial-amount"
+              />
+            </label>
+            <label class="grid gap-1 text-sm">
+              {{ label('CURRENCY') }}
+              <select
+                v-model="draft.commercial_terms.currency"
+                :class="inputClass"
+                data-testid="commercial-currency"
+              >
+                <option
+                  v-for="currency in ['TZS', 'USD', 'KES', 'EUR', 'GBP']"
+                  :key="currency"
+                  :value="currency"
+                >
+                  {{ currency }}
+                </option>
+              </select>
+            </label>
+            <label class="grid gap-1 text-sm">
+              {{ label('EFFECTIVE_FROM') }}
+              <input
+                v-model="draft.commercial_terms.effective_from"
+                type="datetime-local"
+                :class="inputClass"
+              />
+            </label>
+            <label class="grid gap-1 text-sm">
+              {{ label('EFFECTIVE_UNTIL') }}
+              <input
+                v-model="draft.commercial_terms.effective_until"
+                type="datetime-local"
+                :class="inputClass"
+              />
+            </label>
+            <label class="grid gap-1 text-sm sm:col-span-2">
+              {{ label('TIMEZONE') }}
+              <input
+                v-model="draft.commercial_terms.timezone"
+                required
+                :class="inputClass"
+                data-testid="commercial-timezone"
+              />
+            </label>
+            <label class="grid gap-1 text-sm sm:col-span-2">
+              {{ label('PRICE_CONDITIONS') }}
+              <textarea
+                v-model="draft.commercial_terms.conditions"
+                class="min-h-20 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm text-n-slate-12"
+              />
+            </label>
+            <label class="grid gap-1 text-sm sm:col-span-2">
+              {{ label('PRICING_LINK') }}
+              <input
+                v-model="draft.commercial_terms.pricing_url"
+                type="url"
+                :class="inputClass"
+              />
+            </label>
+          </div>
+          <fieldset class="grid gap-3 rounded-lg border border-n-weak p-3">
+            <legend class="px-1 text-sm font-semibold">
+              {{ label('PROMOTION') }}
+            </legend>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="grid gap-1 text-sm">
+                {{ label('PROMOTION_AMOUNT') }}
+                <input
+                  v-model="draft.commercial_terms.promotion_amount"
+                  inputmode="decimal"
+                  :class="inputClass"
+                />
+              </label>
+              <label
+                class="flex items-center gap-2 text-sm sm:self-end sm:pb-2"
+              >
+                <input
+                  v-model="
+                    draft.commercial_terms.promotion_requires_confirmation
+                  "
+                  type="checkbox"
+                />
+                {{ label('PROMOTION_CONFIRMATION') }}
+              </label>
+              <label
+                v-if="draft.commercial_terms.promotion_requires_confirmation"
+                class="grid gap-1 text-sm sm:col-span-2"
+              >
+                {{ label('PROMOTION_ELIGIBILITY_FIELD') }}
+                <select
+                  v-model="draft.commercial_terms.promotion_eligibility_field"
+                  required
+                  :class="inputClass"
+                >
+                  <option value="">{{ label('CHOOSE_BOOLEAN_FIELD') }}</option>
+                  <option
+                    v-for="question in booleanQuestions"
+                    :key="question.key"
+                    :value="question.key"
+                  >
+                    {{ question.meaning }}
+                  </option>
+                </select>
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('PROMOTION_START') }}
+                <input
+                  v-model="draft.commercial_terms.promotion_starts_at"
+                  type="datetime-local"
+                  :class="inputClass"
+                />
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('PROMOTION_END') }}
+                <input
+                  v-model="draft.commercial_terms.promotion_ends_at"
+                  type="datetime-local"
+                  :class="inputClass"
+                />
+              </label>
+              <label class="grid gap-1 text-sm sm:col-span-2">
+                {{ label('PROMOTION_CONDITIONS') }}
+                <textarea
+                  v-model="draft.commercial_terms.promotion_conditions"
+                  class="min-h-20 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm text-n-slate-12"
+                />
+              </label>
+            </div>
+          </fieldset>
+          <div
+            v-if="draft.commercial_proposals?.length"
+            class="grid gap-2 rounded-lg border border-n-weak p-3"
+          >
+            <h4 class="text-sm font-semibold">
+              {{ label('DOCUMENT_PRICE_PROPOSALS') }}
+            </h4>
+            <article
+              v-for="proposal in draft.commercial_proposals"
+              :key="proposal.id"
+              class="grid gap-2 border-t border-n-weak pt-2 text-sm first:border-0 first:pt-0"
+            >
+              <p>
+                {{ proposal.proposed_terms.currency }}
+                {{ proposal.proposed_terms.amount || label('QUOTE_REQUIRED') }}
+                · {{ proposal.status }}
+              </p>
+              <p
+                v-if="proposal.conflict_details?.reason"
+                class="text-n-amber-11"
+              >
+                {{ proposal.conflict_details.reason }}
+              </p>
+              <div
+                v-if="['pending', 'conflict_review'].includes(proposal.status)"
+                class="flex flex-wrap gap-2"
+              >
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="reviewCommercialProposal(proposal, 'approve')"
+                >
+                  {{ label('APPROVE_DRAFT') }}
+                </button>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="reviewCommercialProposal(proposal, 'reject')"
+                >
+                  {{ label('REJECT') }}
+                </button>
+              </div>
+            </article>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              :class="buttonClass"
+              data-testid="save-commercial-terms"
+              @click="saveCommercialTerms"
+            >
+              {{ label('SAVE_COMMERCIAL_DRAFT') }}
+            </button>
+            <button
+              type="button"
+              :disabled="!draft.commercial_terms.draft_version"
+              class="min-h-9 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:opacity-40"
+              data-testid="publish-commercial-terms"
+              @click="publishCommercialTerms"
+            >
+              {{ label('PUBLISH_COMMERCIAL_TERMS') }}
+            </button>
+            <button
+              v-if="draft.published_commercial_terms"
+              type="button"
+              :class="buttonClass"
+              data-testid="preview-commercial-terms"
+              @click="previewCommercialTerms"
+            >
+              {{ label('PREVIEW_LEAD_ANSWER') }}
+            </button>
+            <label
+              v-if="
+                draft.published_commercial_terms
+                  ?.promotion_requires_confirmation
+              "
+              class="flex items-center gap-2 text-sm"
+            >
+              <input v-model="previewPromotionEligible" type="checkbox" />
+              {{ label('PREVIEW_PROMOTION_ELIGIBLE') }}
+            </label>
+          </div>
+          <p
+            v-if="pricingPreview"
+            class="rounded-lg bg-n-background p-3 text-sm leading-6 text-n-slate-12"
+            role="status"
+          >
+            {{ pricingPreview.answer || label('PRICE_NOT_CURRENT') }}
+          </p>
+        </section>
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="grid gap-1 text-sm">
             {{ label('QUALIFICATION_MODE') }}

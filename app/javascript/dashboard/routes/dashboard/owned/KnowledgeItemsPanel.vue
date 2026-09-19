@@ -61,6 +61,7 @@ const importForm = reactive({
   title: 'Imported company context',
   body: '',
   source: 'manual_import',
+  offer_id: '',
 });
 const answerForm = reactive({
   title: '',
@@ -472,7 +473,7 @@ onMounted(loadWorkspace);
     </div>
     <div
       v-if="showImport"
-      class="grid gap-3 border-b border-n-weak bg-n-background py-4 md:grid-cols-[1fr_2fr_auto]"
+      class="grid gap-3 border-b border-n-weak bg-n-background py-4 md:grid-cols-[1fr_2fr_1fr_auto]"
     >
       <input
         v-model="importForm.title"
@@ -485,6 +486,16 @@ onMounted(loadWorkspace);
         placeholder="Paste document text to import"
         aria-label="Imported document body"
       />
+      <select
+        v-model="importForm.offer_id"
+        class="h-10 rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm"
+        aria-label="Offer for extracted commercial proposals"
+      >
+        <option value="">General business document</option>
+        <option v-for="offer in offers" :key="offer.id" :value="offer.id">
+          {{ offer.name }}
+        </option>
+      </select>
       <button
         type="button"
         class="h-10 rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"

@@ -1,0 +1,57 @@
+R20 runtime verification — 2026-09-19
+
+Workspace: /Users/ghalyasaid/.codex/worktrees/r20/AI Chatbot
+Branch: codex/r20-offer-pricing
+Baseline HEAD: e859008345fc3e38e55f293ea6e439bac5698e1a
+Environment: RAILS_ENV=test
+PostgreSQL host: localhost
+PostgreSQL role: ghalyasaid
+Task-owned database: ai_lead_r20_review_test
+Prior task database ai_lead_r20_test was not changed.
+
+Schema command:
+  POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_lead_r20_review_test POSTGRES_HOST=localhost RAILS_ENV=test bundle exec rails db:prepare
+
+Schema result:
+  PASS — created ai_lead_r20_review_test and loaded the corrected schema, including scoped composite commercial foreign keys.
+
+Focused RSpec command:
+  POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_lead_r20_review_test POSTGRES_HOST=localhost RAILS_ENV=test bundle exec rspec spec/models/ai_lead_employee/offer_commercial_term_database_integrity_spec.rb spec/requests/ai_lead_employee/offer_commercial_terms_spec.rb spec/requests/api/v1/accounts/knowledge_documents_controller_spec.rb spec/services/ai_lead_employee/knowledge_answer_service_spec.rb spec/services/ai_lead_employee/offer_answer_context_spec.rb spec/services/ai_lead_employee/offer_pricing_resolver_spec.rb spec/services/ai_lead_employee/promotion_eligibility_spec.rb
+
+Initial RSpec result:
+  PASS — 49 examples, 0 failures; 7.49 seconds, 3.15 seconds file load.
+
+Final spec-review red command:
+  POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_lead_r20_review_test POSTGRES_HOST=localhost RAILS_ENV=test bundle exec rspec spec/services/ai_lead_employee/knowledge_answer_service_spec.rb:283 spec/requests/api/v1/accounts/knowledge_documents_controller_spec.rb:217
+
+Red result against commit fabaaadc:
+  EXPECTED FAIL — 2 examples, 2 failures.
+  1. Mixed course-price/platform-subscription wording returned no authoritative Offer price.
+  2. Two distinct prices in one sentence produced a pending proposal instead of conflict review.
+
+Targeted green result after correction:
+  PASS — 2 examples, 0 failures.
+
+Complete focused green result after correction:
+  PASS — 51 examples, 0 failures; 6.88 seconds, 2.87 seconds file load.
+
+Non-blocking output:
+  Existing Rails enum deprecation warnings and the Rack :unprocessable_entity deprecation warning were emitted.
+
+Runtime release:
+  No command, server, build or browser remained active after the suite.
+
+Guarded browser acceptance:
+  PASS — synthetic RAILS_ENV=test fixture on 127.0.0.1 only.
+  Desktop path covered fixed-price draft/publish, unpublished-draft isolation, document conflict review, proposal approval, explicit republish, quote-required publication, preview output and reload persistence.
+  Phone path used a 390x844 viewport; document width equaled viewport width (390px), with no horizontal overflow.
+
+UI stale-preview TDD correction:
+  RED — focused regression: 1 example, 1 failure; the prior TZS 1250 preview remained displayed after publishing TZS 900.
+  GREEN — complete OfferConfigurationPanel suite: 12 examples, 0 failures.
+  Direct ESLint on the changed component and spec: PASS, 0 errors.
+
+Production asset build:
+  NODE_OPTIONS=--max-old-space-size=4096 ./node_modules/.bin/vite build --mode production
+  PASS — 5087 modules transformed; built in 2m 6s. Existing Browserslist and chunk-size warnings only.
+  Raw output: docs/releases/2026-09-19-r20/vite-production-build.log
