@@ -129,7 +129,7 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
       'score_weights', 'score_thresholds'
     )
     previous_ownership = previous_proposal.fetch('source_ownership', {})
-    AiLeadEmployee::BusinessSetupProposalOwnership.remove_unchanged_fields!(proposed, previous_ownership)
+    AiLeadEmployee::BusinessSetupProposalOwnership.remove_unchanged_fields!(proposed, previous_proposal)
     reset_owned_value!(proposed, 'next_step', previous_ownership['next_step'])
     reset_owned_value!(proposed, 'qualification_mode', previous_ownership['qualification_mode'])
     proposed

@@ -539,6 +539,27 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(corrected.dig('configuration', 'rules')).to include(include('field' => 'independent_readiness'))
   end
 
+  it 'retires unchanged legacy source-owned requirements during correction' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Legacy draft', source_type: 'document',
+                                         body: 'Customers need a retail registration.' } }, as: :json
+    first = response.parsed_body
+    old_key = first.dig('configuration', 'questions', 0, 'key')
+    source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    legacy_proposal = source.proposal.deep_dup
+    legacy_proposal['source_ownership'] = { 'question_keys' => legacy_proposal.fetch('generated_question_keys') }
+    source.update!(proposal: legacy_proposal)
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Legacy draft', source_type: 'document',
+                                                                    body: 'Customers need an active tax registration.',
+                                                                    reviewed_configuration: first.fetch('configuration') } }, as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.dig('configuration', 'questions').pluck('key')).not_to include(old_key)
+  end
+
   it 'preserves an owner-edited canonical sales-call agreement during source correction' do
     post source_url, headers: headers,
                      params: { source: { title: 'Call draft', source_type: 'document',
@@ -550,6 +571,10 @@ RSpec.describe 'Business setup source review', type: :request do
     question['prompt'] = 'May we arrange a call with you?'
     question['required'] = false
     rule['enabled'] = false
+    source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    legacy_proposal = source.proposal.deep_dup
+    legacy_proposal['source_ownership'] = { 'question_keys' => legacy_proposal.fetch('generated_question_keys') }
+    source.update!(proposal: legacy_proposal)
 
     patch "#{source_url}/#{first.fetch('id')}", headers: headers,
                                                 params: { expected_source_version: first.fetch('version'),
@@ -565,6 +590,25 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(persisted.proposal.dig('source_ownership', 'questions')).to eq({})
     expect(persisted.proposal.dig('source_ownership', 'rules')).to eq({})
     expect(persisted.history.last).to include('event' => 'corrected', 'version' => 2)
+  end
+
+  it 'preserves an owner-appended rule sharing a source-owned field during correction' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Call draft', source_type: 'document',
+                                         body: 'We coach founders. A sales call requires their agreement.' } }, as: :json
+    first = response.parsed_body
+    reviewed = first.fetch('configuration').deep_dup
+    reviewed['rules'] << reviewed.fetch('rules').sole.merge('dimension' => 'owner_review', 'priority' => 1)
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Call draft', source_type: 'document',
+                                                                    body: 'We answer founder questions.',
+                                                                    reviewed_configuration: reviewed } }, as: :json
+
+    corrected = response.parsed_body
+    expect(corrected.dig('configuration', 'questions').pluck('key')).to include('sales_call_agreement')
+    expect(corrected.dig('configuration', 'rules').count { |rule| rule['field'] == 'sales_call_agreement' }).to eq(2)
   end
 
   it 'replaces published source-owned requirements while preserving independent Offer edits' do

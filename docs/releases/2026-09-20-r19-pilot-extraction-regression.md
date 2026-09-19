@@ -17,14 +17,16 @@ sentences produce one canonical question and rule. Reversed revenue-or-business
 alternatives are handled equally conservatively. Source correction retires a
 generated field only while its saved question and rule values remain unchanged;
 an administrator's canonical sales-call agreement edit is preserved and
-detached from source ownership.
+detached from source ownership. Legacy key-only ownership uses the prior saved
+configuration as its comparison snapshot, and same-field rule groups are
+preserved whenever an administrator appends or changes a rule.
 
 Verification on isolated test database `ale_r19_final_patch_20260919_spec`:
 
 ```text
 RAILS_ENV=test POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ale_r19_final_patch_20260919_spec \
   bundle exec rspec spec/requests/ai_lead_employee/business_setup_sources_spec.rb
-# 64 examples, 0 failures
+# 66 examples, 0 failures
 
 bundle exec rubocop app/models/ai_lead_employee/business_setup_source.rb \
   app/services/ai_lead_employee/business_setup_proposal_extractor.rb \
