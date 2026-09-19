@@ -172,6 +172,43 @@ RSpec.describe 'Human Review Requests API', type: :request do
     expect(KnowledgeItem.where("metadata ->> 'proposed_from_human_review_request_id' = ?", request_record.id.to_s)).to have(1).item
   end
 
+  it 'keeps the resolved review recoverable when reusable knowledge cannot yet be proposed', :aggregate_failures do
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_knowledge",
+         headers: agent.create_new_auth_token,
+         params: { source_kind: 'refund', title: 'Refund policy' },
+         as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(request_record.reload).to be_open
+    expect(request_record.knowledge_item).to be_nil
+
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/resolve",
+         headers: agent.create_new_auth_token,
+         params: { answer: 'A team member will review the refund request.', resolution_kind: 'internal_note' },
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(request_record.reload).to be_resolved
+
+    post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/propose_knowledge",
+         headers: agent.create_new_auth_token,
+         params: { source_kind: 'refund', title: 'Refund policy' },
+         as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(request_record.reload.knowledge_item).to be_draft
+  end
+
+  it 'does not expose or resolve another operator\'s assigned review' do
+    other_operator = create(:user, account: account, role: :agent)
+
+    get "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}",
+        headers: other_operator.create_new_auth_token,
+        as: :json
+
+    expect(response).to have_http_status(:not_found)
+  end
+
   it 'supports administrator assignment and assigned operator rejection from the Review workspace', :aggregate_failures do
     post "/api/v1/accounts/#{account.id}/human_review_requests/#{request_record.id}/assign",
          headers: admin.create_new_auth_token,
