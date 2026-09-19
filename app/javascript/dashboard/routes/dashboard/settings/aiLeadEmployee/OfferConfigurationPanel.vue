@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import OffersAPI from 'dashboard/api/qualificationOffers';
+import EvaluationSandboxAPI from 'dashboard/api/evaluationSandbox';
 
 const { t } = useI18n();
 const draft = ref(null);
@@ -39,10 +40,58 @@ const saving = ref(false);
 const error = ref('');
 const status = ref('');
 const pricingPreview = ref(null);
+const setupSources = reactive({});
+const setupTitle = ref('');
+const setupBody = ref('');
+const setupSourceType = ref('pasted_prose');
+const setupProposal = ref(null);
+const setupQuestions = reactive({});
+const setupTestResults = reactive({});
 const previewPromotionEligible = ref(false);
 const conflicts = reactive({});
 const conflicted = computed(() => Boolean(conflicts[draft.value?.id]));
 const label = key => t(`AI_LEAD_EMPLOYEE.OFFERS.${key}`);
+const setupStatusLabel = sourceStatus =>
+  label(
+    { proposed: 'SETUP_STATUS_PROPOSED', published: 'SETUP_STATUS_PUBLISHED' }[
+      sourceStatus
+    ] || 'SETUP_STATUS_UNKNOWN'
+  );
+const setupModeLabel = mode =>
+  label(
+    {
+      not_configured: 'MODE_NOT_CONFIGURED',
+      disabled: 'MODE_DISABLED',
+      enabled: 'MODE_ENABLED',
+    }[mode] || 'MODE_NOT_CONFIGURED'
+  );
+const setupNextStepLabel = kind =>
+  label(
+    {
+      answer_only: 'NEXT_ANSWER_ONLY',
+      enquiry: 'NEXT_ENQUIRY',
+      purchase_link: 'NEXT_PURCHASE_LINK',
+      sales_call: 'NEXT_SALES_CALL',
+      appointment: 'NEXT_APPOINTMENT',
+    }[kind] || 'NEXT_ANSWER_ONLY'
+  );
+const setupPurposeLabel = purpose =>
+  label(
+    {
+      fit: 'PURPOSE_FIT',
+      readiness: 'PURPOSE_READINESS',
+      action_eligibility: 'PURPOSE_ACTION_ELIGIBILITY',
+    }[purpose] || 'PURPOSE_FIT'
+  );
+const setupRuleSummary = (source, rule) => {
+  const question = source.configuration?.questions?.find(
+    item => item.key === rule.field
+  );
+  return t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_RULE_SUMMARY', {
+    field: question?.meaning || label('SETUP_REVIEW_FIELD'),
+    purpose: setupPurposeLabel(rule.dimension || rule.kind),
+  });
+};
 const inputClass =
   'h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12';
 const buttonClass =
@@ -63,12 +112,21 @@ const blankCommercialTerms = currency => ({
   promotion_requires_confirmation: false,
   promotion_eligibility_field: '',
 });
+const setupResultKey = source => `${source.id}:${source.version}`;
+const clearSetupTests = () => {
+  Object.keys(setupQuestions).forEach(key => delete setupQuestions[key]);
+  Object.keys(setupTestResults).forEach(key => delete setupTestResults[key]);
+};
 const selectDraft = key => {
   draft.value = drafts[key];
   pricingPreview.value = null;
   previewPromotionEligible.value = false;
   error.value = '';
   status.value = '';
+  setupProposal.value = null;
+  clearSetupTests();
+  // eslint-disable-next-line no-use-before-define
+  if (draft.value?.id) loadSetupSources(draft.value.id);
 };
 const newOffer = () => {
   drafts.new ||= {
@@ -191,6 +249,171 @@ const load = async () => {
     loading.value = false;
   }
 };
+const loadSetupSources = async offerId => {
+  try {
+    const { data } = await OffersAPI.setupSources(offerId);
+    setupSources[offerId] = Array.isArray(data) ? data : [];
+  } catch {
+    // The Offer remains editable when setup source history is temporarily unavailable.
+  }
+};
+const reopenSetup = source => {
+  setupTitle.value = source.title;
+  setupBody.value = source.body;
+  setupSourceType.value = source.source_type;
+  setupProposal.value = source;
+  Object.assign(
+    draft.value,
+    JSON.parse(JSON.stringify(source.configuration || {}))
+  );
+  clearSetupTests();
+};
+const editPublishedSetup = source => {
+  setupTitle.value = source.title;
+  setupBody.value = source.body;
+  setupSourceType.value = source.source_type;
+  setupProposal.value = null;
+  clearSetupTests();
+};
+const setupTestResult = source => setupTestResults[setupResultKey(source)];
+const setupTestBlockedReason = source =>
+  setupTestResult(source)?.steps?.find(step => step.blocked_reason)
+    ?.blocked_reason;
+const setupTestBlockedReasonLabel = source =>
+  label(
+    {
+      provider_configuration_changed:
+        'SETUP_TEST_BLOCKED_PROVIDER_CONFIGURATION_CHANGED',
+      provider_disabled: 'SETUP_TEST_BLOCKED_PROVIDER_DISABLED',
+      usage_limit_exhausted: 'SETUP_TEST_BLOCKED_USAGE_LIMIT',
+      no_approved_knowledge: 'SETUP_TEST_BLOCKED_REVIEW_REQUIRED',
+    }[setupTestBlockedReason(source)] || 'SETUP_TEST_BLOCKED_GENERIC'
+  );
+const setupTestAnswered = source =>
+  setupTestResult(source)?.status === 'completed' &&
+  !setupTestBlockedReason(source) &&
+  setupTestResult(source)?.steps?.some(
+    step => step.selected_answer && step.source_references?.length
+  );
+const reviewedConfiguration = () => {
+  const configuration = JSON.parse(JSON.stringify(draft.value));
+  delete configuration.commercial_terms;
+  delete configuration.commercial_terms_draft;
+  delete configuration.published_commercial_terms;
+  delete configuration.commercial_proposals;
+  configuration.questions.forEach((question, position) => {
+    question.position = position;
+  });
+  configuration.budget_ranges.forEach((range, position) => {
+    range.position = position;
+  });
+  if (!['purchase_link', 'appointment'].includes(configuration.next_step.kind))
+    delete configuration.next_step.url;
+  if (configuration.next_step.kind === 'answer_only')
+    delete configuration.next_step.prompt;
+  return configuration;
+};
+const proposeSetup = async () => {
+  if (!draft.value?.id || !setupBody.value.trim() || saving.value) return;
+  saving.value = true;
+  error.value = '';
+  try {
+    const { data } = await OffersAPI.createSetupSource(draft.value.id, {
+      title: setupTitle.value.trim() || label('SETUP_DEFAULT_TITLE'),
+      source_type: setupSourceType.value,
+      body: setupBody.value,
+      reviewed_configuration: reviewedConfiguration(),
+    });
+    setupSources[draft.value.id] = [
+      data,
+      ...(setupSources[draft.value.id] || []),
+    ];
+    setupProposal.value = data;
+    status.value = label('SETUP_PROPOSED');
+  } catch (exception) {
+    error.value =
+      exception.response?.data?.error || label('SETUP_REVIEW_ERROR');
+  } finally {
+    saving.value = false;
+  }
+};
+const publishSetup = async source => {
+  if (!draft.value?.id || saving.value) return;
+  saving.value = true;
+  error.value = '';
+  try {
+    const { data } = await OffersAPI.publishSetupSource(
+      draft.value.id,
+      source.id,
+      {
+        expected_source_version: source.version,
+        expected_offer_version: draft.value.version,
+      }
+    );
+    setupSources[draft.value.id] = (setupSources[draft.value.id] || []).map(
+      item => (item.id === data.id ? data : item)
+    );
+    setupProposal.value = data;
+    // eslint-disable-next-line no-use-before-define
+    await reloadCurrent();
+    status.value = label('SETUP_PUBLISHED');
+  } catch (exception) {
+    error.value = exception.response?.data?.error || label('SETUP_CONFLICT');
+  } finally {
+    saving.value = false;
+  }
+};
+const correctSetup = async source => {
+  if (!draft.value?.id || saving.value) return;
+  saving.value = true;
+  error.value = '';
+  try {
+    const { data } = await OffersAPI.updateSetupSource(
+      draft.value.id,
+      source.id,
+      {
+        title: setupTitle.value.trim() || source.title,
+        source_type: setupSourceType.value,
+        body: setupBody.value,
+        reviewed_configuration: reviewedConfiguration(),
+        expected_source_version: source.version,
+      }
+    );
+    setupSources[draft.value.id] = (setupSources[draft.value.id] || []).map(
+      item => (item.id === data.id ? data : item)
+    );
+    setupProposal.value = data;
+    status.value = label('SETUP_CORRECTED');
+  } catch (exception) {
+    error.value =
+      exception.response?.data?.error || label('SETUP_CORRECTION_ERROR');
+  } finally {
+    saving.value = false;
+  }
+};
+
+const testSetup = async source => {
+  const key = setupResultKey(source);
+  const question = setupQuestions[key]?.trim();
+  if (!question || saving.value) return;
+  saving.value = true;
+  error.value = '';
+  delete setupTestResults[key];
+  try {
+    const { data } = await EvaluationSandboxAPI.runScenario(
+      'business_setup_context',
+      {
+        business_setup_source_id: source.id,
+        question,
+      }
+    );
+    setupTestResults[key] = data;
+  } catch (exception) {
+    error.value = exception.response?.data?.error || label('SETUP_TEST_ERROR');
+  } finally {
+    saving.value = false;
+  }
+};
 
 const save = async () => {
   if (saving.value || conflicted.value) return;
@@ -198,23 +421,7 @@ const save = async () => {
   error.value = '';
   status.value = '';
   try {
-    const payload = { offer: JSON.parse(JSON.stringify(draft.value)) };
-    delete payload.offer.commercial_terms;
-    delete payload.offer.commercial_terms_draft;
-    delete payload.offer.published_commercial_terms;
-    delete payload.offer.commercial_proposals;
-    if (
-      !['purchase_link', 'appointment'].includes(payload.offer.next_step.kind)
-    )
-      delete payload.offer.next_step.url;
-    if (payload.offer.next_step.kind === 'answer_only')
-      delete payload.offer.next_step.prompt;
-    payload.offer.questions.forEach((question, position) => {
-      question.position = position;
-    });
-    payload.offer.budget_ranges.forEach((range, position) => {
-      range.position = position;
-    });
+    const payload = { offer: reviewedConfiguration() };
     const { data } = draft.value.id
       ? await OffersAPI.update(draft.value.id, payload)
       : await OffersAPI.create(payload);
@@ -411,7 +618,7 @@ onMounted(load);
             class="rounded-lg border border-n-weak bg-n-background p-3 text-sm text-n-slate-12"
             data-testid="published-commercial-summary"
           >
-            <strong>{{ label('CURRENT_PUBLISHED_PRICE') }}:</strong>
+            <strong>{{ label('CURRENT_PUBLISHED_PRICE') }}</strong>
             <template v-if="draft.published_commercial_terms.quote_required">
               {{ label('QUOTE_REQUIRED') }}
             </template>
@@ -420,7 +627,7 @@ onMounted(load);
               {{ draft.published_commercial_terms.amount }}
             </template>
             <span class="text-n-slate-11">
-              · {{ label('COMMERCIAL_REVISION') }}
+              {{ label('SEPARATOR') }}{{ label('COMMERCIAL_REVISION') }}
               {{ draft.published_commercial_terms.revision }}
             </span>
           </div>
@@ -587,7 +794,7 @@ onMounted(load);
               <p>
                 {{ proposal.proposed_terms.currency }}
                 {{ proposal.proposed_terms.amount || label('QUOTE_REQUIRED') }}
-                · {{ proposal.status }}
+                {{ label('SEPARATOR') }}{{ proposal.status }}
               </p>
               <p
                 v-if="proposal.conflict_details?.reason"
@@ -661,6 +868,236 @@ onMounted(load);
           >
             {{ pricingPreview.answer || label('PRICE_NOT_CURRENT') }}
           </p>
+        </section>
+        <section
+          v-if="draft.id"
+          class="grid gap-3 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
+          data-testid="business-setup-section"
+        >
+          <div>
+            <h3 class="text-base font-semibold text-n-slate-12">
+              {{ label('SETUP_TITLE') }}
+            </h3>
+            <p class="mt-1 text-sm leading-6 text-n-slate-11">
+              {{ label('SETUP_HELP') }}
+            </p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm">
+              {{ label('SETUP_SOURCE_NAME') }}
+              <input
+                v-model="setupTitle"
+                :class="inputClass"
+                :placeholder="label('SETUP_SOURCE_NAME_PLACEHOLDER')"
+              />
+            </label>
+            <label class="grid gap-1 text-sm">
+              {{ label('SETUP_SOURCE_TYPE') }}
+              <select v-model="setupSourceType" :class="inputClass">
+                <option value="pasted_prose">
+                  {{ label('SETUP_PASTED_NOTES') }}
+                </option>
+                <option value="document">
+                  {{ label('SETUP_DOCUMENT_TEXT') }}
+                </option>
+              </select>
+            </label>
+            <label class="grid gap-1 text-sm sm:col-span-2">
+              {{ label('SETUP_BODY_LABEL') }}
+              <textarea
+                v-model="setupBody"
+                class="min-h-28 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm text-n-slate-12"
+                :placeholder="label('SETUP_BODY_PLACEHOLDER')"
+              />
+            </label>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              :class="buttonClass"
+              :disabled="!setupBody.trim() || saving"
+              data-testid="propose-business-setup"
+              @click="proposeSetup"
+            >
+              {{ label('SETUP_REVIEW') }}
+            </button>
+            <span class="text-sm text-n-slate-11">
+              {{ label('SETUP_PRICE_HELP') }}
+            </span>
+          </div>
+          <article
+            v-for="source in setupSources[draft.id] || []"
+            :key="source.id"
+            class="grid gap-2 rounded-lg border border-n-weak bg-n-background p-3 text-sm"
+          >
+            <p class="font-medium text-n-slate-12">
+              {{ source.title }}{{ label('SEPARATOR')
+              }}{{ setupStatusLabel(source.status) }}
+            </p>
+            <p v-if="source.proposed_facts?.length">
+              <strong>{{ label('SETUP_PROPOSED_FACTS') }}</strong>
+              {{ source.proposed_facts.join(' ') }}
+            </p>
+            <p v-if="source.proposed_rules?.length">
+              <strong>{{ label('SETUP_PROPOSED_RULES') }}</strong>
+              {{ source.proposed_rules.join(' ') }}
+            </p>
+            <p class="text-n-slate-11">
+              {{ label('SETUP_PROPOSED_CONFIGURATION') }}
+              {{ setupModeLabel(source.configuration?.qualification_mode)
+              }}{{ label('SEPARATOR')
+              }}{{ setupNextStepLabel(source.configuration?.next_step?.kind) }}
+            </p>
+            <details
+              v-if="source.history?.length"
+              class="text-n-slate-11"
+              data-testid="business-setup-history"
+            >
+              <summary>{{ label('SETUP_HISTORY') }}</summary>
+              <ul class="mt-1 list-disc pl-5">
+                <li v-for="revision in source.history" :key="revision.version">
+                  {{
+                    t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_HISTORY_ENTRY', {
+                      version: revision.version,
+                      body: revision.body,
+                    })
+                  }}
+                </li>
+              </ul>
+            </details>
+            <ul
+              v-if="source.configuration?.questions?.length"
+              class="list-disc pl-5 text-n-slate-11"
+            >
+              <li
+                v-for="question in source.configuration.questions"
+                :key="question.key"
+              >
+                {{ question.meaning }}{{ label('SEPARATOR')
+                }}{{ setupPurposeLabel(question.purpose) }}
+              </li>
+            </ul>
+            <ul
+              v-if="source.configuration?.rules?.length"
+              class="list-disc pl-5 text-n-slate-11"
+            >
+              <li
+                v-for="rule in source.configuration.rules"
+                :key="`${rule.field}:${rule.priority}`"
+              >
+                {{ setupRuleSummary(source, rule) }}
+              </li>
+            </ul>
+            <p v-if="source.unknowns?.length" class="text-n-amber-11">
+              <strong>{{ label('SETUP_STILL_NEEDED') }}</strong>
+              {{ source.unknowns.join(' ') }}
+            </p>
+            <p class="text-n-slate-11">
+              {{
+                t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_VERSION', {
+                  version: source.version,
+                })
+              }}
+            </p>
+            <button
+              v-if="
+                source.status === 'proposed' && setupProposal?.id !== source.id
+              "
+              type="button"
+              :class="buttonClass"
+              :disabled="saving"
+              data-testid="reopen-business-setup"
+              @click="reopenSetup(source)"
+            >
+              {{ label('SETUP_REOPEN') }}
+            </button>
+            <button
+              v-if="
+                source.status === 'proposed' && setupProposal?.id === source.id
+              "
+              type="button"
+              :class="buttonClass"
+              :disabled="saving"
+              data-testid="correct-business-setup"
+              @click="correctSetup(source)"
+            >
+              {{ label('SETUP_SAVE_CORRECTION') }}
+            </button>
+            <button
+              v-if="source.status === 'proposed'"
+              type="button"
+              class="w-fit min-h-9 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:opacity-40"
+              :disabled="saving"
+              data-testid="publish-business-setup"
+              @click="publishSetup(source)"
+            >
+              {{ label('SETUP_PUBLISH') }}
+            </button>
+            <button
+              v-if="source.status === 'published'"
+              type="button"
+              :class="buttonClass"
+              :disabled="saving"
+              data-testid="edit-published-business-setup"
+              @click="editPublishedSetup(source)"
+            >
+              {{ label('SETUP_EDIT_PUBLISHED') }}
+            </button>
+            <div v-if="source.status === 'published'" class="grid gap-2">
+              <label class="grid gap-1">
+                {{ label('SETUP_TEST_QUESTION') }}
+                <input
+                  v-model="setupQuestions[setupResultKey(source)]"
+                  :class="inputClass"
+                  :placeholder="label('SETUP_TEST_PLACEHOLDER')"
+                  data-testid="business-setup-question"
+                />
+              </label>
+              <button
+                type="button"
+                :class="buttonClass"
+                :disabled="
+                  !setupQuestions[setupResultKey(source)]?.trim() || saving
+                "
+                data-testid="test-business-setup"
+                @click="testSetup(source)"
+              >
+                {{ label('SETUP_TEST') }}
+              </button>
+              <p
+                v-if="setupTestAnswered(source)"
+                role="status"
+                class="text-n-slate-11"
+              >
+                {{ label('SETUP_TEST_COMPLETE') }}
+              </p>
+              <p
+                v-else-if="setupTestBlockedReason(source)"
+                role="alert"
+                class="text-n-ruby-11"
+              >
+                {{
+                  t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_TEST_BLOCKED', {
+                    reason: setupTestBlockedReasonLabel(source),
+                  })
+                }}
+              </p>
+              <p
+                v-else-if="setupTestResult(source)?.status === 'completed'"
+                role="alert"
+                class="text-n-ruby-11"
+              >
+                {{ label('SETUP_TEST_NO_ANSWER') }}
+              </p>
+              <p
+                v-else-if="setupTestResult(source)"
+                role="alert"
+                class="text-n-ruby-11"
+              >
+                {{ label('SETUP_TEST_FAILED') }}
+              </p>
+            </div>
+          </article>
         </section>
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="grid gap-1 text-sm">

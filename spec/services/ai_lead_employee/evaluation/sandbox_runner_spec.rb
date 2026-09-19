@@ -60,6 +60,87 @@ RSpec.describe AiLeadEmployee::Evaluation::SandboxRunner do
   end
   # rubocop:enable RSpec/MultipleExpectations
 
+  it 'runs the real no-send runtime against the exact published setup source and Offer revision' do
+    offer = account.qualification_offers.create!(name: 'No qualification product', currency: 'TZS')
+    document = account.knowledge_documents.new
+    document.save_draft!(attributes: { title: 'Published setup', body: 'This product helps small shops.',
+                                       general_question_access: false, offer_ids: [offer.id] }, editor: admin)
+    document.publish!(editor: admin)
+    source = AiLeadEmployee::BusinessSetupSource.create!(
+      account: account, offer: offer, title: 'Published setup', source_type: 'document', body: 'This product helps small shops.', proposal: {},
+      status: :published, version: 2, published_offer_version: offer.configuration_version, published_at: Time.current,
+      published_by: admin, knowledge_document: document
+    )
+
+    result = described_class.new(
+      account: account, user: admin, scenario_key: 'business_setup_context', business_setup_source: source,
+      question: 'Which small shops does this product help?'
+    ).perform
+
+    expect(result.run).to be_completed
+    expect(result.run.configuration_snapshot.fetch('business_setup_source')).to include(
+      'id' => source.id, 'offer_id' => offer.id, 'version' => 2,
+      'published_offer_version' => offer.configuration_version
+    )
+    expect(result.run.messages.first).to include('body' => 'Which small shops does this product help?')
+    expect(result.run.steps.first.fetch('source_references')).to include(
+      include('type' => 'knowledge_document', 'id' => document.id, 'status' => 'verified')
+    )
+    expect(provider_client).to have_received(:complete).with(
+      hash_including(messages: include(hash_including(content: include('Approved source answer: This product helps small shops.'))))
+    )
+    expect(SendReplyJob).not_to have_received(:perform_later)
+    expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
+  end
+
+  it 'uses normal inbound retrieval after a corrected setup supersedes the old Knowledge Document' do
+    offer = account.qualification_offers.create!(name: 'Corrected inventory service', currency: 'TZS', enabled: true)
+    old_document = account.knowledge_documents.new
+    old_document.save_draft!(attributes: { title: 'Old inventory setup', body: 'Inventory service uses old guidance.',
+                                           general_question_access: false, offer_ids: [offer.id] }, editor: admin)
+    old_document.publish!(editor: admin)
+    old_document.archive!(editor: admin)
+    corrected_document = account.knowledge_documents.new
+    corrected_document.save_draft!(
+      attributes: { title: 'Corrected inventory setup', body: 'Inventory service uses corrected stock guidance.',
+                    general_question_access: false, offer_ids: [offer.id] }, editor: admin
+    )
+    corrected_document.publish!(editor: admin)
+    source = AiLeadEmployee::BusinessSetupSource.create!(
+      account: account, offer: offer, title: 'Corrected inventory setup', source_type: 'document',
+      body: corrected_document.body, proposal: {}, status: :published, version: 2,
+      published_offer_version: offer.configuration_version, published_at: Time.current,
+      published_by: admin, knowledge_document: corrected_document
+    )
+
+    result = described_class.new(
+      account: account, user: admin, scenario_key: 'business_setup_context', business_setup_source: source,
+      question: 'What corrected stock guidance does the inventory service use?'
+    ).perform
+
+    expect(result.run).to be_completed
+    expect(result.run.steps.first.fetch('source_references')).to include(
+      include('type' => 'knowledge_document', 'id' => corrected_document.id, 'status' => 'verified')
+    )
+    expect(result.run.steps.first.fetch('source_references')).not_to include(include('id' => old_document.id))
+  end
+
+  it 'fails a delayed run when its published Offer revision changes before runtime admission' do
+    offer = account.qualification_offers.create!(name: 'Changing service', currency: 'TZS')
+    source = AiLeadEmployee::BusinessSetupSource.create!(
+      account: account, offer: offer, title: 'Published setup', source_type: 'document', body: 'Service details', proposal: {},
+      status: :published, version: 1, published_offer_version: offer.configuration_version, published_at: Time.current
+    )
+    runner = described_class.new(account: account, user: admin, scenario_key: 'approved_answer', business_setup_source: source)
+    offer.update!(configuration_version: offer.configuration_version + 1)
+
+    result = runner.perform
+
+    expect(result.run).to be_failed
+    expect(result.run.steps.first).to include('error' => 'Business setup source is no longer current')
+    expect(SendReplyJob).not_to have_received(:perform_later)
+  end
+
   it 'records controlled-claim review requirements without faking a manual pass' do
     result = described_class.new(account: account, user: admin, scenario_key: 'controlled_claim_requires_review').perform
 

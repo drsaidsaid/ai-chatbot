@@ -214,6 +214,9 @@ Rails.application.routes.draw do
               post 'commercial_proposals/:proposal_id/approve', action: :approve_commercial_proposal
               post 'commercial_proposals/:proposal_id/reject', action: :reject_commercial_proposal
             end
+            resources :setup_sources, controller: 'business_setup_sources', only: [:index, :show, :create, :update] do
+              post :publish, on: :member
+            end
           end
           resource :whatsapp_connection, only: [:show, :update] do
             post :health_check

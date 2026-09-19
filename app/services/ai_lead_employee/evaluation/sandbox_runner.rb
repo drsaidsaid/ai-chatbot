@@ -4,20 +4,25 @@
 class AiLeadEmployee::Evaluation::SandboxRunner
   PROMPT_VERSION = 'ai-orchestration-v1'
   KNOWLEDGE_DOCUMENT_SCENARIO_KEY = 'knowledge_document_context'
+  BUSINESS_SETUP_SCENARIO_KEY = 'business_setup_context'
 
   Result = Struct.new(:run, keyword_init: true)
 
-  def initialize(account:, user:, scenario_key:, knowledge_document: nil, question: nil)
+  # rubocop:disable Metrics/ParameterLists
+  def initialize(account:, user:, scenario_key:, knowledge_document: nil, business_setup_source: nil, question: nil)
     @account = account
     @user = user
     @knowledge_document = knowledge_document
+    @business_setup_source = business_setup_source
     if knowledge_document.present? && scenario_key != KNOWLEDGE_DOCUMENT_SCENARIO_KEY
       raise AiLeadEmployee::Evaluation::ScenarioCatalog::ScenarioNotFound, scenario_key
     end
 
-    @scenario = contextual_document_scenario(question) || AiLeadEmployee::Evaluation::ScenarioCatalog.find!(scenario_key)
+    @scenario = contextual_setup_scenario(question) || contextual_document_scenario(question) ||
+                AiLeadEmployee::Evaluation::ScenarioCatalog.find!(scenario_key)
     @simulation_identifier = "evaluation-#{scenario[:key]}-#{SecureRandom.hex(6)}"
   end
+  # rubocop:enable Metrics/ParameterLists
 
   def perform
     simulation = simulate_with_rollback
@@ -28,7 +33,22 @@ class AiLeadEmployee::Evaluation::SandboxRunner
 
   private
 
-  attr_reader :account, :user, :scenario, :simulation_identifier, :knowledge_document
+  attr_reader :account, :user, :scenario, :simulation_identifier, :knowledge_document, :business_setup_source
+
+  def admit_business_setup_source!
+    return if business_setup_source.blank?
+
+    AiLeadEmployee::KnowledgeAuthorityLock.acquire_for_answer!(account.id)
+    membership = AccountUser.lock.find_by(account_id: account.id, user_id: user.id)
+    raise AiLeadEmployee::BusinessSetupSource::NotAuthorized, 'Administrator access is required' unless membership&.administrator?
+
+    business_setup_source.lock!
+    business_setup_source.offer.lock!
+    business_setup_source.knowledge_document&.lock!
+    return if business_setup_source.account_id == account.id && business_setup_source.current_published_offer?
+
+    raise ActiveRecord::RecordNotFound, 'Business setup source is no longer current'
+  end
 
   def contextual_document_scenario(question)
     return if knowledge_document.blank?
@@ -48,9 +68,25 @@ class AiLeadEmployee::Evaluation::SandboxRunner
     }
   end
 
+  def contextual_setup_scenario(question)
+    return if business_setup_source.blank?
+    return if question.blank?
+
+    {
+      key: BUSINESS_SETUP_SCENARIO_KEY,
+      name: "Business setup: #{business_setup_source.title}",
+      description: 'The published setup answers a real question through AI Orchestration without sending a live message.',
+      messages: [{
+        event_id: "business-setup-#{business_setup_source.id}-#{SecureRandom.hex(4)}",
+        type: 'text', body: question.to_s, expected: { no_real_send: true }
+      }]
+    }
+  end
+
   def simulate_with_rollback
     result = nil
     ActiveRecord::Base.transaction(requires_new: true) do
+      admit_business_setup_source!
       context = sandbox_context
       processed_event_ids = Set.new
       steps = scenario[:messages].each_with_index.map do |message_payload, index|
@@ -108,6 +144,7 @@ class AiLeadEmployee::Evaluation::SandboxRunner
   end
 
   def contextual_offer
+    return business_setup_source.offer if business_setup_source.present?
     return if knowledge_document.blank?
 
     account.qualification_offers.enabled_in_order.find_by(id: Array(knowledge_document.offer_ids))
@@ -541,13 +578,20 @@ class AiLeadEmployee::Evaluation::SandboxRunner
   end
 
   def configuration_snapshot
-    {
+    snapshot = {
       'qualification_config_version' => configuration_version,
       'questions' => account.qualification_questions.enabled_in_order.map do |question|
         question.slice(:id, :signal, :prompt, :position, :updated_at).as_json
       end,
       'booking' => AiLeadEmployee::BookingConfiguration.for(account)
     }
+    return snapshot if business_setup_source.blank?
+
+    snapshot.merge(
+      'business_setup_source' => business_setup_source.payload.slice(
+        :id, :offer_id, :version, :status, :published_offer_version, :published_at
+      )
+    )
   end
 
   def knowledge_snapshot

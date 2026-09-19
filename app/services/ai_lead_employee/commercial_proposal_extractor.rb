@@ -1,11 +1,7 @@
 # frozen_string_literal: true
 
 class AiLeadEmployee::CommercialProposalExtractor
-  CURRENCY_PATTERN = /(?:(?<currency>USD|TZS|KES|EUR|GBP)\s*(?<amount>\d[\d,]*(?:\.\d{1,2})?)|
-                       (?<symbol>\$|TSh|Sh)\s*(?<symbol_amount>\d[\d,]*(?:\.\d{1,2})?))/ix
-  PRICE_WORDS = /\b(price|pricing|cost|fee|promotion|promotional|discount|sale|quote)\b/i
-  EXCLUDED_CONTEXT = /\b(lead|customer|client)\s+budget\b|\b(revenue|salary|income)\b|
-                       \b(platform subscription|AI reply credit|Meta charge|ad spend)\b/ix
+  CURRENCY_PATTERN = AiLeadEmployee::CommercialClaimClassifier::CURRENCY_PATTERN
 
   def initialize(document:, offer:)
     @document = document
@@ -34,28 +30,37 @@ class AiLeadEmployee::CommercialProposalExtractor
 
   def extract_candidates
     sentences = document.body.to_s.split(/(?<=[.!?])\s+|\n+/)
-    sentences.flat_map do |sentence|
-      next [] if sentence.match?(EXCLUDED_CONTEXT)
-      next [] unless sentence.match?(PRICE_WORDS)
+    sentences.flat_map { |sentence| AiLeadEmployee::CommercialClaimClassifier.clauses(sentence) }.flat_map do |clause|
+      next [] unless AiLeadEmployee::CommercialClaimClassifier.commercial?(clause, offer_name: offer.name)
 
-      next [{ proposal_kind: 'quote_required', quote_required: true, sentence: sentence }] if quote_required?(sentence)
+      next [{ proposal_kind: 'quote_required', quote_required: true, sentence: clause }] if quote_required?(clause)
 
-      monetary_candidates(sentence)
+      monetary_candidates(clause)
     end
   end
 
   def monetary_candidates(sentence)
+    return [] if AiLeadEmployee::SwahiliMoneyParser.unresolved?(sentence)
+
     promotion = sentence.match?(/promotion|promotional|discount|sale/i)
-    sentence.to_enum(:scan, CURRENCY_PATTERN).map do
+    numeric = sentence.to_enum(:scan, CURRENCY_PATTERN).map do
       match = Regexp.last_match
       currency = match[:currency]&.upcase || symbol_currency(match[:symbol])
       amount = (match[:amount] || match[:symbol_amount]).delete(',')
       { proposal_kind: promotion ? 'promotion' : 'standard', amount: amount, currency: currency, sentence: sentence }
     end
+    numeric + swahili_word_candidates(sentence, promotion)
+  end
+
+  def swahili_word_candidates(sentence, promotion)
+    AiLeadEmployee::SwahiliMoneyParser.amounts(sentence).map do |amount|
+      { proposal_kind: promotion ? 'promotion' : 'standard', amount: amount.to_s, currency: 'TZS', sentence: sentence }
+    end
   end
 
   def quote_required?(sentence)
-    sentence.match?(/quote\s+(?:is\s+)?required|contact\s+.+\s+for\s+(?:a\s+)?quote/i)
+    sentence.match?(/quote\s+(?:is\s+)?required|contact\s+.+\s+for\s+(?:a\s+)?quote|
+                     nukuu\s+(?:ina)?hitajika|wasiliana.+(?:bei|gharama|nukuu)/ix)
   end
 
   def symbol_currency(symbol)

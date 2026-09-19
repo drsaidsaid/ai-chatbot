@@ -10,6 +10,7 @@ class AiLeadEmployee::Offer < ApplicationRecord
   has_many :lead_qualifications, dependent: :restrict_with_exception
   has_one :commercial_term, class_name: 'AiLeadEmployee::OfferCommercialTerm', dependent: :restrict_with_exception
   has_many :commercial_proposals, class_name: 'AiLeadEmployee::OfferCommercialProposal', dependent: :restrict_with_exception
+  has_many :business_setup_sources, class_name: 'AiLeadEmployee::BusinessSetupSource', dependent: :restrict_with_exception
 
   validates :name, presence: true, uniqueness: { scope: :account_id }
   validates :currency, inclusion: { in: AiLeadEmployee::OfferMoney::PRECISION.keys }
