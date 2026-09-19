@@ -51,6 +51,7 @@ class HumanReviewRequest < ApplicationRecord
   belongs_to :human_answer_message, class_name: 'Message', optional: true
   belongs_to :knowledge_item, optional: true
   belongs_to :assigned_user, class_name: 'User', optional: true
+  has_one :configuration_suggestion, class_name: 'ReviewConfigurationSuggestion', dependent: :restrict_with_exception
 
   enum reason: {
     no_approved_knowledge: 0,
@@ -86,52 +87,112 @@ class HumanReviewRequest < ApplicationRecord
     update!(status: :rejected, operator_answer: operator_answer, resolution_kind: 'rejected', rejected_at: Time.current)
   end
 
-  def resolve!(human_answer_message:, proposer:, propose_knowledge:, source_kind:, title:)
-    validate_human_answer!(human_answer_message)
+  def resolve_with!(answer:, operator:, resolution_kind:, existing_message: nil)
+    with_authorized_review_lock(operator) do |locked_conversation|
+      return self if resolved?
 
-    transaction do
-      item = proposed_knowledge_item(
-        human_answer_message: human_answer_message,
-        proposer: proposer,
-        propose_knowledge: propose_knowledge,
-        source_kind: source_kind,
-        title: title
+      message = resolution_message(
+        answer: answer,
+        operator: operator,
+        resolution_kind: resolution_kind,
+        existing_message: existing_message,
+        locked_conversation: locked_conversation
       )
+      validate_human_answer!(message)
 
       update!(
-        resolution_attributes(
-          human_answer_message: human_answer_message,
-          knowledge_item: item,
-          source_kind: source_kind,
-          propose_knowledge: propose_knowledge
-        )
+        human_answer_message: message,
+        operator_answer: message.content,
+        resolution_kind: resolution_kind,
+        status: :resolved,
+        resolved_at: Time.current
+      )
+    end
+    self
+  end
+
+  def propose_knowledge!(proposer:, source_kind:, title:, answer: nil)
+    with_authorized_review_lock(proposer, lock_knowledge_authority: true) do |locked_conversation|
+      return knowledge_item if knowledge_item.present?
+
+      unless resolved? && human_answer_message.present?
+        errors.add(:base, 'must be resolved before reusable knowledge can be proposed')
+        raise ActiveRecord::RecordInvalid, self
+      end
+
+      item = account.knowledge_items.create!(
+        title: title.presence || question.truncate(80),
+        question: question,
+        answer: proposal_answer(answer),
+        source_kind: source_kind,
+        status: :draft,
+        metadata: proposal_metadata(proposer, locked_conversation)
+      )
+      update!(knowledge_item: item, proposed_source_kind: item.source_kind)
+      item
+    end
+  end
+
+  def propose_configuration_suggestion!(proposer:, category:, suggestion:)
+    with_authorized_review_lock(proposer) do |locked_conversation|
+      return configuration_suggestion if configuration_suggestion.present?
+
+      unless resolved?
+        errors.add(:base, 'must be resolved before handoff feedback can be proposed')
+        raise ActiveRecord::RecordInvalid, self
+      end
+
+      create_configuration_suggestion!(
+        account: account,
+        conversation: locked_conversation,
+        offer: locked_conversation.offer,
+        source_message: lead_message,
+        proposed_by_user: proposer,
+        category: category,
+        suggestion: suggestion,
+        evidence: question,
+        status: :pending
       )
     end
   end
 
   private
 
-  def proposed_knowledge_item(human_answer_message:, proposer:, propose_knowledge:, source_kind:, title:)
-    return unless ActiveModel::Type::Boolean.new.cast(propose_knowledge)
+  def resolution_message(answer:, operator:, resolution_kind:, existing_message:, locked_conversation:)
+    return existing_message if existing_message
 
-    propose_knowledge_item(
-      proposer: proposer,
-      source_kind: source_kind,
-      title: title,
-      answer: human_answer_message.content
+    locked_conversation.messages.create!(
+      account: account,
+      inbox: conversation.inbox,
+      sender: operator,
+      message_type: :outgoing,
+      private: resolution_kind == 'internal_note',
+      content: answer
     )
   end
 
-  def resolution_attributes(human_answer_message:, knowledge_item:, source_kind:, propose_knowledge:)
-    {
-      human_answer_message: human_answer_message,
-      knowledge_item: knowledge_item,
-      proposed_source_kind: knowledge_item&.source_kind || source_kind,
-      operator_answer: human_answer_message.content,
-      resolution_kind: ActiveModel::Type::Boolean.new.cast(propose_knowledge) ? 'approved_answer_proposed' : 'answered',
-      status: :resolved,
-      resolved_at: Time.current
-    }
+  def with_authorized_review_lock(actor, lock_knowledge_authority: false)
+    ApplicationRecord.transaction do
+      if lock_knowledge_authority
+        AiLeadEmployee::KnowledgeAuthorityLock.acquire_for_answer!(account_id)
+      else
+        Account.where(id: account_id).lock('FOR KEY SHARE').load
+      end
+      locked_conversation = Conversation.where(account_id: account_id, id: conversation_id)
+                                        .lock('FOR NO KEY UPDATE').first!
+      self.class.where(account_id: account_id, id: id).lock.first!
+      reload
+      authorize_mutation!(actor, locked_conversation)
+      yield locked_conversation
+    end
+  end
+
+  def authorize_mutation!(actor, locked_conversation)
+    membership = AccountUser.where(account_id: account_id, user_id: actor&.id).lock.first
+    return if membership&.administrator?
+    return if membership.present? && locked_conversation.assignee_id == actor.id
+
+    raise Pundit::NotAuthorizedError
   end
 
   def validate_human_answer!(human_answer_message)
@@ -141,18 +202,26 @@ class HumanReviewRequest < ApplicationRecord
     raise ActiveRecord::RecordInvalid, self
   end
 
-  def propose_knowledge_item(proposer:, source_kind:, title:, answer:)
-    account.knowledge_items.create!(
-      title: title.presence || question.truncate(80),
-      question: question,
-      answer: answer,
-      source_kind: source_kind,
-      status: :draft,
-      metadata: {
-        proposed_from_human_review_request_id: id,
-        proposed_by_user_id: proposer&.id
-      }.compact
-    )
+  def proposal_metadata(proposer, locked_conversation)
+    {
+      proposed_from_human_review_request_id: id,
+      proposed_by_user_id: proposer&.id,
+      source_message_id: proposal_source_message_id,
+      source_conversation_id: conversation_id,
+      offer_ids: locked_conversation.offer_id ? [locked_conversation.offer_id] : []
+    }.compact
+  end
+
+  def proposal_source_message_id
+    human_answer_message_id unless human_answer_message.private?
+  end
+
+  def proposal_answer(answer)
+    return answer if answer.present?
+    return human_answer_message.content unless human_answer_message.private?
+
+    errors.add(:base, 'requires a separate reusable answer when the resolution is private')
+    raise ActiveRecord::RecordInvalid, self
   end
 
   def messages_belong_to_conversation

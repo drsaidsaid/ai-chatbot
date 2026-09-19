@@ -13,6 +13,8 @@ import MessagesView from 'dashboard/components/widgets/conversation/MessagesView
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import InboxConversationsAPI from 'dashboard/api/inboxConversations';
+import HumanReviewRequestsPanel from 'dashboard/routes/dashboard/owned/HumanReviewRequestsPanel.vue';
+import LeadHandoffFeedbackPanel from './LeadHandoffFeedbackPanel.vue';
 
 const props = defineProps({
   inboxId: {
@@ -111,6 +113,7 @@ const detailTabs = computed(() => [
 ]);
 
 const selectedDisplayId = computed(() => Number(props.conversationId || 0));
+const selectedReviewId = computed(() => Number(route.query.review_id || 0));
 
 const selectedRow = computed(() => {
   if (!rows.value.length) return null;
@@ -385,13 +388,16 @@ const loadDashboard = async () => {
 };
 const openConversation = row => {
   if (!row?.conversation_display_id) return;
+  const query = Object.fromEntries(
+    Object.entries(route.query).filter(([key]) => key !== 'review_id')
+  );
   router.push({
     name: props.inboxId ? 'conversation_through_inbox' : 'inbox_conversation',
     params: {
       ...listRoute.value.params,
       conversation_id: row.conversation_display_id,
     },
-    query: route.query,
+    query,
   });
 };
 
@@ -854,6 +860,9 @@ onMounted(() => {
             </div>
           </button>
         </template>
+        <HumanReviewRequestsPanel
+          v-if="activeQueue === 'review' && !selectedDisplayId"
+        />
       </div>
 
       <footer
@@ -1391,6 +1400,15 @@ onMounted(() => {
           </section>
         </template>
       </MessagesView>
+      <LeadHandoffFeedbackPanel
+        v-if="latestHandoff?.id"
+        :handoff-id="latestHandoff.id"
+      />
+      <HumanReviewRequestsPanel
+        v-if="activeQueue === 'review' && currentChat?.id"
+        :conversation-id="currentChat.id"
+        :review-id="selectedReviewId || null"
+      />
     </main>
 
     <aside
