@@ -37,7 +37,7 @@ class AiLeadEmployee::BusinessSetupProposalOwnership
   private_class_method :owned_groups
 
   def self.normalize_groups(values)
-    values.to_h.transform_values { |value| Array(value) }
+    values.to_h.transform_values { |value| value.is_a?(Array) ? value : [value] }
   end
   private_class_method :normalize_groups
 

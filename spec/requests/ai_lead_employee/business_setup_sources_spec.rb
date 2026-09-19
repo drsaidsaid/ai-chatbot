@@ -560,6 +560,31 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(response.parsed_body.dig('configuration', 'questions').pluck('key')).not_to include(old_key)
   end
 
+  it 'retires unchanged scalar ownership snapshots from the prior extractor format' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Scalar draft', source_type: 'document',
+                                         body: 'Customers need a retail registration.' } }, as: :json
+    first = response.parsed_body
+    old_key = first.dig('configuration', 'questions', 0, 'key')
+    source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    source.update!(proposal: source.proposal.merge(
+      'source_ownership' => {
+        'question_keys' => [old_key],
+        'questions' => { old_key => first.dig('configuration', 'questions', 0) },
+        'rules' => { old_key => first.dig('configuration', 'rules', 0) }
+      }
+    ))
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Scalar draft', source_type: 'document',
+                                                                    body: 'Customers need an active tax registration.',
+                                                                    reviewed_configuration: first.fetch('configuration') } }, as: :json
+
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body.dig('configuration', 'questions').pluck('key')).not_to include(old_key)
+  end
+
   it 'preserves an owner-edited canonical sales-call agreement during source correction' do
     post source_url, headers: headers,
                      params: { source: { title: 'Call draft', source_type: 'document',
@@ -573,7 +598,12 @@ RSpec.describe 'Business setup source review', type: :request do
     rule['enabled'] = false
     source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
     legacy_proposal = source.proposal.deep_dup
-    legacy_proposal['source_ownership'] = { 'question_keys' => legacy_proposal.fetch('generated_question_keys') }
+    key = legacy_proposal.fetch('generated_question_keys').sole
+    legacy_proposal['source_ownership'] = {
+      'question_keys' => [key],
+      'questions' => { key => legacy_proposal.dig('configuration', 'questions').sole },
+      'rules' => { key => legacy_proposal.dig('configuration', 'rules').sole }
+    }
     source.update!(proposal: legacy_proposal)
 
     patch "#{source_url}/#{first.fetch('id')}", headers: headers,
