@@ -77,11 +77,16 @@ const feedbackStatusLabel = status => {
   return labels[status] || status;
 };
 
-const humanizeEvidenceValue = value =>
-  value
-    ?.toString()
-    .replaceAll('_', ' ')
-    .replace(/\b\w/g, character => character.toUpperCase());
+const qualificationLabel = quality => {
+  const labels = {
+    highly_qualified: t('AI_LEAD_EMPLOYEE.LEADS.QUALITY.HIGHLY_QUALIFIED'),
+    qualified: t('AI_LEAD_EMPLOYEE.LEADS.QUALITY.QUALIFIED'),
+    low_qualified: t('AI_LEAD_EMPLOYEE.LEADS.QUALITY.LOW_QUALIFIED'),
+    unqualified: t('AI_LEAD_EMPLOYEE.LEADS.QUALITY.UNQUALIFIED'),
+    unknown: t('AI_LEAD_EMPLOYEE.LEADS.QUALITY.UNKNOWN'),
+  };
+  return labels[quality] || labels.unknown;
+};
 
 const feedbackEvidenceLines = suggestion => {
   if (suggestion.source_type === 'human_review_request') {
@@ -96,11 +101,13 @@ const feedbackEvidenceLines = suggestion => {
     const evidence = JSON.parse(suggestion.evidence);
     const lines = [
       t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_QUALIFICATION_SUMMARY', {
-        quality: humanizeEvidenceValue(evidence.quality),
+        quality: qualificationLabel(evidence.quality),
         score: evidence.score ?? t('AI_LEAD_EMPLOYEE.REVIEWS.UNAVAILABLE'),
       }),
     ];
-    const reasons = Array(evidence.reasons).slice(0, 2).join('; ');
+    const reasons = (Array.isArray(evidence.reasons) ? evidence.reasons : [])
+      .slice(0, 2)
+      .join('; ');
     if (reasons) {
       lines.push(
         t('AI_LEAD_EMPLOYEE.REVIEWS.FEEDBACK_QUALIFICATION_REASONS', {

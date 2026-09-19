@@ -1,0 +1,146 @@
+{
+  "database": "ale_r12_review_acceptance_browser",
+  "account_id": 1,
+  "offer": {
+    "id": 1,
+    "configuration_version": 1,
+    "configuration_digest": "ee7485b8f042f0aa5de4041e676bc5e7b58cfcd952079912de254a9d080332e7"
+  },
+  "reviews": [
+    {
+      "id": 1,
+      "conversation_id": 1,
+      "status": "resolved",
+      "resolution_kind": "send_reply",
+      "operator_answer": "Synthetic public response: we will review your refund request.",
+      "human_answer_message": {
+        "id": 4,
+        "message_type": "outgoing",
+        "private": false,
+        "status": "sent",
+        "content": "Synthetic public response: we will review your refund request."
+      },
+      "knowledge_item": null,
+      "configuration_suggestion": null,
+      "conversation_messages": [
+        {
+          "id": 1,
+          "message_type": "incoming",
+          "private": false,
+          "status": "sent",
+          "content": "Can I get a refund if I am not ready to start?",
+          "sender_type": "Contact",
+          "sender_id": 1
+        },
+        {
+          "id": 4,
+          "message_type": "outgoing",
+          "private": false,
+          "status": "sent",
+          "content": "Synthetic public response: we will review your refund request.",
+          "sender_type": "User",
+          "sender_id": 2
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "conversation_id": 2,
+      "status": "resolved",
+      "resolution_kind": "internal_note",
+      "operator_answer": "PRIVATE synthetic operator assessment; do not publish this note.",
+      "human_answer_message": {
+        "id": 5,
+        "message_type": "outgoing",
+        "private": true,
+        "status": "sent",
+        "content": "PRIVATE synthetic operator assessment; do not publish this note."
+      },
+      "knowledge_item": {
+        "id": 2,
+        "status": "approved",
+        "source_kind": "faq",
+        "question": "I live outside the configured region. Is this still a fit?",
+        "answer": "Synthetic public policy: availability depends on your region; our team can confirm coverage.",
+        "approved_at": "2026-09-19 13:06:54 UTC",
+        "metadata": {
+          "offer_ids": [
+            1
+          ],
+          "source_reference": "knowledge_item:2:approved_at:2026-09-19T13:06:54Z",
+          "approval_revisions": [
+            {
+              "title": "I live outside the configured region. Is this still a fit?",
+              "answer": "Synthetic public policy: availability depends on your region; our team can confirm coverage.",
+              "question": "I live outside the configured region. Is this still a fit?",
+              "approved_at": "2026-09-19T13:06:54.338376Z",
+              "source_kind": "faq",
+              "source_reference": "knowledge_item:2:approved_at:2026-09-19T13:06:54Z",
+              "authority_metadata": {
+                "offer_ids": [
+                  1
+                ]
+              }
+            }
+          ],
+          "proposed_by_user_id": 2,
+          "source_conversation_id": 2,
+          "proposed_from_human_review_request_id": 2
+        }
+      },
+      "configuration_suggestion": null,
+      "conversation_messages": [
+        {
+          "id": 2,
+          "message_type": "incoming",
+          "private": false,
+          "status": "sent",
+          "content": "I live outside the configured region. Is this still a fit?",
+          "sender_type": "Contact",
+          "sender_id": 2
+        },
+        {
+          "id": 5,
+          "message_type": "outgoing",
+          "private": true,
+          "status": "sent",
+          "content": "PRIVATE synthetic operator assessment; do not publish this note.",
+          "sender_type": "User",
+          "sender_id": 2
+        }
+      ]
+    }
+  ],
+  "handoffs": [
+    {
+      "id": 1,
+      "conversation_id": 3,
+      "status": "open",
+      "qualification_snapshot": {
+        "score": 88,
+        "quality": "highly_qualified",
+        "reasons": [
+          "Lead agreed to a sales handoff"
+        ],
+        "evidence": {
+          "sales_call_agreement": {
+            "polarity": "positive",
+            "typed_value": true
+          }
+        },
+        "missing_signals": []
+      },
+      "configuration_suggestion": {
+        "id": 1,
+        "category": "poor_fit",
+        "status": "reviewed",
+        "suggestion": "Synthetic feedback: lead needs a service this Offer does not include. Please review fit criteria.",
+        "evidence": "{\"quality\":\"highly_qualified\",\"score\":88,\"reasons\":[\"Lead agreed to a sales handoff\"],\"missing_signals\":[],\"evidence\":{\"sales_call_agreement\":{\"polarity\":\"positive\",\"typed_value\":true}}}",
+        "offer_id": 1,
+        "reviewed_by_user_id": 1,
+        "reviewed_at": "2026-09-19 13:11:44 UTC",
+        "decision_note": null
+      }
+    }
+  ]
+}

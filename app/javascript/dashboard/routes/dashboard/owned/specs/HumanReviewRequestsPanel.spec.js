@@ -196,7 +196,7 @@ describe('HumanReviewRequestsPanel', () => {
           suggestion: 'Review whether the fit rule is too broad.',
           source_type: 'lead_handoff',
           evidence:
-            '{"quality":"highly_qualified","score":88,"reasons":["Lead agreed to a sales handoff"],"evidence":{"sales_call_agreement":{"typed_value":true}}}',
+            '{"quality":"highly_qualified","score":88,"reasons":["Lead agreed to a sales handoff","Budget confirmed","Third reason must stay hidden"],"evidence":{"sales_call_agreement":{"typed_value":true}}}',
           conversation_display_id: 42,
         },
         {
@@ -220,7 +220,10 @@ describe('HumanReviewRequestsPanel', () => {
     expect(wrapper.text()).toContain(
       'Qualification: Highly Qualified · Score: 88'
     );
-    expect(wrapper.text()).toContain('Reasons: Lead agreed to a sales handoff');
+    expect(wrapper.text()).toContain(
+      'Reasons: Lead agreed to a sales handoff; Budget confirmed'
+    );
+    expect(wrapper.text()).not.toContain('Third reason must stay hidden');
     expect(wrapper.text()).toContain(
       'Source question: Is service available outside the configured region?'
     );
