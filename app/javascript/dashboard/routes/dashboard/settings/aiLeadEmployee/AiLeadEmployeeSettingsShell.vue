@@ -473,7 +473,7 @@ onMounted(load);
             </select>
           </label>
           <RouterLink
-            :to="accountScopedRoute('settings_teams_list')"
+            :to="accountScopedRoute('agent_list')"
             class="mt-5 inline-flex h-9 items-center rounded-lg border border-n-weak px-4 text-sm font-medium"
           >
             Manage team members

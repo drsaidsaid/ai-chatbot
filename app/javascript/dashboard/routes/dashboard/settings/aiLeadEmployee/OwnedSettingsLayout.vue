@@ -24,7 +24,11 @@ const sections = [
       'team_assignment',
       'settings_alerts',
     ],
-    children: ['settings_teams_list', 'ai_lead_employee_settings_alerts'],
+    children: [
+      'settings_teams_list',
+      'ai_lead_employee_settings_team_assignment',
+      'ai_lead_employee_settings_alerts',
+    ],
   },
   {
     key: 'booking',

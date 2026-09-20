@@ -986,6 +986,7 @@
       "general_settings_index": "Business profile",
       "agent_list": "Team members",
       "settings_teams_list": "Teams",
+      "ai_lead_employee_settings_team_assignment": "Default owner",
       "ai_lead_employee_settings_alerts": "Alert routes",
       "ai_lead_employee_settings_ai_testing": "AI & testing",
       "owned_ai_provider_settings": "Managed AI",

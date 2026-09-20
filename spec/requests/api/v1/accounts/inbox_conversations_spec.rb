@@ -39,12 +39,34 @@ RSpec.describe 'Inbox conversations', type: :request do
     create(:message, account: account, inbox: inbox, conversation: sibling, content: 'Private marker', private: true)
     result = fetch_inbox({ queue: 'review' }, agent)
     expect(result['conversations'].pluck('conversation_display_id')).to eq([visible.display_id])
-    expect(result['counts']).to eq('all' => 2, 'review' => 1, 'hot' => 2)
+    expect(result['counts']).to eq('all' => 2, 'review' => 1, 'hot' => 0)
     expect(fetch_inbox({ q: 'solar' }, agent)['total']).to eq(1)
     expect(fetch_inbox({ q: 'Private marker' }, agent)['total']).to eq(0)
     expect(fetch_inbox({ q: 'Grace' }, agent)['total']).to eq(2)
     expect(fetch_inbox({ source_id: hidden.inbox_id }, agent)['total']).to eq(0)
     expect(fetch_inbox({ source_id: hidden.inbox_id }, agent)['counts']).to eq('all' => 0, 'review' => 0, 'hot' => 0)
+  end
+
+  it 'queues only open, actionable Hot Lead handoffs and excludes booked or unhanded-off conversations' do
+    hot_contact = create(:contact, account: account)
+    hot = create(:conversation, account: account, inbox: inbox, contact: hot_contact)
+    hot_qualification = create(:lead_qualification, account: account, contact: hot_contact, quality: :highly_qualified)
+    create(:lead_handoff, account: account, contact: hot_contact, conversation: hot, lead_qualification: hot_qualification, status: :open)
+
+    booked_contact = create(:contact, account: account)
+    booked = create(:conversation, account: account, inbox: inbox, contact: booked_contact)
+    booked_qualification = create(:lead_qualification, account: account, contact: booked_contact, quality: :highly_qualified)
+    create(:lead_handoff, account: account, contact: booked_contact, conversation: booked, lead_qualification: booked_qualification, status: :open)
+    create(:booking, account: account, contact: booked_contact, conversation: booked, lead_qualification: booked_qualification)
+
+    unhanded_contact = create(:contact, account: account)
+    unhanded = create(:conversation, account: account, inbox: inbox, contact: unhanded_contact)
+    create(:lead_qualification, account: account, contact: unhanded_contact, quality: :highly_qualified)
+
+    result = fetch_inbox(queue: 'hot')
+    expect(result['conversations'].pluck('conversation_display_id')).to eq([hot.display_id])
+    expect(result['counts']).to include('all' => 3, 'hot' => 1)
+    expect(result['conversations'].pluck('conversation_display_id')).not_to include(booked.display_id, unhanded.display_id)
   end
 
   it 'filters actual booked Conversations and pending due follow-ups independently of Lead qualification state' do

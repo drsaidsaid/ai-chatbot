@@ -99,7 +99,9 @@ class AiLeadEmployee::InboxConversations
   def queue_scope(result, queue)
     case queue
     when 'hot'
-      result.where(contact_id: visible_qualifications.highly_qualified.select(:contact_id))
+      open_handoffs = LeadHandoff.open.where(conversation_id: scope.select(:id)).select(:conversation_id)
+      booked = Booking.confirmed.where(conversation_id: scope.select(:id)).select(:conversation_id)
+      result.where(id: open_handoffs).where.not(id: booked)
     when 'review'
       result.where(id: HumanReviewRequest.open.where(conversation_id: scope.select(:id)).select(:conversation_id))
     else
