@@ -69,6 +69,8 @@ RSpec.describe AiLeadEmployee::StructuredQualificationResponse do
             typed_value: 300_000_000, asserted: true, certainty: 'certain' },
           { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
             typed_value: 300_000_000, asserted: true, certainty: 'certain' },
+          { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi, na lengo ni kufikia milioni 3.',
+            typed_value: 80_000_000, asserted: true, certainty: 'certain' },
           { key: 'expert_willingness', quote: 'Je, programu yenu inaweza kunisaidia?',
             typed_value: true, asserted: true, certainty: 'certain' },
           { key: 'sales_call_agreement', quote: 'Ndiyo, nina biashara ya kufundisha watu ujuzi mtandaoni.',
@@ -84,6 +86,16 @@ RSpec.describe AiLeadEmployee::StructuredQualificationResponse do
     expect(result).not_to be_malformed
     expect(result.observations).to be_empty
     expect(result.localized_prompts).to be_empty
+    expect(result.diagnostics).to include(
+      'accepted_field_keys' => [],
+      'absent_candidate_field_keys' => %w[business_status employee_count revenue_goal_tzs],
+      'rejection_counts' => include('quote_context' => 3, 'typed_mismatch' => 1, 'action_agreement' => 1,
+                                    'unsupported_field' => 1, 'invalid_candidate' => 1)
+    )
+    expect(result.diagnostics.dig('rejected_field_keys_by_code', 'quote_context')).to contain_exactly(
+      'expert_willingness', 'monthly_business_revenue_tzs'
+    )
+    expect(result.diagnostics.to_s).not_to include('800,000', 'milioni 3', '300000000')
   end
 
   it 'rejects duplicate conflicting candidates for the same field instead of letting the last one win' do
@@ -127,6 +139,13 @@ RSpec.describe AiLeadEmployee::StructuredQualificationResponse do
 
     expect(result.observations).to include('revenue_goal_tzs')
     expect(result.observations).not_to include('employee_count', 'monthly_business_revenue_tzs')
+    expect(result.diagnostics).to include(
+      'accepted_field_keys' => ['revenue_goal_tzs'],
+      'absent_candidate_field_keys' => %w[business_status expert_willingness sales_call_agreement]
+    )
+    expect(result.diagnostics.dig('rejected_field_keys_by_code', 'quote_context')).to contain_exactly(
+      'employee_count', 'monthly_business_revenue_tzs'
+    )
   end
 
   it 'supports arbitrary configured number fields from asserted clauses' do
