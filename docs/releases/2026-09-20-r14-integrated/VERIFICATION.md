@@ -25,6 +25,10 @@ Canonical Rails/Vue code and final assets ran at `http://127.0.0.1:3234`, isolat
 - Actual Inbox Hot leads initially incorrectly included a booked lead; corrected query and count now show only the one open actionable handoff. API regression also excludes a booked open handoff and highly-qualified lead without handoff.
 - Default-owner settings checked visually at actual 390x844 browser viewport; controls and related navigation remained usable. Viewport reset afterward.
 
-Fixtures and server commands are preserved in ignored `local/r14-acceptance/`. Raw local logs: `/tmp/r14-r19-canonical-focused-encrypted.log`, `/tmp/r14-canonical-concurrency.log`, `/tmp/r14-canonical-vue.log`, `/tmp/r14-inbox-fixed-canonical.log`, `/tmp/r14-navigation-fixed-canonical.log`, `/tmp/r14-browser-fixed-vite.log`. Source hashes accompany this record.
+Fixtures and server commands are preserved in ignored `local/r14-acceptance/`. Raw local logs: `/tmp/r14-r19-canonical-focused-encrypted.log`, `/tmp/r14-canonical-concurrency.log`, `/tmp/r14-canonical-vue.log`, `/tmp/r14-inbox-fixed-canonical.log`, `/tmp/r14-navigation-fixed-direct.log`, `/tmp/r14-browser-fixed-vite.log`. Source hashes accompany this record.
 
 This accepts local integrated R14 behavior. Deployment and real-model English/Swahili response quality remain separate pilot gates; R17/R18 full contracts remain open.
+
+## Finalization
+
+Merge commit: `50f2dedf4079549d3e39fd52604aae8559ced6f2`. Normal commit hooks passed; all 36 recorded source hashes still match after hooks. The navigation test command initially selected ambient pnpm11, which rejected this repository’s pnpm10 engine requirement before tests started. Running the already-installed local Vitest binary passed the one navigation test. No dependency install or product change was needed.
