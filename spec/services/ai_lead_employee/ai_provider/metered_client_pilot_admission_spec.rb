@@ -112,6 +112,34 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
     expect(adapter).not_to have_received(:complete)
   end
 
+  it 'rejects a malformed persisted intent whose triggering message is scoped but whose conversation is not' do
+    other_conversation = create(:conversation, account: account, inbox: inbox, contact: contact, contact_inbox: contact_inbox,
+                                               control_state: :ai_active)
+    malformed_intent = create(:ai_orchestration_intent, account: account, conversation: other_conversation,
+                                                        triggering_message: message,
+                                                        observed_control_version: conversation.control_version,
+                                                        pilot_authorization: authorization)
+
+    expect do
+      client.complete(messages: [{ role: 'user', content: 'Question' }], pilot_authorization: authorization,
+                      orchestration_intent: malformed_intent)
+    end.to raise_error(AiLeadEmployee::AiProvider::PilotAdmissionFailure, /intent scope/)
+    expect(adapter).not_to have_received(:complete)
+  end
+
+  it 'does not overwrite an operator revocation while a provider failure is being accounted for' do
+    allow(adapter).to receive(:complete) do
+      authorization.update!(status: 'revoked', paused_at: Time.current, pause_reason: 'operator_revoked')
+      raise AiLeadEmployee::AiProvider::TimeoutFailure
+    end
+
+    expect do
+      client.complete(messages: [{ role: 'user', content: 'Question' }], pilot_authorization: authorization,
+                      orchestration_intent: intent)
+    end.to raise_error(AiLeadEmployee::AiProvider::TimeoutFailure)
+    expect(authorization.reload).to have_attributes(status: 'revoked', pause_reason: 'operator_revoked')
+  end
+
   it 'pauses the authorization and fails closed when provider cost is unavailable' do
     allow(adapter).to receive(:complete).and_return(response.tap { |value| value.cost_usd = nil })
 

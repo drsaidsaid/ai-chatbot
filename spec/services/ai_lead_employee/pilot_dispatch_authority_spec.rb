@@ -77,6 +77,12 @@ RSpec.describe AiLeadEmployee::PilotDispatchAuthority do
     expect(authority.failure_code).to eq('pilot_usage_invalid')
   end
 
+  it 'denies a pending known-cost answer after an operator revokes the pilot during a later provider failure' do
+    authorization.update!(status: 'revoked', paused_at: Time.current, pause_reason: 'operator_revoked')
+
+    expect(authority.failure_code).to eq('pilot_authorization_stopped')
+  end
+
   def authority
     described_class.new(message: message, conversation: conversation.reload,
                         authorization: authorization.reload, usage: usage.reload)

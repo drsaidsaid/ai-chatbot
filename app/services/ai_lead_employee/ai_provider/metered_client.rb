@@ -265,7 +265,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
 
     with_usage_ledger do |_connection_class, _usage_class, pilot_class, _intent_class|
       pilot = pilot_class.find(reservation.pilot_authorization_id)
-      pilot.with_lock { pause_pilot!(pilot, 'provider_cost_unknown') }
+      pilot.with_lock { pause_pilot!(pilot, 'provider_cost_unknown') if pilot.status == 'active' }
     end
   end
 
