@@ -723,7 +723,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def reply_content(answer_content, qualification_result)
     progression = AiLeadEmployee::OfferProgressionService.new(
-      offer: selected_offer, qualification_result: qualification_result
+      offer: selected_offer, qualification_result: qualification_result, classification: classification
     ).perform
     return answer_content if progression.blank?
 

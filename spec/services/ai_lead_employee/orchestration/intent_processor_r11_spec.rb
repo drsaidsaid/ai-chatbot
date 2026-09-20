@@ -87,6 +87,44 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(LeadQualification.where(contact: contact)).to be_empty
   end
 
+  it 'does not turn an actual Swahili greeting into the selected Offer revenue interview' do
+    offer = create_offer(qualification_mode: 'enabled', questions: [
+                           question('business_status', 'Do you currently run a business?'),
+                           question('monthly_revenue', 'What is your monthly revenue?').merge('position' => 1)
+                         ])
+    conversation.update!(offer: offer)
+    create(
+      :qualification_evidence,
+      account: account,
+      contact: contact,
+      offer: offer,
+      conversation: conversation,
+      message: triggering_message,
+      field_key: 'business_status',
+      value: { 'value' => 'running', 'polarity' => 'positive', 'asserted' => true }
+    )
+    triggering_message.update!(content: 'Habari yako')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('Habari. Ninaweza kusaidia kuhusu biashara hii leo?')
+    expect(intent.outbound_message.content).not_to include('monthly revenue')
+    expect(intent.outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification', 'next_question')).to eq(
+      'What is your monthly revenue?'
+    )
+  end
+
+  it 'does not turn an English greeting into the selected Offer revenue interview' do
+    offer = create_offer(qualification_mode: 'enabled', questions: [question('monthly_revenue', 'What is your monthly revenue?')])
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Hello')
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.reload.outbound_message.content).to eq('Hello. How can I help with this business today?')
+  end
+
   it 'carries exact Pilot Authorization identity on a provider-free Conversation Reply without usage or credit' do
     triggering_message.update!(content: 'Who won the football match?')
     provider = create(:ai_provider_connection, account: account)

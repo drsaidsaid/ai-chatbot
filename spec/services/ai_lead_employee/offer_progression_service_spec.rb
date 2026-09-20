@@ -6,10 +6,12 @@ module AiLeadEmployee
 end
 
 require_relative '../../../app/services/ai_lead_employee/offer_progression_service'
+require_relative '../../../app/services/ai_lead_employee/conversation_follow_up_policy'
 
 RSpec.describe AiLeadEmployee::OfferProgressionService do
   let(:offer_type) { Struct.new(:name, :next_step, keyword_init: true) }
   let(:qualification_type) { Struct.new(:qualification_mode, :next_question, keyword_init: true) }
+  let(:classification_type) { Struct.new(:intent, :language, keyword_init: true) }
 
   it 'keeps answer-only Offers answer-only' do
     result = described_class.new(offer: offer_type.new(name: 'Audit', next_step: { 'kind' => 'answer_only' })).perform
@@ -46,9 +48,22 @@ RSpec.describe AiLeadEmployee::OfferProgressionService do
       offer: offer_type.new(name: 'Coaching', next_step: { 'kind' => 'sales_call' }),
       qualification_result: qualification_type.new(
         qualification_mode: 'enabled', next_question: 'Would you like a sales call?'
-      )
+      ),
+      classification: classification_type.new(intent: :business_question, language: :english)
     ).perform
 
     expect(result).to eq('Would you like a sales call?')
+  end
+
+  it 'does not turn a greeting into a sales-call question' do
+    result = described_class.new(
+      offer: offer_type.new(name: 'Coaching', next_step: { 'kind' => 'sales_call' }),
+      qualification_result: qualification_type.new(
+        qualification_mode: 'enabled', next_question: 'What is your monthly revenue?'
+      ),
+      classification: classification_type.new(intent: :greeting, language: :english)
+    ).perform
+
+    expect(result).to be_nil
   end
 end
