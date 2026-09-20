@@ -1,6 +1,6 @@
 # Pilot typed alternative requirements
 
-Status: In review
+Status: Integrated; local pilot acceptance passed, not deployed
 
 The pilot needs typed `all`/`any` Offer requirement groups for alternatives
 such as no business *or* an operating business below a configured revenue

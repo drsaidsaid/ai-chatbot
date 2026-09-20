@@ -1,0 +1,15 @@
+{
+  "app/controllers/api/v1/accounts/qualification_offers_controller.rb": "66b7564e82de45872f5ad70845121e821a3155edd29ff7decdf4519894ad7eb4",
+  "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/OfferConfigurationPanel.vue": "9dc14ab8792f888821de8ce737895bc0b02893b8c1908d68ef46e4d4d37cda0b",
+  "app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js": "b9127ba18590429ca150f66854c8e4d0e13a263eb59833a5901906a91017855d",
+  "app/models/ai_lead_employee/offer.rb": "3a812bcaa45db0f5492ad8ee9c715d3f17037b1b258b20d399e65bb4b42466dc",
+  "app/services/ai_lead_employee/business_setup_proposal_extractor.rb": "2b79f09ef31640d0e29ce05c8352fb32476f2c346b76b666c42f8b1d87c354c0",
+  "app/services/ai_lead_employee/business_setup_proposal_ownership.rb": "3bfde372d98588173e7917555462e1abc2e98b23f5366263c209a9f7b67b79c4",
+  "app/services/ai_lead_employee/highly_qualified_handoff_service.rb": "25e73eb79c3c2c442b8d2114211205fa173a307d30c81f3b8c14f414d0baa292",
+  "app/services/ai_lead_employee/offer_configuration_writer.rb": "d8aa27ed1e16db2625b67d914561e1f744c6d1872b3d63b4baaf49f085332aff",
+  "app/services/ai_lead_employee/offer_qualification_read_context.rb": "6cb0eeadc5fd3038976bd9b45e2d57ace29606948449d6ae3b79a5647a5d936e",
+  "app/services/ai_lead_employee/offer_qualification_service.rb": "a04aac21f5d04c67f670c3d5768a24598f62a9ff7aa0c9b8f043d26b6bed0aff",
+  "app/services/ai_lead_employee/offer_rules.rb": "a12c9422c0503ba29ffac36a6e9b9a3d8971d768eedc05d86cf6fb65f8a1811d",
+  "spec/requests/ai_lead_employee/business_setup_sources_spec.rb": "796a1484375e93bc3273487d60fd7e7233ffd547afbc08dd0b22ce2ba29e2fe7",
+  "spec/requests/ai_lead_employee/offer_requirement_groups_spec.rb": "55793be892044955c952fd7d8878aad29a8f319a6e3e7d09686a83e7268ac670"
+}

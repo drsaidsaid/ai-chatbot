@@ -27,3 +27,18 @@ bundle exec rubocop <scoped changed Ruby files>
 
 No full build, browser runtime, deployment, provider call, publication, or live
 send was run.
+
+## Coordinator integrated acceptance
+
+Candidate `84941d51cef2371e86190b5de10ad71c1f04e5a7` was merged without conflicts after source review. Candidate production Vite build passed (5092 modules, 2m06s). No runtime changes were made during integration.
+
+Actual in-app browser tab 17, isolated fixture at 127.0.0.1:3019:
+
+- Any/All switching preserved branches; money Known information → Less than did not crash.
+- Desktop save and reload retained a changed money threshold; 390×844 phone editing restored the original test threshold, with readable controls. Temporary viewport reset.
+- After restarting the fixture to refresh its cached asset manifest, blank-price Save Offer succeeded (revision 5) and reload retained TZS 950000, without checking Quote required or publishing a price.
+- Proposed setup displayed “Less than 950000.00 TZS” and “Equals Yes” with the intended OR/AND structure. No source was published.
+
+The initial post-build browser attempt still served cached assets and failed native price validation; this was not counted as passing. The restarted fixture loaded the corrected form. All fixture records are synthetic; no provider connection, external messages, deployment or live response-quality claims.
+
+Full R17/R18 and the wider V1 programme remain open. This is the accepted R19 pilot follow-up, preserving original R19 acceptance.
