@@ -93,16 +93,27 @@ const setupRuleSummary = (source, rule) => {
   });
 };
 const requirementGroupSummary = (source, group) => {
+  const operatorLabel = operator => label(`OP_${operator.toUpperCase()}`);
+  const valueLabel = (node, field) => {
+    if (['positive', 'negative', 'known'].includes(node.operator)) return '';
+    if (typeof node.value === 'boolean')
+      return label(node.value ? 'YES' : 'NO');
+    if (node.value?.amount)
+      return `${node.value.amount} ${
+        node.value.currency || field?.currency || ''
+      }`.trim();
+    if (Array.isArray(node.value)) return node.value.join(', ');
+    return String(node.value ?? '');
+  };
   const describe = node => {
     if (node.field) {
       const field = source.configuration?.questions?.find(
         item => item.key === node.field
       );
-      let value = String(node.value);
-      if (node.value?.amount)
-        value = `${node.value.amount} ${node.value.currency}`;
-      if (Array.isArray(node.value)) value = node.value.join(', ');
-      return `${field?.meaning || node.field} ${node.operator} ${value}`;
+      const value = valueLabel(node, field);
+      return `${field?.meaning || node.field} ${operatorLabel(node.operator)}${
+        value ? ` ${value}` : ''
+      }`;
     }
     const key = node.all ? 'all' : 'any';
     return `(${node[key].map(describe).join(key === 'all' ? ' and ' : ' or ')})`;
@@ -1930,6 +1941,8 @@ onMounted(load);
         </fieldset>
         <button
           type="submit"
+          formnovalidate
+          data-testid="save-offer"
           :disabled="saving || conflicted"
           class="min-h-10 justify-self-start rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
         >

@@ -107,6 +107,27 @@ it('saves explicit qualification mode, question purpose, requirement dimension a
   });
 });
 
+it('submits qualification changes when an unrelated commercial amount is blank', async () => {
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  const saveButton = wrapper.get('[data-testid="save-offer"]');
+  expect(saveButton.attributes('formnovalidate')).toBeDefined();
+  expect(wrapper.get('[data-testid="commercial-amount"]').element.value).toBe(
+    ''
+  );
+
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(axios.patch).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9'),
+    expect.objectContaining({
+      offer: expect.objectContaining({ name: 'Message support' }),
+    })
+  );
+});
+
 it('saves and explicitly publishes readable Offer commercial terms', async () => {
   axios.patch.mockImplementation((_url, payload) =>
     Promise.resolve({
@@ -559,6 +580,12 @@ it('keeps guided setup notes proposed until the owner explicitly publishes the r
           meaning: 'Current registration number',
           purpose: 'action_eligibility',
         },
+        {
+          key: 'ready',
+          meaning: 'Ready to proceed',
+          answer_type: 'boolean',
+          purpose: 'fit',
+        },
       ],
       rules: [
         {
@@ -566,6 +593,19 @@ it('keeps guided setup notes proposed until the owner explicitly publishes the r
           kind: 'requirement',
           dimension: 'action_eligibility',
           priority: 0,
+        },
+      ],
+      requirement_groups: [
+        {
+          dimension: 'fit',
+          any: [
+            {
+              field: 'budget',
+              operator: 'lt',
+              value: { amount: '1000000', currency: 'TZS' },
+            },
+            { field: 'ready', operator: 'eq', value: true },
+          ],
         },
       ],
     },
@@ -593,6 +633,11 @@ it('keeps guided setup notes proposed until the owner explicitly publishes the r
   expect(wrapper.text()).toContain('Disabled');
   expect(wrapper.text()).toContain('Share a purchase link');
   expect(wrapper.text()).toContain('Action eligibility');
+  expect(wrapper.text()).toContain('Less than');
+  expect(wrapper.text()).toContain('Equals');
+  expect(wrapper.text()).toContain('Yes');
+  expect(wrapper.text()).not.toContain(' budget lt ');
+  expect(wrapper.text()).not.toContain(' ready eq ');
   expect(wrapper.text()).not.toContain('setup_fit_registration');
   expect(wrapper.text()).not.toContain('purchase_link');
   expect(wrapper.text()).not.toContain('action_eligibility');
