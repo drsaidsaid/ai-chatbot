@@ -1181,6 +1181,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       ]
     )
     conversation.update!(offer: offer)
+    create_prompted_question_message(offer, key: 'business_status', prompt: 'Do you currently run a business?')
     triggering_message.update!(content: 'My business is local. We make TZS 900,000 per month.')
     connection = create(:ai_provider_connection, account: account)
     allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
@@ -1208,6 +1209,43 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(evidence).to include('business_type', 'business_status', 'monthly_business_revenue_tzs')
     expect(evidence['business_status'].value).to include('typed_value' => 'running')
     expect(evidence['monthly_business_revenue_tzs'].value).to include('typed_value' => 90_000_000)
+  end
+
+  it 'uses one provider attempt when unrelated legacy problem evidence does not cover a pending custom field' do
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('customer_segment', 'Which customer segment do you serve?').merge(
+          'meaning' => 'Current customer segment', 'answer_type' => 'choice', 'options' => %w[local export]
+        )
+      ]
+    )
+    conversation.update!(offer: offer)
+    create_prompted_question_message(offer, key: 'customer_segment', prompt: 'Which customer segment do you serve?')
+    triggering_message.update!(content: 'I need help because my customers are local.')
+    connection = create(:ai_provider_connection, account: account)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-legacy-problem-custom-gap', model: connection.model,
+        content: {
+          reply: 'Thanks for those details.',
+          observations: [
+            { key: 'customer_segment', quote: 'my customers are local',
+              typed_value: 'local', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(provider_client).to have_received(:complete).once
+    evidence = QualificationEvidence.where(account: account, contact: contact, offer: offer).index_by(&:field_key)
+    expect(evidence).to include('problem', 'customer_segment')
+    expect(evidence['customer_segment'].value).to include('typed_value' => 'local')
   end
 
   it 'uses one pilot provider attempt to interpret pure free-text qualification when local parsing has no evidence' do
@@ -1646,6 +1684,27 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
   def question(key, prompt)
     { 'key' => key, 'meaning' => key.humanize, 'answer_type' => 'text', 'prompt' => prompt, 'position' => 0,
       'enabled' => true, 'required' => true, 'purpose' => 'fit' }
+  end
+
+  def create_prompted_question_message(offer, key:, prompt:)
+    create(
+      :message,
+      account: account,
+      inbox: channel.inbox,
+      conversation: conversation,
+      message_type: :outgoing,
+      content: "Thanks.\n\n#{prompt}",
+      additional_attributes: {
+        'ai_lead_employee' => {
+          'qualification' => {
+            'offer_id' => offer.id,
+            'configuration_version' => offer.configuration_version,
+            'next_question' => prompt,
+            'next_question_key' => key
+          }
+        }
+      }
+    )
   end
 
   def create_offer(name: 'Growth coaching', currency: 'USD', qualification_mode: 'disabled', questions: [],

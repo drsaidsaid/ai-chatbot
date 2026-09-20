@@ -238,7 +238,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     consume_scope_clarification!
     return request_review!(classification.review_reason) if classification.review_reason.present?
     return request_review!('human_requested') if classification.intent == :human_request
-    return process_conversation_reply! unless classification.requires_approved_knowledge?
+    return @early_qualification_response if early_qualification_response?
+    return process_conversation_reply!(@qualification_result) unless classification.requires_approved_knowledge?
 
     answer_result = knowledge_answer
     if answer_result.refused?
@@ -250,8 +251,22 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     capture_structured_offer_context!(nil) if structured_qualification_available?
   end
 
-  def process_conversation_reply!
-    qualification_result = qualify_lead! if qualification_progression_intent?
+  def early_qualification_response?
+    @qualification_result = qualify_lead! if qualification_progression_intent? && structured_qualification_available?
+    @early_qualification_response = structured_qualification_response_for(@qualification_result)
+    @early_qualification_response.present?
+  end
+
+  def structured_qualification_response_for(qualification_result)
+    if structured_qualification_interpretation_required?(qualification_result)
+      prepare_structured_qualification_interpretation!(qualification_result)
+    elsif local_qualification_reply?(qualification_result)
+      complete_conversation_reply!(qualification_result)
+    end
+  end
+
+  def process_conversation_reply!(qualification_result = nil)
+    qualification_result ||= qualify_lead! if qualification_progression_intent?
     if structured_qualification_interpretation_required?(qualification_result)
       return prepare_structured_qualification_interpretation!(qualification_result)
     end
@@ -290,10 +305,57 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     evidence = Array(qualification_result.new_evidence)
     return false if evidence.empty?
 
-    configured_keys = selected_offer&.questions.to_a.pluck('key')
-    return false if evidence.all? { |item| item.field_key == 'business_type' } && configured_keys.exclude?('business_type')
+    configured_keys = enabled_offer_field_keys
+    return true if evidence.any? { |item| configured_keys.include?(item.field_key) }
 
-    true
+    prompted_question = prompted_structured_question
+    return true if prompted_question.blank?
+
+    deterministic_money_evidence?(evidence) && prompted_question.fetch('answer_type') == 'money'
+  end
+
+  def local_qualification_reply?(qualification_result)
+    classification.intent == :qualification_answer && qualification_result.present? &&
+      Array(qualification_result.new_evidence).present?
+  end
+
+  def enabled_offer_field_keys
+    selected_offer&.questions.to_a.reject { |field| field['enabled'] == false }.pluck('key')
+  end
+
+  def prompted_structured_question
+    return unless previous_prompted_message&.outgoing?
+
+    metadata = previous_prompted_qualification_metadata
+    return unless current_prompt_metadata?(metadata)
+
+    selected_offer&.questions.to_a.find do |field|
+      prompted_question_matches?(field, metadata)
+    end
+  end
+
+  def previous_prompted_message
+    @previous_prompted_message ||= begin
+      messages = conversation.messages.where(private: false).where('id < ?', triggering_message.id)
+      messages.reorder(id: :desc).first
+    end
+  end
+
+  def previous_prompted_qualification_metadata
+    previous_prompted_message.additional_attributes.dig('ai_lead_employee', 'qualification') || {}
+  end
+
+  def current_prompt_metadata?(metadata)
+    metadata['offer_id'] == selected_offer.id && metadata['configuration_version'] == selected_offer.configuration_version
+  end
+
+  def prompted_question_matches?(field, metadata)
+    field['enabled'] != false && previous_prompted_message.content.to_s.end_with?(field['prompt']) &&
+      metadata['next_question'] == field['prompt'] && metadata['next_question_key'] == field['key']
+  end
+
+  def deterministic_money_evidence?(evidence)
+    evidence.any? { |item| item.value.is_a?(Hash) && item.value['amount_minor'].present? }
   end
 
   def complete_conversation_reply!(qualification_result, provider_response: nil)
