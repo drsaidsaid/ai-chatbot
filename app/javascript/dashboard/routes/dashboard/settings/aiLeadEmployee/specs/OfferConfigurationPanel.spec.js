@@ -111,6 +111,20 @@ it('keeps the six owner-facing setup sections while technical controls stay coll
   const wrapper = mountPanel();
   await flushPromises();
 
+  const sectionIds = [
+    'business-setup-section',
+    'commercial-terms-section',
+    'who-we-help-section',
+    'response-settings-section',
+    'next-step-section',
+    'preview-publish-section',
+  ];
+  expect(
+    wrapper
+      .findAll('section[data-testid]')
+      .map(node => node.attributes('data-testid'))
+      .filter(id => sectionIds.includes(id))
+  ).toEqual(sectionIds);
   expect(
     wrapper.get('[data-testid="business-setup-section"]').text()
   ).toContain('About the business');

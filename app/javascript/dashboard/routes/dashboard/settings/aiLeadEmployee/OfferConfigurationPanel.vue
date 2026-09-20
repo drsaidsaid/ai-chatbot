@@ -646,7 +646,249 @@ onMounted(load);
         </section>
         <section
           v-if="draft.id"
-          class="order-2 grid gap-4 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
+          class="grid gap-3 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
+          data-testid="business-setup-section"
+        >
+          <div>
+            <h3 class="text-base font-semibold text-n-slate-12">
+              {{ label('ABOUT_BUSINESS') }}
+            </h3>
+            <p class="mt-1 text-sm leading-6 text-n-slate-11">
+              {{ label('SETUP_HELP') }}
+            </p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm">
+              {{ label('SETUP_SOURCE_NAME') }}
+              <input
+                v-model="setupTitle"
+                :class="inputClass"
+                :placeholder="label('SETUP_SOURCE_NAME_PLACEHOLDER')"
+              />
+            </label>
+            <label class="grid gap-1 text-sm">
+              {{ label('SETUP_SOURCE_TYPE') }}
+              <select v-model="setupSourceType" :class="inputClass">
+                <option value="pasted_prose">
+                  {{ label('SETUP_PASTED_NOTES') }}
+                </option>
+                <option value="document">
+                  {{ label('SETUP_DOCUMENT_TEXT') }}
+                </option>
+              </select>
+            </label>
+            <label class="grid gap-1 text-sm sm:col-span-2">
+              {{ label('SETUP_BODY_LABEL') }}
+              <textarea
+                v-model="setupBody"
+                class="min-h-28 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm text-n-slate-12"
+                :placeholder="label('SETUP_BODY_PLACEHOLDER')"
+              />
+            </label>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              :class="buttonClass"
+              :disabled="!setupBody.trim() || saving"
+              data-testid="propose-business-setup"
+              @click="proposeSetup"
+            >
+              {{ label('SETUP_REVIEW') }}
+            </button>
+            <span class="text-sm text-n-slate-11">
+              {{ label('SETUP_PRICE_HELP') }}
+            </span>
+          </div>
+          <article
+            v-for="source in setupSources[draft.id] || []"
+            :key="source.id"
+            class="grid gap-2 rounded-lg border border-n-weak bg-n-background p-3 text-sm"
+          >
+            <p class="font-medium text-n-slate-12">
+              {{ source.title }}{{ label('SEPARATOR')
+              }}{{ setupStatusLabel(source.status) }}
+            </p>
+            <p v-if="source.proposed_facts?.length">
+              <strong>{{ label('SETUP_PROPOSED_FACTS') }}</strong>
+              {{ source.proposed_facts.join(' ') }}
+            </p>
+            <p v-if="source.proposed_rules?.length">
+              <strong>{{ label('SETUP_PROPOSED_RULES') }}</strong>
+              {{ source.proposed_rules.join(' ') }}
+            </p>
+            <p class="text-n-slate-11">
+              {{ label('SETUP_PROPOSED_CONFIGURATION') }}
+              {{ setupModeLabel(source.configuration?.qualification_mode)
+              }}{{ label('SEPARATOR')
+              }}{{ setupNextStepLabel(source.configuration?.next_step?.kind) }}
+            </p>
+            <details
+              v-if="source.history?.length"
+              class="text-n-slate-11"
+              data-testid="business-setup-history"
+            >
+              <summary>{{ label('SETUP_HISTORY') }}</summary>
+              <ul class="mt-1 list-disc pl-5">
+                <li v-for="revision in source.history" :key="revision.version">
+                  {{
+                    t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_HISTORY_ENTRY', {
+                      version: revision.version,
+                      body: revision.body,
+                    })
+                  }}
+                </li>
+              </ul>
+            </details>
+            <ul
+              v-if="source.configuration?.questions?.length"
+              class="list-disc pl-5 text-n-slate-11"
+            >
+              <li
+                v-for="question in source.configuration.questions"
+                :key="question.key"
+              >
+                {{ question.meaning }}{{ label('SEPARATOR')
+                }}{{ setupPurposeLabel(question.purpose) }}
+              </li>
+            </ul>
+            <ul
+              v-if="source.configuration?.rules?.length"
+              class="list-disc pl-5 text-n-slate-11"
+            >
+              <li
+                v-for="rule in source.configuration.rules"
+                :key="`${rule.field}:${rule.priority}`"
+              >
+                {{ setupRuleSummary(source, rule) }}
+              </li>
+            </ul>
+            <ul
+              v-if="source.configuration?.requirement_groups?.length"
+              class="list-disc pl-5 text-n-slate-11"
+            >
+              <li
+                v-for="(group, index) in source.configuration
+                  .requirement_groups"
+                :key="`group-${index}`"
+              >
+                {{ requirementGroupSummary(source, group) }}
+              </li>
+            </ul>
+            <p v-if="source.unknowns?.length" class="text-n-amber-11">
+              <strong>{{ label('SETUP_STILL_NEEDED') }}</strong>
+              {{ source.unknowns.join(' ') }}
+            </p>
+            <p class="text-n-slate-11">
+              {{
+                t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_VERSION', {
+                  version: source.version,
+                })
+              }}
+            </p>
+            <button
+              v-if="
+                source.status === 'proposed' && setupProposal?.id !== source.id
+              "
+              type="button"
+              :class="buttonClass"
+              :disabled="saving"
+              data-testid="reopen-business-setup"
+              @click="reopenSetup(source)"
+            >
+              {{ label('SETUP_REOPEN') }}
+            </button>
+            <button
+              v-if="
+                source.status === 'proposed' && setupProposal?.id === source.id
+              "
+              type="button"
+              :class="buttonClass"
+              :disabled="saving"
+              data-testid="correct-business-setup"
+              @click="correctSetup(source)"
+            >
+              {{ label('SETUP_SAVE_CORRECTION') }}
+            </button>
+            <button
+              v-if="source.status === 'proposed'"
+              type="button"
+              class="w-fit min-h-9 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:opacity-40"
+              :disabled="saving"
+              data-testid="publish-business-setup"
+              @click="publishSetup(source)"
+            >
+              {{ label('SETUP_PUBLISH') }}
+            </button>
+            <button
+              v-if="source.status === 'published'"
+              type="button"
+              :class="buttonClass"
+              :disabled="saving"
+              data-testid="edit-published-business-setup"
+              @click="editPublishedSetup(source)"
+            >
+              {{ label('SETUP_EDIT_PUBLISHED') }}
+            </button>
+            <div v-if="source.status === 'published'" class="grid gap-2">
+              <label class="grid gap-1">
+                {{ label('SETUP_TEST_QUESTION') }}
+                <input
+                  v-model="setupQuestions[setupResultKey(source)]"
+                  :class="inputClass"
+                  :placeholder="label('SETUP_TEST_PLACEHOLDER')"
+                  data-testid="business-setup-question"
+                />
+              </label>
+              <button
+                type="button"
+                :class="buttonClass"
+                :disabled="
+                  !setupQuestions[setupResultKey(source)]?.trim() || saving
+                "
+                data-testid="test-business-setup"
+                @click="testSetup(source)"
+              >
+                {{ label('SETUP_TEST') }}
+              </button>
+              <p
+                v-if="setupTestAnswered(source)"
+                role="status"
+                class="text-n-slate-11"
+              >
+                {{ label('SETUP_TEST_COMPLETE') }}
+              </p>
+              <p
+                v-else-if="setupTestBlockedReason(source)"
+                role="alert"
+                class="text-n-ruby-11"
+              >
+                {{
+                  t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_TEST_BLOCKED', {
+                    reason: setupTestBlockedReasonLabel(source),
+                  })
+                }}
+              </p>
+              <p
+                v-else-if="setupTestResult(source)?.status === 'completed'"
+                role="alert"
+                class="text-n-ruby-11"
+              >
+                {{ label('SETUP_TEST_NO_ANSWER') }}
+              </p>
+              <p
+                v-else-if="setupTestResult(source)"
+                role="alert"
+                class="text-n-ruby-11"
+              >
+                {{ label('SETUP_TEST_FAILED') }}
+              </p>
+            </div>
+          </article>
+        </section>
+        <section
+          v-if="draft.id"
+          class="grid gap-4 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
           data-testid="commercial-terms-section"
         >
           <div class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-start">
@@ -924,338 +1166,8 @@ onMounted(load);
             {{ pricingPreview.answer || label('PRICE_NOT_CURRENT') }}
           </p>
         </section>
-        <section
-          v-if="draft.id"
-          class="order-1 grid gap-3 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
-          data-testid="business-setup-section"
-        >
-          <div>
-            <h3 class="text-base font-semibold text-n-slate-12">
-              {{ label('ABOUT_BUSINESS') }}
-            </h3>
-            <p class="mt-1 text-sm leading-6 text-n-slate-11">
-              {{ label('SETUP_HELP') }}
-            </p>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm">
-              {{ label('SETUP_SOURCE_NAME') }}
-              <input
-                v-model="setupTitle"
-                :class="inputClass"
-                :placeholder="label('SETUP_SOURCE_NAME_PLACEHOLDER')"
-              />
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{ label('SETUP_SOURCE_TYPE') }}
-              <select v-model="setupSourceType" :class="inputClass">
-                <option value="pasted_prose">
-                  {{ label('SETUP_PASTED_NOTES') }}
-                </option>
-                <option value="document">
-                  {{ label('SETUP_DOCUMENT_TEXT') }}
-                </option>
-              </select>
-            </label>
-            <label class="grid gap-1 text-sm sm:col-span-2">
-              {{ label('SETUP_BODY_LABEL') }}
-              <textarea
-                v-model="setupBody"
-                class="min-h-28 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm text-n-slate-12"
-                :placeholder="label('SETUP_BODY_PLACEHOLDER')"
-              />
-            </label>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              type="button"
-              :class="buttonClass"
-              :disabled="!setupBody.trim() || saving"
-              data-testid="propose-business-setup"
-              @click="proposeSetup"
-            >
-              {{ label('SETUP_REVIEW') }}
-            </button>
-            <span class="text-sm text-n-slate-11">
-              {{ label('SETUP_PRICE_HELP') }}
-            </span>
-          </div>
-          <article
-            v-for="source in setupSources[draft.id] || []"
-            :key="source.id"
-            class="grid gap-2 rounded-lg border border-n-weak bg-n-background p-3 text-sm"
-          >
-            <p class="font-medium text-n-slate-12">
-              {{ source.title }}{{ label('SEPARATOR')
-              }}{{ setupStatusLabel(source.status) }}
-            </p>
-            <p v-if="source.proposed_facts?.length">
-              <strong>{{ label('SETUP_PROPOSED_FACTS') }}</strong>
-              {{ source.proposed_facts.join(' ') }}
-            </p>
-            <p v-if="source.proposed_rules?.length">
-              <strong>{{ label('SETUP_PROPOSED_RULES') }}</strong>
-              {{ source.proposed_rules.join(' ') }}
-            </p>
-            <p class="text-n-slate-11">
-              {{ label('SETUP_PROPOSED_CONFIGURATION') }}
-              {{ setupModeLabel(source.configuration?.qualification_mode)
-              }}{{ label('SEPARATOR')
-              }}{{ setupNextStepLabel(source.configuration?.next_step?.kind) }}
-            </p>
-            <details
-              v-if="source.history?.length"
-              class="text-n-slate-11"
-              data-testid="business-setup-history"
-            >
-              <summary>{{ label('SETUP_HISTORY') }}</summary>
-              <ul class="mt-1 list-disc pl-5">
-                <li v-for="revision in source.history" :key="revision.version">
-                  {{
-                    t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_HISTORY_ENTRY', {
-                      version: revision.version,
-                      body: revision.body,
-                    })
-                  }}
-                </li>
-              </ul>
-            </details>
-            <ul
-              v-if="source.configuration?.questions?.length"
-              class="list-disc pl-5 text-n-slate-11"
-            >
-              <li
-                v-for="question in source.configuration.questions"
-                :key="question.key"
-              >
-                {{ question.meaning }}{{ label('SEPARATOR')
-                }}{{ setupPurposeLabel(question.purpose) }}
-              </li>
-            </ul>
-            <ul
-              v-if="source.configuration?.rules?.length"
-              class="list-disc pl-5 text-n-slate-11"
-            >
-              <li
-                v-for="rule in source.configuration.rules"
-                :key="`${rule.field}:${rule.priority}`"
-              >
-                {{ setupRuleSummary(source, rule) }}
-              </li>
-            </ul>
-            <ul
-              v-if="source.configuration?.requirement_groups?.length"
-              class="list-disc pl-5 text-n-slate-11"
-            >
-              <li
-                v-for="(group, index) in source.configuration
-                  .requirement_groups"
-                :key="`group-${index}`"
-              >
-                {{ requirementGroupSummary(source, group) }}
-              </li>
-            </ul>
-            <p v-if="source.unknowns?.length" class="text-n-amber-11">
-              <strong>{{ label('SETUP_STILL_NEEDED') }}</strong>
-              {{ source.unknowns.join(' ') }}
-            </p>
-            <p class="text-n-slate-11">
-              {{
-                t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_VERSION', {
-                  version: source.version,
-                })
-              }}
-            </p>
-            <button
-              v-if="
-                source.status === 'proposed' && setupProposal?.id !== source.id
-              "
-              type="button"
-              :class="buttonClass"
-              :disabled="saving"
-              data-testid="reopen-business-setup"
-              @click="reopenSetup(source)"
-            >
-              {{ label('SETUP_REOPEN') }}
-            </button>
-            <button
-              v-if="
-                source.status === 'proposed' && setupProposal?.id === source.id
-              "
-              type="button"
-              :class="buttonClass"
-              :disabled="saving"
-              data-testid="correct-business-setup"
-              @click="correctSetup(source)"
-            >
-              {{ label('SETUP_SAVE_CORRECTION') }}
-            </button>
-            <button
-              v-if="source.status === 'proposed'"
-              type="button"
-              class="w-fit min-h-9 rounded-lg bg-n-brand px-3 text-sm font-medium text-white disabled:opacity-40"
-              :disabled="saving"
-              data-testid="publish-business-setup"
-              @click="publishSetup(source)"
-            >
-              {{ label('SETUP_PUBLISH') }}
-            </button>
-            <button
-              v-if="source.status === 'published'"
-              type="button"
-              :class="buttonClass"
-              :disabled="saving"
-              data-testid="edit-published-business-setup"
-              @click="editPublishedSetup(source)"
-            >
-              {{ label('SETUP_EDIT_PUBLISHED') }}
-            </button>
-            <div v-if="source.status === 'published'" class="grid gap-2">
-              <label class="grid gap-1">
-                {{ label('SETUP_TEST_QUESTION') }}
-                <input
-                  v-model="setupQuestions[setupResultKey(source)]"
-                  :class="inputClass"
-                  :placeholder="label('SETUP_TEST_PLACEHOLDER')"
-                  data-testid="business-setup-question"
-                />
-              </label>
-              <button
-                type="button"
-                :class="buttonClass"
-                :disabled="
-                  !setupQuestions[setupResultKey(source)]?.trim() || saving
-                "
-                data-testid="test-business-setup"
-                @click="testSetup(source)"
-              >
-                {{ label('SETUP_TEST') }}
-              </button>
-              <p
-                v-if="setupTestAnswered(source)"
-                role="status"
-                class="text-n-slate-11"
-              >
-                {{ label('SETUP_TEST_COMPLETE') }}
-              </p>
-              <p
-                v-else-if="setupTestBlockedReason(source)"
-                role="alert"
-                class="text-n-ruby-11"
-              >
-                {{
-                  t('AI_LEAD_EMPLOYEE.OFFERS.SETUP_TEST_BLOCKED', {
-                    reason: setupTestBlockedReasonLabel(source),
-                  })
-                }}
-              </p>
-              <p
-                v-else-if="setupTestResult(source)?.status === 'completed'"
-                role="alert"
-                class="text-n-ruby-11"
-              >
-                {{ label('SETUP_TEST_NO_ANSWER') }}
-              </p>
-              <p
-                v-else-if="setupTestResult(source)"
-                role="alert"
-                class="text-n-ruby-11"
-              >
-                {{ label('SETUP_TEST_FAILED') }}
-              </p>
-            </div>
-          </article>
-        </section>
-        <section
-          class="order-4 grid gap-3"
-          data-testid="response-settings-section"
-        >
-          <h3 class="text-base font-semibold text-n-slate-12">
-            {{ label('HOW_ASSISTANT_RESPONDS') }}
-          </h3>
-          <p class="text-sm leading-6 text-n-slate-11">
-            {{ label('RESPONSE_SETTINGS_CURRENT') }}
-          </p>
-        </section>
-        <section class="order-5 grid gap-3" data-testid="next-step-section">
-          <div>
-            <h3 class="text-base font-semibold text-n-slate-12">
-              {{ label('WHAT_HAPPENS_NEXT') }}
-            </h3>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm">
-              {{ label('QUALIFICATION_MODE') }}
-              <select
-                v-model="draft.qualification_mode"
-                :class="inputClass"
-                data-testid="qualification-mode"
-              >
-                <option value="not_configured">
-                  {{ label('MODE_NOT_CONFIGURED') }}
-                </option>
-                <option value="disabled">
-                  {{ label('MODE_DISABLED') }}
-                </option>
-                <option value="enabled">
-                  {{ label('MODE_ENABLED') }}
-                </option>
-              </select>
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{ label('NEXT_STEP') }}
-              <select
-                v-model="draft.next_step.kind"
-                :class="inputClass"
-                data-testid="next-step"
-              >
-                <option
-                  v-for="kind in [
-                    'answer_only',
-                    'enquiry',
-                    'purchase_link',
-                    'sales_call',
-                    'appointment',
-                  ]"
-                  :key="kind"
-                  :value="kind"
-                >
-                  {{ label(`NEXT_${kind.toUpperCase()}`) }}
-                </option>
-              </select>
-            </label>
-          </div>
-          <div
-            v-if="draft.next_step.kind !== 'answer_only'"
-            class="grid gap-3 sm:grid-cols-2"
-          >
-            <label class="grid gap-1 text-sm">
-              {{ label('NEXT_STEP_PROMPT') }}
-              <input
-                v-model="draft.next_step.prompt"
-                :class="inputClass"
-                maxlength="240"
-                data-testid="next-step-prompt"
-              />
-            </label>
-            <label
-              v-if="
-                ['purchase_link', 'appointment'].includes(draft.next_step.kind)
-              "
-              class="grid gap-1 text-sm"
-            >
-              {{ label('NEXT_STEP_URL') }}
-              <input
-                v-model="draft.next_step.url"
-                :class="inputClass"
-                type="url"
-                data-testid="next-step-url"
-              />
-            </label>
-          </div>
-        </section>
         <!-- eslint-disable vue/no-bare-strings-in-template -->
-        <section class="order-3 grid gap-3" data-testid="who-we-help-section">
+        <section class="grid gap-3" data-testid="who-we-help-section">
           <div>
             <h3 class="text-base font-semibold text-n-slate-12">
               {{ label('WHO_WE_HELP') }}
@@ -1365,10 +1277,6 @@ onMounted(load);
                 </label>
                 <div class="flex flex-wrap items-center gap-3">
                   <label class="flex items-center gap-2 text-sm">
-                    <input v-model="question.enabled" type="checkbox" />
-                    {{ label('ENABLED') }}
-                  </label>
-                  <label class="flex items-center gap-2 text-sm">
                     <input v-model="question.required" type="checkbox" />
                     {{ label('REQUIRED') }}
                   </label>
@@ -1389,15 +1297,21 @@ onMounted(load);
                   >
                     {{ label('DOWN') }}
                   </button>
-                  <button
-                    type="button"
-                    :class="buttonClass"
-                    @click="draft.questions.splice(index, 1)"
-                  >
-                    {{ label('REMOVE') }}
-                  </button>
                 </div>
               </details>
+              <div class="flex flex-wrap items-center gap-3">
+                <label class="flex items-center gap-2 text-sm">
+                  <input v-model="question.enabled" type="checkbox" />
+                  {{ label('ENABLED') }}
+                </label>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="draft.questions.splice(index, 1)"
+                >
+                  {{ label('REMOVE') }}
+                </button>
+              </div>
             </div>
             <div class="flex gap-2">
               <select
@@ -1431,10 +1345,92 @@ onMounted(load);
             </div>
           </fieldset>
         </section>
-        <details
-          class="order-6 grid gap-3"
-          data-testid="advanced-technical-controls"
-        >
+        <section class="grid gap-3" data-testid="response-settings-section">
+          <h3 class="text-base font-semibold text-n-slate-12">
+            {{ label('HOW_ASSISTANT_RESPONDS') }}
+          </h3>
+          <p class="text-sm leading-6 text-n-slate-11">
+            {{ label('RESPONSE_SETTINGS_CURRENT') }}
+          </p>
+        </section>
+        <section class="grid gap-3" data-testid="next-step-section">
+          <div>
+            <h3 class="text-base font-semibold text-n-slate-12">
+              {{ label('WHAT_HAPPENS_NEXT') }}
+            </h3>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm">
+              {{ label('QUALIFICATION_MODE') }}
+              <select
+                v-model="draft.qualification_mode"
+                :class="inputClass"
+                data-testid="qualification-mode"
+              >
+                <option value="not_configured">
+                  {{ label('MODE_NOT_CONFIGURED') }}
+                </option>
+                <option value="disabled">
+                  {{ label('MODE_DISABLED') }}
+                </option>
+                <option value="enabled">
+                  {{ label('MODE_ENABLED') }}
+                </option>
+              </select>
+            </label>
+            <label class="grid gap-1 text-sm">
+              {{ label('NEXT_STEP') }}
+              <select
+                v-model="draft.next_step.kind"
+                :class="inputClass"
+                data-testid="next-step"
+              >
+                <option
+                  v-for="kind in [
+                    'answer_only',
+                    'enquiry',
+                    'purchase_link',
+                    'sales_call',
+                    'appointment',
+                  ]"
+                  :key="kind"
+                  :value="kind"
+                >
+                  {{ label(`NEXT_${kind.toUpperCase()}`) }}
+                </option>
+              </select>
+            </label>
+          </div>
+          <div
+            v-if="draft.next_step.kind !== 'answer_only'"
+            class="grid gap-3 sm:grid-cols-2"
+          >
+            <label class="grid gap-1 text-sm">
+              {{ label('NEXT_STEP_PROMPT') }}
+              <input
+                v-model="draft.next_step.prompt"
+                :class="inputClass"
+                maxlength="240"
+                data-testid="next-step-prompt"
+              />
+            </label>
+            <label
+              v-if="
+                ['purchase_link', 'appointment'].includes(draft.next_step.kind)
+              "
+              class="grid gap-1 text-sm"
+            >
+              {{ label('NEXT_STEP_URL') }}
+              <input
+                v-model="draft.next_step.url"
+                :class="inputClass"
+                type="url"
+                data-testid="next-step-url"
+              />
+            </label>
+          </div>
+        </section>
+        <details class="grid gap-3" data-testid="advanced-technical-controls">
           <summary
             class="cursor-pointer text-base font-semibold text-n-slate-12"
           >
@@ -2001,10 +1997,7 @@ onMounted(load);
             </label>
           </fieldset>
         </details>
-        <section
-          class="order-7 grid gap-2"
-          data-testid="preview-publish-section"
-        >
+        <section class="grid gap-2" data-testid="preview-publish-section">
           <h3 class="text-base font-semibold text-n-slate-12">
             {{ label('PREVIEW_AND_PUBLISH') }}
           </h3>

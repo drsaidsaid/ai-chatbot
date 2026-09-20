@@ -1069,7 +1069,7 @@
       "PREVIEW_AND_PUBLISH": "Preview and publish",
       "PREVIEW_AND_PUBLISH_HELP": "Test this published setup with the current single-question, no-send Test Center run. Review source evidence before relying on it.",
       "ADVANCED_TECHNICAL_CONTROLS": "Advanced technical controls",
-      "ADVANCED_TECHNICAL_CONTROLS_HELP": "Field keys, answer types, ordering, scores, ranges, and nested rules are available here. Validation still applies when you save.",
+      "ADVANCED_TECHNICAL_CONTROLS_HELP": "Currency, scores, ranges, and nested rules are available here. Each information requirement has its own technical controls for answer type, period, and ordering. Validation still applies when you save.",
       "CURRENCY": "Currency",
       "BUDGET_RANGES": "Budget ranges",
       "MINIMUM": "Minimum ({currency})",
