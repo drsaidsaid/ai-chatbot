@@ -115,6 +115,28 @@ RSpec.describe 'Typed alternative Offer requirements', type: :request do
     expect(handoff_for(conversation, corrected).handoff).to be_nil
   end
 
+  it 'does not let a fit group suppress the same field when it is required for action eligibility' do
+    configuration = group_configuration
+    configuration['questions'].find { |question| question['key'] == 'business_status' }['purpose'] = 'action_eligibility'
+    offer = r09_create_offer(configuration)
+    conversation = r09_conversation(offer: offer)
+    AiLeadEmployee::OfferQualificationService.new(conversation: conversation).perform
+
+    expect(r09_qualification(offer).assessment.dig('action_eligibility', 'missing_fields')).to include('business_status')
+  end
+
+  it 'stales a previous qualification decision when an alternative group edit creates a new revision' do
+    offer = r09_create_offer(group_configuration)
+    conversation = r09_conversation(offer: offer)
+    record(conversation, offer, 'business_status', 'no_business')
+    record(conversation, offer, 'expert_willingness', true)
+    qualification = r09_qualification(offer)
+
+    r09_update_offer(offer, name: 'Edited alternative fit')
+    expect(response).to have_http_status(:success)
+    expect(qualification.reload.stale_at).to be_present
+  end
+
   def group_configuration(requirement_groups: nil) # rubocop:disable Metrics/MethodLength
     questions = [
       r09_question('business_status', answer_type: 'choice', options: %w[no_business operating_business uncertain],
