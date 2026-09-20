@@ -1,0 +1,7 @@
+# Scoped multilingual retrieval pilot repair
+
+The owner's Swahili programme-suitability question failed the English document token-overlap gate before the provider was called. Candidates 73863539 and 747d8c1c add a bounded fallback for generic Offer suitability/help questions when exactly one verified, nonexpired, AI-enabled document is scoped to the selected Offer. Normal lexical matching stays first. Multiple eligible documents refuse rather than arbitrarily choosing the newest. Existing language restrictions, tenant scope and controlled-claim checks remain unchanged. This is bounded English/Swahili support, not general semantic search.
+
+The actual mixed Swahili structured regression now uses an English scoped document without language restrictions and verifies one provider call, recorded current revenue rather than goal, no invented agreement, and the localized next unanswered question. Canonical focused knowledge and full R11 orchestration suites: 189 examples, zero failures. Candidate scoped lint and coordinator diff check passed. Simulated providers do not establish real response quality.
+
+Only one production service changes; no assets, schema or dependencies. Package from deployed da592a56 image sha256:ee36f5276c8ef6d712e8c20f2edb5a888461c06776d9400362ba6bb615145758. Preserve pilot2/provider revision2/original expiry and usage, revoked pilot1 history, and paused general Launch Gate. Coordinator alone performs reviewed backup and cutover; fresh owner-only live validation remains required. No full V1 completion is implied.
