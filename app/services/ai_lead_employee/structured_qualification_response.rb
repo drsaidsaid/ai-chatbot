@@ -176,13 +176,30 @@ class AiLeadEmployee::StructuredQualificationResponse # rubocop:disable Metrics/
 
   def money_observation(question, quote, candidate)
     money = AiLeadEmployee::QualificationAmountParser.parse(quote, default_currency: offer.currency)
-    return [nil, 'typed_mismatch'] unless money
+    return [nil, money_rejection('money_parse_failed')] unless money
     return [nil, 'currency_period'] unless money['currency'] == offer.currency
-    return [nil, 'typed_mismatch'] unless candidate['typed_value'] == money['amount_minor']
+    return [nil, money_typed_value_rejection(candidate['typed_value'], money)] unless candidate['typed_value'] == money['amount_minor']
     return [nil, 'currency_period'] unless period_matches?(quote, question['period'])
 
     [{ 'typed_value' => money['amount_minor'], 'amount_minor' => money['amount_minor'],
        'currency' => money['currency'], 'period' => question['period'] }, nil]
+  end
+
+  def money_typed_value_rejection(value, money)
+    return money_rejection('money_typed_value_not_numeric') unless value.is_a?(Numeric)
+    return money_rejection('money_major_units_supplied') if money_major_units?(value, money)
+
+    money_rejection('money_typed_value_mismatch')
+  end
+
+  def money_major_units?(value, money)
+    BigDecimal(value.to_s) == BigDecimal(money.fetch('amount_minor').to_s) / 100
+  rescue ArgumentError
+    false
+  end
+
+  def money_rejection(detail)
+    { 'code' => 'typed_mismatch', 'detail' => detail }
   end
 
   def number_observation(quote, candidate)
@@ -238,8 +255,11 @@ class AiLeadEmployee::StructuredQualificationResponse # rubocop:disable Metrics/
     key.present? && configured_field_keys.include?(key)
   end
 
-  def rejection_payload(key, code)
-    { 'field_key' => configured_field_key?(key) ? key : nil, 'code' => code }
+  def rejection_payload(key, rejection)
+    values = rejection.is_a?(Hash) ? rejection.stringify_keys : { 'code' => rejection }
+    { 'field_key' => configured_field_key?(key) ? key : nil, 'code' => values['code'] }.tap do |payload|
+      payload['detail'] = values['detail'] if values['detail'].present?
+    end
   end
 
   def diagnostics(candidates:, candidate_keys:, observations:, rejections:, malformed: false)
@@ -253,6 +273,9 @@ class AiLeadEmployee::StructuredQualificationResponse # rubocop:disable Metrics/
       'rejected_count' => rejections.size,
       'rejection_counts' => rejections.pluck('code').compact.tally,
       'rejected_field_keys_by_code' => rejected_field_keys_by_code(rejections),
+      'rejected_field_details' => rejections.filter_map do |rejection|
+        rejection.slice('field_key', 'code', 'detail') if rejection['detail'].present?
+      end,
       'absent_candidate_field_keys' => (configured_field_keys - candidate_keys.uniq).sort
     }
   end
