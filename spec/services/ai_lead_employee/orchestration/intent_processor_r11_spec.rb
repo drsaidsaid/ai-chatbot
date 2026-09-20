@@ -1195,7 +1195,9 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     )
     connection = create(:ai_provider_connection, account: account)
     intent.update!(pilot_authorization: create_pilot_authorization(connection))
-    allow(provider_client).to receive(:complete).and_return(
+    captured_provider_messages = nil
+    allow(provider_client).to receive(:complete) do |messages:, **|
+      captured_provider_messages = messages
       AiLeadEmployee::AiProvider::Response.new(
         id: 'r19-mixed-swahili', model: connection.model,
         content: {
@@ -1214,10 +1216,18 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
         }.to_json,
         finish_reason: 'stop', configuration_version: connection.configuration_version
       )
-    )
+    end
 
     described_class.new(intent: intent, enqueue_deliveries: false).perform
 
+    provider_prompt = captured_provider_messages.map { |message| message.fetch(:content) }.join("\n")
+    expect(provider_prompt).to include('reply in the requested language')
+    expect(provider_prompt).to include('money fields')
+    expect(provider_prompt).to include('amount_minor')
+    expect(provider_prompt).to include('TZS 800,000 => 80000000')
+    expect(provider_prompt).to include('choice fields')
+    expect(provider_prompt).to include('boolean fields')
+    expect(provider_prompt).to include('number fields')
     expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
     expect(intent.outbound_message.content).to eq(
       "Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.\n\nJe, ungependa kuzungumza na mtaalamu?"
