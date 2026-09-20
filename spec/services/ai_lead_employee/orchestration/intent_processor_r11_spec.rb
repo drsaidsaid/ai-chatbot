@@ -1161,7 +1161,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
-  it 'answers a mixed Swahili business question while recording only supported configured facts' do # rubocop:disable RSpec/ExampleLength
+  it 'answers a mixed Swahili business question while recording only supported configured facts' do # rubocop:disable RSpec/ExampleLength, RSpec/MultipleExpectations
     offer = create_offer(
       name: 'Mafunzo ya Biashara',
       currency: 'TZS',
@@ -1185,12 +1185,13 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
                'Mapato yangu ni shilingi 800,000 kwa mwezi, na lengo ni kufikia milioni 3. ' \
                'Je, programu yenu inaweza kunisaidia? Tafadhali nijibu kwa Kiswahili.'
     )
-    create(
-      :knowledge_item,
+    document = create(
+      :knowledge_document,
       account: account,
-      question: triggering_message.content,
-      answer: 'Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.',
-      metadata: { 'source_reference' => 'swahili-business-fit-v1', 'offer_ids' => [offer.id], 'language' => 'swahili' }
+      title: 'Business training programme',
+      body: 'This programme can help online training businesses improve marketing systems and follow-up.',
+      general_question_access: false,
+      offer_ids: [offer.id]
     )
     connection = create(:ai_provider_connection, account: account)
     intent.update!(pilot_authorization: create_pilot_authorization(connection))
@@ -1221,6 +1222,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(intent.outbound_message.content).to eq(
       "Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.\n\nJe, ungependa kuzungumza na mtaalamu?"
     )
+    expect(intent.source_references).to contain_exactly(include('id' => document.id, 'type' => 'knowledge_document'))
     expect(provider_client).to have_received(:complete).once
     evidence = QualificationEvidence.where(account: account, contact: contact, offer: offer).index_by(&:field_key)
     expect(evidence).to include('business_status', 'monthly_business_revenue_tzs')

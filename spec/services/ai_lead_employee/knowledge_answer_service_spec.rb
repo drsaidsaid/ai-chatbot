@@ -181,6 +181,35 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.refusal_reason).to eq('no_approved_knowledge')
   end
 
+  it 'refuses semantic selected Offer fallback when multiple scoped documents are eligible' do
+    create(
+      :knowledge_document,
+      account: account,
+      title: 'Coaching overview',
+      body: 'This coaching helps founders with marketing systems.',
+      general_question_access: false,
+      offer_ids: [selected_offer.id]
+    )
+    create(
+      :knowledge_document,
+      account: account,
+      title: 'Operations overview',
+      body: 'This service helps founders with delivery operations.',
+      general_question_access: false,
+      offer_ids: [selected_offer.id]
+    )
+
+    result = described_class.new(
+      account: account,
+      offer: selected_offer,
+      question: 'Je, programu yenu inaweza kunisaidia? Tafadhali nijibu kwa Kiswahili.',
+      language: :swahili
+    ).perform
+
+    expect(result).to be_refused
+    expect(result.refusal_reason).to eq('no_approved_knowledge')
+  end
+
   it 'accepts standard language aliases in approved metadata' do
     item = create(
       :knowledge_item,

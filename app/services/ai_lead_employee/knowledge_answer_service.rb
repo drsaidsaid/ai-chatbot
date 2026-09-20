@@ -225,9 +225,10 @@ class AiLeadEmployee::KnowledgeAnswerService # rubocop:disable Metrics/ClassLeng
   def semantic_source_document
     return unless semantic_offer_suitability_question?
 
-    eligible_documents.select do |document|
+    matches = eligible_documents.select do |document|
       document.verified_source_reference? && !document_expired?(document) && selected_offer_document?(document)
-    end.max_by(&:updated_at)
+    end
+    matches.one? ? matches.first : nil
   end
 
   def semantic_offer_suitability_question?
