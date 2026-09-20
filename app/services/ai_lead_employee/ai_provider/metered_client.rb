@@ -1,19 +1,23 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class AiLeadEmployee::AiProvider::MeteredClient
-  Reservation = Data.define(:usage_id, :configuration_version, :period_on)
+  Reservation = Data.define(:usage_id, :configuration_version, :period_on, :pilot_authorization_id)
   MAX_INPUT_BYTES = 32.kilobytes
+  PILOT_RESERVATION_STALE_AFTER = 2.minutes
 
   def initialize(connection:, adapter:)
     @connection = connection
     @adapter = adapter
   end
 
-  def complete(messages:, max_tokens: connection.reply_token_limit, temperature: 0.2, response_format: nil,
-               purpose: 'answer')
+  def complete(messages:, max_tokens: connection.reply_token_limit, temperature: 0.2, response_format: nil, # rubocop:disable Metrics/ParameterLists
+               purpose: 'answer', pilot_authorization: nil, orchestration_intent: nil)
     validate_input!(messages)
     validate_output!(max_tokens)
-    reservation = reserve_usage!(purpose: purpose, max_tokens: max_tokens)
+    reservation = reserve_usage!(purpose: purpose, max_tokens: max_tokens,
+                                 pilot_authorization: pilot_authorization,
+                                 orchestration_intent: orchestration_intent)
     complete_reserved!(reservation, messages, max_tokens, temperature, response_format)
   rescue AiLeadEmployee::AiProvider::InputLimitFailure, AiLeadEmployee::AiProvider::OutputLimitFailure
     raise
@@ -53,7 +57,9 @@ class AiLeadEmployee::AiProvider::MeteredClient
 
   def complete_reserved!(reservation, messages, max_tokens, temperature, response_format)
     response = request_provider_response(messages, max_tokens, temperature, response_format)
-    finalize_response!(reservation, response)
+    response = finalize_response!(reservation, response)
+    ensure_pilot_cost_is_known!(reservation, response)
+    response
   end
 
   def request_provider_response(messages, max_tokens, temperature, response_format)
@@ -73,6 +79,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def finalize_response!(reservation, response)
     response.configuration_version = reservation.configuration_version
     response.usage_period_on = reservation.period_on
+    response.provider_usage_id = reservation.usage_id
     complete_usage!(reservation.usage_id, response)
     response
   rescue StandardError
@@ -80,19 +87,60 @@ class AiLeadEmployee::AiProvider::MeteredClient
           'AI provider responded but durable usage completion is uncertain'
   end
 
-  def reserve_usage!(purpose:, max_tokens:)
-    with_usage_ledger do |connection_class, usage_class|
+  def reserve_usage!(purpose:, max_tokens:, pilot_authorization:, orchestration_intent:)
+    with_usage_ledger do |connection_class, usage_class, pilot_class, _intent_class|
       current = connection_class.find(connection.id)
-      current.with_lock do
-        validate_reservation!(current)
-        usage = create_usage!(usage_class, current, purpose, max_tokens)
-        Reservation.new(
-          usage_id: usage.id,
-          configuration_version: current.configuration_version,
-          period_on: usage.period_on
-        )
+      pilot = pilot_class.find(pilot_authorization.id) if pilot_authorization
+      if pilot
+        pilot.with_lock do
+          pilot_failure!(pilot, usage_class, orchestration_intent)
+          reserve_current!(usage_class, current, purpose, max_tokens, pilot, orchestration_intent)
+        end
+      else
+        reserve_current!(usage_class, current, purpose, max_tokens, nil, orchestration_intent)
       end
     end
+  end
+
+  def reserve_current!(usage_class, current, purpose, max_tokens, pilot, orchestration_intent) # rubocop:disable Metrics/ParameterLists
+    current.with_lock do
+      validate_reservation!(current)
+      usage = create_usage!(usage_class, current, purpose, max_tokens, pilot, orchestration_intent)
+      Reservation.new(
+        usage_id: usage.id,
+        configuration_version: current.configuration_version,
+        period_on: usage.period_on,
+        pilot_authorization_id: pilot&.id
+      )
+    end
+  end
+
+  def pilot_failure!(pilot, usage_class, orchestration_intent) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+    unless pilot.status == 'active' && pilot.starts_at <= Time.current && pilot.expires_at > Time.current &&
+           pilot.account_id == connection.account_id && pilot.ai_provider_connection_id == connection.id &&
+           pilot.provider_configuration_version == connection.configuration_version
+      raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot Authorization is not current'
+    end
+
+    intent = AiLeadEmployee::AiProviderLedgerOrchestrationIntent.find_by(id: orchestration_intent&.id)
+    unless intent&.exact_pilot_scope?(pilot)
+      raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot Authorization intent scope is not current'
+    end
+
+    usages = usage_class.where(pilot_authorization_id: pilot.id)
+    stale = usages.where(status: 'reserved').exists?(started_at: ...PILOT_RESERVATION_STALE_AFTER.ago)
+    pause_pilot!(pilot, 'stale_provider_attempt') if stale
+    raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot provider attempt is stale' if stale
+    raise AiLeadEmployee::AiProvider::PilotBusyFailure, 'Pilot provider attempt is already in flight' if usages.exists?(status: 'reserved')
+
+    if usages.exists?(status: %w[completed failed], cost_available: false)
+      pause_pilot!(pilot, 'provider_cost_unavailable')
+      raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot provider cost is unavailable'
+    end
+    raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot attempt limit is exhausted' if usages.count >= pilot.max_attempts
+
+    known_cost = usages.where(status: 'completed', cost_available: true).sum(:cost_usd)
+    raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot spend target is reached' if known_cost >= pilot.max_spend_usd
   end
 
   def validate_reservation!(current)
@@ -105,7 +153,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
     raise AiLeadEmployee::AiProvider::UsageLimitFailure, 'Daily AI request allowance is exhausted' if current.daily_request_limit <= used
   end
 
-  def create_usage!(usage_class, current, purpose, max_tokens)
+  def create_usage!(usage_class, current, purpose, max_tokens, pilot, orchestration_intent) # rubocop:disable Metrics/ParameterLists
     usage_class.create!(
       account_id: current.account_id,
       ai_provider_connection_id: current.id,
@@ -113,12 +161,14 @@ class AiLeadEmployee::AiProvider::MeteredClient
       purpose: purpose,
       period_on: Time.current.utc.to_date,
       requested_output_tokens: max_tokens,
-      started_at: Time.current
+      started_at: Time.current,
+      pilot_authorization_id: pilot&.id,
+      ai_orchestration_intent_id: orchestration_intent&.id
     )
   end
 
   def complete_usage!(usage_id, response)
-    with_usage_ledger do |_connection_class, usage_class|
+    with_usage_ledger do |_connection_class, usage_class, _pilot_class, _intent_class|
       usage_class.find(usage_id).update!(
         status: 'completed',
         provider_request_id: response.id,
@@ -136,7 +186,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def fail_usage!(usage_id, failure_class)
     return unless usage_id
 
-    with_usage_ledger do |_connection_class, usage_class|
+    with_usage_ledger do |_connection_class, usage_class, _pilot_class, _intent_class|
       usage_class.find(usage_id).update!(
         status: 'failed',
         failure_class: failure_class,
@@ -148,7 +198,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def record_provider_failure!(reservation, failure_class)
     return unless reservation
 
-    with_usage_ledger do |connection_class, _usage_class|
+    with_usage_ledger do |connection_class, _usage_class, _pilot_class, _intent_class|
       current = connection_class.find(connection.id)
       current.with_lock do
         next unless current.configured? && current.configuration_version == reservation.configuration_version
@@ -172,10 +222,14 @@ class AiLeadEmployee::AiProvider::MeteredClient
   end
 
   def with_usage_ledger
-    return yield(AiLeadEmployee::AiProviderConnection, AiLeadEmployee::AiProviderUsage) unless ActiveRecord::Base.connection.transaction_open?
+    unless ActiveRecord::Base.connection.transaction_open?
+      return yield(AiLeadEmployee::AiProviderConnection, AiLeadEmployee::AiProviderUsage,
+                   AiLeadEmployee::PilotAuthorization, AiLeadEmployee::OrchestrationIntent)
+    end
 
     AiLeadEmployee::AiProviderLedgerRecord.connection_pool.with_connection do
-      yield(AiLeadEmployee::AiProviderLedgerConnection, AiLeadEmployee::AiProviderLedgerUsage)
+      yield(AiLeadEmployee::AiProviderLedgerConnection, AiLeadEmployee::AiProviderLedgerUsage,
+            AiLeadEmployee::AiProviderLedgerPilotAuthorization, AiLeadEmployee::AiProviderLedgerOrchestrationIntent)
     end
   rescue ActiveRecord::ConnectionTimeoutError, ActiveRecord::ConnectionNotEstablished => e
     raise AiLeadEmployee::AiProvider::AdmissionUnavailableFailure, "AI provider usage admission unavailable: #{e.message}"
@@ -202,6 +256,32 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def clean_up_provider_failure(reservation, failure)
     cleanup_context = { reservation: reservation, failure: failure }
     attempt_cleanup(operation: 'fail_usage', **cleanup_context) { fail_usage!(reservation&.usage_id, failure.failure_class) }
+    attempt_cleanup(operation: 'pause_unknown_pilot_failure', **cleanup_context) { pause_unknown_pilot_failure!(reservation) }
     attempt_cleanup(operation: 'record_provider_failure', **cleanup_context) { record_provider_failure!(reservation, failure.failure_class) }
   end
+
+  def pause_unknown_pilot_failure!(reservation)
+    return unless reservation&.pilot_authorization_id
+
+    with_usage_ledger do |_connection_class, _usage_class, pilot_class, _intent_class|
+      pilot = pilot_class.find(reservation.pilot_authorization_id)
+      pilot.with_lock { pause_pilot!(pilot, 'provider_cost_unknown') if pilot.status == 'active' }
+    end
+  end
+
+  def ensure_pilot_cost_is_known!(reservation, response)
+    return unless reservation.pilot_authorization_id && response.cost_usd.nil?
+
+    with_usage_ledger do |_connection_class, _usage_class, pilot_class, _intent_class|
+      pilot = pilot_class.find(reservation.pilot_authorization_id)
+      pilot.with_lock { pause_pilot!(pilot, 'provider_cost_unavailable') }
+    end
+    raise AiLeadEmployee::AiProvider::AccountingUncertainFailure,
+          'Pilot provider cost is unavailable after the provider response'
+  end
+
+  def pause_pilot!(pilot, reason)
+    pilot.update!(status: 'paused', paused_at: Time.current, pause_reason: reason)
+  end
 end
+# rubocop:enable Metrics/ClassLength

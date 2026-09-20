@@ -126,6 +126,21 @@ RSpec.describe AiLeadEmployee::HighlyQualifiedHandoffService do
     end
   end
 
+  it 'retains the in-app handoff while explicitly suppressing unapproved external team alerts for a pilot' do
+    result = described_class.new(
+      conversation: conversation, qualification: qualification, suppress_external_alerts: true
+    ).perform
+
+    expect(result).to have_attributes(created: true, assignee: operator, alert_message_ids: [])
+    expect(conversation.reload).to have_attributes(assignee: operator, control_state: 'human_active')
+    expect(result.handoff).to have_attributes(alert_recipients: [])
+    expect(result.handoff.alert_deliveries).to contain_exactly(
+      include('status' => 'suppressed', 'reason' => 'pilot_external_alert_not_authorized')
+    )
+    expect(Message.where(message_type: :outgoing)).to be_empty
+    expect(SendReplyJob).not_to have_received(:perform_later)
+  end
+
   it 'uses the configured Offer question label for arbitrary evidence fields' do
     offer = AiLeadEmployee::Offer.create!(
       account: account,

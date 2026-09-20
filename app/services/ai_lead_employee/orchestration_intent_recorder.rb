@@ -63,10 +63,10 @@ class AiLeadEmployee::OrchestrationIntentRecorder
   end
 
   def live_ai_enabled?
-    !enforce_launch_gate || AiLeadEmployee::LaunchGate.live_ai_enabled?(message.account)
+    !enforce_launch_gate || AiLeadEmployee::LaunchGate.live_ai_enabled?(message.account) || pilot_authorization.present?
   end
 
-  def find_or_create_intent
+  def find_or_create_intent # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     @created_intent = false
     conversation = message.conversation.reload
 
@@ -78,12 +78,16 @@ class AiLeadEmployee::OrchestrationIntentRecorder
       return existing_intent if existing_intent.present?
 
       @created_intent = true
+      authorization = current_pilot_authorization(conversation)
+      return unless !enforce_launch_gate || AiLeadEmployee::LaunchGate.live_ai_enabled?(message.account) || authorization.present?
+
       AiLeadEmployee::OrchestrationIntent.create!(
         account: message.account,
         conversation: conversation,
         triggering_message: message,
         observed_control_version: conversation.control_version,
-        idempotency_key: key
+        idempotency_key: key,
+        pilot_authorization: authorization
       )
     end
   rescue ActiveRecord::RecordNotUnique
@@ -113,5 +117,17 @@ class AiLeadEmployee::OrchestrationIntentRecorder
 
   def idempotency_key(conversation)
     "ai-orchestration/#{message.account_id}/#{message.conversation_id}/#{message.id}/#{conversation.control_version}"
+  end
+
+  def pilot_authorization
+    @pilot_authorization ||= AiLeadEmployee::PilotAuthorization.current_for(message: message)
+  end
+
+  def current_pilot_authorization(conversation)
+    authorization = AiLeadEmployee::PilotAuthorization.current_for(message: message)
+    authorization&.lock!
+    return authorization if authorization&.control_version == conversation.control_version
+
+    nil
   end
 end

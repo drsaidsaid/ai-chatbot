@@ -101,13 +101,16 @@ class Whatsapp::OutboundDispatch
       AiLeadEmployee::OfferDeliveryContext.new(
         conversation: origin, context: @message.additional_attributes.dig('ai_lead_employee', 'qualification_context')
       ).lock_offers!
+      pilot_authorization = pilot_authorization_authority
       # These authorities were formerly acquired by eligibility after Delivery.
       # Prelock them at their rank; eligibility only reuses the owned rows.
       provider_connection = AiLeadEmployee::AiProviderConnection.where(account_id: @delivery.account_id).lock.first
+      provider_usage = pilot_provider_usage_authority
       membership = AccountUser.where(account_id: @delivery.account_id, user_id: @message.sender_id).lock.first if @message.sender_type == 'User'
       confirmation_booking = booking_confirmation_authority
       @authority_records = {
-        provider_connection: provider_connection, membership: membership,
+        provider_connection: provider_connection, pilot_authorization: pilot_authorization,
+        provider_usage: provider_usage, membership: membership,
         confirmation_booking: confirmation_booking
       }.freeze
       @outbound_alert_authority.lock_record!
@@ -120,6 +123,20 @@ class Whatsapp::OutboundDispatch
     return unless attributes['delivery_type'] == 'booking_confirmation'
 
     Booking.where(account_id: @delivery.account_id, id: attributes['booking_id']).lock.first
+  end
+
+  def pilot_authorization_authority
+    id = @message.additional_attributes.dig('ai_lead_employee', 'pilot_authorization_id')
+    return unless id
+
+    AiLeadEmployee::PilotAuthorization.where(account_id: @delivery.account_id, id: id).lock.first
+  end
+
+  def pilot_provider_usage_authority
+    id = @message.additional_attributes.dig('ai_lead_employee', 'provider_usage_id')
+    return unless id
+
+    AiLeadEmployee::AiProviderUsage.where(account_id: @delivery.account_id, id: id).lock.first
   end
 
   def greeting_ready?(owner) # rubocop:disable Metrics/CyclomaticComplexity

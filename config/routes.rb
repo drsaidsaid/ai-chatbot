@@ -705,6 +705,7 @@ Rails.application.routes.draw do
           resources :subscription_payment_confirmations, only: [:create]
           resources :ai_reply_usages, only: [:index, :update]
           resources :cost_allocations, only: [:index, :create], controller: 'account_cost_allocations'
+          resources :pilot_authorizations, only: [:create, :update]
           resource :ai_provider_connection, only: [:show, :update, :destroy] do
             post :health_check
           end
