@@ -107,16 +107,19 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
     [quality, score, missing, rules, assessment]
   end
 
-  def assessment_for(snapshot, rules)
+  def assessment_for(snapshot, rules) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     AiLeadEmployee::OfferRules::REQUIREMENT_DIMENSIONS.index_with do |dimension|
       dimension_requirements = rules.requirements.select { |rule| rule['dimension'] == dimension }
+      group_assessments = rules.requirement_groups.filter_map do |group|
+        rules.group_assessment(group) if group['dimension'] == dimension
+      end
       question_fields = offer.questions.select do |question|
-        question['enabled'] && question['required'] && question.fetch('purpose', 'fit') == dimension
+        question['enabled'] && question['required'] && question.fetch('purpose', 'fit') == dimension && rules.group_fields.exclude?(question['key'])
       end.pluck('key')
       requirement_states = dimension_requirements.map { |rule| [rule['field'], rules.requirement_state(rule)] }
       question_states = question_fields.map { |field| [field, evidence_state(snapshot[field])] }
       states = question_states + requirement_states
-      dimension_assessment(states)
+      dimension_assessment(states, group_assessments)
     end
   end
 
@@ -126,21 +129,39 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
     :met
   end
 
-  def dimension_assessment(states) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def dimension_assessment(states, group_assessments = []) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+    group_states = group_assessments.pluck(:state)
     status = if states.empty?
-               'not_required'
+               group_states.empty? ? 'not_required' : group_status(group_states)
              elsif states.any? { |_field, state| state == :not_met }
                'not_met'
              elsif states.any? { |_field, state| state == :missing }
                'missing'
+             elsif group_states.any?
+               group_status(group_states)
              else
                'met'
              end
     {
       'status' => status,
-      'missing_fields' => states.filter_map { |field, state| field if state == :missing }.uniq,
-      'reasons' => states.filter_map { |field, state| "#{field.humanize} did not meet the configured requirement" if state == :not_met }.uniq
+      'missing_fields' => (states.filter_map do |field, state|
+        field if state == :missing
+      end + group_assessments.flat_map do |group|
+              group[:missing_fields]
+            end).uniq,
+      'reasons' => (states.filter_map do |field, state|
+        "#{field.humanize} did not meet the configured requirement" if state == :not_met
+      end + group_assessments.flat_map do |group|
+              group[:reasons]
+            end).uniq
     }
+  end
+
+  def group_status(states)
+    return 'not_met' if states.include?(:not_met)
+    return 'missing' if states.include?(:missing)
+
+    'met'
   end
 
   def evidence_snapshot
@@ -156,11 +177,16 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
     end
   end
 
-  def next_question(snapshot)
-    offer.questions.find do |question|
+  def next_question(snapshot) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    rules = AiLeadEmployee::OfferRules.new(offer: offer, snapshot: snapshot)
+    direct = offer.questions.find do |question|
       question['required'] && (!snapshot.key?(question['key']) || snapshot.dig(question['key'], 'asserted') == false ||
-        snapshot.dig(question['key'], 'polarity') == 'unknown')
+        snapshot.dig(question['key'], 'polarity') == 'unknown') && rules.group_fields.exclude?(question['key'])
     end
+    return direct if direct
+
+    missing = rules.requirement_groups.flat_map { |group| rules.group_assessment(group)[:missing_fields] }.uniq
+    offer.questions.find { |question| missing.include?(question['key']) }
   end
 
   def positive_signals(snapshot)

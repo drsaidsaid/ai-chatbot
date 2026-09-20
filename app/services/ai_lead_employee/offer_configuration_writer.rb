@@ -59,6 +59,9 @@ class AiLeadEmployee::OfferConfigurationWriter
       'questions' => normalized_questions,
       'budget_ranges' => attributes.fetch('budget_ranges', []).map { |range| normalize_range(range, currency) },
       'rules' => AiLeadEmployee::OfferRules.normalize(attributes.fetch('rules', []), questions: normalized_questions, currency: currency),
+      'requirement_groups' => AiLeadEmployee::OfferRules.normalize_requirement_groups(
+        attributes.fetch('requirement_groups', []), questions: normalized_questions, currency: currency
+      ),
       'score_weights' => normalized_weights,
       'score_thresholds' => normalized_thresholds
     }
@@ -143,7 +146,7 @@ class AiLeadEmployee::OfferConfigurationWriter
 
   def inferred_qualification_mode
     configured = attributes.fetch('questions', []).any? || attributes.fetch('rules', []).any? ||
-                 attributes.fetch('score_weights', {}).any?
+                 attributes.fetch('requirement_groups', []).any? || attributes.fetch('score_weights', {}).any?
     configured ? 'enabled' : 'not_configured'
   end
 

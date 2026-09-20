@@ -143,9 +143,12 @@ class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/Cl
   end
 
   def sales_call_dimension_configured?(dimension)
-    configured_required_question?(dimension) || qualification.offer.configuration.fetch('rules', []).any? do |rule|
+    return true if configured_required_question?(dimension)
+    return true if qualification.offer.configuration.fetch('rules', []).any? do |rule|
       rule['enabled'] && rule['kind'] == 'requirement' && rule['dimension'] == dimension
     end
+
+    qualification.offer.configuration.fetch('requirement_groups', []).any? { |group| group['dimension'] == dimension }
   end
 
   def configured_required_question?(dimension)

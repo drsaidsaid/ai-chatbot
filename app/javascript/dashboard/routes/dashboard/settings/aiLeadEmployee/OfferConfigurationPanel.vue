@@ -92,6 +92,19 @@ const setupRuleSummary = (source, rule) => {
     purpose: setupPurposeLabel(rule.dimension || rule.kind),
   });
 };
+const requirementGroupSummary = (source, group) => {
+  const describe = node => {
+    if (node.field) {
+      const field = source.configuration?.questions?.find(
+        item => item.key === node.field
+      );
+      return field?.meaning || node.field;
+    }
+    const key = node.all ? 'all' : 'any';
+    return `(${node[key].map(describe).join(key === 'all' ? ' and ' : ' or ')})`;
+  };
+  return `${setupPurposeLabel(group.dimension)}: ${describe(group)}`;
+};
 const inputClass =
   'h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12';
 const buttonClass =
@@ -138,6 +151,7 @@ const newOffer = () => {
     questions: [],
     budget_ranges: [],
     rules: [],
+    requirement_groups: [],
     score_weights: {},
     score_thresholds: { qualified: 60, highly_qualified: 80 },
     commercial_terms: blankCommercialTerms('TZS'),
@@ -227,6 +241,7 @@ const orderedDraft = offer => ({
   questions: [...offer.questions]
     .sort((left, right) => left.position - right.position)
     .map(question => ({ purpose: 'fit', ...question })),
+  requirement_groups: offer.requirement_groups || [],
   commercial_terms: {
     ...blankCommercialTerms(offer.currency),
     ...(offer.commercial_terms_draft || {}),
@@ -986,6 +1001,18 @@ onMounted(load);
                 :key="`${rule.field}:${rule.priority}`"
               >
                 {{ setupRuleSummary(source, rule) }}
+              </li>
+            </ul>
+            <ul
+              v-if="source.configuration?.requirement_groups?.length"
+              class="list-disc pl-5 text-n-slate-11"
+            >
+              <li
+                v-for="(group, index) in source.configuration
+                  .requirement_groups"
+                :key="`group-${index}`"
+              >
+                {{ requirementGroupSummary(source, group) }}
               </li>
             </ul>
             <p v-if="source.unknowns?.length" class="text-n-amber-11">

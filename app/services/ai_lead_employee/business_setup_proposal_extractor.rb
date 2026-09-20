@@ -125,7 +125,7 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
 
   def configuration_without_previous_source_fields
     proposed = reviewed_configuration.slice(
-      'name', 'currency', 'enabled', 'version', 'qualification_mode', 'next_step', 'questions', 'budget_ranges', 'rules',
+      'name', 'currency', 'enabled', 'version', 'qualification_mode', 'next_step', 'questions', 'budget_ranges', 'rules', 'requirement_groups',
       'score_weights', 'score_thresholds'
     )
     previous_ownership = previous_proposal.fetch('source_ownership', {})
