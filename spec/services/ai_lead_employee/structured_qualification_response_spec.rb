@@ -58,6 +58,107 @@ RSpec.describe AiLeadEmployee::StructuredQualificationResponse do
     expect(result.localized_prompts).to eq('expert_willingness' => 'Je, ungependa kuzungumza na mtaalamu?')
   end
 
+  it 'records a safe major-unit diagnostic without accepting the exact current-revenue candidate' do
+    result = described_class.new(
+      offer: offer,
+      incoming_message: message,
+      content: {
+        reply: 'Asante kwa maelezo.',
+        observations: [
+          { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
+            typed_value: 800_000, asserted: true, certainty: 'certain' }
+        ],
+        localized_prompts: {}
+      }.to_json
+    ).perform
+
+    expect(result.observations).not_to include('monthly_business_revenue_tzs')
+    expect(result.diagnostics.fetch('rejected_field_details')).to contain_exactly(
+      'field_key' => 'monthly_business_revenue_tzs', 'code' => 'typed_mismatch', 'detail' => 'money_major_units_supplied'
+    )
+    expect(result.diagnostics.to_s).not_to include('800,000', '800000', '80000000')
+  end
+
+  it 'records a safe nonnumeric diagnostic without accepting a string money value' do
+    result = described_class.new(
+      offer: offer,
+      incoming_message: message,
+      content: {
+        reply: 'Asante kwa maelezo.',
+        observations: [
+          { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
+            typed_value: '80000000', asserted: true, certainty: 'certain' }
+        ],
+        localized_prompts: {}
+      }.to_json
+    ).perform
+
+    expect(result.observations).not_to include('monthly_business_revenue_tzs')
+    expect(result.diagnostics.fetch('rejected_field_details')).to contain_exactly(
+      'field_key' => 'monthly_business_revenue_tzs', 'code' => 'typed_mismatch', 'detail' => 'money_typed_value_not_numeric'
+    )
+    expect(result.diagnostics.to_s).not_to include('800,000', '80000000')
+  end
+
+  it 'records a safe parse diagnostic without accepting an unparsable money quote' do
+    message.update!(content: 'Mapato yangu ni shilingi mia nane kwa mwezi.')
+    result = described_class.new(
+      offer: offer,
+      incoming_message: message,
+      content: {
+        reply: 'Asante kwa maelezo.',
+        observations: [
+          { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi mia nane kwa mwezi',
+            typed_value: 80_000_000, asserted: true, certainty: 'certain' }
+        ],
+        localized_prompts: {}
+      }.to_json
+    ).perform
+
+    expect(result.observations).not_to include('monthly_business_revenue_tzs')
+    expect(result.diagnostics.fetch('rejected_field_details')).to contain_exactly(
+      'field_key' => 'monthly_business_revenue_tzs', 'code' => 'typed_mismatch', 'detail' => 'money_parse_failed'
+    )
+    expect(result.diagnostics.to_s).not_to include('mia nane', '80000000')
+  end
+
+  it 'records a safe mismatch diagnostic while preserving numerically equivalent floats' do
+    mismatch = described_class.new(
+      offer: offer,
+      incoming_message: message,
+      content: {
+        reply: 'Asante kwa maelezo.',
+        observations: [
+          { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
+            typed_value: 79_000_000, asserted: true, certainty: 'certain' }
+        ],
+        localized_prompts: {}
+      }.to_json
+    ).perform
+    equivalent_float = described_class.new(
+      offer: offer,
+      incoming_message: message,
+      content: {
+        reply: 'Asante kwa maelezo.',
+        observations: [
+          { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
+            typed_value: 80_000_000.0, asserted: true, certainty: 'certain' }
+        ],
+        localized_prompts: {}
+      }.to_json
+    ).perform
+
+    expect(mismatch.observations).not_to include('monthly_business_revenue_tzs')
+    expect(mismatch.diagnostics.fetch('rejected_field_details')).to contain_exactly(
+      'field_key' => 'monthly_business_revenue_tzs', 'code' => 'typed_mismatch', 'detail' => 'money_typed_value_mismatch'
+    )
+    expect(mismatch.diagnostics.to_s).not_to include('79000000', '800,000')
+    expect(equivalent_float.observations).to include(
+      'monthly_business_revenue_tzs' => include('typed_value' => 80_000_000)
+    )
+    expect(equivalent_float.diagnostics.fetch('rejected_field_details')).to be_empty
+  end
+
   it 'accepts stated willingness while refusing to turn it into sales-call agreement' do
     statement = 'Ndiyo, nataka kutumia utaalamu wangu kufundisha watu mtandaoni.'
     message.update!(content: statement)
