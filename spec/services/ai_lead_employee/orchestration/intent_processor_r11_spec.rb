@@ -1109,6 +1109,58 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
   end
 
+  it 'uses an English selected Offer document for a Swahili suitability question with one provider attempt' do
+    offer = create_offer(name: 'Online Profits', qualification_mode: 'enabled')
+    conversation.update!(offer: offer)
+    triggering_message.update!(
+      content: 'Nina biashara ya kufundisha watu mtandaoni. Je, programu yenu inaweza kunisaidia? Tafadhali nijibu kwa Kiswahili.'
+    )
+    document = create(
+      :knowledge_document,
+      account: account,
+      title: 'Online Profits programme',
+      body: 'Online Profits helps founders build marketing systems and improve follow-up.',
+      general_question_access: false,
+      offer_ids: [offer.id]
+    )
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-cross-language-offer-doc', model: connection.model,
+        content: 'Ndiyo, inaweza kusaidia kwa mifumo ya masoko na ufuatiliaji.',
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('Ndiyo, inaweza kusaidia kwa mifumo ya masoko na ufuatiliaji.')
+    expect(intent.source_references).to contain_exactly(include('id' => document.id, 'type' => 'knowledge_document'))
+    expect(provider_client).to have_received(:complete).once
+  end
+
+  it 'does not spend a provider attempt on an unknown selected Offer detail without lexical support' do
+    offer = create_offer(name: 'Online Profits', qualification_mode: 'enabled')
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'For this programme, do you include weekend delivery?')
+    create(
+      :knowledge_document,
+      account: account,
+      title: 'Online Profits programme',
+      body: 'Online Profits helps founders build marketing systems and improve follow-up.',
+      general_question_access: false,
+      offer_ids: [offer.id]
+    )
+    intent.update!(pilot_authorization: create_pilot_authorization(create(:ai_provider_connection, account: account)))
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload.source_references).to be_empty
+    expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
+  end
+
   it 'answers a mixed Swahili business question while recording only supported configured facts' do # rubocop:disable RSpec/ExampleLength
     offer = create_offer(
       name: 'Mafunzo ya Biashara',

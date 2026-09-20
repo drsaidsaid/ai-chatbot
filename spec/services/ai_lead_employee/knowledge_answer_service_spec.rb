@@ -139,6 +139,48 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.sources).to contain_exactly(include(id: document.id, offer_id: selected_offer.id))
   end
 
+  it 'uses a selected Offer document as semantic context for a multilingual suitability question' do
+    document = create(
+      :knowledge_document,
+      account: account,
+      title: 'Online Profits coaching',
+      body: 'Online Profits helps founders build marketing systems and improve follow-up.',
+      general_question_access: false,
+      offer_ids: [selected_offer.id]
+    )
+
+    result = described_class.new(
+      account: account,
+      offer: selected_offer,
+      question: 'Je, programu yenu inaweza kunisaidia? Tafadhali nijibu kwa Kiswahili.',
+      language: :swahili
+    ).perform
+
+    expect(result).to be_answered
+    expect(result.answer).to include('Online Profits helps founders')
+    expect(result.sources).to contain_exactly(include(id: document.id, offer_id: selected_offer.id))
+  end
+
+  it 'does not use selected Offer document fallback for an unknown detail question' do
+    create(
+      :knowledge_document,
+      account: account,
+      title: 'Online Profits coaching',
+      body: 'Online Profits helps founders build marketing systems and improve follow-up.',
+      general_question_access: false,
+      offer_ids: [selected_offer.id]
+    )
+
+    result = described_class.new(
+      account: account,
+      offer: selected_offer,
+      question: 'Does the programme include weekend delivery?'
+    ).perform
+
+    expect(result).to be_refused
+    expect(result.refusal_reason).to eq('no_approved_knowledge')
+  end
+
   it 'accepts standard language aliases in approved metadata' do
     item = create(
       :knowledge_item,

@@ -202,7 +202,7 @@ class AiLeadEmployee::KnowledgeAnswerService # rubocop:disable Metrics/ClassLeng
     matches = eligible_documents.select do |document|
       document.verified_source_reference? && !document_expired?(document) && matches_document_content?(document)
     end
-    matches.min_by { |document| [-document_score(document), document.updated_at] }
+    matches.min_by { |document| [-document_score(document), document.updated_at] } || semantic_source_document
   end
 
   def eligible_documents
@@ -220,6 +220,30 @@ class AiLeadEmployee::KnowledgeAnswerService # rubocop:disable Metrics/ClassLeng
 
   def matches_document_content?(document)
     (tokens(normalize(question)) & tokens(normalize([document.title, document.body].join(' ')))).size >= 2
+  end
+
+  def semantic_source_document
+    return unless semantic_offer_suitability_question?
+
+    eligible_documents.select do |document|
+      document.verified_source_reference? && !document_expired?(document) && selected_offer_document?(document)
+    end.max_by(&:updated_at)
+  end
+
+  def semantic_offer_suitability_question?
+    offer.present? && offer_reference_question? && help_or_suitability_question?
+  end
+
+  def offer_reference_question?
+    normalize(question).match?(/\b(programu|program|programme|offer|course|coaching|service|huduma|product)\b/)
+  end
+
+  def help_or_suitability_question?
+    normalize(question).match?(/\b(help|helps|support|suitable|fit|benefit|benefits|useful|saidia|kusaidia|kunisaidia|msaada)\b/)
+  end
+
+  def selected_offer_document?(document)
+    Array(document.offer_ids).filter_map { |id| Integer(id, exception: false) }.include?(offer.id)
   end
 
   def document_expired?(document)
