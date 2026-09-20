@@ -24,6 +24,13 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   GREETING_TOKENS = %w[hello hi hey habari mambo].freeze
+  SOCIAL_GREETING_PATTERNS = [
+    /\A(?:hello|hi|hey)(?: there)? how (?:are|re) you(?: doing)?\??\z/,
+    /\Ahow (?:are|re) you(?: doing)?\??\z/,
+    /\A(?:how is it going|how s it going)\??\z/,
+    /\A(?:habari|mambo)(?: ukoje|mkoje| hali yako ikoje| habari yako)\??\z/,
+    /\A(?:ukoje|mkoje|hali yako ikoje|habari yako)\??\z/
+  ].freeze
   ACKNOWLEDGMENT_TOKENS = %w[ok okay sawa asante thanks].freeze
   QUALIFICATION_TOKENS = %w[
     business biashara course agency leads lead inquiries customers budget owner founder sales
@@ -204,8 +211,8 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def greeting?
-    tokens.any? { |token| GREETING_TOKENS.include?(token) } &&
-      (tokens - GREETING_TOKENS - ['there']).empty?
+    (tokens.any? { |token| GREETING_TOKENS.include?(token) } &&
+      (tokens - GREETING_TOKENS - ['there']).empty?) || SOCIAL_GREETING_PATTERNS.any? { |pattern| normalized.match?(pattern) }
   end
 
   def qualification_answer?

@@ -269,6 +269,32 @@ RSpec.describe AiLeadEmployee::ConversationIntentClassifier do
     expect(english).to be_safe_conversation
   end
 
+  [
+    'Hello. How are you?', 'Hi, how are you doing?', 'How are you?',
+    'Habari, ukoje?', 'Mambo, hali yako ikoje?', 'Ukoje?'
+  ].each do |message|
+    it "classifies a complete English or Swahili wellbeing greeting as safe conversation: #{message}" do
+      result = described_class.new(message: message).perform
+
+      expect(result.intent).to eq(:greeting)
+      expect(result).to be_safe_conversation
+    end
+  end
+
+  {
+    'Hello, what does your offer include?' => :business_question,
+    'Habari, bei ya huduma ni nini?' => :risky_question
+  }.each do |message, expected_intent|
+    it "keeps a business or price question after a greeting in its content path: #{message}" do
+      expect(described_class.new(message: message).perform.intent).to eq(expected_intent)
+    end
+  end
+
+  it 'keeps staff and stop requests ahead of social greeting detection' do
+    expect(described_class.new(message: 'Hello, I want to speak to a human.').perform.intent).to eq(:human_request)
+    expect(described_class.new(message: 'Hello, please stop messaging me.').perform.intent).not_to eq(:greeting)
+  end
+
   it 'classifies lead-detail statements as qualification answers' do
     result = described_class.new(message: 'I run an online course business and I need more qualified leads.').perform
 
