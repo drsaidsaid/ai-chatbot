@@ -1044,6 +1044,141 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
+  it 'answers a mixed Swahili business question while recording only supported configured facts' do # rubocop:disable RSpec/ExampleLength
+    offer = create_offer(
+      name: 'Mafunzo ya Biashara',
+      currency: 'TZS',
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        ),
+        question('monthly_business_revenue_tzs', 'What is your current monthly business revenue?').merge(
+          'meaning' => 'Current monthly business revenue', 'answer_type' => 'money', 'period' => 'monthly'
+        ),
+        question('expert_willingness', 'Would you like to speak with an expert?').merge(
+          'meaning' => 'Willingness to speak with an expert', 'answer_type' => 'boolean'
+        )
+      ],
+      next_step: { 'kind' => 'sales_call', 'agreement_field' => 'sales_call_agreement' }
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(
+      content: 'Ndiyo, nina biashara ya kufundisha watu ujuzi mtandaoni. ' \
+               'Mapato yangu ni shilingi 800,000 kwa mwezi, na lengo ni kufikia milioni 3. ' \
+               'Je, programu yenu inaweza kunisaidia? Tafadhali nijibu kwa Kiswahili.'
+    )
+    create(
+      :knowledge_item,
+      account: account,
+      question: triggering_message.content,
+      answer: 'Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.',
+      metadata: { 'source_reference' => 'swahili-business-fit-v1', 'offer_ids' => [offer.id], 'language' => 'swahili' }
+    )
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-mixed-swahili', model: connection.model,
+        content: {
+          reply: 'Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.',
+          observations: [
+            { key: 'business_status', quote: 'Ndiyo, nina biashara ya kufundisha watu ujuzi mtandaoni.',
+              typed_value: 'running', asserted: true, certainty: 'certain' },
+            { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
+              typed_value: 80_000_000, asserted: true, certainty: 'certain' },
+            { key: 'monthly_business_revenue_tzs', quote: 'lengo ni kufikia milioni 3',
+              typed_value: 300_000_000, asserted: true, certainty: 'certain' },
+            { key: 'expert_willingness', quote: 'Je, programu yenu inaweza kunisaidia?',
+              typed_value: true, asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: { expert_willingness: 'Je, ungependa kuzungumza na mtaalamu?' }
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq(
+      "Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.\n\nJe, ungependa kuzungumza na mtaalamu?"
+    )
+    expect(provider_client).to have_received(:complete).once
+    evidence = QualificationEvidence.where(account: account, contact: contact, offer: offer).index_by(&:field_key)
+    expect(evidence).to include('business_status', 'monthly_business_revenue_tzs')
+    expect(evidence['business_status'].value).to include('typed_value' => 'running')
+    expect(evidence['monthly_business_revenue_tzs'].value).to include('typed_value' => 80_000_000, 'currency' => 'TZS')
+    expect(evidence).not_to include('expert_willingness', 'sales_call_agreement')
+  end
+
+  it 'uses one pilot provider attempt to interpret pure free-text qualification when local parsing has no evidence' do
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        ),
+        question('team_size', 'How many team members do you have?').merge('answer_type' => 'number')
+      ]
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'I run a catering business and need more customers.')
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-pure-qualification', model: connection.model,
+        content: {
+          reply: 'Thanks for those details.',
+          observations: [
+            { key: 'business_status', quote: 'I run a catering business and need more customers.',
+              typed_value: 'running', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq("Thanks for those details.\n\nHow many team members do you have?")
+    expect(provider_client).to have_received(:complete).once
+    evidence = QualificationEvidence.find_by!(account: account, contact: contact, offer: offer, field_key: 'business_status')
+    expect(evidence.value).to include('typed_value' => 'running')
+    authority = intent.outbound_message.additional_attributes.fetch('ai_lead_employee')
+    expect(authority).to include('provider_configuration_version' => connection.configuration_version)
+  end
+
+  it 'blocks malformed pilot structured output without sending the raw provider payload' do
+    offer = create_offer(qualification_mode: 'enabled', questions: [
+                           question('business_status', 'Do you currently run a business?').merge(
+                             'answer_type' => 'choice', 'options' => %w[running not_running]
+                           )
+                         ])
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'I run a catering business.')
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-malformed-qualification', model: connection.model, content: 'not json',
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_failed')
+    expect(intent.outbound_message.content).to eq(
+      'I cannot give you a confirmed answer yet. I have recorded your question for the team to review.'
+    )
+    expect(intent.outbound_message.content).not_to include('not json')
+    expect(QualificationEvidence.where(account: account, contact: contact, offer: offer, field_key: 'business_status')).to be_empty
+  end
+
   it 'records an explicit human-help Review without inserting a qualification question' do
     triggering_message.update!(content: 'Please let me speak to a human.')
     conversation.reload
@@ -1262,9 +1397,10 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       'enabled' => true, 'required' => true, 'purpose' => 'fit' }
   end
 
-  def create_offer(name: 'Growth coaching', qualification_mode: 'disabled', questions: [], next_step: { 'kind' => 'answer_only' })
+  def create_offer(name: 'Growth coaching', currency: 'USD', qualification_mode: 'disabled', questions: [],
+                   next_step: { 'kind' => 'answer_only' })
     AiLeadEmployee::Offer.create!(
-      account: account, name: name, currency: 'USD', enabled: true,
+      account: account, name: name, currency: currency, enabled: true,
       configuration: {
         'qualification_mode' => qualification_mode,
         'next_step' => next_step,
@@ -1274,6 +1410,19 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
         'score_weights' => {},
         'score_thresholds' => { 'qualified' => 60, 'highly_qualified' => 80 }
       }
+    )
+  end
+
+  def create_pilot_authorization(connection)
+    AiLeadEmployee::PilotAuthorization.create!(
+      account: account, inbox: channel.inbox, contact: contact, conversation: conversation,
+      ai_provider_connection: connection, authorized_by_platform_app: create(:platform_app), recipient: contact_inbox.source_id,
+      control_version: conversation.control_version, provider_configuration_version: connection.configuration_version,
+      max_attempts: 3, max_spend_usd: 1, provider_limit_usd: 1,
+      external_owner_approval_reference: 'test-owner-approval', provider_limit_verified_at: Time.current,
+      provider_limit_evidence: { kind: 'openrouter_key_limit', key_fingerprint: 'sha256:test',
+                                 verification_digest: 'sha256:response' },
+      starts_at: 1.minute.ago, expires_at: 1.hour.from_now
     )
   end
 end

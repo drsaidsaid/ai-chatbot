@@ -121,10 +121,12 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
     CONTENT_INTENT_CHECKS.find { |_intent, predicate| send(predicate) }&.first || :generic_safe
   end
 
-  def preclassified_intent
-    return :qualification_answer if pending_offer_answer?
+  def preclassified_intent # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     return :business_question if resolved_scope_question?
     return :scope_clarification if business_scope_relevance&.reclarification_required?
+    return :business_question if explicit_question? && account && offer.present? && token_match?(QUALIFICATION_TOKENS)
+    return :business_question if explicit_question? && pending_offer_answer?
+    return :qualification_answer if pending_offer_answer?
   end
 
   def resolved_scope_question?
@@ -240,7 +242,14 @@ class AiLeadEmployee::ConversationIntentClassifier # rubocop:disable Metrics/Cla
   end
 
   def question?
-    account ? business_scope_relevance.information_request? : AiLeadEmployee::InformationRequest.call(message)
+    request = AiLeadEmployee::InformationRequest.call(message, configured_names: [offer&.name])
+    return request unless account
+
+    business_scope_relevance.information_request? || (offer.present? && request)
+  end
+
+  def explicit_question?
+    message.include?('?')
   end
 
   def token_match?(expected_tokens)

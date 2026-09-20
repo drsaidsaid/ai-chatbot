@@ -2,10 +2,11 @@
 
 # Called inside the qualification owner's Conversation, Offer and Contact locks.
 class AiLeadEmployee::OfferEvidenceRecorder
-  def initialize(conversation:, offer:, incoming_message:)
+  def initialize(conversation:, offer:, incoming_message:, observations: nil)
     @conversation = conversation
     @offer = offer
     @incoming_message = incoming_message
+    @provided_observations = observations
   end
 
   def perform
@@ -29,7 +30,9 @@ class AiLeadEmployee::OfferEvidenceRecorder
     incoming_message&.persisted? && incoming_message.incoming? && !incoming_message.private?
   end
 
-  def observations # rubocop:disable Metrics/CyclomaticComplexity
+  def observations # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    return @provided_observations if @provided_observations
+
     proposal = booking_proposal_observation
     return proposal if proposal.present?
 

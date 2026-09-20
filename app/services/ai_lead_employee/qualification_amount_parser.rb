@@ -18,11 +18,11 @@ class AiLeadEmployee::QualificationAmountParser
   CURRENCY_TOKEN = /\b(?:tzs|tshs?|usd|kes|ugx|eur|gbp)\b|\$/
   NEGATIVE_AMOUNT = /[-−]\s*(?:(?:#{CURRENCY_TOKEN}|shilingi)\s*)*(?:\d|milioni\b|laki\b|elfu\b)/
 
-  def self.parse(text)
+  def self.parse(text, default_currency: nil)
     text = text.to_s.downcase
     return if text.match?(/\b(?:or|au|between|kati|nusu|billion|bilioni)\b/) || text.match?(NEGATIVE_AMOUNT)
 
-    currencies = currencies(text)
+    currencies = currencies(text, default_currency: default_currency)
     return if currencies.size > 1
 
     amount = text.match?(/\b(?:milioni|laki|elfu)\b/) ? swahili_amount(text) : numeric_amount(text)
@@ -39,14 +39,16 @@ class AiLeadEmployee::QualificationAmountParser
     minor.to_i if minor.frac.zero? && minor <= 9_007_199_254_740_991
   end
 
-  def self.currencies(text)
-    text.scan(CURRENCY_TOKEN).map do |token|
+  def self.currencies(text, default_currency: nil)
+    tokens = text.scan(CURRENCY_TOKEN).map do |token|
       case token
       when 'tsh', 'tshs' then 'TZS'
       when '$' then 'USD' # Existing pilot compatibility, not an inferred FX rate.
       else token.upcase
       end
-    end.uniq
+    end
+    tokens << 'TZS' if tokens.empty? && default_currency == 'TZS' && text.match?(/\bshilingi\b/)
+    tokens.uniq
   end
 
   def self.numeric_amount(text)
