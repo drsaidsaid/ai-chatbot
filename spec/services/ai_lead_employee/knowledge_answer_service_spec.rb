@@ -161,6 +161,27 @@ RSpec.describe AiLeadEmployee::KnowledgeAnswerService do
     expect(result.sources).to contain_exactly(include(id: document.id, offer_id: selected_offer.id))
   end
 
+  it 'recognizes a Swahili help question with a question suffix as selected Offer suitability' do
+    document = create(
+      :knowledge_document,
+      account: account,
+      title: 'Online Profits programme',
+      body: 'Online Profits is a 12-month programme where business experts help founders build an online business.',
+      general_question_access: false,
+      offer_ids: [selected_offer.id]
+    )
+
+    result = described_class.new(
+      account: account,
+      offer: selected_offer,
+      question: 'Nataka kujua zaidi kuhusu huduma mnazotoa. Mnaweza kunisaidiaje kujenga biashara mtandaoni?',
+      language: :swahili
+    ).perform
+
+    expect(result).to be_answered
+    expect(result.sources).to contain_exactly(include(id: document.id, offer_id: selected_offer.id))
+  end
+
   it 'does not use selected Offer document fallback for an unknown detail question' do
     create(
       :knowledge_document,
