@@ -51,6 +51,16 @@ RSpec.describe AiLeadEmployee::ConversationFollowUpPolicy do
     expect(result).to eq(question)
   end
 
+  it 'keeps a validated localized Swahili prompt with a terminal question word' do
+    question = 'Una wafanyakazi wangapi?'
+    result = described_class.new(
+      classification: classification_type.new(intent: :qualification_answer, language: :swahili),
+      qualification_result: qualification_type.new(qualification_mode: 'enabled', next_question: question)
+    ).perform
+
+    expect(result).to eq(question)
+  end
+
   it 'does not restore a prompt for disabled or not-configured qualification' do
     [:disabled, nil].each do |mode|
       result = described_class.new(

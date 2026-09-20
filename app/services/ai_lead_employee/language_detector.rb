@@ -9,6 +9,7 @@ class AiLeadEmployee::LanguageDetector
     hapana huduma je jinsi labda lini mna mnafundisha naam naweza ndiyo ndivyo ni ninaweza ningependa nini sawa
     sijui simaanishi siwezi tafadhali unaongea utapeli wapi ukoje mkoje ikoje
   ] + AiLeadEmployee::InformationRequest::SWAHILI_LANGUAGE_TOKENS).uniq.freeze
+  SWAHILI_QUESTION_SUFFIXES = %w[ngapi].freeze
 
   def self.detect(content)
     new(content).detect
@@ -29,7 +30,9 @@ class AiLeadEmployee::LanguageDetector
   attr_reader :content
 
   def swahili?
-    normalized_tokens.intersect?(SWAHILI_TOKENS)
+    normalized_tokens.intersect?(SWAHILI_TOKENS) || normalized_tokens.any? do |token|
+      SWAHILI_QUESTION_SUFFIXES.any? { |suffix| token.end_with?(suffix) }
+    end
   end
 
   def normalized_tokens
