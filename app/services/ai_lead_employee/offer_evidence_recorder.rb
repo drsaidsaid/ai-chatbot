@@ -113,12 +113,12 @@ class AiLeadEmployee::OfferEvidenceRecorder
                   value: value, observed_at: incoming_message.created_at)
   end
 
-  def answered_question # rubocop:disable Metrics/CyclomaticComplexity
+  def answered_question
     previous = previous_message
     return unless previous&.outgoing?
 
     metadata = previous.additional_attributes.dig('ai_lead_employee', 'qualification') || {}
-    return unless metadata['offer_id'] == offer.id && metadata['configuration_version'] == offer.configuration_version
+    return unless current_prompt_metadata?(metadata)
 
     matches = matching_questions(previous, metadata)
     @answered_message = previous if matches.one?
@@ -131,8 +131,14 @@ class AiLeadEmployee::OfferEvidenceRecorder
 
   def matching_questions(previous, metadata)
     offer.questions.select do |question|
-      previous.content.to_s.end_with?(question['prompt']) && metadata['next_question'] == question['prompt'] &&
-        metadata['next_question_key'] == question['key']
+      question['enabled'] != false && metadata['next_question_key'] == question['key'] &&
+        previous.content.to_s.end_with?(metadata['next_question'].to_s)
     end
+  end
+
+  def current_prompt_metadata?(metadata)
+    metadata['offer_id'] == offer.id &&
+      metadata['configuration_version'] == offer.configuration_version &&
+      metadata.fetch('selection_version', conversation.offer_selection_version) == conversation.offer_selection_version
   end
 end

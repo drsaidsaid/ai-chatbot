@@ -258,11 +258,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def structured_qualification_response_for(qualification_result)
-    if structured_qualification_interpretation_required?(qualification_result)
-      prepare_structured_qualification_interpretation!(qualification_result)
-    elsif local_qualification_reply?(qualification_result)
-      complete_conversation_reply!(qualification_result)
-    end
+    prepare_structured_qualification_interpretation!(qualification_result) if structured_qualification_interpretation_required?(qualification_result)
   end
 
   def process_conversation_reply!(qualification_result = nil)
@@ -314,11 +310,6 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     deterministic_money_evidence?(evidence) && prompted_question.fetch('answer_type') == 'money'
   end
 
-  def local_qualification_reply?(qualification_result)
-    classification.intent == :qualification_answer && qualification_result.present? &&
-      Array(qualification_result.new_evidence).present?
-  end
-
   def enabled_offer_field_keys
     selected_offer&.questions.to_a.reject { |field| field['enabled'] == false }.pluck('key')
   end
@@ -346,12 +337,14 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def current_prompt_metadata?(metadata)
-    metadata['offer_id'] == selected_offer.id && metadata['configuration_version'] == selected_offer.configuration_version
+    metadata['offer_id'] == selected_offer.id &&
+      metadata['configuration_version'] == selected_offer.configuration_version &&
+      metadata.fetch('selection_version', conversation.offer_selection_version) == conversation.offer_selection_version
   end
 
   def prompted_question_matches?(field, metadata)
-    field['enabled'] != false && previous_prompted_message.content.to_s.end_with?(field['prompt']) &&
-      metadata['next_question'] == field['prompt'] && metadata['next_question_key'] == field['key']
+    field['enabled'] != false && metadata['next_question_key'] == field['key'] &&
+      previous_prompted_message.content.to_s.end_with?(metadata['next_question'].to_s)
   end
 
   def deterministic_money_evidence?(evidence)

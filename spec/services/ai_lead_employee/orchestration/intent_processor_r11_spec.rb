@@ -1044,6 +1044,46 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
+  it 'binds a lead reply to the localized prompt that was actually emitted' do
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        ),
+        question('team_size', 'How many team members do you have?').merge('answer_type' => 'number')
+      ]
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Wateja wangu ni wa hapa. Tafadhali nijibu kwa Kiswahili.')
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-localized-first-prompt', model: connection.model,
+        content: {
+          reply: 'Asante kwa maelezo.',
+          observations: [
+            { key: 'business_status', quote: 'Wateja wangu ni wa hapa.',
+              typed_value: 'running', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: { team_size: 'Una wafanyakazi wangapi?' }
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+    followup, followup_intent = followup_records('12')
+
+    described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+
+    expect(intent.outbound_message.content).to eq("Asante kwa maelezo.\n\nUna wafanyakazi wangapi?")
+    expect(followup.reload).to be_incoming
+    evidence = QualificationEvidence.find_by!(account: account, contact: contact, offer: offer, field_key: 'team_size')
+    expect(evidence.value).to include('typed_value' => 12, 'polarity' => 'positive')
+    expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+  end
+
   it 'answers a mixed Swahili business question while recording only supported configured facts' do # rubocop:disable RSpec/ExampleLength
     offer = create_offer(
       name: 'Mafunzo ya Biashara',
@@ -1699,6 +1739,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
           'qualification' => {
             'offer_id' => offer.id,
             'configuration_version' => offer.configuration_version,
+            'selection_version' => conversation.offer_selection_version,
             'next_question' => prompt,
             'next_question_key' => key
           }
