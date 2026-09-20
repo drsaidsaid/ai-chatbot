@@ -2,6 +2,8 @@
 
 # Called only after matching a real outgoing question in this Conversation/revision.
 class AiLeadEmployee::OfferTypedAnswer
+  COMPOUND_BOOLEAN_CANDIDATE = /\A(?:yes|no|ndiyo|ndio|hapana)[,;.!]\s+\S/i
+
   def initialize(question:, content:, currency:)
     @question = question
     @provided_value = content
@@ -17,6 +19,10 @@ class AiLeadEmployee::OfferTypedAnswer
     return if typed.nil?
 
     { 'value' => content, 'typed_value' => typed, 'polarity' => typed == false ? 'negative' : 'positive' }.merge(money_attributes)
+  end
+
+  def compound_boolean_candidate?
+    question['answer_type'] == 'boolean' && content.match?(COMPOUND_BOOLEAN_CANDIDATE)
   end
 
   private

@@ -17,7 +17,7 @@ class AiLeadEmployee::OfferEvidenceRecorder
   end
 
   def answers_pending_question?
-    processable_message? && observations.present?
+    processable_message? && (observations.present? || structured_answer_candidate?)
   end
 
   private
@@ -70,6 +70,15 @@ class AiLeadEmployee::OfferEvidenceRecorder
     answer = AiLeadEmployee::OfferTypedAnswer.new(question: question, content: incoming_message.content, currency: offer.currency).observation
     answer = attach_agreed_time(answer, key)
     observations[key] = answer if answer
+  end
+
+  def structured_answer_candidate?
+    question = answered_question
+    return false unless question
+
+    AiLeadEmployee::OfferTypedAnswer.new(
+      question: question, content: incoming_message.content, currency: offer.currency
+    ).compound_boolean_candidate?
   end
 
   def attach_agreed_time(answer, key) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
