@@ -40,7 +40,7 @@ class AiLeadEmployee::OfferTypedAnswer
   def money_value
     return unless complete_money_answer?
 
-    @money = AiLeadEmployee::QualificationAmountParser.parse(content.downcase)
+    @money = AiLeadEmployee::QualificationAmountParser.parse(content.downcase, default_currency: currency)
     @money['amount_minor'] if @money && @money['currency'] == currency
   end
 

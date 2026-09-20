@@ -99,6 +99,40 @@ RSpec.describe 'Optional business-defined Offer qualification', type: :request d
     expect(result.handoff.qualification_snapshot.fetch('assessment').dig('action_eligibility', 'status')).to eq('met')
   end
 
+  it 'creates the sales handoff when the lead gives the last required deterministic answer' do
+    offer = r09_create_offer(enabled_configuration)
+    conversation = r09_conversation(offer: offer)
+    record_evidence(conversation, offer, 'problem', 'We need more qualified inquiries')
+    record_evidence(conversation, offer, 'contact_details', '+255700222333')
+    record_evidence(conversation, offer, 'urgency', 'We are ready now')
+    create(
+      :message,
+      account: account,
+      inbox: r09_channel.inbox,
+      conversation: conversation,
+      message_type: :outgoing,
+      content: "Thanks.\n\nWould you like our sales team to call you?",
+      additional_attributes: {
+        'ai_lead_employee' => {
+          'qualification' => {
+            'offer_id' => offer.fetch('id'),
+            'configuration_version' => offer.fetch('version'),
+            'selection_version' => conversation.offer_selection_version,
+            'next_question' => 'Would you like our sales team to call you?',
+            'next_question_key' => 'sales_call_agreement'
+          }
+        }
+      }
+    )
+
+    _message, intent = r09_receive(conversation, 'Yes')
+
+    expect(intent.reload.decision).to include('status' => 'highly_qualified_handoff')
+    handoff = LeadHandoff.find_by!(account: account, conversation: conversation)
+    expect(handoff.qualification_snapshot.fetch('assessment').dig('action_eligibility', 'status')).to eq('met')
+    expect(conversation.reload).to be_human_active
+  end
+
   it 'does not create a sales handoff without explicit Lead agreement' do
     configuration = enabled_configuration
     configuration['questions'].reject! { |question| question['key'] == 'sales_call_agreement' }

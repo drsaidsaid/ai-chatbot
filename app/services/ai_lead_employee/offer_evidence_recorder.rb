@@ -2,10 +2,11 @@
 
 # Called inside the qualification owner's Conversation, Offer and Contact locks.
 class AiLeadEmployee::OfferEvidenceRecorder
-  def initialize(conversation:, offer:, incoming_message:)
+  def initialize(conversation:, offer:, incoming_message:, observations: nil)
     @conversation = conversation
     @offer = offer
     @incoming_message = incoming_message
+    @provided_observations = observations
   end
 
   def perform
@@ -29,7 +30,9 @@ class AiLeadEmployee::OfferEvidenceRecorder
     incoming_message&.persisted? && incoming_message.incoming? && !incoming_message.private?
   end
 
-  def observations # rubocop:disable Metrics/CyclomaticComplexity
+  def observations # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    return @provided_observations if @provided_observations
+
     proposal = booking_proposal_observation
     return proposal if proposal.present?
 
@@ -110,12 +113,12 @@ class AiLeadEmployee::OfferEvidenceRecorder
                   value: value, observed_at: incoming_message.created_at)
   end
 
-  def answered_question # rubocop:disable Metrics/CyclomaticComplexity
+  def answered_question
     previous = previous_message
     return unless previous&.outgoing?
 
     metadata = previous.additional_attributes.dig('ai_lead_employee', 'qualification') || {}
-    return unless metadata['offer_id'] == offer.id && metadata['configuration_version'] == offer.configuration_version
+    return unless current_prompt_metadata?(metadata)
 
     matches = matching_questions(previous, metadata)
     @answered_message = previous if matches.one?
@@ -128,8 +131,15 @@ class AiLeadEmployee::OfferEvidenceRecorder
 
   def matching_questions(previous, metadata)
     offer.questions.select do |question|
-      previous.content.to_s.end_with?(question['prompt']) && metadata['next_question'] == question['prompt'] &&
-        metadata['next_question_key'] == question['key']
+      question['enabled'] != false && metadata['next_question_key'] == question['key'] &&
+        previous.content.to_s.end_with?(metadata['next_question'].to_s)
     end
+  end
+
+  def current_prompt_metadata?(metadata)
+    metadata['next_question'].is_a?(String) && metadata['next_question'].present? &&
+      metadata['offer_id'] == offer.id &&
+      metadata['configuration_version'] == offer.configuration_version &&
+      metadata.fetch('selection_version', conversation.offer_selection_version) == conversation.offer_selection_version
   end
 end

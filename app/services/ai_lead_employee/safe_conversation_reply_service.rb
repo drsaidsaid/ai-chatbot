@@ -73,7 +73,7 @@ class AiLeadEmployee::SafeConversationReplyService
   end
 
   def useful_next_question
-    return unless classification.intent.in?(%i[qualification_answer personalized_strategy])
+    return unless classification.intent.in?(%i[greeting qualification_answer personalized_strategy])
     return unless qualification_result&.qualification_mode == 'enabled'
 
     qualification_result.next_question
