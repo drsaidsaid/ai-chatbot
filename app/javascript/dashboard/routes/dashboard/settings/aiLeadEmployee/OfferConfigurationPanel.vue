@@ -1689,6 +1689,7 @@ onMounted(load);
                   v-model="node.field"
                   :class="inputClass"
                   :data-testid="`group-field-${groupIndex}-${nodeIndex}`"
+                  :aria-label="label('FIELD')"
                   @change="resetRule(node)"
                 >
                   <option
@@ -1703,6 +1704,7 @@ onMounted(load);
                   v-model="node.operator"
                   :class="inputClass"
                   :data-testid="`group-operator-${groupIndex}-${nodeIndex}`"
+                  :aria-label="label('OPERATOR')"
                   @change="resetRule(node)"
                 >
                   <option
@@ -1710,43 +1712,58 @@ onMounted(load);
                     :key="operator"
                     :value="operator"
                   >
-                    {{ operator }}
+                    {{ label(`OP_${operator.toUpperCase()}`) }}
                   </option>
                 </select>
-                <input
-                  v-if="fields[node.field]?.answer_type === 'money'"
-                  v-model="node.value.amount"
-                  inputmode="decimal"
-                  :class="inputClass"
-                />
-                <input
-                  v-else-if="fields[node.field]?.answer_type === 'number'"
-                  v-model.number="node.value"
-                  type="number"
-                  :class="inputClass"
-                />
-                <select
-                  v-else-if="fields[node.field]?.answer_type === 'boolean'"
-                  v-model="node.value"
-                  :class="inputClass"
+                <template
+                  v-if="
+                    !['positive', 'negative', 'known'].includes(node.operator)
+                  "
                 >
-                  <option :value="true">{{ label('YES') }}</option>
-                  <option :value="false">{{ label('NO') }}</option>
-                </select>
-                <select
-                  v-else-if="fields[node.field]?.answer_type === 'choice'"
-                  v-model="node.value"
-                  :class="inputClass"
-                >
-                  <option
-                    v-for="option in fields[node.field].options"
-                    :key="option"
-                    :value="option"
+                  <input
+                    v-if="fields[node.field]?.answer_type === 'money'"
+                    v-model="node.value.amount"
+                    inputmode="decimal"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
+                  />
+                  <input
+                    v-else-if="fields[node.field]?.answer_type === 'number'"
+                    v-model.number="node.value"
+                    type="number"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
+                  />
+                  <select
+                    v-else-if="fields[node.field]?.answer_type === 'boolean'"
+                    v-model="node.value"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
                   >
-                    {{ option }}
-                  </option>
-                </select>
-                <input v-else v-model="node.value" :class="inputClass" />
+                    <option :value="true">{{ label('YES') }}</option>
+                    <option :value="false">{{ label('NO') }}</option>
+                  </select>
+                  <select
+                    v-else-if="fields[node.field]?.answer_type === 'choice'"
+                    v-model="node.value"
+                    :multiple="node.operator === 'in'"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
+                  >
+                    <option
+                      v-for="option in fields[node.field].options"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                  <input v-else v-model="node.value" :class="inputClass" />
+                </template>
                 <button
                   type="button"
                   :class="buttonClass"
@@ -1778,6 +1795,7 @@ onMounted(load);
                   <select
                     v-model="leaf.field"
                     :class="inputClass"
+                    :aria-label="label('FIELD')"
                     @change="resetRule(leaf)"
                   >
                     <option
@@ -1791,6 +1809,7 @@ onMounted(load);
                   <select
                     v-model="leaf.operator"
                     :class="inputClass"
+                    :aria-label="label('OPERATOR')"
                     @change="resetRule(leaf)"
                   >
                     <option
@@ -1798,43 +1817,54 @@ onMounted(load);
                       :key="operator"
                       :value="operator"
                     >
-                      {{ operator }}
+                      {{ label(`OP_${operator.toUpperCase()}`) }}
                     </option>
                   </select>
-                  <input
-                    v-if="fields[leaf.field]?.answer_type === 'money'"
-                    v-model="leaf.value.amount"
-                    inputmode="decimal"
-                    :class="inputClass"
-                  />
-                  <input
-                    v-else-if="fields[leaf.field]?.answer_type === 'number'"
-                    v-model.number="leaf.value"
-                    type="number"
-                    :class="inputClass"
-                  />
-                  <select
-                    v-else-if="fields[leaf.field]?.answer_type === 'boolean'"
-                    v-model="leaf.value"
-                    :class="inputClass"
+                  <template
+                    v-if="
+                      !['positive', 'negative', 'known'].includes(leaf.operator)
+                    "
                   >
-                    <option :value="true">{{ label('YES') }}</option>
-                    <option :value="false">{{ label('NO') }}</option>
-                  </select>
-                  <select
-                    v-else-if="fields[leaf.field]?.answer_type === 'choice'"
-                    v-model="leaf.value"
-                    :class="inputClass"
-                  >
-                    <option
-                      v-for="option in fields[leaf.field].options"
-                      :key="option"
-                      :value="option"
+                    <input
+                      v-if="fields[leaf.field]?.answer_type === 'money'"
+                      v-model="leaf.value.amount"
+                      inputmode="decimal"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
+                    />
+                    <input
+                      v-else-if="fields[leaf.field]?.answer_type === 'number'"
+                      v-model.number="leaf.value"
+                      type="number"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
+                    />
+                    <select
+                      v-else-if="fields[leaf.field]?.answer_type === 'boolean'"
+                      v-model="leaf.value"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
                     >
-                      {{ option }}
-                    </option>
-                  </select>
-                  <input v-else v-model="leaf.value" :class="inputClass" />
+                      <option :value="true">{{ label('YES') }}</option>
+                      <option :value="false">{{ label('NO') }}</option>
+                    </select>
+                    <select
+                      v-else-if="fields[leaf.field]?.answer_type === 'choice'"
+                      v-model="leaf.value"
+                      :multiple="leaf.operator === 'in'"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
+                    >
+                      <option
+                        v-for="option in fields[leaf.field].options"
+                        :key="option"
+                        :value="option"
+                      >
+                        {{ option }}
+                      </option>
+                    </select>
+                    <input v-else v-model="leaf.value" :class="inputClass" />
+                  </template>
                   <button
                     type="button"
                     :class="buttonClass"

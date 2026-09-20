@@ -16,7 +16,7 @@ bundle exec rspec spec/requests/ai_lead_employee/offer_requirement_groups_spec.r
 
 ./node_modules/.bin/vitest run \
   app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js
-# 20 tests passed
+# 21 tests passed
 
 bundle exec rubocop <scoped changed Ruby files>
 # 0 offenses

@@ -968,6 +968,10 @@ it('edits and reloads typed alternative groups without losing children when swit
   expect(wrapper.get('[data-testid="group-field-0-0"]').element.value).toBe(
     'budget'
   );
+  await wrapper.get('[data-testid="group-operator-0-0"]').setValue('known');
+  expect(wrapper.find('[data-testid="group-value-0-0"]').exists()).toBe(false);
+  await wrapper.get('[data-testid="group-operator-0-0"]').setValue('lt');
+  await wrapper.get('[data-testid="group-value-0-0"]').setValue('750000.00');
   await wrapper.get('form').trigger('submit');
   await flushPromises();
 
@@ -978,9 +982,40 @@ it('edits and reloads typed alternative groups without losing children when swit
         {
           field: 'budget',
           operator: 'lt',
-          value: { amount: '1000000.00', currency: 'TZS' },
+          value: { amount: '750000.00', currency: 'TZS' },
         },
       ],
     },
   ]);
+});
+
+it('saves boolean group values as booleans through rendered controls', async () => {
+  const saved = offer();
+  saved.questions.push({
+    key: 'ready',
+    meaning: 'Ready',
+    answer_type: 'boolean',
+    prompt: 'Ready?',
+    position: 1,
+    enabled: true,
+    required: true,
+    purpose: 'fit',
+  });
+  saved.requirement_groups = [
+    {
+      dimension: 'fit',
+      all: [{ field: 'ready', operator: 'eq', value: true }],
+    },
+  ];
+  axios.get.mockResolvedValue({ data: [saved] });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="group-value-0-0"]').setValue('false');
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(
+    axios.patch.mock.calls[0][1].offer.requirement_groups[0].all[0].value
+  ).toBe(false);
 });
