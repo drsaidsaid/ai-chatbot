@@ -629,15 +629,7 @@ onMounted(load);
             t('AI_LEAD_EMPLOYEE.OFFERS.REVISION', { version: draft.version })
           }}
         </p>
-        <section class="grid gap-3" data-testid="business-about-section">
-          <div>
-            <h3 class="text-base font-semibold text-n-slate-12">
-              {{ label('ABOUT_BUSINESS') }}
-            </h3>
-            <p class="mt-1 text-sm leading-6 text-n-slate-11">
-              {{ label('ABOUT_BUSINESS_HELP') }}
-            </p>
-          </div>
+        <section class="grid gap-3" data-testid="offer-details-section">
           <label class="grid gap-1 text-sm">
             {{ label('NAME') }}
             <input
@@ -654,7 +646,7 @@ onMounted(load);
         </section>
         <section
           v-if="draft.id"
-          class="grid gap-4 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
+          class="order-2 grid gap-4 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
           data-testid="commercial-terms-section"
         >
           <div class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-start">
@@ -934,7 +926,7 @@ onMounted(load);
         </section>
         <section
           v-if="draft.id"
-          class="grid gap-3 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
+          class="order-1 grid gap-3 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
           data-testid="business-setup-section"
         >
           <div>
@@ -1174,7 +1166,10 @@ onMounted(load);
             </div>
           </article>
         </section>
-        <section class="grid gap-3" data-testid="response-settings-section">
+        <section
+          class="order-4 grid gap-3"
+          data-testid="response-settings-section"
+        >
           <h3 class="text-base font-semibold text-n-slate-12">
             {{ label('HOW_ASSISTANT_RESPONDS') }}
           </h3>
@@ -1182,7 +1177,7 @@ onMounted(load);
             {{ label('RESPONSE_SETTINGS_CURRENT') }}
           </p>
         </section>
-        <section class="grid gap-3" data-testid="next-step-section">
+        <section class="order-5 grid gap-3" data-testid="next-step-section">
           <div>
             <h3 class="text-base font-semibold text-n-slate-12">
               {{ label('WHAT_HAPPENS_NEXT') }}
@@ -1260,7 +1255,7 @@ onMounted(load);
           </div>
         </section>
         <!-- eslint-disable vue/no-bare-strings-in-template -->
-        <section class="grid gap-3" data-testid="who-we-help-section">
+        <section class="order-3 grid gap-3" data-testid="who-we-help-section">
           <div>
             <h3 class="text-base font-semibold text-n-slate-12">
               {{ label('WHO_WE_HELP') }}
@@ -1291,50 +1286,6 @@ onMounted(load);
                 />
               </label>
               <label class="grid gap-1 text-sm">
-                {{ label('ANSWER_TYPE') }}
-                <select
-                  v-model="question.answer_type"
-                  :class="inputClass"
-                  :disabled="Boolean(builtinFields[question.key])"
-                >
-                  <option
-                    v-for="type in [
-                      'text',
-                      'boolean',
-                      'number',
-                      'money',
-                      'choice',
-                    ]"
-                    :key="type"
-                    :value="type"
-                  >
-                    {{ label(`TYPE_${type.toUpperCase()}`) }}
-                  </option>
-                </select>
-              </label>
-              <label
-                v-if="question.answer_type === 'choice'"
-                class="grid gap-1 text-sm"
-              >
-                {{ label('CHOICES') }}
-                <textarea
-                  :value="(question.options || []).join('\n')"
-                  :class="inputClass"
-                  @input="
-                    question.options = $event.target.value
-                      .split('\n')
-                      .filter(Boolean)
-                  "
-                />
-              </label>
-              <label
-                v-if="['number', 'money'].includes(question.answer_type)"
-                class="grid gap-1 text-sm"
-              >
-                {{ label('PERIOD') }}
-                <input v-model="question.period" :class="inputClass" />
-              </label>
-              <label class="grid gap-1 text-sm">
                 {{ label('PROMPT') }}
                 <input
                   v-model="question.prompt"
@@ -1359,40 +1310,94 @@ onMounted(load);
                   </option>
                 </select>
               </label>
-              <div class="flex flex-wrap items-center gap-3">
-                <label class="flex items-center gap-2 text-sm">
-                  <input v-model="question.enabled" type="checkbox" />
-                  {{ label('ENABLED') }}
+              <details
+                :data-testid="`question-technical-${index}`"
+                class="grid gap-3"
+              >
+                <summary
+                  class="cursor-pointer text-sm font-medium text-n-slate-12"
+                >
+                  {{ label('ADVANCED_TECHNICAL_CONTROLS') }}
+                </summary>
+                <label class="grid gap-1 text-sm">
+                  {{ label('ANSWER_TYPE') }}
+                  <select
+                    v-model="question.answer_type"
+                    :class="inputClass"
+                    :disabled="Boolean(builtinFields[question.key])"
+                  >
+                    <option
+                      v-for="type in [
+                        'text',
+                        'boolean',
+                        'number',
+                        'money',
+                        'choice',
+                      ]"
+                      :key="type"
+                      :value="type"
+                    >
+                      {{ label(`TYPE_${type.toUpperCase()}`) }}
+                    </option>
+                  </select>
                 </label>
-                <label class="flex items-center gap-2 text-sm">
-                  <input v-model="question.required" type="checkbox" />
-                  {{ label('REQUIRED') }}
+                <label
+                  v-if="question.answer_type === 'choice'"
+                  class="grid gap-1 text-sm"
+                >
+                  {{ label('CHOICES') }}
+                  <textarea
+                    :value="(question.options || []).join('\n')"
+                    :class="inputClass"
+                    @input="
+                      question.options = $event.target.value
+                        .split('\n')
+                        .filter(Boolean)
+                    "
+                  />
                 </label>
-                <button
-                  type="button"
-                  :class="buttonClass"
-                  :disabled="index === 0"
-                  :data-testid="`question-up-${index}`"
-                  @click="moveQuestion(index, -1)"
+                <label
+                  v-if="['number', 'money'].includes(question.answer_type)"
+                  class="grid gap-1 text-sm"
                 >
-                  {{ label('UP') }}
-                </button>
-                <button
-                  type="button"
-                  :class="buttonClass"
-                  :disabled="index === draft.questions.length - 1"
-                  @click="moveQuestion(index, 1)"
-                >
-                  {{ label('DOWN') }}
-                </button>
-                <button
-                  type="button"
-                  :class="buttonClass"
-                  @click="draft.questions.splice(index, 1)"
-                >
-                  {{ label('REMOVE') }}
-                </button>
-              </div>
+                  {{ label('PERIOD') }}
+                  <input v-model="question.period" :class="inputClass" />
+                </label>
+                <div class="flex flex-wrap items-center gap-3">
+                  <label class="flex items-center gap-2 text-sm">
+                    <input v-model="question.enabled" type="checkbox" />
+                    {{ label('ENABLED') }}
+                  </label>
+                  <label class="flex items-center gap-2 text-sm">
+                    <input v-model="question.required" type="checkbox" />
+                    {{ label('REQUIRED') }}
+                  </label>
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    :disabled="index === 0"
+                    :data-testid="`question-up-${index}`"
+                    @click="moveQuestion(index, -1)"
+                  >
+                    {{ label('UP') }}
+                  </button>
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    :disabled="index === draft.questions.length - 1"
+                    @click="moveQuestion(index, 1)"
+                  >
+                    {{ label('DOWN') }}
+                  </button>
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    @click="draft.questions.splice(index, 1)"
+                  >
+                    {{ label('REMOVE') }}
+                  </button>
+                </div>
+              </details>
             </div>
             <div class="flex gap-2">
               <select
@@ -1426,7 +1431,10 @@ onMounted(load);
             </div>
           </fieldset>
         </section>
-        <details class="grid gap-3" data-testid="advanced-technical-controls">
+        <details
+          class="order-6 grid gap-3"
+          data-testid="advanced-technical-controls"
+        >
           <summary
             class="cursor-pointer text-base font-semibold text-n-slate-12"
           >
@@ -1993,7 +2001,10 @@ onMounted(load);
             </label>
           </fieldset>
         </details>
-        <section class="grid gap-2" data-testid="preview-publish-section">
+        <section
+          class="order-7 grid gap-2"
+          data-testid="preview-publish-section"
+        >
           <h3 class="text-base font-semibold text-n-slate-12">
             {{ label('PREVIEW_AND_PUBLISH') }}
           </h3>

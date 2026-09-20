@@ -112,7 +112,7 @@ it('keeps the six owner-facing setup sections while technical controls stay coll
   await flushPromises();
 
   expect(
-    wrapper.get('[data-testid="business-about-section"]').text()
+    wrapper.get('[data-testid="business-setup-section"]').text()
   ).toContain('About the business');
   expect(
     wrapper.get('[data-testid="commercial-terms-section"]').text()
@@ -132,8 +132,17 @@ it('keeps the six owner-facing setup sections while technical controls stay coll
   expect(
     wrapper.get('[data-testid="advanced-technical-controls"]').element.open
   ).toBe(false);
+  expect(wrapper.get('[data-testid="question-technical-0"]').element.open).toBe(
+    false
+  );
+  expect(wrapper.get('[data-testid="question-prompt-0"]').isVisible()).toBe(
+    true
+  );
   expect(
     wrapper.get('[data-testid="question-prompt-0"]').attributes('required')
+  ).toBeDefined();
+  expect(
+    wrapper.get('[data-testid="save-offer"]').attributes('formnovalidate')
   ).toBeDefined();
 });
 
