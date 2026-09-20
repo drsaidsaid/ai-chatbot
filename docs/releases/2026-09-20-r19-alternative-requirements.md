@@ -12,7 +12,7 @@ Verification on isolated test database `ale_r19_final_patch_20260919_spec`:
 ```text
 bundle exec rspec spec/requests/ai_lead_employee/offer_requirement_groups_spec.rb \
   spec/requests/ai_lead_employee/business_setup_sources_spec.rb
-# 70 examples, 0 failures
+# 74 examples, 0 failures
 
 ./node_modules/.bin/vitest run \
   app/javascript/dashboard/routes/dashboard/settings/aiLeadEmployee/specs/OfferConfigurationPanel.spec.js

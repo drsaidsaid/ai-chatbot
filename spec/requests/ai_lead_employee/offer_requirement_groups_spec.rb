@@ -17,6 +17,17 @@ RSpec.describe 'Typed alternative Offer requirements', type: :request do
 
     expect(response).to have_http_status(:unprocessable_entity)
     expect(response.parsed_body.fetch('error')).to include('between one and eight')
+
+    malformed = [
+      [{ 'dimension' => 'fit', 'any' => [{ 'field' => 'unknown_field', 'operator' => 'eq', 'value' => true }] }],
+      [{ 'dimension' => 'fit', 'any' => [{ 'any' => [{ 'any' => [{ 'field' => 'business_status',
+                                                                   'operator' => 'eq', 'value' => 'no_business' }] }] }] }]
+    ]
+    malformed.each do |groups|
+      post r09_offers_url, headers: r09_headers,
+                           params: { offer: group_configuration(requirement_groups: groups) }, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
   end
 
   it 'does not ask operating-business revenue when the no-business alternative is known satisfied' do
@@ -49,6 +60,61 @@ RSpec.describe 'Typed alternative Offer requirements', type: :request do
     expect(qualification_payload(offer).fetch('assessment').dig('fit', 'status')).to eq('not_met')
   end
 
+  it 'admits a sales handoff only when the alternative, expert willingness and explicit agreement are met' do
+    offer = r09_create_offer(group_configuration)
+    conversation = r09_conversation(offer: offer)
+    record(conversation, offer, 'business_status', 'no_business')
+    record(conversation, offer, 'expert_willingness', true)
+    record(conversation, offer, 'sales_call_agreement', true)
+    qualification = r09_qualification(offer)
+
+    expect(handoff_for(conversation, qualification).handoff).to be_persisted
+  end
+
+  it 'blocks sales handoff for false expert willingness or absent agreement' do
+    offer = r09_create_offer(group_configuration)
+    conversation = r09_conversation(offer: offer)
+    record(conversation, offer, 'business_status', 'no_business')
+    record(conversation, offer, 'expert_willingness', false)
+    qualification = r09_qualification(offer)
+
+    expect(qualification.assessment.dig('fit', 'status')).to eq('not_met')
+    expect(handoff_for(conversation, qualification).handoff).to be_nil
+  end
+
+  it 'blocks sales handoff for wrong-currency or unknown operating-business revenue' do
+    offer = r09_create_offer(group_configuration)
+    conversation = r09_conversation(offer: offer)
+    record(conversation, offer, 'business_status', 'operating_business')
+    record(conversation, offer, 'expert_willingness', true)
+    post "/api/v1/accounts/#{account.id}/lead_qualifications/#{r09_lead.id}/evidence",
+         headers: r09_headers,
+         params: { offer_id: offer.fetch('id'), conversation_id: conversation.display_id,
+                   field_key: 'monthly_business_revenue_tzs', value: 'USD 500000' }, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    record(conversation, offer, 'sales_call_agreement', true)
+    qualification = r09_qualification(offer)
+
+    expect(qualification.assessment.dig('fit', 'status')).not_to eq('met')
+    expect(handoff_for(conversation, qualification).handoff).to be_nil
+  end
+
+  it 'revokes current handoff authority after corrected evidence no longer meets the alternative' do
+    offer = r09_create_offer(group_configuration)
+    conversation = r09_conversation(offer: offer)
+    record(conversation, offer, 'business_status', 'no_business')
+    record(conversation, offer, 'expert_willingness', true)
+    record(conversation, offer, 'sales_call_agreement', true)
+    expect(r09_qualification(offer).assessment.dig('fit', 'status')).to eq('met')
+
+    record(conversation, offer, 'business_status', 'operating_business')
+    record(conversation, offer, 'monthly_business_revenue_tzs', 'TZS 1200000')
+    corrected = r09_qualification(offer)
+
+    expect(corrected.assessment.dig('fit', 'status')).to eq('not_met')
+    expect(handoff_for(conversation, corrected).handoff).to be_nil
+  end
+
   def group_configuration(requirement_groups: nil) # rubocop:disable Metrics/MethodLength
     questions = [
       r09_question('business_status', answer_type: 'choice', options: %w[no_business operating_business uncertain],
@@ -73,7 +139,9 @@ RSpec.describe 'Typed alternative Offer requirements', type: :request do
         { 'field' => 'sales_call_agreement', 'operator' => 'eq', 'value' => true }
       ] }
     ]
-    r09_configuration(name: 'Alternative fit', questions: questions, rules: [], requirement_groups: groups,
+    expert_rule = { kind: 'requirement', dimension: 'fit', field: 'expert_willingness', operator: 'eq', value: true,
+                    priority: 0, enabled: true }
+    r09_configuration(name: 'Alternative fit', questions: questions, rules: [expert_rule], requirement_groups: groups,
                       score_weights: {}, budget_ranges: [], legacy_contract: false,
                       score_thresholds: { qualified: 0, highly_qualified: 100 }, next_step: { kind: 'sales_call' })
   end
@@ -85,5 +153,15 @@ RSpec.describe 'Typed alternative Offer requirements', type: :request do
   def qualification_payload(offer)
     get "/api/v1/accounts/#{account.id}/lead_qualifications/#{r09_lead.id}", headers: r09_headers, params: { offer_id: offer.fetch('id') }
     response.parsed_body
+  end
+
+  def handoff_for(conversation, qualification)
+    context = AiLeadEmployee::OfferDeliveryContext.capture(
+      conversation: conversation, qualification: qualification,
+      decision: qualification.lead_qualification_decisions.order(:id).last, next_question_key: nil
+    )
+    AiLeadEmployee::HighlyQualifiedHandoffService.new(
+      conversation: conversation, qualification: qualification, qualification_context: context, defer_alert_delivery: true
+    ).perform
   end
 end
