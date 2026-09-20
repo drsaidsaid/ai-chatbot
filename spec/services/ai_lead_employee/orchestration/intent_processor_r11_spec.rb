@@ -1678,7 +1678,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     )
   end
 
-  it 'omits the next Swahili qualification question when the provider does not translate the owner prompt' do
+  it 'fails closed when the provider omits the recalculated next Swahili qualification prompt' do
     offer = create_offer(
       qualification_mode: 'enabled',
       questions: [
@@ -1709,9 +1709,13 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     described_class.new(intent: intent, enqueue_deliveries: false).perform
 
-    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
-    expect(intent.outbound_message.content).to eq('Asante kwa maelezo.')
-    expect(intent.outbound_message.content).not_to include('How many team members')
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_failed')
+    expect(intent.review_request).to have_attributes(reason: 'provider_failed', status: 'open')
+    expect(intent.outbound_message.content).to eq(
+      'Bado sina jibu lililothibitishwa. Nimeweka swali lako kwa timu ili ilipitie.'
+    )
+    expect(intent.outbound_message.content).not_to eq('Asante kwa maelezo.')
+    expect(QualificationEvidence.where(offer: offer, field_key: 'business_status')).to exist
   end
 
   it 'uses the structured qualification path for ordinary enabled accounts with customer allowance controls' do # rubocop:disable RSpec/MultipleExpectations

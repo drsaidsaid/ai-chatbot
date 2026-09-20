@@ -110,7 +110,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
       record_structured_observations!(structured.observations)
       qualification_result = qualify_lead!
-      localize_next_question!(qualification_result, structured.localized_prompts)
+      next request_review!('provider_failed') unless localize_next_question!(qualification_result, structured.localized_prompts)
       next complete_structured_qualification_reply!(response, qualification_result) if structured_qualification_only?
 
       complete_grounded_answer!(response, @answer_result, qualification_result)
@@ -539,7 +539,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       For a pending boolean question, a clause may support true when it starts with an explicit yes or ndiyo equivalent and also restates the configured topic in that same clause. The affirmative token alone is never enough. A later refusal or contradiction makes the clause unsupported. Never apply this rule to action agreement or consent.
       Goal or negative facts are valid only when the configured field meaning and owner prompt ask for that kind of fact; otherwise skip them.
       Never infer eligibility, requirements, handoff, action agreement, or a next question. Current requested language: #{classification.language}. Pending question key: #{@structured_offer_context['next_question_key']}. Current Offer fields: #{fields.to_json}.
-      localized_prompts maps only enabled field keys to a translation or rendering of the owner prompt in the Lead's requested language; do not invent a new question.
+      For a non-English requested language, localized_prompts must map every enabled field key to a translation or rendering of the owner prompt in the Lead's requested language. Otherwise localized_prompts may be empty. Use only enabled field keys and do not invent a new question.
     CONTRACT
   end
 
@@ -604,10 +604,11 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def localize_next_question!(qualification_result, prompts)
-    return unless qualification_result&.next_question_key && classification.language == :swahili
+    return true unless qualification_result&.next_question_key && classification.language == :swahili
 
     prompt = prompts[qualification_result.next_question_key]
     qualification_result.next_question = prompt.presence
+    qualification_result.next_question.present?
   end
 
   def commercial_claim_valid?(provider_response, answer_result)
