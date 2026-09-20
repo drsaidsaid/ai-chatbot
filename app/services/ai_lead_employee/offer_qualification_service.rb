@@ -114,7 +114,8 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
         rules.group_assessment(group) if group['dimension'] == dimension
       end
       question_fields = offer.questions.select do |question|
-        question['enabled'] && question['required'] && question.fetch('purpose', 'fit') == dimension && rules.group_fields.exclude?(question['key'])
+        question['enabled'] && question['required'] && question.fetch('purpose', 'fit') == dimension &&
+          rules.group_fields(dimension).exclude?(question['key'])
       end.pluck('key')
       requirement_states = dimension_requirements.map { |rule| [rule['field'], rules.requirement_state(rule)] }
       question_states = question_fields.map { |field| [field, evidence_state(snapshot[field])] }
@@ -181,7 +182,7 @@ class AiLeadEmployee::OfferQualificationService # rubocop:disable Metrics/ClassL
     rules = AiLeadEmployee::OfferRules.new(offer: offer, snapshot: snapshot)
     direct = offer.questions.find do |question|
       question['required'] && (!snapshot.key?(question['key']) || snapshot.dig(question['key'], 'asserted') == false ||
-        snapshot.dig(question['key'], 'polarity') == 'unknown') && rules.group_fields.exclude?(question['key'])
+        snapshot.dig(question['key'], 'polarity') == 'unknown') && rules.group_fields(question.fetch('purpose', 'fit')).exclude?(question['key'])
     end
     return direct if direct
 

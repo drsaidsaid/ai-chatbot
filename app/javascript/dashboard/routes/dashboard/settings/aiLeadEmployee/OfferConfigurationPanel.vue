@@ -98,7 +98,11 @@ const requirementGroupSummary = (source, group) => {
       const field = source.configuration?.questions?.find(
         item => item.key === node.field
       );
-      return field?.meaning || node.field;
+      let value = String(node.value);
+      if (node.value?.amount)
+        value = `${node.value.amount} ${node.value.currency}`;
+      if (Array.isArray(node.value)) value = node.value.join(', ');
+      return `${field?.meaning || node.field} ${node.operator} ${value}`;
     }
     const key = node.all ? 'all' : 'any';
     return `(${node[key].map(describe).join(key === 'all' ? ' and ' : ' or ')})`;
@@ -210,6 +214,23 @@ const addRule = () =>
     priority: draft.value.rules.length,
     enabled: true,
   });
+const newRequirementLeaf = () => ({
+  field: 'business_type',
+  operator: 'known',
+  value: null,
+});
+const groupBranch = group => (group.all ? 'all' : 'any');
+const addRequirementGroup = () =>
+  draft.value.requirement_groups.push({
+    dimension: 'fit',
+    any: [newRequirementLeaf()],
+  });
+const addGroupLeaf = group =>
+  group[groupBranch(group)].push(newRequirementLeaf());
+const addNestedGroup = group =>
+  group[groupBranch(group)].push({ all: [newRequirementLeaf()] });
+const addNestedLeaf = group =>
+  group[groupBranch(group)].push(newRequirementLeaf());
 const operatorsFor = rule => {
   const type = fields.value[rule.field]?.answer_type;
   return [
@@ -1196,6 +1217,7 @@ onMounted(load);
             />
           </label>
         </div>
+        <!-- eslint-disable vue/no-bare-strings-in-template -->
         <fieldset class="grid gap-3">
           <legend class="mb-3 text-base font-semibold">
             {{ label('QUESTIONS') }}
@@ -1616,6 +1638,159 @@ onMounted(load);
             {{ label('ADD_RULE') }}
           </button>
         </fieldset>
+        <fieldset class="grid gap-3">
+          <legend class="mb-3 text-base font-semibold">
+            Alternative requirements
+          </legend>
+          <p class="text-sm text-n-slate-11">
+            Combine typed requirements with all or any. A satisfied any branch
+            does not ask for the other branch.
+          </p>
+          <div
+            v-for="(group, groupIndex) in draft.requirement_groups"
+            :key="`requirement-group-${groupIndex}`"
+            class="grid gap-3 rounded-lg border border-n-weak p-4"
+          >
+            <div class="grid gap-3 sm:grid-cols-3">
+              <select v-model="group.dimension" :class="inputClass">
+                <option value="fit">Fit</option>
+                <option value="readiness">Readiness</option>
+                <option value="action_eligibility">Action eligibility</option>
+              </select>
+              <select
+                :value="groupBranch(group)"
+                :class="inputClass"
+                @change="
+                  group[$event.target.value] = group[groupBranch(group)];
+                  delete group[groupBranch(group)];
+                "
+              >
+                <option value="all">All must apply</option>
+                <option value="any">Any one can apply</option>
+              </select>
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="draft.requirement_groups.splice(groupIndex, 1)"
+              >
+                {{ label('REMOVE') }}
+              </button>
+            </div>
+            <template
+              v-for="(node, nodeIndex) in group[groupBranch(group)]"
+              :key="nodeIndex"
+            >
+              <div v-if="node.field" class="grid gap-2 sm:grid-cols-4">
+                <select v-model="node.field" :class="inputClass">
+                  <option
+                    v-for="field in fields"
+                    :key="field.key"
+                    :value="field.key"
+                  >
+                    {{ field.meaning }}
+                  </option>
+                </select>
+                <select v-model="node.operator" :class="inputClass">
+                  <option
+                    v-for="operator in operatorsFor(node)"
+                    :key="operator"
+                    :value="operator"
+                  >
+                    {{ operator }}
+                  </option>
+                </select>
+                <input v-model="node.value" :class="inputClass" />
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="group[groupBranch(group)].splice(nodeIndex, 1)"
+                >
+                  {{ label('REMOVE') }}
+                </button>
+              </div>
+              <div v-else class="grid gap-2 rounded border border-n-weak p-3">
+                <div class="flex gap-2">
+                  <span class="text-sm">{{
+                    groupBranch(node) === 'all'
+                      ? 'All must apply'
+                      : 'Any one can apply'
+                  }}</span>
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    @click="group[groupBranch(group)].splice(nodeIndex, 1)"
+                  >
+                    {{ label('REMOVE') }}
+                  </button>
+                </div>
+                <div
+                  v-for="(leaf, leafIndex) in node[groupBranch(node)]"
+                  :key="leafIndex"
+                  class="grid gap-2 sm:grid-cols-4"
+                >
+                  <select v-model="leaf.field" :class="inputClass">
+                    <option
+                      v-for="field in fields"
+                      :key="field.key"
+                      :value="field.key"
+                    >
+                      {{ field.meaning }}
+                    </option>
+                  </select>
+                  <select v-model="leaf.operator" :class="inputClass">
+                    <option
+                      v-for="operator in operatorsFor(leaf)"
+                      :key="operator"
+                      :value="operator"
+                    >
+                      {{ operator }}
+                    </option>
+                  </select>
+                  <input v-model="leaf.value" :class="inputClass" />
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    @click="node[groupBranch(node)].splice(leafIndex, 1)"
+                  >
+                    {{ label('REMOVE') }}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="addNestedLeaf(node)"
+                >
+                  Add requirement
+                </button>
+              </div>
+            </template>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="addGroupLeaf(group)"
+              >
+                Add requirement
+              </button>
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="addNestedGroup(group)"
+              >
+                Add all/any branch
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            :class="buttonClass"
+            data-testid="add-requirement-group"
+            @click="addRequirementGroup"
+          >
+            Add alternative group
+          </button>
+        </fieldset>
+        <!-- eslint-enable vue/no-bare-strings-in-template -->
         <fieldset class="grid gap-3 sm:grid-cols-2">
           <legend class="mb-3 text-base font-semibold">
             {{ label('THRESHOLDS') }}

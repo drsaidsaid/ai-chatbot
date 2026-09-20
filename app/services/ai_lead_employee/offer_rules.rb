@@ -191,8 +191,9 @@ class AiLeadEmployee::OfferRules # rubocop:disable Metrics/ClassLength
     @offer.configuration.fetch('requirement_groups', [])
   end
 
-  def group_fields
-    requirement_groups.flat_map { |group| fields_for_group(group) }.uniq
+  def group_fields(dimension = nil)
+    groups = dimension ? requirement_groups.select { |group| group['dimension'] == dimension } : requirement_groups
+    groups.flat_map { |group| fields_for_group(group) }.uniq
   end
 
   def group_assessment(group)

@@ -113,6 +113,13 @@ _Avoid_: Extracted field, AI guess
 A stable meaning and answer type within an Offer, independent of the question's wording or order. Purchasing budget, revenue and inquiry volume are distinct fields.
 _Avoid_: Prompt, label
 
+**Alternative Requirement Group**:
+A bounded, typed `all` or `any` tree of current Offer-field comparisons used
+only for an Offer qualification dimension. It is versioned Offer authority, not
+free-form logic; a satisfied alternative branch does not require fields unique
+to another branch.
+_Avoid_: Script, expression, inferred prose rule
+
 **Purchase Budget Capacity**:
 The amount a Lead explicitly says they can spend on the contemplated purchase. It is evidence of spending capacity, not proof of payment or committed funds; income and revenue alone do not establish it.
 _Avoid_: Revenue, salary, payment commitment

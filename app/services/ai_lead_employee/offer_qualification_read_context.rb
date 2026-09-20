@@ -117,7 +117,7 @@ class AiLeadEmployee::OfferQualificationReadContext
     rules = AiLeadEmployee::OfferRules.new(offer: offer, snapshot: snapshot)
     direct = offer.questions.find do |question|
       question['required'] && (!snapshot.key?(question['key']) || snapshot.dig(question['key'], 'asserted') == false ||
-        snapshot.dig(question['key'], 'polarity') == 'unknown') && rules.group_fields.exclude?(question['key'])
+        snapshot.dig(question['key'], 'polarity') == 'unknown') && rules.group_fields(question.fetch('purpose', 'fit')).exclude?(question['key'])
     end
     return direct.fetch('prompt') if direct
 
