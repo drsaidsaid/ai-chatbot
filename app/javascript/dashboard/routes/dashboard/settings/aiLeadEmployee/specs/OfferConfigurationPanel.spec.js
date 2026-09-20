@@ -40,6 +40,7 @@ const offer = () => ({
     },
   ],
   rules: [],
+  requirement_groups: [],
   score_weights: { budget: 20 },
   score_thresholds: { qualified: 60, highly_qualified: 80 },
   commercial_terms_draft: null,
@@ -104,6 +105,27 @@ it('saves explicit qualification mode, question purpose, requirement dimension a
       }),
     ],
   });
+});
+
+it('submits qualification changes when an unrelated commercial amount is blank', async () => {
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  const saveButton = wrapper.get('[data-testid="save-offer"]');
+  expect(saveButton.attributes('formnovalidate')).toBeDefined();
+  expect(wrapper.get('[data-testid="commercial-amount"]').element.value).toBe(
+    ''
+  );
+
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(axios.patch).toHaveBeenCalledWith(
+    expect.stringContaining('/qualification_offers/9'),
+    expect.objectContaining({
+      offer: expect.objectContaining({ name: 'Message support' }),
+    })
+  );
 });
 
 it('saves and explicitly publishes readable Offer commercial terms', async () => {
@@ -558,6 +580,12 @@ it('keeps guided setup notes proposed until the owner explicitly publishes the r
           meaning: 'Current registration number',
           purpose: 'action_eligibility',
         },
+        {
+          key: 'ready',
+          meaning: 'Ready to proceed',
+          answer_type: 'boolean',
+          purpose: 'fit',
+        },
       ],
       rules: [
         {
@@ -565,6 +593,19 @@ it('keeps guided setup notes proposed until the owner explicitly publishes the r
           kind: 'requirement',
           dimension: 'action_eligibility',
           priority: 0,
+        },
+      ],
+      requirement_groups: [
+        {
+          dimension: 'fit',
+          any: [
+            {
+              field: 'budget',
+              operator: 'lt',
+              value: { amount: '1000000', currency: 'TZS' },
+            },
+            { field: 'ready', operator: 'eq', value: true },
+          ],
         },
       ],
     },
@@ -592,6 +633,11 @@ it('keeps guided setup notes proposed until the owner explicitly publishes the r
   expect(wrapper.text()).toContain('Disabled');
   expect(wrapper.text()).toContain('Share a purchase link');
   expect(wrapper.text()).toContain('Action eligibility');
+  expect(wrapper.text()).toContain('Less than');
+  expect(wrapper.text()).toContain('Equals');
+  expect(wrapper.text()).toContain('Yes');
+  expect(wrapper.text()).not.toContain(' budget lt ');
+  expect(wrapper.text()).not.toContain(' ready eq ');
   expect(wrapper.text()).not.toContain('setup_fit_registration');
   expect(wrapper.text()).not.toContain('purchase_link');
   expect(wrapper.text()).not.toContain('action_eligibility');
@@ -943,4 +989,78 @@ it('updates existing money-rule currency without converting amounts and retains 
   await wrapper.get('form').trigger('submit');
   await flushPromises();
   expect(wrapper.text()).toContain('Offer saved');
+});
+
+it('edits and reloads typed alternative groups without losing children when switching any to all', async () => {
+  const saved = offer();
+  saved.requirement_groups = [
+    {
+      dimension: 'fit',
+      any: [
+        {
+          field: 'budget',
+          operator: 'lt',
+          value: { amount: '1000000.00', currency: 'TZS' },
+        },
+      ],
+    },
+  ];
+  axios.get.mockResolvedValue({ data: [saved] });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="group-branch-0"]').setValue('all');
+  expect(wrapper.get('[data-testid="group-field-0-0"]').element.value).toBe(
+    'budget'
+  );
+  await wrapper.get('[data-testid="group-operator-0-0"]').setValue('known');
+  expect(wrapper.find('[data-testid="group-value-0-0"]').exists()).toBe(false);
+  await wrapper.get('[data-testid="group-operator-0-0"]').setValue('lt');
+  await wrapper.get('[data-testid="group-value-0-0"]').setValue('750000.00');
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(axios.patch.mock.calls[0][1].offer.requirement_groups).toEqual([
+    {
+      dimension: 'fit',
+      all: [
+        {
+          field: 'budget',
+          operator: 'lt',
+          value: { amount: '750000.00', currency: 'TZS' },
+        },
+      ],
+    },
+  ]);
+});
+
+it('saves boolean group values as booleans through rendered controls', async () => {
+  const saved = offer();
+  saved.questions.push({
+    key: 'ready',
+    meaning: 'Ready',
+    answer_type: 'boolean',
+    prompt: 'Ready?',
+    position: 1,
+    enabled: true,
+    required: true,
+    purpose: 'fit',
+  });
+  saved.requirement_groups = [
+    {
+      dimension: 'fit',
+      all: [{ field: 'ready', operator: 'eq', value: true }],
+    },
+  ];
+  axios.get.mockResolvedValue({ data: [saved] });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="group-value-0-0"]').setValue('false');
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(
+    axios.patch.mock.calls[0][1].offer.requirement_groups[0].all[0].value
+  ).toBe(false);
 });

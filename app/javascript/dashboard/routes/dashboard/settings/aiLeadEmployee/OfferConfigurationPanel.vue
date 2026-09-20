@@ -92,6 +92,34 @@ const setupRuleSummary = (source, rule) => {
     purpose: setupPurposeLabel(rule.dimension || rule.kind),
   });
 };
+const requirementGroupSummary = (source, group) => {
+  const operatorLabel = operator => label(`OP_${operator.toUpperCase()}`);
+  const valueLabel = (node, field) => {
+    if (['positive', 'negative', 'known'].includes(node.operator)) return '';
+    if (typeof node.value === 'boolean')
+      return label(node.value ? 'YES' : 'NO');
+    if (node.value?.amount)
+      return `${node.value.amount} ${
+        node.value.currency || field?.currency || ''
+      }`.trim();
+    if (Array.isArray(node.value)) return node.value.join(', ');
+    return String(node.value ?? '');
+  };
+  const describe = node => {
+    if (node.field) {
+      const field = source.configuration?.questions?.find(
+        item => item.key === node.field
+      );
+      const value = valueLabel(node, field);
+      return `${field?.meaning || node.field} ${operatorLabel(node.operator)}${
+        value ? ` ${value}` : ''
+      }`;
+    }
+    const key = node.all ? 'all' : 'any';
+    return `(${node[key].map(describe).join(key === 'all' ? ' and ' : ' or ')})`;
+  };
+  return `${setupPurposeLabel(group.dimension)}: ${describe(group)}`;
+};
 const inputClass =
   'h-10 w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 text-sm text-n-slate-12';
 const buttonClass =
@@ -138,6 +166,7 @@ const newOffer = () => {
     questions: [],
     budget_ranges: [],
     rules: [],
+    requirement_groups: [],
     score_weights: {},
     score_thresholds: { qualified: 60, highly_qualified: 80 },
     commercial_terms: blankCommercialTerms('TZS'),
@@ -196,6 +225,29 @@ const addRule = () =>
     priority: draft.value.rules.length,
     enabled: true,
   });
+const newRequirementLeaf = () => ({
+  field: 'business_type',
+  operator: 'known',
+  value: null,
+});
+const groupBranch = group => (group.all ? 'all' : 'any');
+const changeGroupBranch = (group, branch) => {
+  const previous = groupBranch(group);
+  const children = group[previous];
+  delete group[previous];
+  group[branch] = children;
+};
+const addRequirementGroup = () =>
+  draft.value.requirement_groups.push({
+    dimension: 'fit',
+    any: [newRequirementLeaf()],
+  });
+const addGroupLeaf = group =>
+  group[groupBranch(group)].push(newRequirementLeaf());
+const addNestedGroup = group =>
+  group[groupBranch(group)].push({ all: [newRequirementLeaf()] });
+const addNestedLeaf = group =>
+  group[groupBranch(group)].push(newRequirementLeaf());
 const operatorsFor = rule => {
   const type = fields.value[rule.field]?.answer_type;
   return [
@@ -227,6 +279,7 @@ const orderedDraft = offer => ({
   questions: [...offer.questions]
     .sort((left, right) => left.position - right.position)
     .map(question => ({ purpose: 'fit', ...question })),
+  requirement_groups: offer.requirement_groups || [],
   commercial_terms: {
     ...blankCommercialTerms(offer.currency),
     ...(offer.commercial_terms_draft || {}),
@@ -988,6 +1041,18 @@ onMounted(load);
                 {{ setupRuleSummary(source, rule) }}
               </li>
             </ul>
+            <ul
+              v-if="source.configuration?.requirement_groups?.length"
+              class="list-disc pl-5 text-n-slate-11"
+            >
+              <li
+                v-for="(group, index) in source.configuration
+                  .requirement_groups"
+                :key="`group-${index}`"
+              >
+                {{ requirementGroupSummary(source, group) }}
+              </li>
+            </ul>
             <p v-if="source.unknowns?.length" class="text-n-amber-11">
               <strong>{{ label('SETUP_STILL_NEEDED') }}</strong>
               {{ source.unknowns.join(' ') }}
@@ -1169,6 +1234,7 @@ onMounted(load);
             />
           </label>
         </div>
+        <!-- eslint-disable vue/no-bare-strings-in-template -->
         <fieldset class="grid gap-3">
           <legend class="mb-3 text-base font-semibold">
             {{ label('QUESTIONS') }}
@@ -1589,6 +1655,271 @@ onMounted(load);
             {{ label('ADD_RULE') }}
           </button>
         </fieldset>
+        <fieldset class="grid gap-3">
+          <legend class="mb-3 text-base font-semibold">
+            Alternative requirements
+          </legend>
+          <p class="text-sm text-n-slate-11">
+            Combine typed requirements with all or any. A satisfied any branch
+            does not ask for the other branch.
+          </p>
+          <div
+            v-for="(group, groupIndex) in draft.requirement_groups"
+            :key="`requirement-group-${groupIndex}`"
+            class="grid gap-3 rounded-lg border border-n-weak p-4"
+          >
+            <div class="grid gap-3 sm:grid-cols-3">
+              <select v-model="group.dimension" :class="inputClass">
+                <option value="fit">Fit</option>
+                <option value="readiness">Readiness</option>
+                <option value="action_eligibility">Action eligibility</option>
+              </select>
+              <select
+                :value="groupBranch(group)"
+                :class="inputClass"
+                :data-testid="`group-branch-${groupIndex}`"
+                @change="changeGroupBranch(group, $event.target.value)"
+              >
+                <option value="all">All must apply</option>
+                <option value="any">Any one can apply</option>
+              </select>
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="draft.requirement_groups.splice(groupIndex, 1)"
+              >
+                {{ label('REMOVE') }}
+              </button>
+            </div>
+            <template
+              v-for="(node, nodeIndex) in group[groupBranch(group)]"
+              :key="nodeIndex"
+            >
+              <div v-if="node.field" class="grid gap-2 sm:grid-cols-4">
+                <select
+                  v-model="node.field"
+                  :class="inputClass"
+                  :data-testid="`group-field-${groupIndex}-${nodeIndex}`"
+                  :aria-label="label('FIELD')"
+                  @change="resetRule(node)"
+                >
+                  <option
+                    v-for="field in fields"
+                    :key="field.key"
+                    :value="field.key"
+                  >
+                    {{ field.meaning }}
+                  </option>
+                </select>
+                <select
+                  v-model="node.operator"
+                  :class="inputClass"
+                  :data-testid="`group-operator-${groupIndex}-${nodeIndex}`"
+                  :aria-label="label('OPERATOR')"
+                  @change="resetRule(node)"
+                >
+                  <option
+                    v-for="operator in operatorsFor(node)"
+                    :key="operator"
+                    :value="operator"
+                  >
+                    {{ label(`OP_${operator.toUpperCase()}`) }}
+                  </option>
+                </select>
+                <template
+                  v-if="
+                    !['positive', 'negative', 'known'].includes(node.operator)
+                  "
+                >
+                  <input
+                    v-if="fields[node.field]?.answer_type === 'money'"
+                    v-model="node.value.amount"
+                    inputmode="decimal"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
+                  />
+                  <input
+                    v-else-if="fields[node.field]?.answer_type === 'number'"
+                    v-model.number="node.value"
+                    type="number"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
+                  />
+                  <select
+                    v-else-if="fields[node.field]?.answer_type === 'boolean'"
+                    v-model="node.value"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
+                  >
+                    <option :value="true">{{ label('YES') }}</option>
+                    <option :value="false">{{ label('NO') }}</option>
+                  </select>
+                  <select
+                    v-else-if="fields[node.field]?.answer_type === 'choice'"
+                    v-model="node.value"
+                    :multiple="node.operator === 'in'"
+                    :class="inputClass"
+                    :aria-label="label('VALUE')"
+                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
+                  >
+                    <option
+                      v-for="option in fields[node.field].options"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                  <input v-else v-model="node.value" :class="inputClass" />
+                </template>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="group[groupBranch(group)].splice(nodeIndex, 1)"
+                >
+                  {{ label('REMOVE') }}
+                </button>
+              </div>
+              <div v-else class="grid gap-2 rounded border border-n-weak p-3">
+                <div class="flex gap-2">
+                  <span class="text-sm">{{
+                    groupBranch(node) === 'all'
+                      ? 'All must apply'
+                      : 'Any one can apply'
+                  }}</span>
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    @click="group[groupBranch(group)].splice(nodeIndex, 1)"
+                  >
+                    {{ label('REMOVE') }}
+                  </button>
+                </div>
+                <div
+                  v-for="(leaf, leafIndex) in node[groupBranch(node)]"
+                  :key="leafIndex"
+                  class="grid gap-2 sm:grid-cols-4"
+                >
+                  <select
+                    v-model="leaf.field"
+                    :class="inputClass"
+                    :aria-label="label('FIELD')"
+                    @change="resetRule(leaf)"
+                  >
+                    <option
+                      v-for="field in fields"
+                      :key="field.key"
+                      :value="field.key"
+                    >
+                      {{ field.meaning }}
+                    </option>
+                  </select>
+                  <select
+                    v-model="leaf.operator"
+                    :class="inputClass"
+                    :aria-label="label('OPERATOR')"
+                    @change="resetRule(leaf)"
+                  >
+                    <option
+                      v-for="operator in operatorsFor(leaf)"
+                      :key="operator"
+                      :value="operator"
+                    >
+                      {{ label(`OP_${operator.toUpperCase()}`) }}
+                    </option>
+                  </select>
+                  <template
+                    v-if="
+                      !['positive', 'negative', 'known'].includes(leaf.operator)
+                    "
+                  >
+                    <input
+                      v-if="fields[leaf.field]?.answer_type === 'money'"
+                      v-model="leaf.value.amount"
+                      inputmode="decimal"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
+                    />
+                    <input
+                      v-else-if="fields[leaf.field]?.answer_type === 'number'"
+                      v-model.number="leaf.value"
+                      type="number"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
+                    />
+                    <select
+                      v-else-if="fields[leaf.field]?.answer_type === 'boolean'"
+                      v-model="leaf.value"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
+                    >
+                      <option :value="true">{{ label('YES') }}</option>
+                      <option :value="false">{{ label('NO') }}</option>
+                    </select>
+                    <select
+                      v-else-if="fields[leaf.field]?.answer_type === 'choice'"
+                      v-model="leaf.value"
+                      :multiple="leaf.operator === 'in'"
+                      :class="inputClass"
+                      :aria-label="label('VALUE')"
+                    >
+                      <option
+                        v-for="option in fields[leaf.field].options"
+                        :key="option"
+                        :value="option"
+                      >
+                        {{ option }}
+                      </option>
+                    </select>
+                    <input v-else v-model="leaf.value" :class="inputClass" />
+                  </template>
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    @click="node[groupBranch(node)].splice(leafIndex, 1)"
+                  >
+                    {{ label('REMOVE') }}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="addNestedLeaf(node)"
+                >
+                  Add requirement
+                </button>
+              </div>
+            </template>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="addGroupLeaf(group)"
+              >
+                Add requirement
+              </button>
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="addNestedGroup(group)"
+              >
+                Add all/any branch
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            :class="buttonClass"
+            data-testid="add-requirement-group"
+            @click="addRequirementGroup"
+          >
+            Add alternative group
+          </button>
+        </fieldset>
+        <!-- eslint-enable vue/no-bare-strings-in-template -->
         <fieldset class="grid gap-3 sm:grid-cols-2">
           <legend class="mb-3 text-base font-semibold">
             {{ label('THRESHOLDS') }}
@@ -1610,6 +1941,8 @@ onMounted(load);
         </fieldset>
         <button
           type="submit"
+          formnovalidate
+          data-testid="save-offer"
           :disabled="saving || conflicted"
           class="min-h-10 justify-self-start rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
         >

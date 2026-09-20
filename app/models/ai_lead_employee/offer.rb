@@ -53,7 +53,7 @@ class AiLeadEmployee::Offer < ApplicationRecord
 
   def qualification_configured?
     configuration.fetch('questions', []).any? || configuration.fetch('rules', []).any? ||
-      configuration.fetch('score_weights', {}).any?
+      configuration.fetch('requirement_groups', []).any? || configuration.fetch('score_weights', {}).any?
   end
 
   def public_budget_ranges

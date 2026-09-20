@@ -99,7 +99,7 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
                                               next_step: [:kind, :prompt, :url],
                                               budget_ranges: [:label, :minimum, :maximum, :position, :enabled],
                                               score_weights: {}, score_thresholds: [:qualified, :highly_qualified]).to_h
-    permitted.merge('rules' => rule_params)
+    permitted.merge('rules' => rule_params, 'requirement_groups' => requirement_group_params)
   end
 
   def commercial_terms_params
@@ -128,6 +128,15 @@ class Api::V1::Accounts::QualificationOffersController < Api::V1::Accounts::Base
       value = rule[:value]
       value = value.permit(:amount, :currency).to_h if value.is_a?(ActionController::Parameters)
       rule.permit(:kind, :dimension, :field, :operator, :score_delta, :forced_outcome, :priority, :enabled).to_h.merge('value' => value)
+    end
+  end
+
+  def requirement_group_params
+    groups = params.require(:offer).fetch(:requirement_groups, [])
+    if groups.is_a?(Array)
+      groups.map { |group| group.respond_to?(:to_unsafe_h) ? group.to_unsafe_h : group }
+    else
+      groups
     end
   end
 end

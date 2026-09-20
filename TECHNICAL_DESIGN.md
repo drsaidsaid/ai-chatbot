@@ -749,3 +749,10 @@ Separate platform provider authorisation from Business Account administration. P
 Ad-set routing resolves Meta source to permitted owned ad metadata, including future ads, and stores source provenance. Never infer ad membership from message text. Templates have provider-authoritative status and approved revision; broadcast audience snapshots remain subject to fresh consent/control checks. Static broadcasts do not consume AI replies per recipient. A provider estimate is not a final invoice.
 
 Per-ticket implementation must specify migration, rollback, partial-failure/concurrency behavior, tests and real UI acceptance before integration. R17 and R18 include every new slice, not only the original 18 tickets.
+# Pilot amendment — typed alternative requirements
+
+Offer configuration may include validated `requirement_groups`: bounded typed
+`all`/`any` comparison trees. They are normalized by `OfferRules`, persisted in
+the normal Offer revision, evaluated with the current evidence snapshot, and
+included in sales-call admission. Flat rules and required questions retain their
+existing behavior outside groups. See ADR 0017.

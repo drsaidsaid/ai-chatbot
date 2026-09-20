@@ -641,6 +641,32 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(corrected.dig('configuration', 'rules').count { |rule| rule['field'] == 'sales_call_agreement' }).to eq(2)
   end
 
+  it 'preserves a generated question referenced by an owner group through correction and publication' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Grouped draft', source_type: 'document',
+                                         body: 'Customers need a retail registration.' } }, as: :json
+    first = response.parsed_body
+    old_key = first.dig('configuration', 'questions', 0, 'key')
+    reviewed = first.fetch('configuration').deep_dup
+    reviewed['requirement_groups'] = [
+      { 'dimension' => 'fit', 'all' => [{ 'field' => old_key, 'operator' => 'positive', 'value' => nil }] }
+    ]
+
+    patch "#{source_url}/#{first.fetch('id')}", headers: headers,
+                                                params: { expected_source_version: first.fetch('version'),
+                                                          source: { title: 'Grouped draft', source_type: 'document',
+                                                                    body: 'Customers need an active tax registration.',
+                                                                    reviewed_configuration: reviewed } }, as: :json
+    corrected = response.parsed_body
+    expect(corrected.dig('configuration', 'questions').pluck('key')).to include(old_key)
+
+    post "#{source_url}/#{corrected.fetch('id')}/publish", headers: headers,
+                                                           params: { expected_source_version: corrected.fetch('version'),
+                                                                     expected_offer_version: offer.reload.configuration_version }, as: :json
+    expect(response).to have_http_status(:success)
+    expect(offer.reload.configuration.fetch('requirement_groups').sole.dig('all', 0, 'field')).to eq(old_key)
+  end
+
   it 'replaces published source-owned requirements while preserving independent Offer edits' do
     first = create_and_publish_source('Retail customers need an active retail registration.')
     retail_key = first.proposal.fetch('generated_question_keys').sole

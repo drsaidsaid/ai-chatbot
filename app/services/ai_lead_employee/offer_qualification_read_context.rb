@@ -113,11 +113,16 @@ class AiLeadEmployee::OfferQualificationReadContext
     selection_required? || (offer && (!offer.enabled? || !offer.qualification_enabled?))
   end
 
-  def next_offer_question(snapshot)
-    offer.questions.find do |question|
+  def next_offer_question(snapshot) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    rules = AiLeadEmployee::OfferRules.new(offer: offer, snapshot: snapshot)
+    direct = offer.questions.find do |question|
       question['required'] && (!snapshot.key?(question['key']) || snapshot.dig(question['key'], 'asserted') == false ||
-        snapshot.dig(question['key'], 'polarity') == 'unknown')
-    end&.fetch('prompt')
+        snapshot.dig(question['key'], 'polarity') == 'unknown') && rules.group_fields(question.fetch('purpose', 'fit')).exclude?(question['key'])
+    end
+    return direct.fetch('prompt') if direct
+
+    missing = rules.requirement_groups.flat_map { |group| rules.group_assessment(group)[:missing_fields] }.uniq
+    offer.questions.find { |question| missing.include?(question['key']) }&.fetch('prompt')
   end
 
   def field_definitions
