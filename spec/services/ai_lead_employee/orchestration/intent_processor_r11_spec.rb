@@ -1192,6 +1192,40 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(provider_client).to have_received(:complete).once
   end
 
+  it 'answers the pilot service question from the selected Offer programme source' do
+    offer = create_offer(name: 'Online Profits', qualification_mode: 'enabled')
+    conversation.update!(offer: offer)
+    triggering_message.update!(
+      content: 'Nataka kujua zaidi kuhusu huduma mnazotoa. Mnaweza kunisaidiaje kujenga biashara mtandaoni?'
+    )
+    document = create(
+      :knowledge_document,
+      account: account,
+      title: 'Online Profits programme',
+      body: 'Online Profits is a 12-month programme where business experts help founders build an online business.',
+      general_question_access: false,
+      offer_ids: [offer.id]
+    )
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-pilot-service-answer', model: connection.model,
+        content: 'Ni programu ya miezi 12 inayokusaidia kujenga biashara mtandaoni pamoja na wataalamu wa biashara.',
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq(
+      'Ni programu ya miezi 12 inayokusaidia kujenga biashara mtandaoni pamoja na wataalamu wa biashara.'
+    )
+    expect(intent.source_references).to contain_exactly(include('id' => document.id, 'type' => 'knowledge_document'))
+    expect(provider_client).to have_received(:complete).once
+  end
+
   it 'does not spend a provider attempt on an unknown selected Offer detail without lexical support' do
     offer = create_offer(name: 'Online Profits', qualification_mode: 'enabled')
     conversation.update!(offer: offer)

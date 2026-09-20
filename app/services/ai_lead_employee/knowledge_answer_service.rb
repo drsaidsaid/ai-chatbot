@@ -240,7 +240,9 @@ class AiLeadEmployee::KnowledgeAnswerService # rubocop:disable Metrics/ClassLeng
   end
 
   def help_or_suitability_question?
-    normalize(question).match?(/\b(help|helps|support|suitable|fit|benefit|benefits|useful|saidia|kusaidia|kunisaidia|msaada)\b/)
+    normalize(question).match?(
+      /\b(help|helps|support|suitable|fit|benefit|benefits|useful|(?:ku|kuni)?saidia(?:je)?|msaada)\b/
+    )
   end
 
   def selected_offer_document?(document)
