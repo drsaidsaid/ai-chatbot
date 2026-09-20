@@ -1107,6 +1107,35 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(QualificationEvidence.where(offer: offer, field_key: 'team_size')).not_to exist
   end
 
+  it 'does not grant sales-call agreement from an affirmative preamble followed by refusal' do
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('sales_call_agreement', 'Would you like a sales call?').merge(
+          'answer_type' => 'boolean', 'purpose' => 'action_eligibility'
+        )
+      ],
+      next_step: { 'kind' => 'sales_call', 'agreement_field' => 'sales_call_agreement' }
+    )
+    conversation.update!(offer: offer)
+
+    [
+      'Yes, I understand. Do not call me.',
+      'Ndiyo, nimeelewa. Sitaki kupigiwa simu.'
+    ].each do |content|
+      create_prompted_question_message(offer, key: 'sales_call_agreement', prompt: 'Would you like a sales call?')
+      incoming, = followup_records(content)
+
+      evidence = AiLeadEmployee::OfferEvidenceRecorder.new(
+        conversation: conversation, offer: offer, incoming_message: incoming
+      ).perform
+
+      expect(evidence).to be_empty
+    end
+
+    expect(QualificationEvidence.where(offer: offer, field_key: 'sales_call_agreement')).not_to exist
+  end
+
   it 'selects a contextual prompt atomically and binds the next short reply only to that field' do
     offer = create_offer(
       qualification_mode: 'enabled',
@@ -1158,6 +1187,134 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(evidence.value).to include('typed_value' => 12, 'polarity' => 'positive')
     expect(QualificationEvidence.where(offer: offer, field_key: 'monthly_metric')).not_to exist
     expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
+  end
+
+  it 'binds an affirmative prompted answer and extracts additional facts from the same reply' do # rubocop:disable RSpec/ExampleLength
+    offer = create_offer(
+      name: 'Online Profits University',
+      currency: 'TZS',
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice',
+          'options' => %w[no_business operating_business uncertain], 'position' => 0
+        ),
+        question('monthly_business_revenue_tzs', 'What is your monthly business revenue in TZS?').merge(
+          'meaning' => 'Current monthly business revenue', 'answer_type' => 'money', 'period' => 'monthly',
+          'required' => false, 'position' => 1
+        ),
+        question('expert_willingness', 'Would you build a business using your own expertise?').merge(
+          'meaning' => 'Willingness to build an expertise business', 'answer_type' => 'boolean', 'position' => 2
+        ),
+        question('investment_readiness_12_months', 'Would you invest financially in mentoring?').merge(
+          'meaning' => 'Investment readiness for 12 months', 'answer_type' => 'boolean',
+          'purpose' => 'readiness', 'position' => 3
+        ),
+        question('business_goal', 'What is your business goal?').merge(
+          'meaning' => 'Business goal', 'required' => false, 'purpose' => 'readiness', 'position' => 4
+        )
+      ]
+    )
+    conversation.update!(offer: offer)
+    create_prompted_question_message(
+      offer, key: 'expert_willingness',
+             prompt: 'Je, ungependa kujenga biashara ukitumia utaalamu wako kutatua matatizo mtandaoni kupitia bidhaa au huduma?'
+    )
+    triggering_message.update!(
+      content: 'Ndiyo, nataka kutumia utaalamu wangu kufundisha watu mtandaoni. Nina biashara tayari, ' \
+               'mapato yake ni shilingi 800,000 kwa mwezi. Lengo langu ni kufikia shilingi milioni 3 kwa mwezi.'
+    )
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-prompted-multi-fact', model: connection.model,
+        content: {
+          reply: 'Asante kwa maelezo.',
+          observations: [
+            { key: 'expert_willingness',
+              quote: 'Ndiyo, nataka kutumia utaalamu wangu kufundisha watu mtandaoni.',
+              typed_value: true, asserted: true, certainty: 'certain' },
+            { key: 'business_status', quote: 'Nina biashara tayari', typed_value: 'operating_business',
+              asserted: true, certainty: 'certain' },
+            { key: 'monthly_business_revenue_tzs', quote: 'mapato yake ni shilingi 800,000 kwa mwezi',
+              typed_value: 80_000_000, asserted: true, certainty: 'certain' },
+            { key: 'business_goal', quote: 'Lengo langu ni kufikia shilingi milioni 3 kwa mwezi.',
+              typed_value: 'Lengo langu ni kufikia shilingi milioni 3 kwa mwezi.', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {
+            expert_willingness: 'Je, ungependa kujenga biashara ukitumia utaalamu wako?',
+            investment_readiness_12_months: 'Je, uko tayari kuwekeza katika ushauri wa miezi 12?'
+          }
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    evidence = QualificationEvidence.where(account: account, contact: contact, offer: offer).index_by(&:field_key)
+    expect(evidence).to include(
+      'expert_willingness', 'business_status', 'monthly_business_revenue_tzs', 'business_goal'
+    )
+    expect(evidence['expert_willingness'].value).to include('typed_value' => true)
+    expect(evidence['expert_willingness'].value).to include(
+      'quote' => 'Ndiyo, nataka kutumia utaalamu wangu kufundisha watu mtandaoni.'
+    )
+    expect(evidence['monthly_business_revenue_tzs'].value).to include('typed_value' => 80_000_000)
+    expect(intent.decision.dig('structured_qualification', 'accepted_field_keys')).to include('expert_willingness')
+    expect(intent.reload.outbound_message.content).to eq(
+      "Asante kwa maelezo.\n\nJe, uko tayari kuwekeza katika ushauri wa miezi 12?"
+    )
+    expect(provider_client).to have_received(:complete).once
+  end
+
+  it 'extracts additional facts when a compound reply answers the final required boolean' do
+    offer = create_offer(
+      currency: 'TZS',
+      qualification_mode: 'enabled',
+      questions: [
+        question('expert_willingness', 'Would you build a business using your own expertise?').merge(
+          'meaning' => 'Willingness to build an expertise business', 'answer_type' => 'boolean'
+        ),
+        question('business_goal', 'What is your business goal?').merge(
+          'meaning' => 'Business goal', 'required' => false, 'purpose' => 'readiness', 'position' => 1
+        )
+      ]
+    )
+    conversation.update!(offer: offer)
+    create_prompted_question_message(
+      offer, key: 'expert_willingness', prompt: 'Je, ungependa kujenga biashara ukitumia utaalamu wako?'
+    )
+    triggering_message.update!(
+      content: 'Ndiyo, nataka kutumia utaalamu wangu. Lengo langu ni kuuza mafunzo mtandaoni.'
+    )
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-final-boolean-with-facts', model: connection.model,
+        content: {
+          reply: 'Asante kwa maelezo.',
+          observations: [
+            { key: 'expert_willingness', quote: 'Ndiyo, nataka kutumia utaalamu wangu.', typed_value: true,
+              asserted: true, certainty: 'certain' },
+            { key: 'business_goal', quote: 'Lengo langu ni kuuza mafunzo mtandaoni.',
+              typed_value: 'Lengo langu ni kuuza mafunzo mtandaoni.', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    evidence = QualificationEvidence.where(account: account, contact: contact, offer: offer).index_by(&:field_key)
+    expect(evidence).to include('expert_willingness', 'business_goal')
+    expect(intent.reload.outbound_message.content).to eq('Asante kwa maelezo.')
+    expect(intent.outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification', 'next_question_key')).to be_nil
+    expect(provider_client).to have_received(:complete).once
   end
 
   it 'uses an English selected Offer document for a Swahili suitability question with one provider attempt' do

@@ -58,6 +58,53 @@ RSpec.describe AiLeadEmployee::StructuredQualificationResponse do
     expect(result.localized_prompts).to eq('expert_willingness' => 'Je, ungependa kuzungumza na mtaalamu?')
   end
 
+  it 'accepts stated willingness while refusing to turn it into sales-call agreement' do
+    statement = 'Ndiyo, nataka kutumia utaalamu wangu kufundisha watu mtandaoni.'
+    message.update!(content: statement)
+
+    result = described_class.new(
+      offer: offer,
+      incoming_message: message,
+      content: {
+        reply: 'Asante kwa maelezo.',
+        observations: [
+          { key: 'expert_willingness', quote: statement, typed_value: true, asserted: true, certainty: 'certain' },
+          { key: 'sales_call_agreement', quote: statement, typed_value: true, asserted: true, certainty: 'certain' }
+        ],
+        localized_prompts: {}
+      }.to_json
+    ).perform
+
+    expect(result.observations).to include('expert_willingness' => include('typed_value' => true))
+    expect(result.observations).not_to include('sales_call_agreement')
+    expect(result.diagnostics.dig('rejected_field_keys_by_code', 'action_agreement')).to contain_exactly(
+      'sales_call_agreement'
+    )
+  end
+
+  it 'rejects a generic affirmative preamble as evidence of configured willingness' do
+    statement = 'Ndiyo, nimeelewa. Sitaki kupigiwa simu.'
+    message.update!(content: statement)
+
+    result = described_class.new(
+      offer: offer,
+      incoming_message: message,
+      content: {
+        reply: 'Asante kwa maelezo.',
+        observations: [
+          { key: 'expert_willingness', quote: 'Ndiyo, nimeelewa.', typed_value: true,
+            asserted: true, certainty: 'certain' }
+        ],
+        localized_prompts: {}
+      }.to_json
+    ).perform
+
+    expect(result.observations).not_to include('expert_willingness')
+    expect(result.diagnostics.dig('rejected_field_keys_by_code', 'quote_context')).to contain_exactly(
+      'expert_willingness'
+    )
+  end
+
   it 'rejects unsafe or unsupported candidates without exposing provider garbage' do
     result = described_class.new(
       offer: offer,

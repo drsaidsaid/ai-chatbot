@@ -10,6 +10,8 @@ class AiLeadEmployee::StructuredQualificationResponse # rubocop:disable Metrics/
   GOAL_OR_FUTURE = /\b(?:goal|target|aim|plan|planning|want|would like|hope|future|lengo|malengo|nataka|ningependa|
                     natarajia|mpango|mipango|kufikia|nitafikia)\b/ix
   GOAL_FIELD = /\b(?:goal|target|aim|desired|future|lengo|malengo)\b/i
+  INTENT_BOOLEAN_FIELD = /\b(?:willing|willingness|ready|readiness|interested|would you|ungependa|uko tayari)\b/i
+  POSITIVE_INTENT = /\b(?:want|would like|willing|ready|interested|nataka|ningependa|niko tayari|uko tayari)\b/i
   NEGATION = /\b(?:no|not|never|without|don't|dont|cannot|can't|sina|hapana|si|sio|siyo|bila)\b/i
   HYPOTHETICAL = /\b(?:if|would|could|might|maybe|perhaps|ikiwa|endapo|labda)\b/i
   THIRD_PARTY = /\b(?:he|she|they|them|his|her|their|friend|partner|spouse|rafiki|yeye|wao)\b/i
@@ -111,8 +113,9 @@ class AiLeadEmployee::StructuredQualificationResponse # rubocop:disable Metrics/
     context = containing_clause(quote)
     return 'quote_context' if context.include?('?')
     return 'quote_context' if context.match?(HYPOTHETICAL) || context.match?(THIRD_PARTY)
-    return 'quote_context' if context.match?(GOAL_OR_FUTURE) && !goal_field?(question)
+    return 'quote_context' if context.match?(GOAL_OR_FUTURE) && !goal_field?(question) && !intent_boolean_field?(question)
     return 'quote_context' if context.match?(NEGATION) && !negative_value?(question, candidate)
+    return 'quote_context' if unsupported_positive_intent?(question, context, candidate)
 
     return 'quote_context' unless quote.split.size >= 2 || question['answer_type'] == 'number'
 
@@ -125,6 +128,15 @@ class AiLeadEmployee::StructuredQualificationResponse # rubocop:disable Metrics/
 
   def goal_field?(question)
     [question['key'], question['meaning'], question['prompt']].compact.join(' ').match?(GOAL_FIELD)
+  end
+
+  def intent_boolean_field?(question)
+    question['answer_type'] == 'boolean' &&
+      [question['key'], question['meaning'], question['prompt']].compact.join(' ').match?(INTENT_BOOLEAN_FIELD)
+  end
+
+  def unsupported_positive_intent?(question, context, candidate)
+    intent_boolean_field?(question) && candidate['typed_value'] == true && !context.match?(POSITIVE_INTENT)
   end
 
   def negative_value?(question, candidate)
