@@ -88,12 +88,12 @@ class AiLeadEmployee::AiProvider::MeteredClient
   end
 
   def reserve_usage!(purpose:, max_tokens:, pilot_authorization:, orchestration_intent:)
-    with_usage_ledger do |connection_class, usage_class, pilot_class|
+    with_usage_ledger do |connection_class, usage_class, pilot_class, _intent_class|
       current = connection_class.find(connection.id)
       pilot = pilot_class.find(pilot_authorization.id) if pilot_authorization
       if pilot
         pilot.with_lock do
-          pilot_failure!(pilot, usage_class)
+          pilot_failure!(pilot, usage_class, orchestration_intent)
           reserve_current!(usage_class, current, purpose, max_tokens, pilot, orchestration_intent)
         end
       else
@@ -115,11 +115,16 @@ class AiLeadEmployee::AiProvider::MeteredClient
     end
   end
 
-  def pilot_failure!(pilot, usage_class) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def pilot_failure!(pilot, usage_class, orchestration_intent) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
     unless pilot.status == 'active' && pilot.starts_at <= Time.current && pilot.expires_at > Time.current &&
            pilot.account_id == connection.account_id && pilot.ai_provider_connection_id == connection.id &&
            pilot.provider_configuration_version == connection.configuration_version
       raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot Authorization is not current'
+    end
+
+    intent = AiLeadEmployee::AiProviderLedgerOrchestrationIntent.find_by(id: orchestration_intent&.id)
+    unless intent&.exact_pilot_scope?(pilot)
+      raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot Authorization intent scope is not current'
     end
 
     usages = usage_class.where(pilot_authorization_id: pilot.id)
@@ -128,7 +133,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
     raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot provider attempt is stale' if stale
     raise AiLeadEmployee::AiProvider::PilotBusyFailure, 'Pilot provider attempt is already in flight' if usages.exists?(status: 'reserved')
 
-    if usages.exists?(status: 'completed', cost_available: false)
+    if usages.exists?(status: %w[completed failed], cost_available: false)
       pause_pilot!(pilot, 'provider_cost_unavailable')
       raise AiLeadEmployee::AiProvider::PilotAdmissionFailure, 'Pilot provider cost is unavailable'
     end
@@ -163,7 +168,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
   end
 
   def complete_usage!(usage_id, response)
-    with_usage_ledger do |_connection_class, usage_class, _pilot_class|
+    with_usage_ledger do |_connection_class, usage_class, _pilot_class, _intent_class|
       usage_class.find(usage_id).update!(
         status: 'completed',
         provider_request_id: response.id,
@@ -181,7 +186,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def fail_usage!(usage_id, failure_class)
     return unless usage_id
 
-    with_usage_ledger do |_connection_class, usage_class, _pilot_class|
+    with_usage_ledger do |_connection_class, usage_class, _pilot_class, _intent_class|
       usage_class.find(usage_id).update!(
         status: 'failed',
         failure_class: failure_class,
@@ -193,7 +198,7 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def record_provider_failure!(reservation, failure_class)
     return unless reservation
 
-    with_usage_ledger do |connection_class, _usage_class, _pilot_class|
+    with_usage_ledger do |connection_class, _usage_class, _pilot_class, _intent_class|
       current = connection_class.find(connection.id)
       current.with_lock do
         next unless current.configured? && current.configuration_version == reservation.configuration_version
@@ -219,12 +224,12 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def with_usage_ledger
     unless ActiveRecord::Base.connection.transaction_open?
       return yield(AiLeadEmployee::AiProviderConnection, AiLeadEmployee::AiProviderUsage,
-                   AiLeadEmployee::PilotAuthorization)
+                   AiLeadEmployee::PilotAuthorization, AiLeadEmployee::OrchestrationIntent)
     end
 
     AiLeadEmployee::AiProviderLedgerRecord.connection_pool.with_connection do
       yield(AiLeadEmployee::AiProviderLedgerConnection, AiLeadEmployee::AiProviderLedgerUsage,
-            AiLeadEmployee::AiProviderLedgerPilotAuthorization)
+            AiLeadEmployee::AiProviderLedgerPilotAuthorization, AiLeadEmployee::AiProviderLedgerOrchestrationIntent)
     end
   rescue ActiveRecord::ConnectionTimeoutError, ActiveRecord::ConnectionNotEstablished => e
     raise AiLeadEmployee::AiProvider::AdmissionUnavailableFailure, "AI provider usage admission unavailable: #{e.message}"
@@ -251,13 +256,23 @@ class AiLeadEmployee::AiProvider::MeteredClient
   def clean_up_provider_failure(reservation, failure)
     cleanup_context = { reservation: reservation, failure: failure }
     attempt_cleanup(operation: 'fail_usage', **cleanup_context) { fail_usage!(reservation&.usage_id, failure.failure_class) }
+    attempt_cleanup(operation: 'pause_unknown_pilot_failure', **cleanup_context) { pause_unknown_pilot_failure!(reservation) }
     attempt_cleanup(operation: 'record_provider_failure', **cleanup_context) { record_provider_failure!(reservation, failure.failure_class) }
+  end
+
+  def pause_unknown_pilot_failure!(reservation)
+    return unless reservation&.pilot_authorization_id
+
+    with_usage_ledger do |_connection_class, _usage_class, pilot_class, _intent_class|
+      pilot = pilot_class.find(reservation.pilot_authorization_id)
+      pilot.with_lock { pause_pilot!(pilot, 'provider_cost_unknown') }
+    end
   end
 
   def ensure_pilot_cost_is_known!(reservation, response)
     return unless reservation.pilot_authorization_id && response.cost_usd.nil?
 
-    with_usage_ledger do |_connection_class, _usage_class, pilot_class|
+    with_usage_ledger do |_connection_class, _usage_class, pilot_class, _intent_class|
       pilot = pilot_class.find(reservation.pilot_authorization_id)
       pilot.with_lock { pause_pilot!(pilot, 'provider_cost_unavailable') }
     end

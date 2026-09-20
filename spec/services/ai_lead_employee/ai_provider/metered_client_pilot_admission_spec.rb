@@ -32,7 +32,7 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
       ai_provider_connection: provider, authorized_by_platform_app: create(:platform_app),
       recipient: contact_inbox.source_id, control_version: conversation.control_version,
       provider_configuration_version: provider.configuration_version,
-      max_attempts: 1, max_spend_usd: 1, provider_limit_usd: 1,
+      max_attempts: 1, max_spend_usd: 1, provider_limit_usd: 1, external_owner_approval_reference: 'test-owner-approval',
       provider_limit_verified_at: Time.current,
       provider_limit_evidence: {
         kind: 'openrouter_key_limit', key_fingerprint: 'sha256:test',
@@ -88,10 +88,28 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
     end.to raise_error(AiLeadEmployee::AiProvider::TimeoutFailure)
 
     expect(AiLeadEmployee::AiProviderUsage.find_by!(pilot_authorization: authorization)).to be_failed
+    expect(authorization.reload).to have_attributes(status: 'paused', pause_reason: 'provider_cost_unknown')
     expect do
       client.complete(messages: [{ role: 'user', content: 'Retry' }], pilot_authorization: authorization,
                       orchestration_intent: intent)
     end.to raise_error(AiLeadEmployee::AiProvider::PilotAdmissionFailure, /attempt limit/)
+  end
+
+  it 'rejects a persisted intent from another pilot scope before making a provider call' do
+    other_conversation = create(:conversation, account: account, inbox: inbox, contact: contact, contact_inbox: contact_inbox,
+                                               control_state: :ai_active)
+    other_message = create(:message, account: account, inbox: inbox, conversation: other_conversation, sender: contact,
+                                     message_type: :incoming, content: 'Other question')
+    other_intent = create(:ai_orchestration_intent, account: account, conversation: other_conversation,
+                                                    triggering_message: other_message,
+                                                    observed_control_version: other_conversation.control_version,
+                                                    pilot_authorization: authorization)
+
+    expect do
+      client.complete(messages: [{ role: 'user', content: 'Question' }], pilot_authorization: authorization,
+                      orchestration_intent: other_intent)
+    end.to raise_error(AiLeadEmployee::AiProvider::PilotAdmissionFailure, /intent scope/)
+    expect(adapter).not_to have_received(:complete)
   end
 
   it 'pauses the authorization and fails closed when provider cost is unavailable' do

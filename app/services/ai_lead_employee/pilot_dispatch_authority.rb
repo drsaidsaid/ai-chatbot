@@ -10,7 +10,7 @@ class AiLeadEmployee::PilotDispatchAuthority
 
   def failure_code # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     return 'pilot_authorization_missing' unless authorization && usage
-    return 'pilot_authorization_stopped' unless authorization.active?
+    return 'pilot_authorization_stopped' unless authorization.active? || deliverable_known_usage_after_cost_uncertainty?
     return 'pilot_authorization_expired' unless authorization.starts_at <= Time.current && authorization.expires_at > Time.current
     return 'pilot_scope_changed' unless exact_scope?
     return 'pilot_provider_changed' unless provider_current?
@@ -45,5 +45,10 @@ class AiLeadEmployee::PilotDispatchAuthority
       usage.ai_provider_connection_id == authorization.ai_provider_connection_id &&
       usage.configuration_version == authorization.provider_configuration_version &&
       usage.completed? && usage.cost_available?
+  end
+
+  def deliverable_known_usage_after_cost_uncertainty?
+    authorization.paused? && authorization.pause_reason.in?(%w[provider_cost_unknown provider_cost_unavailable]) &&
+      usage.completed? && usage.cost_available? && usage.completed_at && authorization.paused_at && usage.completed_at < authorization.paused_at
   end
 end

@@ -15,10 +15,11 @@ class AiLeadEmployee::PilotAuthorization < ApplicationRecord
 
   has_many :orchestration_intents, class_name: 'AiLeadEmployee::OrchestrationIntent', dependent: :restrict_with_exception
   has_many :provider_usages, class_name: 'AiLeadEmployee::AiProviderUsage', dependent: :restrict_with_exception
+  has_many :events, class_name: 'AiLeadEmployee::PilotAuthorizationEvent', dependent: :restrict_with_exception
 
   enum :status, STATUSES.index_with(&:itself)
 
-  validates :recipient, :provider_limit_verified_at, :starts_at, :expires_at, presence: true
+  validates :recipient, :provider_limit_verified_at, :starts_at, :expires_at, :external_owner_approval_reference, presence: true
   validates :control_version, :provider_configuration_version,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :max_attempts, numericality: { only_integer: true, greater_than: 0 }

@@ -9,12 +9,13 @@ class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/Cl
 
   Result = Struct.new(:handoff, :created, :assignee, :alert_message_ids, keyword_init: true)
 
-  def initialize(conversation:, qualification:, qualification_context: nil, defer_alert_delivery: false)
+  def initialize(conversation:, qualification:, qualification_context: nil, defer_alert_delivery: false, suppress_external_alerts: false)
     @conversation = conversation
     @qualification = qualification
     @qualification_context = qualification_context
     @account = conversation.account
     @defer_alert_delivery = defer_alert_delivery
+    @suppress_external_alerts = suppress_external_alerts
   end
 
   def perform
@@ -75,10 +76,19 @@ class AiLeadEmployee::HighlyQualifiedHandoffService # rubocop:disable Metrics/Cl
     Result.new(handoff: handoff, created: false, assignee: handoff.assignee)
   end
 
-  attr_reader :account, :conversation, :qualification, :qualification_context, :defer_alert_delivery
+  attr_reader :account, :conversation, :qualification, :qualification_context, :defer_alert_delivery, :suppress_external_alerts
 
   def deliver_result_alerts(result)
     return result unless result.handoff
+
+    if suppress_external_alerts
+      result.handoff.update!(
+        alert_recipients: [],
+        alert_deliveries: [{ 'status' => 'suppressed', 'reason' => 'pilot_external_alert_not_authorized', 'at' => Time.current.iso8601 }]
+      )
+      result.alert_message_ids = []
+      return result
+    end
 
     result.alert_message_ids = deliver_alerts!(result.handoff)
     result.handoff.reload

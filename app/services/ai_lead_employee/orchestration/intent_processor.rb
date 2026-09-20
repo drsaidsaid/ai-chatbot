@@ -305,7 +305,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       conversation: conversation,
       qualification: qualification_result.qualification,
       qualification_context: qualification_result.qualification_context,
-      defer_alert_delivery: true
+      defer_alert_delivery: true,
+      suppress_external_alerts: intent.pilot_authorization.present?
     ).perform
   end
 

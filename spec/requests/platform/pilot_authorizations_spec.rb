@@ -55,8 +55,17 @@ RSpec.describe 'Platform Pilot Authorizations API', type: :request do
     )
   end
 
+  it 'requires a nonempty external owner approval reference' do
+    params = activation_params.except(:external_owner_approval_reference)
+    post endpoint, headers: headers, params: params, as: :json
+
+    expect(response).to have_http_status(:bad_request)
+    expect(AiLeadEmployee::PilotAuthorization.count).to eq(0)
+  end
+
   def activation_params
-    { conversation_id: conversation.id, max_attempts: 3, max_spend_usd: 1.0, expires_at: 1.hour.from_now.iso8601 }
+    { conversation_id: conversation.id, max_attempts: 3, max_spend_usd: 1.0, expires_at: 1.hour.from_now.iso8601,
+      external_owner_approval_reference: 'owner-approval-r17-test' }
   end
 
   def clean_committed_fixtures

@@ -10,7 +10,8 @@ class Platform::Api::V1::PilotAuthorizationsController < PlatformController
     authorization = AiLeadEmployee::PilotAuthorizationActivator.new(
       account: @resource, conversation: conversation,
       max_attempts: params.require(:max_attempts), max_spend_usd: params.require(:max_spend_usd),
-      expires_at: params.require(:expires_at), platform_app: @platform_app
+      expires_at: params.require(:expires_at), platform_app: @platform_app,
+      external_owner_approval_reference: params.require(:external_owner_approval_reference)
     ).perform
     render json: payload(authorization), status: :created
   end
@@ -20,8 +21,9 @@ class Platform::Api::V1::PilotAuthorizationsController < PlatformController
     status = params.require(:status)
     raise ActionController::BadRequest, 'status must pause or revoke the authorization' unless status.in?(%w[paused revoked])
 
-    authorization.update!(status: status, paused_at: Time.current, pause_reason: params[:reason].presence || "operator_#{status}")
-    AiLeadEmployee::AutomationCancellation.call(conversation: authorization.conversation, reason: "pilot_#{status}")
+    authorization = AiLeadEmployee::PilotAuthorizationStopper.new(
+      authorization: authorization, platform_app: @platform_app, status: status, reason: params[:reason]
+    ).perform
     render json: payload(authorization)
   end
 
@@ -40,6 +42,7 @@ class Platform::Api::V1::PilotAuthorizationsController < PlatformController
   def payload(record)
     record.as_json(only: %i[id account_id inbox_id contact_id conversation_id ai_provider_connection_id recipient
                             control_version provider_configuration_version status max_attempts max_spend_usd
-                            provider_limit_usd provider_limit_verified_at starts_at expires_at paused_at pause_reason])
+                            provider_limit_usd provider_limit_verified_at starts_at expires_at paused_at pause_reason
+                            external_owner_approval_reference])
   end
 end

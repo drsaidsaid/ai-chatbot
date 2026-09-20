@@ -113,7 +113,7 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
       conversation: conversation, ai_provider_connection: provider,
       recipient: sender_number, control_version: conversation.control_version,
       provider_configuration_version: provider.configuration_version,
-      max_attempts: 3, max_spend_usd: 1.00, provider_limit_usd: 1.00,
+      max_attempts: 3, max_spend_usd: 1.00, provider_limit_usd: 1.00, external_owner_approval_reference: 'test-owner-approval',
       provider_limit_verified_at: Time.current, provider_limit_evidence: {
         'kind' => 'openrouter_key_limit', 'key_fingerprint' => 'sha256:test',
         'verification_digest' => 'sha256:verified-response'
