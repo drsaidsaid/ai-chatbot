@@ -776,6 +776,47 @@ RSpec.describe 'Business setup source review', type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
+  it 'retains independently configured typed qualification when legacy source mode ownership is removed' do
+    post source_url, headers: headers,
+                     params: { source: { title: 'Online Profits University — owner-approved pilot notes', source_type: 'document',
+                                         body: 'Customers need an active business registration.' } }, as: :json
+    first = response.parsed_body
+    source = AiLeadEmployee::BusinessSetupSource.find(first.fetch('id'))
+    old_key = first.dig('configuration', 'questions').sole.fetch('key')
+    legacy_proposal = source.proposal.deep_dup
+    legacy_proposal['source_ownership'] = {
+      'question_keys' => [old_key],
+      'qualification_mode' => { 'baseline' => 'not_configured', 'value' => 'enabled' }
+    }
+    source.update!(proposal: legacy_proposal, version: 2)
+
+    AiLeadEmployee::OfferConfigurationWriter.new(
+      offer: offer.reload, attributes: pilot_alternative_configuration(offer.reload)
+    ).perform
+    reviewed = offer.reload.payload.slice(
+      'name', 'currency', 'enabled', 'version', 'qualification_mode', 'next_step', 'questions', 'budget_ranges', 'rules',
+      'requirement_groups', 'score_weights', 'score_thresholds'
+    )
+
+    patch "#{source_url}/#{source.id}", headers: headers,
+                                        params: { expected_source_version: 2,
+                                                  source: { title: source.title, source_type: source.source_type,
+                                                            body: 'Online Profits University provides 12 months of mentoring.',
+                                                            reviewed_configuration: reviewed } }, as: :json
+
+    corrected = response.parsed_body
+    expect(response).to have_http_status(:success)
+    expect(corrected.fetch('version')).to eq(3)
+    expect(corrected.dig('configuration', 'qualification_mode')).to eq('enabled')
+    expect(corrected.dig('configuration', 'questions').pluck('key')).to contain_exactly(
+      'business_status', 'monthly_business_revenue_tzs', 'expert_willingness', 'investment_readiness_12_months',
+      'business_goal', 'main_obstacle', 'sales_call_agreement'
+    )
+    expect(corrected.dig('configuration', 'rules')).to eq([])
+    expect(corrected.dig('configuration', 'requirement_groups')).to eq(reviewed.fetch('requirement_groups'))
+    expect(corrected.fetch('history').last).to include('event' => 'corrected', 'version' => 3)
+  end
+
   BusinessSetupFixtureMatrix::FIXTURES.each do |key, fixture|
     it "previews the #{key} setup in #{fixture[:language]} without activating it" do
       configured_offer = if key == :online_profits_en
@@ -839,5 +880,51 @@ RSpec.describe 'Business setup source review', type: :request do
                                                                     expected_offer_version: offer.reload.configuration_version }, as: :json
     expect(response).to have_http_status(:success)
     AiLeadEmployee::BusinessSetupSource.find(proposal.fetch('id'))
+  end
+
+  def pilot_alternative_configuration(record) # rubocop:disable Metrics/MethodLength
+    questions = [
+      pilot_question('business_status', answer_type: 'choice', options: %w[no_business operating_business uncertain],
+                                        prompt: 'Do you currently run a business?'),
+      pilot_question('monthly_business_revenue_tzs', answer_type: 'money', required: false, position: 1,
+                                                     prompt: 'What is your monthly business revenue in TZS?'),
+      pilot_question('expert_willingness', answer_type: 'boolean', position: 2,
+                                           prompt: 'Would you build a business using your own expertise?'),
+      pilot_question('investment_readiness_12_months', answer_type: 'boolean', position: 3, purpose: 'readiness',
+                                                       prompt: 'Would you invest financially in mentoring?'),
+      pilot_question('business_goal', answer_type: 'text', required: false, position: 4, purpose: 'readiness',
+                                      prompt: 'What is your business goal?'),
+      pilot_question('main_obstacle', answer_type: 'text', required: false, position: 5, purpose: 'readiness',
+                                      prompt: 'What is your main obstacle?'),
+      pilot_question('sales_call_agreement', answer_type: 'boolean', position: 6, purpose: 'action_eligibility',
+                                             prompt: 'Would you like a sales call?')
+    ]
+    record.payload.slice('name', 'currency', 'enabled').merge(
+      'version' => record.configuration_version, 'qualification_mode' => 'enabled', 'next_step' => { 'kind' => 'sales_call' },
+      'questions' => questions, 'budget_ranges' => [], 'rules' => [],
+      'requirement_groups' => [
+        { 'dimension' => 'fit', 'any' => [
+          { 'field' => 'business_status', 'operator' => 'eq', 'value' => 'no_business' },
+          { 'all' => [
+            { 'field' => 'business_status', 'operator' => 'eq', 'value' => 'operating_business' },
+            { 'field' => 'monthly_business_revenue_tzs', 'operator' => 'lt',
+              'value' => { 'amount' => '1000000.00', 'currency' => 'TZS' } }
+          ] }
+        ] },
+        { 'dimension' => 'fit', 'all' => [{ 'field' => 'expert_willingness', 'operator' => 'eq', 'value' => true }] },
+        { 'dimension' => 'readiness', 'all' => [
+          { 'field' => 'investment_readiness_12_months', 'operator' => 'eq', 'value' => true }
+        ] },
+        { 'dimension' => 'action_eligibility', 'all' => [
+          { 'field' => 'sales_call_agreement', 'operator' => 'eq', 'value' => true }
+        ] }
+      ],
+      'score_weights' => {}, 'score_thresholds' => { 'qualified' => 0, 'highly_qualified' => 100 }
+    )
+  end
+
+  def pilot_question(key, answer_type:, prompt:, **attributes)
+    { 'key' => key, 'meaning' => key.humanize, 'answer_type' => answer_type, 'prompt' => prompt,
+      'position' => 0, 'enabled' => true, 'required' => true, 'purpose' => 'fit' }.merge(attributes.stringify_keys)
   end
 end

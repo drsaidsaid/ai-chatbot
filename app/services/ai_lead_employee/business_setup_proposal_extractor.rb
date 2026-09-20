@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AiLeadEmployee::BusinessSetupProposalExtractor
+class AiLeadEmployee::BusinessSetupProposalExtractor # rubocop:disable Metrics/ClassLength
   NEXT_STEP_PATTERNS = {
     'purchase_link' => /\b(purchase link|buy now|kiungo cha ununuzi|nunua)\b/i,
     'appointment' => /\b(appointment|book(?:ing)?|miadi)\b/i,
@@ -137,8 +137,17 @@ class AiLeadEmployee::BusinessSetupProposalExtractor
 
   def reset_owned_value!(proposed, field, ownership)
     return unless ownership.is_a?(Hash) && proposed[field] == ownership['value']
+    return if field == 'qualification_mode' && independently_configured_qualification?(proposed)
 
     proposed[field] = ownership['baseline'].deep_dup
+  end
+
+  def independently_configured_qualification?(proposed)
+    return true if Array(proposed['requirement_groups']).any? || proposed['score_weights'].to_h.any?
+
+    source_keys = generated_question_keys
+    Array(proposed['questions']).any? { |question| source_keys.exclude?(question['key']) } ||
+      Array(proposed['rules']).any? { |rule| source_keys.exclude?(rule['field']) }
   end
 
   def apply_next_step_proposal!(proposed)
