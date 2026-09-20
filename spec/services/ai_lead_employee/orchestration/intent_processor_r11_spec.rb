@@ -1222,8 +1222,9 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     provider_prompt = captured_provider_messages.map { |message| message.fetch(:content) }.join("\n")
     expect(provider_prompt).to include('reply in the requested language')
-    expect(provider_prompt).to include('shortest independent current-fact clause')
-    expect(provider_prompt).to include('do not include adjacent goals')
+    expect(provider_prompt).to include('shortest independent clause relevant to that configured field')
+    expect(provider_prompt).to include('For current-state fields, do not include adjacent goals')
+    expect(provider_prompt).to include('For configured goal or target fields')
     expect(provider_prompt).to include('money fields')
     expect(provider_prompt).to include('amount_minor')
     expect(provider_prompt).to include('TZS 800,000 => 80000000')
@@ -1241,6 +1242,18 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(evidence['business_status'].value).to include('typed_value' => 'running')
     expect(evidence['monthly_business_revenue_tzs'].value).to include('typed_value' => 80_000_000, 'currency' => 'TZS')
     expect(evidence).not_to include('expert_willingness', 'sales_call_agreement')
+    diagnostics = intent.decision.fetch('structured_qualification')
+    expect(diagnostics).to include(
+      'configured_field_keys' => %w[business_status monthly_business_revenue_tzs expert_willingness],
+      'accepted_field_keys' => %w[business_status monthly_business_revenue_tzs],
+      'absent_candidate_field_keys' => [],
+      'rejection_counts' => include('quote_context' => 2)
+    )
+    expect(diagnostics.dig('rejected_field_keys_by_code', 'quote_context')).to contain_exactly(
+      'expert_willingness', 'monthly_business_revenue_tzs'
+    )
+    expect(intent.outbound_message.additional_attributes.dig('ai_lead_employee', 'structured_qualification')).to eq(diagnostics)
+    expect(diagnostics.to_s).not_to include('800,000', 'milioni 3', '300000000')
   end
 
   it 'uses managed billing to extract configured facts from an ordinary mixed business question' do
@@ -1417,6 +1430,10 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(evidence.value).to include('typed_value' => 'running')
     authority = intent.outbound_message.additional_attributes.fetch('ai_lead_employee')
     expect(authority).to include('provider_configuration_version' => connection.configuration_version)
+    expect(authority.fetch('structured_qualification')).to include(
+      'accepted_field_keys' => ['business_status'],
+      'absent_candidate_field_keys' => ['team_size']
+    )
   end
 
   it 'omits the next Swahili qualification question when the provider does not translate the owner prompt' do

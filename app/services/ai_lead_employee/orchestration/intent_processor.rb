@@ -519,8 +519,8 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     <<~CONTRACT.squish
       Return JSON only with reply, observations, and localized_prompts. When an approved source answer is present, reply must use only that approved source answer and reply in the requested language; otherwise reply must be a brief acknowledgment only.
       observations are candidates with key, quote copied exactly from one full asserted Lead clause, typed_value, asserted true, and certainty "certain".
-      The quote must be the shortest independent current-fact clause needed for that field; do not include adjacent goals, targets, future plans, questions, hypotheticals, or another field's clause in the quote.
-      typed_value must match the configured answer_type and local validator: for money fields, quote must contain exactly one current amount with currency/unit and configured period, and typed_value must be the integer amount_minor in the Offer currency parsed from that quote (example: TZS 800,000 => 80000000), not formatted text or human major units; for number fields, typed_value must be the numeric value in the quote; for choice fields, typed_value must be one exact configured option; for boolean fields, typed_value must be true or false; for text fields, typed_value must exactly equal the quote.
+      The quote must be the shortest independent clause relevant to that configured field. For current-state fields, do not include adjacent goals, targets, future plans, questions, hypotheticals, or another field's clause. For configured goal or target fields, keep the Lead's requested goal or target clause and do not recast it as current state.
+      typed_value must match the configured answer_type and local validator: for money fields, quote must contain exactly one amount with currency/unit and any configured period, and typed_value must be the integer amount_minor in the Offer currency parsed from that quote (example: TZS 800,000 => 80000000), not formatted text or human major units; for current money fields the amount must be asserted as current, while configured goal or target money fields may use an explicitly requested goal or target amount; for number fields, typed_value must be the numeric value in the quote; for choice fields, typed_value must be one exact configured option; for boolean fields, typed_value must be true or false; for text fields, typed_value must exactly equal the quote.
       Use the full Lead clause, owner prompt, field meaning, currency, period, requested language, and pending question context when proposing a value; skip ambiguous, conflicting, unsupported, third-party, action-agreement, and consent facts.
       Goal or negative facts are valid only when the configured field meaning and owner prompt ask for that kind of fact; otherwise skip them.
       Never infer eligibility, requirements, handoff, action agreement, or a next question. Current requested language: #{classification.language}. Pending question key: #{@structured_offer_context['next_question_key']}. Current Offer fields: #{fields.to_json}.
@@ -535,9 +535,11 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       )
     end
 
-    AiLeadEmployee::StructuredQualificationResponse.new(
+    result = AiLeadEmployee::StructuredQualificationResponse.new(
       content: response.content, offer: @locked_structured_offer || selected_offer, incoming_message: triggering_message
     ).perform
+    @structured_qualification_diagnostics = result.diagnostics
+    result
   end
 
   def record_structured_observations!(observations)
@@ -636,7 +638,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
         offer_context: AiLeadEmployee::OfferAnswerContext.capture(
           conversation: conversation, offer: selected_offer, sources: source_references
         )
-      }.merge(pilot_delivery_authority).merge(provider_delivery_authority(provider_response))
+      }.merge(structured_qualification_metadata).merge(pilot_delivery_authority).merge(provider_delivery_authority(provider_response))
         .merge(reply_usage_authority(provider_response))
     }
   end
@@ -714,7 +716,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
         outbound_message_id: outbound_message.id,
         provider_response_id: provider_response&.id,
         qualification: qualification_result_payload(qualification_result)
-      ),
+      ).merge(structured_qualification_metadata),
       completed_at: Time.current
     }
   end
@@ -825,6 +827,16 @@ class AiLeadEmployee::Orchestration::IntentProcessor
       'next_question_key' => qualification_result.next_question_key,
       'configuration_version' => qualification&.configuration_version
     }.merge(qualification_result.qualification_context || {})
+  end
+
+  def structured_qualification_diagnostics
+    @structured_qualification_diagnostics.presence
+  end
+
+  def structured_qualification_metadata
+    return {} unless structured_qualification_diagnostics
+
+    { structured_qualification: structured_qualification_diagnostics }
   end
 
   def record_ai_employee_decision!(status:, qualification_result:, source_references: [])
