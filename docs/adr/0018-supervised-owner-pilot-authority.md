@@ -1,6 +1,6 @@
 # ADR 0018: Supervised owner pilot authority
 
-Status: Proposed — pending root acceptance
+Status: Accepted for the bounded pilot implementation — pending root acceptance
 
 ## Context
 
