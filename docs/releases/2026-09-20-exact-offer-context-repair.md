@@ -1,0 +1,11 @@
+# Exact named Offer context for owner pilot
+
+The deployed pilot accepted and delivered the owner question about Online Profits University, but returned no_approved_knowledge despite the published scoped document. Conversation2 had no Offer selected. The resolver now selects a unique complete normalized enabled Offer name within the account when no explicit selection exists. It preserves explicit selections, including disabled selections, and refuses partial/ambiguous matches. Inference holds Conversation then candidate Offer, rechecks the match and persists normal selection/version state. It never changes campaign fields. Current Offer is re-read across provider work; configuration, disable and selection mutations lead to review rather than a stale grounded answer. Disabled/not-configured qualification omits unnecessary qualification metadata, retaining Offer answer authority.
+
+Candidates94e85704/e119b5e4 are based on deployededffbc6c. Independent review verified stale-cache and candidate-row race fixes. Standards reviewer retracted a claimed final-dispatch lock gap: OfferDeliveryContext always locks the current Conversation Offer even with no qualification context. Root does not expand this bounded repair to account-wide serialization against creation of another Offer: uniqueness is decided at the locked re-resolution query, and a later concurrent creation does not retroactively invalidate an explicit selection. No account-crossing inference is possible.
+
+Candidate15focused examples pass, including enabled seven-question orchestration and fake-provider mutation cases. Canonical combined resolver, orchestration, pricing, answer context, pilot authority and R11 suite:179examples,0failures in32.35s.
+
+Known baseline validation debt: offer_reply_context_spec has12examples/6failures on clean deployededff, independently reproduced by root; same six descriptions/classes on candidate. They concern legacy greeting qualification/automatic-selection and missing handoff fixtures/context expectations. They are recorded, not declared harmless or waived for fullV1 acceptance. No broad ticket is closed by this repair.
+
+Deployment and actual grounded English/Swahili response quality remain separate checks. No live message or provider call is part of these local tests.

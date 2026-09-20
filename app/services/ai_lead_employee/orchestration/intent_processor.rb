@@ -293,6 +293,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def qualify_lead!
     return unless account.qualification_offers.enabled_in_order.exists?
+    return if selected_offer && !selected_offer.qualification_enabled?
 
     AiLeadEmployee::QualificationService.new(
       conversation: conversation,
@@ -527,7 +528,34 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def selected_offer
-    account.qualification_offers.enabled_in_order.find_by(id: conversation.offer_id)
+    return account.qualification_offers.enabled_in_order.find_by(id: conversation.offer_id) if conversation.offer_id.present?
+    return if defined?(@exact_offer_context_resolved)
+
+    # Persist the unambiguous per-message selection while the caller holds the
+    # Conversation lock. Delivery authority then validates the same selection
+    # and revision; campaign/ad routing remains untouched.
+    inferred_offer = resolve_and_select_exact_offer!
+    @exact_offer_context_resolved = true
+    inferred_offer
+  end
+
+  def resolve_and_select_exact_offer!
+    candidate = exact_offer_context_candidate
+    return unless candidate
+
+    candidate.with_lock('FOR NO KEY UPDATE') do
+      # Re-resolve after taking the candidate lock. A concurrent configuration
+      # writer or overlapping Offer creation must not bind stale context.
+      current = exact_offer_context_candidate
+      return unless current&.id == candidate.id && candidate.enabled?
+
+      conversation.update!(offer: candidate)
+      account.qualification_offers.enabled_in_order.find_by(id: candidate.id)
+    end
+  end
+
+  def exact_offer_context_candidate
+    AiLeadEmployee::ExactOfferContextResolver.new(account: account, message: triggering_message.content).perform
   end
 
   def promotion_eligible
