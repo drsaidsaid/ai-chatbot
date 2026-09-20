@@ -98,10 +98,13 @@ class Whatsapp::OutboundEligibility
 
     lead_failure = automation_prerequisite_failure
     return lead_failure if lead_failure
+
+    pilot_failure = pilot_dispatch_failure
+    return pilot_failure if pilot_failure
     return qualification_failure(alert) unless provider_control_required?
 
     attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
-    pilot_dispatch_failure || AiLeadEmployee::AiProvider::RuntimeControl.failure_code_locked(
+    AiLeadEmployee::AiProvider::RuntimeControl.failure_code_locked(
       connection: @authority_records[:provider_connection],
       configuration_version: attributes['provider_configuration_version'],
       usage_period_on: attributes['provider_usage_period_on']
@@ -191,7 +194,8 @@ class Whatsapp::OutboundEligibility
       message: @message,
       conversation: @conversation,
       authorization: @authority_records[:pilot_authorization],
-      usage: @authority_records[:provider_usage]
+      usage: @authority_records[:provider_usage],
+      intent: @authority_records[:orchestration_intent]
     ).failure_code
   end
 end

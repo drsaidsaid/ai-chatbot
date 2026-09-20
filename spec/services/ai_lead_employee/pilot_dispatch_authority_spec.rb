@@ -47,14 +47,18 @@ RSpec.describe AiLeadEmployee::PilotDispatchAuthority do
                        ai_lead_employee: {
                          orchestration_intent_id: intent.id,
                          pilot_authorization_id: authorization.id,
-                         provider_usage_id: usage.id
+                         provider_usage_id: usage.id,
+                         outbound_intent_status: 'grounded_answer'
                        }
-                     })
+                     }).tap do |record|
+                       intent.update!(outbound_message: record, state: :completed, completed_at: Time.current,
+                                      decision: { 'status' => 'grounded_answer' })
+                     end
   end
 
   it 'allows the answer from the final admitted attempt after the attempt cap has been reached' do
     expect(described_class.new(message: message, conversation: conversation,
-                               authorization: authorization, usage: usage).failure_code).to be_nil
+                               authorization: authorization, usage: usage, intent: intent).failure_code).to be_nil
   end
 
   it 'fails closed for pause, expiry, provider revision drift, takeover, and unknown cost', :aggregate_failures do
@@ -85,6 +89,6 @@ RSpec.describe AiLeadEmployee::PilotDispatchAuthority do
 
   def authority
     described_class.new(message: message, conversation: conversation.reload,
-                        authorization: authorization.reload, usage: usage.reload)
+                        authorization: authorization.reload, usage: usage.reload, intent: intent.reload)
   end
 end

@@ -106,11 +106,12 @@ class Whatsapp::OutboundDispatch
       # Prelock them at their rank; eligibility only reuses the owned rows.
       provider_connection = AiLeadEmployee::AiProviderConnection.where(account_id: @delivery.account_id).lock.first
       provider_usage = pilot_provider_usage_authority
+      orchestration_intent = pilot_orchestration_intent_authority
       membership = AccountUser.where(account_id: @delivery.account_id, user_id: @message.sender_id).lock.first if @message.sender_type == 'User'
       confirmation_booking = booking_confirmation_authority
       @authority_records = {
         provider_connection: provider_connection, pilot_authorization: pilot_authorization,
-        provider_usage: provider_usage, membership: membership,
+        provider_usage: provider_usage, orchestration_intent: orchestration_intent, membership: membership,
         confirmation_booking: confirmation_booking
       }.freeze
       @outbound_alert_authority.lock_record!
@@ -137,6 +138,15 @@ class Whatsapp::OutboundDispatch
     return unless id
 
     AiLeadEmployee::AiProviderUsage.where(account_id: @delivery.account_id, id: id).lock.first
+  end
+
+  def pilot_orchestration_intent_authority
+    return unless @message.additional_attributes.dig('ai_lead_employee', 'pilot_authorization_id')
+
+    id = @message.additional_attributes.dig('ai_lead_employee', 'orchestration_intent_id')
+    return unless id
+
+    AiLeadEmployee::OrchestrationIntent.where(account_id: @delivery.account_id, id: id).lock.first
   end
 
   def greeting_ready?(owner) # rubocop:disable Metrics/CyclomaticComplexity

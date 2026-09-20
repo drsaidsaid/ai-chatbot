@@ -45,6 +45,37 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(AiLeadEmployee::AiProvider::ClientFactory).not_to have_received(:for)
   end
 
+  it 'carries exact Pilot Authorization identity on a provider-free Review Acknowledgment' do
+    offer = create_offer(qualification_mode: 'enabled', questions: [question('business_type', 'What business do you run?')])
+    conversation.update!(offer: offer)
+    provider = create(:ai_provider_connection, account: account)
+    authorization = AiLeadEmployee::PilotAuthorization.create!(
+      account: account, inbox: channel.inbox, contact: contact, conversation: conversation,
+      ai_provider_connection: provider, authorized_by_platform_app: create(:platform_app), recipient: contact_inbox.source_id,
+      control_version: conversation.control_version, provider_configuration_version: provider.configuration_version,
+      max_attempts: 1, max_spend_usd: 1, provider_limit_usd: 1,
+      external_owner_approval_reference: 'test-owner-approval', provider_limit_verified_at: Time.current,
+      provider_limit_evidence: { kind: 'openrouter_key_limit', key_fingerprint: 'sha256:test',
+                                 verification_digest: 'sha256:response' },
+      starts_at: 1.minute.ago, expires_at: 1.hour.from_now
+    )
+    intent.update!(pilot_authorization: authorization)
+
+    described_class.new(intent: intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
+    expect_scope_clarification!
+    _followup, confirmation_intent = followup_records(offer.name)
+    confirmation_intent.update!(pilot_authorization: authorization)
+    described_class.new(intent: confirmation_intent, enqueue_deliveries: false).perform
+
+    expect(confirmation_intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'no_approved_knowledge')
+    authority = confirmation_intent.outbound_message.additional_attributes.fetch('ai_lead_employee')
+    expect(authority).to include('pilot_authorization_id' => authorization.id,
+                                 'outbound_intent_status' => 'review_acknowledgment')
+    expect(authority).not_to include('provider_usage_id', 'provider_configuration_version', 'ai_reply_usage_id')
+    expect(AiLeadEmployee::AiProviderUsage.where(pilot_authorization: authorization)).to be_empty
+    expect(AiLeadEmployee::AiReplyUsage.where(ai_orchestration_intent: confirmation_intent)).to be_empty
+  end
+
   it 'sets a polite boundary for an unrelated request without creating Review or qualification evidence' do
     triggering_message.update!(content: 'Who won the football match?')
     conversation.reload
@@ -54,6 +85,32 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
     expect(intent.outbound_message.content).to eq('I can help with questions about this business and its Offers.')
     expect(LeadQualification.where(contact: contact)).to be_empty
+  end
+
+  it 'carries exact Pilot Authorization identity on a provider-free Conversation Reply without usage or credit' do
+    triggering_message.update!(content: 'Who won the football match?')
+    provider = create(:ai_provider_connection, account: account)
+    authorization = AiLeadEmployee::PilotAuthorization.create!(
+      account: account, inbox: channel.inbox, contact: contact, conversation: conversation,
+      ai_provider_connection: provider, authorized_by_platform_app: create(:platform_app), recipient: contact_inbox.source_id,
+      control_version: conversation.control_version, provider_configuration_version: provider.configuration_version,
+      max_attempts: 1, max_spend_usd: 1, provider_limit_usd: 1,
+      external_owner_approval_reference: 'test-owner-approval', provider_limit_verified_at: Time.current,
+      provider_limit_evidence: { kind: 'openrouter_key_limit', key_fingerprint: 'sha256:test',
+                                 verification_digest: 'sha256:response' },
+      starts_at: 1.minute.ago, expires_at: 1.hour.from_now
+    )
+    intent.update!(pilot_authorization: authorization)
+    conversation.reload
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    authority = intent.reload.outbound_message.additional_attributes.fetch('ai_lead_employee')
+    expect(authority).to include('pilot_authorization_id' => authorization.id,
+                                 'outbound_intent_status' => 'conversation_reply')
+    expect(authority).not_to include('provider_usage_id', 'provider_configuration_version', 'ai_reply_usage_id')
+    expect(AiLeadEmployee::AiProviderUsage.where(pilot_authorization: authorization)).to be_empty
+    expect(AiLeadEmployee::AiReplyUsage.where(ai_orchestration_intent: intent)).to be_empty
   end
 
   it 'clarifies an external how-to question when the available scope is ambiguous' do

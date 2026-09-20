@@ -412,8 +412,15 @@ class AiLeadEmployee::Orchestration::IntentProcessor
         offer_context: AiLeadEmployee::OfferAnswerContext.capture(
           conversation: conversation, offer: selected_offer, sources: source_references
         )
-      }.merge(provider_delivery_authority(provider_response)).merge(reply_usage_authority(provider_response))
+      }.merge(pilot_delivery_authority).merge(provider_delivery_authority(provider_response))
+        .merge(reply_usage_authority(provider_response))
     }
+  end
+
+  def pilot_delivery_authority
+    return {} unless intent.pilot_authorization_id
+
+    { pilot_authorization_id: intent.pilot_authorization_id }
   end
 
   def provider_delivery_authority(provider_response)
@@ -422,8 +429,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     {
       provider_configuration_version: provider_response.configuration_version,
       provider_usage_period_on: provider_response.usage_period_on&.iso8601,
-      provider_usage_id: provider_response.provider_usage_id,
-      pilot_authorization_id: intent.pilot_authorization_id
+      provider_usage_id: provider_response.provider_usage_id
     }
   end
 
