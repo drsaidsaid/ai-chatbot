@@ -1112,6 +1112,104 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(evidence).not_to include('expert_willingness', 'sales_call_agreement')
   end
 
+  it 'uses managed billing to extract configured facts from an ordinary mixed business question' do
+    offer = create_offer(
+      name: 'Mafunzo ya Biashara',
+      currency: 'TZS',
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        ),
+        question('monthly_business_revenue_tzs', 'What is your current monthly business revenue?').merge(
+          'meaning' => 'Current monthly business revenue', 'answer_type' => 'money', 'period' => 'monthly'
+        )
+      ]
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(
+      content: 'Ndiyo, nina biashara ya kufundisha watu ujuzi mtandaoni. ' \
+               'Mapato yangu ni shilingi 800,000 kwa mwezi. Je, programu yenu inaweza kunisaidia?'
+    )
+    create(
+      :knowledge_item,
+      account: account,
+      question: triggering_message.content,
+      answer: 'Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.',
+      metadata: { 'source_reference' => 'ordinary-swahili-business-fit-v1', 'offer_ids' => [offer.id], 'language' => 'swahili' }
+    )
+    connection = create(:ai_provider_connection, account: account)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-ordinary-mixed-swahili', model: connection.model,
+        content: {
+          reply: 'Programu hii inaweza kusaidia biashara za mafunzo mtandaoni.',
+          observations: [
+            { key: 'business_status', quote: 'Ndiyo, nina biashara ya kufundisha watu ujuzi mtandaoni.',
+              typed_value: 'running', asserted: true, certainty: 'certain' },
+            { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
+              typed_value: 80_000_000, asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(provider_client).to have_received(:complete).once
+    expect(intent.ai_reply_usage).to be_reserved
+    evidence = QualificationEvidence.where(account: account, contact: contact, offer: offer).index_by(&:field_key)
+    expect(evidence['business_status'].value).to include('typed_value' => 'running')
+    expect(evidence['monthly_business_revenue_tzs'].value).to include('typed_value' => 80_000_000, 'currency' => 'TZS')
+  end
+
+  it 'uses one provider attempt when legacy business_type evidence does not cover configured fields' do
+    offer = create_offer(
+      currency: 'TZS',
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        ),
+        question('monthly_business_revenue_tzs', 'What is your current monthly business revenue?').merge(
+          'meaning' => 'Current monthly business revenue', 'answer_type' => 'money', 'period' => 'monthly'
+        )
+      ]
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'My business is local. We make TZS 900,000 per month.')
+    connection = create(:ai_provider_connection, account: account)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-legacy-business-type-gap', model: connection.model,
+        content: {
+          reply: 'Thanks for those details.',
+          observations: [
+            { key: 'business_status', quote: 'My business is local.',
+              typed_value: 'running', asserted: true, certainty: 'certain' },
+            { key: 'monthly_business_revenue_tzs', quote: 'We make TZS 900,000 per month',
+              typed_value: 90_000_000, asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(provider_client).to have_received(:complete).once
+    evidence = QualificationEvidence.where(account: account, contact: contact, offer: offer).index_by(&:field_key)
+    expect(evidence).to include('business_type', 'business_status', 'monthly_business_revenue_tzs')
+    expect(evidence['business_status'].value).to include('typed_value' => 'running')
+    expect(evidence['monthly_business_revenue_tzs'].value).to include('typed_value' => 90_000_000)
+  end
+
   it 'uses one pilot provider attempt to interpret pure free-text qualification when local parsing has no evidence' do
     offer = create_offer(
       qualification_mode: 'enabled',

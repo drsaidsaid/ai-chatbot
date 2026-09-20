@@ -247,7 +247,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     end
 
     @answer_result = answer_result
-    capture_structured_offer_context!(nil) if intent.pilot_authorization && structured_qualification_available?
+    capture_structured_offer_context!(nil) if structured_qualification_available?
   end
 
   def process_conversation_reply!
@@ -276,7 +276,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   def structured_qualification_interpretation_required?(qualification_result)
     classification.intent == :qualification_answer &&
       structured_qualification_available? &&
-      Array(qualification_result&.new_evidence).empty? &&
+      !deterministic_evidence_blocks_structured?(qualification_result) &&
       qualification_result&.next_question_key.present?
   end
 
@@ -284,9 +284,16 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     selected_offer&.enabled? && selected_offer.qualification_enabled? && selected_offer.questions.present?
   end
 
-  def configured_new_evidence(qualification_result)
+  def deterministic_evidence_blocks_structured?(qualification_result)
+    return false if qualification_result.blank?
+
+    evidence = Array(qualification_result.new_evidence)
+    return false if evidence.empty?
+
     configured_keys = selected_offer&.questions.to_a.pluck('key')
-    Array(qualification_result&.new_evidence).select { |evidence| configured_keys.include?(evidence.field_key) }
+    return false if evidence.all? { |item| item.field_key == 'business_type' } && configured_keys.exclude?('business_type')
+
+    true
   end
 
   def complete_conversation_reply!(qualification_result, provider_response: nil)
