@@ -28,3 +28,16 @@ bundle exec rspec spec/requests/platform/pilot_authorizations_spec.rb \
 ```
 
 The test set covers owner-approval input, activation permission/key-revision drift, exact persisted intent scope, failed-attempt cost uncertainty, preservation of an operator stop, final known-cost dispatch, intent recording, and handoff-alert suppression.
+
+The relevant existing PostgreSQL concurrency controls also passed:
+
+```sh
+RAILS_ENV=test POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=5432 \
+POSTGRES_USERNAME=ghalyasaid POSTGRES_DATABASE=ai_chatbot_r17_pilot_control_test \
+ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=r17-review-primary-placeholder \
+ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=r17-review-deterministic-placeholder \
+ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=r17-review-salt-placeholder \
+bundle exec rspec spec/requests/ai_lead_employee/ai_provider_usage_controls_spec.rb
+```
+
+Result: **11 examples, 0 failures**.
