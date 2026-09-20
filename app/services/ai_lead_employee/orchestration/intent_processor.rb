@@ -353,15 +353,15 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     evidence.any? { |item| item.value.is_a?(Hash) && item.value['amount_minor'].present? }
   end
 
-  def complete_conversation_reply!(qualification_result, provider_response: nil)
+  def complete_conversation_reply!(qualification_result, provider_response: nil, status: 'conversation_reply')
     content = safe_conversation_content(qualification_result)
     outbound_message = create_outbound_message!(content: content, source_references: [],
-                                                qualification_result: qualification_result, status: 'conversation_reply',
+                                                qualification_result: qualification_result, status: status,
                                                 provider_response: provider_response)
     record_scope_clarification!(outbound_message) if classification.intent == :scope_clarification
     create_outbox_event!(outbound_message)
     complete_intent!(outbound_message: outbound_message, provider_response: provider_response, source_references: [],
-                     qualification_result: qualification_result, status: 'conversation_reply')
+                     qualification_result: qualification_result, status: status)
   end
 
   def safe_conversation_content(qualification_result)
@@ -413,7 +413,11 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     qualification_response = qualification_result_response(qualification_result)
     return qualification_response if qualification_response.present?
 
-    complete_conversation_reply!(qualification_result, provider_response: provider_response)
+    complete_conversation_reply!(
+      qualification_result,
+      provider_response: provider_response,
+      status: AiLeadEmployee::Orchestration::DecisionPlaceholder::STRUCTURED_QUALIFICATION_REPLY_STATUS
+    )
   end
 
   def qualify_lead!
