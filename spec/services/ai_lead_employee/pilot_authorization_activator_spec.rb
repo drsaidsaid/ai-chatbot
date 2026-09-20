@@ -28,12 +28,14 @@ RSpec.describe AiLeadEmployee::PilotAuthorizationActivator do
   it 'rejects activation when the verified provider configuration changes before locked construction' do
     verifier = instance_double(AiLeadEmployee::AiProvider::OpenRouterKeyLimitVerifier)
     allow(verifier).to receive(:perform) do
-      connection.update!(api_key: 'sk-or-after', configuration_version: connection.configuration_version + 1)
+      AiLeadEmployee::AiProviderConnection.find(connection.id).update!(
+        api_key: 'sk-or-after', configuration_version: connection.configuration_version + 1
+      )
       verification
     end
 
     expect { activator(verifier).perform }.to raise_error(ActiveRecord::RecordInvalid)
-    expect(AiLeadEmployee::PilotAuthorization).to be_empty
+    expect(AiLeadEmployee::PilotAuthorization.count).to eq(0)
   end
 
   it 'rejects activation when the verified operator loses current pilot permission before locked construction' do
@@ -44,7 +46,7 @@ RSpec.describe AiLeadEmployee::PilotAuthorizationActivator do
     end
 
     expect { activator(verifier).perform }.to raise_error(ActiveRecord::RecordInvalid)
-    expect(AiLeadEmployee::PilotAuthorization).to be_empty
+    expect(AiLeadEmployee::PilotAuthorization.count).to eq(0)
   end
 
   def activator(verifier)

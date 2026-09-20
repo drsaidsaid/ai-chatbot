@@ -27,14 +27,14 @@ class AiLeadEmployee::PilotAuthorizationActivator
     ActiveRecord::Base.transaction do
       actor = PlatformApp.lock.find(platform_app.id)
       permissible = PlatformAppPermissible.lock.find_by(platform_app: actor, permissible: account)
-      conversation.lock!
+      locked_conversation = Conversation.lock.find(conversation.id)
       current_connection = AiLeadEmployee::AiProviderConnection.lock.find_by(account: account)
-      unless actor.pilot_operator? && permissible && exact_scope?(current_connection) &&
+      unless actor.pilot_operator? && permissible && exact_scope?(current_connection, locked_conversation) &&
              snapshot == [current_connection.id, current_connection.configuration_version, key_digest(current_connection)]
         raise ActiveRecord::RecordInvalid, authorization
       end
 
-      record = authorization(current_connection)
+      record = authorization(current_connection, locked_conversation)
       record.assign_attributes(
         provider_limit_usd: verification.remaining_usd,
         provider_limit_verified_at: verification.verified_at,
@@ -54,11 +54,11 @@ class AiLeadEmployee::PilotAuthorizationActivator
   attr_reader :account, :conversation, :max_attempts, :max_spend_usd, :expires_at, :platform_app, :verifier,
               :external_owner_approval_reference
 
-  def authorization(current_connection = account.ai_provider_connection)
+  def authorization(current_connection = account.ai_provider_connection, scoped_conversation = conversation)
     @authorization ||= AiLeadEmployee::PilotAuthorization.new(
-      account: account, inbox: conversation.inbox, contact: conversation.contact, conversation: conversation,
+      account: account, inbox: scoped_conversation.inbox, contact: scoped_conversation.contact, conversation: scoped_conversation,
       ai_provider_connection: current_connection, authorized_by_platform_app: platform_app,
-      recipient: conversation.contact_inbox&.source_id.to_s, control_version: conversation.control_version,
+      recipient: scoped_conversation.contact_inbox&.source_id.to_s, control_version: scoped_conversation.control_version,
       provider_configuration_version: current_connection&.configuration_version,
       max_attempts: max_attempts, max_spend_usd: max_spend_usd,
       external_owner_approval_reference: external_owner_approval_reference,
@@ -66,9 +66,9 @@ class AiLeadEmployee::PilotAuthorizationActivator
     )
   end
 
-  def exact_scope?(current_connection) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-    current_connection&.configured? && conversation.account_id == account.id && conversation.ai_active? &&
-      conversation.open? && conversation.assignee_id.nil? && conversation.contact_inbox&.source_id.present? &&
+  def exact_scope?(current_connection, scoped_conversation = conversation) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    current_connection&.configured? && scoped_conversation.account_id == account.id && scoped_conversation.ai_active? &&
+      scoped_conversation.open? && scoped_conversation.assignee_id.nil? && scoped_conversation.contact_inbox&.source_id.present? &&
       max_attempts.to_i.positive? && max_spend_usd.positive? && expires_at&.future?
   end
 

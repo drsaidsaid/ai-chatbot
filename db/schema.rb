@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_20_000100) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_20_000200) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -262,6 +262,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_20_000100) do
     t.index ["id", "account_id"], name: "idx_ai_offer_account_scope", unique: true
   end
 
+  create_table "ai_lead_employee_pilot_authorization_events", force: :cascade do |t|
+    t.bigint "pilot_authorization_id", null: false
+    t.bigint "platform_app_id", null: false
+    t.string "action", null: false
+    t.string "reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pilot_authorization_id"], name: "idx_on_pilot_authorization_id_df85ac1f2b"
+    t.index ["platform_app_id"], name: "idx_on_platform_app_id_8f8d487eab"
+    t.check_constraint "action::text = ANY (ARRAY['activated'::character varying, 'paused'::character varying, 'revoked'::character varying]::text[])", name: "pilot_authorization_events_action"
+  end
+
   create_table "ai_lead_employee_pilot_authorizations", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "inbox_id", null: false
@@ -284,6 +296,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_20_000100) do
     t.string "pause_reason"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "external_owner_approval_reference"
     t.index ["account_id", "conversation_id", "status"], name: "idx_pilot_authorizations_on_scope_status"
     t.index ["account_id", "conversation_id"], name: "idx_one_active_pilot_authorization_per_conversation", unique: true, where: "((status)::text = 'active'::text)"
     t.index ["account_id"], name: "index_ai_lead_employee_pilot_authorizations_on_account_id"
@@ -293,6 +306,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_20_000100) do
     t.index ["conversation_id"], name: "index_ai_lead_employee_pilot_authorizations_on_conversation_id"
     t.index ["inbox_id"], name: "index_ai_lead_employee_pilot_authorizations_on_inbox_id"
     t.check_constraint "expires_at > starts_at", name: "pilot_authorizations_forward_window"
+    t.check_constraint "external_owner_approval_reference IS NOT NULL AND char_length(btrim(external_owner_approval_reference::text)) > 0", name: "pilot_authorizations_owner_approval_reference"
     t.check_constraint "max_attempts > 0", name: "pilot_authorizations_positive_attempts"
     t.check_constraint "max_spend_usd > 0::numeric", name: "pilot_authorizations_positive_spend"
     t.check_constraint "provider_limit_usd > 0::numeric AND provider_limit_usd <= max_spend_usd", name: "pilot_authorizations_bounded_provider_limit"
@@ -2630,6 +2644,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_20_000100) do
   add_foreign_key "ai_lead_employee_launch_gates", "accounts"
   add_foreign_key "ai_lead_employee_launch_gates", "users", column: "approved_by_id"
   add_foreign_key "ai_lead_employee_offers", "accounts"
+  add_foreign_key "ai_lead_employee_pilot_authorization_events", "ai_lead_employee_pilot_authorizations", column: "pilot_authorization_id"
+  add_foreign_key "ai_lead_employee_pilot_authorization_events", "platform_apps"
   add_foreign_key "ai_lead_employee_pilot_authorizations", "accounts"
   add_foreign_key "ai_lead_employee_pilot_authorizations", "ai_provider_connections"
   add_foreign_key "ai_lead_employee_pilot_authorizations", "contacts"

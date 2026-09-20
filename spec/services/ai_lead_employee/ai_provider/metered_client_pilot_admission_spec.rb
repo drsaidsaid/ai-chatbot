@@ -79,7 +79,7 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
     expect(authorization.reload).to be_active
   end
 
-  it 'counts a failed provider HTTP attempt against the pilot attempt cap' do
+  it 'preserves a failed provider HTTP attempt and pauses later pilot admission for unknown cost' do
     allow(adapter).to receive(:complete).once.and_raise(AiLeadEmployee::AiProvider::TimeoutFailure)
 
     expect do
@@ -92,7 +92,7 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
     expect do
       client.complete(messages: [{ role: 'user', content: 'Retry' }], pilot_authorization: authorization,
                       orchestration_intent: intent)
-    end.to raise_error(AiLeadEmployee::AiProvider::PilotAdmissionFailure, /attempt limit/)
+    end.to raise_error(AiLeadEmployee::AiProvider::PilotAdmissionFailure, /not current/)
   end
 
   it 'rejects a persisted intent from another pilot scope before making a provider call' do
@@ -105,6 +105,7 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
                                                     observed_control_version: other_conversation.control_version,
                                                     pilot_authorization: authorization)
 
+    allow(adapter).to receive(:complete)
     expect do
       client.complete(messages: [{ role: 'user', content: 'Question' }], pilot_authorization: authorization,
                       orchestration_intent: other_intent)
@@ -120,6 +121,7 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
                                                         observed_control_version: conversation.control_version,
                                                         pilot_authorization: authorization)
 
+    allow(adapter).to receive(:complete)
     expect do
       client.complete(messages: [{ role: 'user', content: 'Question' }], pilot_authorization: authorization,
                       orchestration_intent: malformed_intent)
