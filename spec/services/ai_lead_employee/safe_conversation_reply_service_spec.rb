@@ -7,6 +7,7 @@ end
 
 require_relative '../../../app/services/ai_lead_employee/language_detector'
 require_relative '../../../app/services/ai_lead_employee/conversation_intent_classifier'
+require_relative '../../../app/services/ai_lead_employee/conversation_follow_up_policy'
 require_relative '../../../app/services/ai_lead_employee/safe_conversation_reply_service'
 
 RSpec.describe AiLeadEmployee::SafeConversationReplyService do
@@ -80,6 +81,18 @@ RSpec.describe AiLeadEmployee::SafeConversationReplyService do
     ).perform
 
     expect(reply).to eq('Hello. How can I help with this business today?')
+  end
+
+  it 'does not append an untranslated revenue question to a Swahili greeting with a selected Offer' do
+    reply = described_class.new(
+      message: 'Habari yako',
+      refusal_reason: nil,
+      qualification_result: result_type.new(
+        next_question: 'What is your monthly revenue?', qualification_mode: 'enabled'
+      )
+    ).perform
+
+    expect(reply).to eq('Habari. Ninaweza kusaidia kuhusu biashara hii leo?')
   end
 
   it 'sets a consulting boundary for unsupported personalized strategy' do

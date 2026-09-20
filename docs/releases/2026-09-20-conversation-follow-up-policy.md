@@ -1,0 +1,7 @@
+# First natural-conversation correction
+
+Candidate c7eafdd0 introduces a shared eligibility check for configured follow-up prompts in local replies and Offer progression. Pure greetings do not append a missing qualification question. Unknown/review, human and stop paths retain their prior controls. An eligible business or qualification reply may append one prompt only with enabled qualification and matching detected language; untranslated English questions are omitted on local Swahili paths. No extra model call is introduced.
+
+This is a conservative first slice, not full adaptive selection. It retains the existing missing-field selector and heuristic language detector; language persistence, evidence capture reliability, contextual selection, six-section UI, preview and conditional outcomes remain pending under R19. Existing score/evidence/source/price/control/handover/delivery authority is unchanged. Current staging bfee0001 remains unchanged until a separately reviewed release.
+
+Coordinator caught one regression in the initial candidate: a valid translated Swahili question, “Una wafanyakazi wangapi?”, was omitted by the heuristic. Successor1ea467b8 adds general -ngapi question-word recognition and a direct regression. Canonical final184orchestration/policy/service examples passed in36.08s, plus119language/classifier examples in0.66s;303total,zero failures. Source files match the reviewed successor. No frontend/schema/dependency changes or live calls.

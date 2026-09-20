@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'conversation_follow_up_policy'
+
 class AiLeadEmployee::SafeConversationReplyService
   KNOWLEDGE_GAP_REASONS = %w[no_approved_knowledge conflicting_knowledge source_unverified stale_knowledge].freeze
   CONVERSATION_REPLIES = {
@@ -73,10 +75,10 @@ class AiLeadEmployee::SafeConversationReplyService
   end
 
   def useful_next_question
-    return unless classification.intent.in?(%i[greeting qualification_answer personalized_strategy])
-    return unless qualification_result&.qualification_mode == 'enabled'
-
-    qualification_result.next_question
+    AiLeadEmployee::ConversationFollowUpPolicy.new(
+      classification: classification,
+      qualification_result: qualification_result
+    ).perform
   end
 
   def swahili?

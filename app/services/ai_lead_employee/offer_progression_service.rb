@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 require 'uri'
+require_relative 'conversation_follow_up_policy'
 
 class AiLeadEmployee::OfferProgressionService
   LINK_KINDS = %w[purchase_link appointment].freeze
 
-  def initialize(offer:, qualification_result: nil)
+  def initialize(offer:, qualification_result: nil, classification: nil)
     @offer = offer
     @qualification_result = qualification_result
+    @classification = classification
   end
 
   def perform
@@ -23,12 +25,13 @@ class AiLeadEmployee::OfferProgressionService
 
   private
 
-  attr_reader :offer, :qualification_result
+  attr_reader :classification, :offer, :qualification_result
 
   def configured_question
-    return unless qualification_result&.qualification_mode == 'enabled'
-
-    qualification_result.next_question.presence
+    AiLeadEmployee::ConversationFollowUpPolicy.new(
+      classification: classification,
+      qualification_result: qualification_result
+    ).perform
   end
 
   def link_reply(step)
