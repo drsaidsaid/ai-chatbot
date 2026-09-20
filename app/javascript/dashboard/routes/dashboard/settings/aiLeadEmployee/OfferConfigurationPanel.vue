@@ -629,19 +629,29 @@ onMounted(load);
             t('AI_LEAD_EMPLOYEE.OFFERS.REVISION', { version: draft.version })
           }}
         </p>
-        <label class="grid gap-1 text-sm">
-          {{ label('NAME') }}
-          <input
-            v-model="draft.name"
-            required
-            :class="inputClass"
-            data-testid="offer-name"
-          />
-        </label>
-        <label class="flex items-center gap-2 text-sm">
-          <input v-model="draft.enabled" type="checkbox" />
-          {{ label('ENABLED') }}
-        </label>
+        <section class="grid gap-3" data-testid="business-about-section">
+          <div>
+            <h3 class="text-base font-semibold text-n-slate-12">
+              {{ label('ABOUT_BUSINESS') }}
+            </h3>
+            <p class="mt-1 text-sm leading-6 text-n-slate-11">
+              {{ label('ABOUT_BUSINESS_HELP') }}
+            </p>
+          </div>
+          <label class="grid gap-1 text-sm">
+            {{ label('NAME') }}
+            <input
+              v-model="draft.name"
+              required
+              :class="inputClass"
+              data-testid="offer-name"
+            />
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input v-model="draft.enabled" type="checkbox" />
+            {{ label('ENABLED') }}
+          </label>
+        </section>
         <section
           v-if="draft.id"
           class="grid gap-4 rounded-xl border border-n-weak bg-n-solid-2 p-4 sm:p-5"
@@ -650,7 +660,7 @@ onMounted(load);
           <div class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-start">
             <div>
               <h3 class="text-base font-semibold text-n-slate-12">
-                {{ label('COMMERCIAL_TERMS') }}
+                {{ label('OFFERS_AND_PRICES') }}
               </h3>
               <p class="mt-1 text-sm leading-6 text-n-slate-11">
                 {{ label('COMMERCIAL_TERMS_HELP') }}
@@ -929,7 +939,7 @@ onMounted(load);
         >
           <div>
             <h3 class="text-base font-semibold text-n-slate-12">
-              {{ label('SETUP_TITLE') }}
+              {{ label('ABOUT_BUSINESS') }}
             </h3>
             <p class="mt-1 text-sm leading-6 text-n-slate-11">
               {{ label('SETUP_HELP') }}
@@ -1164,544 +1174,363 @@ onMounted(load);
             </div>
           </article>
         </section>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm">
-            {{ label('QUALIFICATION_MODE') }}
-            <select
-              v-model="draft.qualification_mode"
-              :class="inputClass"
-              data-testid="qualification-mode"
-            >
-              <option value="not_configured">
-                {{ label('MODE_NOT_CONFIGURED') }}
-              </option>
-              <option value="disabled">
-                {{ label('MODE_DISABLED') }}
-              </option>
-              <option value="enabled">
-                {{ label('MODE_ENABLED') }}
-              </option>
-            </select>
-          </label>
-          <label class="grid gap-1 text-sm">
-            {{ label('NEXT_STEP') }}
-            <select
-              v-model="draft.next_step.kind"
-              :class="inputClass"
-              data-testid="next-step"
-            >
-              <option
-                v-for="kind in [
-                  'answer_only',
-                  'enquiry',
-                  'purchase_link',
-                  'sales_call',
-                  'appointment',
-                ]"
-                :key="kind"
-                :value="kind"
-              >
-                {{ label(`NEXT_${kind.toUpperCase()}`) }}
-              </option>
-            </select>
-          </label>
-        </div>
-        <div
-          v-if="draft.next_step.kind !== 'answer_only'"
-          class="grid gap-3 sm:grid-cols-2"
-        >
-          <label class="grid gap-1 text-sm">
-            {{ label('NEXT_STEP_PROMPT') }}
-            <input
-              v-model="draft.next_step.prompt"
-              :class="inputClass"
-              maxlength="240"
-              data-testid="next-step-prompt"
-            />
-          </label>
-          <label
-            v-if="
-              ['purchase_link', 'appointment'].includes(draft.next_step.kind)
-            "
-            class="grid gap-1 text-sm"
-          >
-            {{ label('NEXT_STEP_URL') }}
-            <input
-              v-model="draft.next_step.url"
-              :class="inputClass"
-              type="url"
-              data-testid="next-step-url"
-            />
-          </label>
-        </div>
-        <!-- eslint-disable vue/no-bare-strings-in-template -->
-        <fieldset class="grid gap-3">
-          <legend class="mb-3 text-base font-semibold">
-            {{ label('QUESTIONS') }}
-          </legend>
-          <p class="text-sm text-n-slate-11">
-            {{ label('QUESTIONS_HELP') }}
+        <section class="grid gap-3" data-testid="response-settings-section">
+          <h3 class="text-base font-semibold text-n-slate-12">
+            {{ label('HOW_ASSISTANT_RESPONDS') }}
+          </h3>
+          <p class="text-sm leading-6 text-n-slate-11">
+            {{ label('RESPONSE_SETTINGS_CURRENT') }}
           </p>
-          <div
-            v-for="(question, index) in draft.questions"
-            :key="question.key"
-            class="grid gap-3 rounded-lg border border-n-weak p-4"
-          >
+        </section>
+        <section class="grid gap-3" data-testid="next-step-section">
+          <div>
+            <h3 class="text-base font-semibold text-n-slate-12">
+              {{ label('WHAT_HAPPENS_NEXT') }}
+            </h3>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
             <label class="grid gap-1 text-sm">
-              {{ label('MEANING') }}
-              <input
-                v-model="question.meaning"
-                required
+              {{ label('QUALIFICATION_MODE') }}
+              <select
+                v-model="draft.qualification_mode"
                 :class="inputClass"
-                :readonly="Boolean(builtinFields[question.key])"
-              />
+                data-testid="qualification-mode"
+              >
+                <option value="not_configured">
+                  {{ label('MODE_NOT_CONFIGURED') }}
+                </option>
+                <option value="disabled">
+                  {{ label('MODE_DISABLED') }}
+                </option>
+                <option value="enabled">
+                  {{ label('MODE_ENABLED') }}
+                </option>
+              </select>
             </label>
             <label class="grid gap-1 text-sm">
-              {{ label('ANSWER_TYPE') }}
+              {{ label('NEXT_STEP') }}
               <select
-                v-model="question.answer_type"
+                v-model="draft.next_step.kind"
                 :class="inputClass"
-                :disabled="Boolean(builtinFields[question.key])"
+                data-testid="next-step"
               >
                 <option
-                  v-for="type in [
-                    'text',
-                    'boolean',
-                    'number',
-                    'money',
-                    'choice',
+                  v-for="kind in [
+                    'answer_only',
+                    'enquiry',
+                    'purchase_link',
+                    'sales_call',
+                    'appointment',
                   ]"
-                  :key="type"
-                  :value="type"
+                  :key="kind"
+                  :value="kind"
                 >
-                  {{ label(`TYPE_${type.toUpperCase()}`) }}
+                  {{ label(`NEXT_${kind.toUpperCase()}`) }}
                 </option>
               </select>
             </label>
-            <label
-              v-if="question.answer_type === 'choice'"
-              class="grid gap-1 text-sm"
-            >
-              {{ label('CHOICES') }}
-              <textarea
-                :value="(question.options || []).join('\n')"
-                :class="inputClass"
-                @input="
-                  question.options = $event.target.value
-                    .split('\n')
-                    .filter(Boolean)
-                "
-              />
-            </label>
-            <label
-              v-if="['number', 'money'].includes(question.answer_type)"
-              class="grid gap-1 text-sm"
-            >
-              {{ label('PERIOD') }}
-              <input v-model="question.period" :class="inputClass" />
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{ label('PROMPT') }}
-              <input
-                v-model="question.prompt"
-                required
-                :class="inputClass"
-                :data-testid="`question-prompt-${index}`"
-              />
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{ label('PURPOSE') }}
-              <select
-                v-model="question.purpose"
-                :class="inputClass"
-                :data-testid="`question-purpose-${index}`"
-              >
-                <option value="fit">{{ label('PURPOSE_FIT') }}</option>
-                <option value="readiness">
-                  {{ label('PURPOSE_READINESS') }}
-                </option>
-                <option value="action_eligibility">
-                  {{ label('PURPOSE_ACTION_ELIGIBILITY') }}
-                </option>
-              </select>
-            </label>
-            <div class="flex flex-wrap items-center gap-3">
-              <label class="flex items-center gap-2 text-sm">
-                <input v-model="question.enabled" type="checkbox" />
-                {{ label('ENABLED') }}
-              </label>
-              <label class="flex items-center gap-2 text-sm">
-                <input v-model="question.required" type="checkbox" />
-                {{ label('REQUIRED') }}
-              </label>
-              <button
-                type="button"
-                :class="buttonClass"
-                :disabled="index === 0"
-                :data-testid="`question-up-${index}`"
-                @click="moveQuestion(index, -1)"
-              >
-                {{ label('UP') }}
-              </button>
-              <button
-                type="button"
-                :class="buttonClass"
-                :disabled="index === draft.questions.length - 1"
-                @click="moveQuestion(index, 1)"
-              >
-                {{ label('DOWN') }}
-              </button>
-              <button
-                type="button"
-                :class="buttonClass"
-                @click="draft.questions.splice(index, 1)"
-              >
-                {{ label('REMOVE') }}
-              </button>
-            </div>
           </div>
-          <div class="flex gap-2">
-            <select
-              v-model="newField"
-              :class="inputClass"
-              :aria-label="label('FIELD')"
-              data-testid="new-question-field"
-            >
-              <option
-                v-for="(field, key) in builtinFields"
-                :key="key"
-                :value="key"
-                :disabled="
-                  draft.questions.some(question => question.key === key)
-                "
-              >
-                {{ field[0] }}
-              </option>
-              <option value="custom">
-                {{ label('CUSTOM') }}
-              </option>
-            </select>
-            <button
-              type="button"
-              :class="buttonClass"
-              data-testid="add-question"
-              @click="addQuestion"
-            >
-              {{ label('ADD_QUESTION') }}
-            </button>
-          </div>
-        </fieldset>
-        <label class="grid gap-1 text-sm">
-          {{ label('CURRENCY') }}
-          <select
-            v-model="draft.currency"
-            :class="inputClass"
-            data-testid="offer-currency"
-            @change="changeCurrency"
-          >
-            <option
-              v-for="currency in ['TZS', 'USD', 'KES', 'EUR', 'GBP']"
-              :key="currency"
-              :value="currency"
-            >
-              {{ currency }}
-            </option>
-          </select>
-        </label>
-        <fieldset class="grid gap-3">
-          <legend class="mb-3 text-base font-semibold">
-            {{ label('BUDGET_RANGES') }}
-          </legend>
           <div
-            v-for="(range, index) in draft.budget_ranges"
-            :key="index"
-            class="grid gap-2 rounded-lg border border-n-weak p-4 sm:grid-cols-2"
+            v-if="draft.next_step.kind !== 'answer_only'"
+            class="grid gap-3 sm:grid-cols-2"
           >
-            <label class="grid gap-1 text-sm sm:col-span-2">
-              {{ label('RANGE') }}
-              <input v-model="range.label" required :class="inputClass" />
-            </label>
             <label class="grid gap-1 text-sm">
-              {{
-                t('AI_LEAD_EMPLOYEE.OFFERS.MINIMUM', {
-                  currency: draft.currency,
-                })
-              }}
+              {{ label('NEXT_STEP_PROMPT') }}
               <input
-                v-model="range.minimum"
-                inputmode="decimal"
+                v-model="draft.next_step.prompt"
                 :class="inputClass"
-                :data-testid="`budget-minimum-${index}`"
+                maxlength="240"
+                data-testid="next-step-prompt"
               />
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{
-                t('AI_LEAD_EMPLOYEE.OFFERS.MAXIMUM', {
-                  currency: draft.currency,
-                })
-              }}
-              <input
-                v-model="range.maximum"
-                inputmode="decimal"
-                :class="inputClass"
-                :data-testid="`budget-maximum-${index}`"
-              />
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-              <input v-model="range.enabled" type="checkbox" />
-              {{ label('ENABLED') }}
-            </label>
-            <button
-              type="button"
-              :class="buttonClass"
-              @click="draft.budget_ranges.splice(index, 1)"
-            >
-              {{ label('REMOVE') }}
-            </button>
-          </div>
-          <button
-            type="button"
-            :class="buttonClass"
-            data-testid="add-budget-range"
-            @click="addRange"
-          >
-            {{ label('ADD_RANGE') }}
-          </button>
-        </fieldset>
-        <fieldset class="grid gap-3">
-          <legend class="mb-3 text-base font-semibold">
-            {{ label('RULES') }}
-          </legend>
-          <p class="text-sm text-n-slate-11">
-            {{ label('RULES_HELP') }}
-          </p>
-          <div
-            v-for="(rule, index) in draft.rules"
-            :key="index"
-            class="grid gap-3 rounded-lg border border-n-weak p-4 sm:grid-cols-2"
-          >
-            <label class="grid gap-1 text-sm">
-              {{ label('FIELD') }}
-              <select
-                v-model="rule.field"
-                :class="inputClass"
-                :data-testid="`rule-field-${index}`"
-                @change="resetRule(rule)"
-              >
-                <option
-                  v-for="field in fields"
-                  :key="field.key"
-                  :value="field.key"
-                >
-                  {{ field.meaning }}
-                </option>
-              </select>
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{ label('OPERATOR') }}
-              <select
-                v-model="rule.operator"
-                :class="inputClass"
-                :data-testid="`rule-operator-${index}`"
-                @change="resetRule(rule)"
-              >
-                <option
-                  v-for="operator in operatorsFor(rule)"
-                  :key="operator"
-                  :value="operator"
-                >
-                  {{ label(`OP_${operator.toUpperCase()}`) }}
-                </option>
-              </select>
             </label>
             <label
-              v-if="!['positive', 'negative', 'known'].includes(rule.operator)"
+              v-if="
+                ['purchase_link', 'appointment'].includes(draft.next_step.kind)
+              "
               class="grid gap-1 text-sm"
             >
-              {{ label('VALUE') }}
-              <template v-if="fields[rule.field]?.answer_type === 'money'">
-                <span> {{ rule.value.currency }} </span>
+              {{ label('NEXT_STEP_URL') }}
+              <input
+                v-model="draft.next_step.url"
+                :class="inputClass"
+                type="url"
+                data-testid="next-step-url"
+              />
+            </label>
+          </div>
+        </section>
+        <!-- eslint-disable vue/no-bare-strings-in-template -->
+        <section class="grid gap-3" data-testid="who-we-help-section">
+          <div>
+            <h3 class="text-base font-semibold text-n-slate-12">
+              {{ label('WHO_WE_HELP') }}
+            </h3>
+            <p class="mt-1 text-sm leading-6 text-n-slate-11">
+              {{ label('WHO_WE_HELP_HELP') }}
+            </p>
+          </div>
+          <fieldset class="grid gap-3">
+            <legend class="mb-3 text-base font-semibold">
+              {{ label('QUESTIONS') }}
+            </legend>
+            <p class="text-sm text-n-slate-11">
+              {{ label('QUESTIONS_HELP') }}
+            </p>
+            <div
+              v-for="(question, index) in draft.questions"
+              :key="question.key"
+              class="grid gap-3 rounded-lg border border-n-weak p-4"
+            >
+              <label class="grid gap-1 text-sm">
+                {{ label('MEANING') }}
                 <input
-                  v-model="rule.value.amount"
-                  inputmode="decimal"
+                  v-model="question.meaning"
                   required
                   :class="inputClass"
-                  :data-testid="`rule-value-${index}`"
+                  :readonly="Boolean(builtinFields[question.key])"
                 />
-              </template>
-              <input
-                v-else-if="fields[rule.field]?.answer_type === 'number'"
-                v-model.number="rule.value"
-                type="number"
-                step="any"
-                required
-                :class="inputClass"
-                :data-testid="`rule-value-${index}`"
-              />
-              <select
-                v-else-if="fields[rule.field]?.answer_type === 'boolean'"
-                v-model="rule.value"
-                :class="inputClass"
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('ANSWER_TYPE') }}
+                <select
+                  v-model="question.answer_type"
+                  :class="inputClass"
+                  :disabled="Boolean(builtinFields[question.key])"
+                >
+                  <option
+                    v-for="type in [
+                      'text',
+                      'boolean',
+                      'number',
+                      'money',
+                      'choice',
+                    ]"
+                    :key="type"
+                    :value="type"
+                  >
+                    {{ label(`TYPE_${type.toUpperCase()}`) }}
+                  </option>
+                </select>
+              </label>
+              <label
+                v-if="question.answer_type === 'choice'"
+                class="grid gap-1 text-sm"
               >
-                <option :value="true">
-                  {{ label('YES') }}
-                </option>
-                <option :value="false">
-                  {{ label('NO') }}
-                </option>
-              </select>
+                {{ label('CHOICES') }}
+                <textarea
+                  :value="(question.options || []).join('\n')"
+                  :class="inputClass"
+                  @input="
+                    question.options = $event.target.value
+                      .split('\n')
+                      .filter(Boolean)
+                  "
+                />
+              </label>
+              <label
+                v-if="['number', 'money'].includes(question.answer_type)"
+                class="grid gap-1 text-sm"
+              >
+                {{ label('PERIOD') }}
+                <input v-model="question.period" :class="inputClass" />
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('PROMPT') }}
+                <input
+                  v-model="question.prompt"
+                  required
+                  :class="inputClass"
+                  :data-testid="`question-prompt-${index}`"
+                />
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('PURPOSE') }}
+                <select
+                  v-model="question.purpose"
+                  :class="inputClass"
+                  :data-testid="`question-purpose-${index}`"
+                >
+                  <option value="fit">{{ label('PURPOSE_FIT') }}</option>
+                  <option value="readiness">
+                    {{ label('PURPOSE_READINESS') }}
+                  </option>
+                  <option value="action_eligibility">
+                    {{ label('PURPOSE_ACTION_ELIGIBILITY') }}
+                  </option>
+                </select>
+              </label>
+              <div class="flex flex-wrap items-center gap-3">
+                <label class="flex items-center gap-2 text-sm">
+                  <input v-model="question.enabled" type="checkbox" />
+                  {{ label('ENABLED') }}
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                  <input v-model="question.required" type="checkbox" />
+                  {{ label('REQUIRED') }}
+                </label>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  :disabled="index === 0"
+                  :data-testid="`question-up-${index}`"
+                  @click="moveQuestion(index, -1)"
+                >
+                  {{ label('UP') }}
+                </button>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  :disabled="index === draft.questions.length - 1"
+                  @click="moveQuestion(index, 1)"
+                >
+                  {{ label('DOWN') }}
+                </button>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="draft.questions.splice(index, 1)"
+                >
+                  {{ label('REMOVE') }}
+                </button>
+              </div>
+            </div>
+            <div class="flex gap-2">
               <select
-                v-else-if="fields[rule.field]?.answer_type === 'choice'"
-                v-model="rule.value"
-                :multiple="rule.operator === 'in'"
+                v-model="newField"
                 :class="inputClass"
+                :aria-label="label('FIELD')"
+                data-testid="new-question-field"
               >
                 <option
-                  v-for="option in fields[rule.field].options"
-                  :key="option"
-                  :value="option"
+                  v-for="(field, key) in builtinFields"
+                  :key="key"
+                  :value="key"
+                  :disabled="
+                    draft.questions.some(question => question.key === key)
+                  "
                 >
-                  {{ option }}
+                  {{ field[0] }}
                 </option>
-              </select>
-              <input
-                v-else
-                v-model="rule.value"
-                required
-                :class="inputClass"
-                :data-testid="`rule-value-${index}`"
-              />
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{ label('EFFECT') }}
-              <select
-                v-model="rule.kind"
-                :class="inputClass"
-                :data-testid="`rule-effect-${index}`"
-                @change="
-                  rule.forced_outcome =
-                    rule.kind === 'hard_rule' ? 'unqualified' : null
-                "
-              >
-                <option value="score_rule">
-                  {{ label('ADD_SCORE') }}
+                <option value="custom">
+                  {{ label('CUSTOM') }}
                 </option>
-                <option value="hard_rule">
-                  {{ label('EXCLUDE') }}
-                </option>
-                <option value="requirement">
-                  {{ label('REQUIREMENT') }}
-                </option>
-              </select>
-            </label>
-            <label
-              v-if="rule.kind === 'requirement'"
-              class="grid gap-1 text-sm"
-            >
-              {{ label('DIMENSION') }}
-              <select
-                v-model="rule.dimension"
-                :class="inputClass"
-                :data-testid="`rule-dimension-${index}`"
-              >
-                <option value="fit">{{ label('PURPOSE_FIT') }}</option>
-                <option value="readiness">
-                  {{ label('PURPOSE_READINESS') }}
-                </option>
-                <option value="action_eligibility">
-                  {{ label('PURPOSE_ACTION_ELIGIBILITY') }}
-                </option>
-              </select>
-            </label>
-            <label v-if="rule.kind === 'score_rule'" class="grid gap-1 text-sm">
-              {{ label('SCORE') }}
-              <input
-                v-model.number="rule.score_delta"
-                type="number"
-                min="0"
-                required
-                :class="inputClass"
-                :data-testid="`rule-score-${index}`"
-              />
-            </label>
-            <label class="grid gap-1 text-sm">
-              {{ label('PRIORITY') }}
-              <input
-                v-model.number="rule.priority"
-                type="number"
-                min="0"
-                required
-                :class="inputClass"
-              />
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-              <input v-model="rule.enabled" type="checkbox" />
-              {{ label('ENABLED') }}
-            </label>
-            <button
-              type="button"
-              :class="buttonClass"
-              @click="draft.rules.splice(index, 1)"
-            >
-              {{ label('REMOVE') }}
-            </button>
-          </div>
-          <button
-            type="button"
-            :class="buttonClass"
-            data-testid="add-rule"
-            @click="addRule"
-          >
-            {{ label('ADD_RULE') }}
-          </button>
-        </fieldset>
-        <fieldset class="grid gap-3">
-          <legend class="mb-3 text-base font-semibold">
-            Alternative requirements
-          </legend>
-          <p class="text-sm text-n-slate-11">
-            Combine typed requirements with all or any. A satisfied any branch
-            does not ask for the other branch.
-          </p>
-          <div
-            v-for="(group, groupIndex) in draft.requirement_groups"
-            :key="`requirement-group-${groupIndex}`"
-            class="grid gap-3 rounded-lg border border-n-weak p-4"
-          >
-            <div class="grid gap-3 sm:grid-cols-3">
-              <select v-model="group.dimension" :class="inputClass">
-                <option value="fit">Fit</option>
-                <option value="readiness">Readiness</option>
-                <option value="action_eligibility">Action eligibility</option>
-              </select>
-              <select
-                :value="groupBranch(group)"
-                :class="inputClass"
-                :data-testid="`group-branch-${groupIndex}`"
-                @change="changeGroupBranch(group, $event.target.value)"
-              >
-                <option value="all">All must apply</option>
-                <option value="any">Any one can apply</option>
               </select>
               <button
                 type="button"
                 :class="buttonClass"
-                @click="draft.requirement_groups.splice(groupIndex, 1)"
+                data-testid="add-question"
+                @click="addQuestion"
+              >
+                {{ label('ADD_QUESTION') }}
+              </button>
+            </div>
+          </fieldset>
+        </section>
+        <details class="grid gap-3" data-testid="advanced-technical-controls">
+          <summary
+            class="cursor-pointer text-base font-semibold text-n-slate-12"
+          >
+            {{ label('ADVANCED_TECHNICAL_CONTROLS') }}
+          </summary>
+          <p class="text-sm leading-6 text-n-slate-11">
+            {{ label('ADVANCED_TECHNICAL_CONTROLS_HELP') }}
+          </p>
+          <label class="grid gap-1 text-sm">
+            {{ label('CURRENCY') }}
+            <select
+              v-model="draft.currency"
+              :class="inputClass"
+              data-testid="offer-currency"
+              @change="changeCurrency"
+            >
+              <option
+                v-for="currency in ['TZS', 'USD', 'KES', 'EUR', 'GBP']"
+                :key="currency"
+                :value="currency"
+              >
+                {{ currency }}
+              </option>
+            </select>
+          </label>
+          <fieldset class="grid gap-3">
+            <legend class="mb-3 text-base font-semibold">
+              {{ label('BUDGET_RANGES') }}
+            </legend>
+            <div
+              v-for="(range, index) in draft.budget_ranges"
+              :key="index"
+              class="grid gap-2 rounded-lg border border-n-weak p-4 sm:grid-cols-2"
+            >
+              <label class="grid gap-1 text-sm sm:col-span-2">
+                {{ label('RANGE') }}
+                <input v-model="range.label" required :class="inputClass" />
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{
+                  t('AI_LEAD_EMPLOYEE.OFFERS.MINIMUM', {
+                    currency: draft.currency,
+                  })
+                }}
+                <input
+                  v-model="range.minimum"
+                  inputmode="decimal"
+                  :class="inputClass"
+                  :data-testid="`budget-minimum-${index}`"
+                />
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{
+                  t('AI_LEAD_EMPLOYEE.OFFERS.MAXIMUM', {
+                    currency: draft.currency,
+                  })
+                }}
+                <input
+                  v-model="range.maximum"
+                  inputmode="decimal"
+                  :class="inputClass"
+                  :data-testid="`budget-maximum-${index}`"
+                />
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="range.enabled" type="checkbox" />
+                {{ label('ENABLED') }}
+              </label>
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="draft.budget_ranges.splice(index, 1)"
               >
                 {{ label('REMOVE') }}
               </button>
             </div>
-            <template
-              v-for="(node, nodeIndex) in group[groupBranch(group)]"
-              :key="nodeIndex"
+            <button
+              type="button"
+              :class="buttonClass"
+              data-testid="add-budget-range"
+              @click="addRange"
             >
-              <div v-if="node.field" class="grid gap-2 sm:grid-cols-4">
+              {{ label('ADD_RANGE') }}
+            </button>
+          </fieldset>
+          <fieldset class="grid gap-3">
+            <legend class="mb-3 text-base font-semibold">
+              {{ label('RULES') }}
+            </legend>
+            <p class="text-sm text-n-slate-11">
+              {{ label('RULES_HELP') }}
+            </p>
+            <div
+              v-for="(rule, index) in draft.rules"
+              :key="index"
+              class="grid gap-3 rounded-lg border border-n-weak p-4 sm:grid-cols-2"
+            >
+              <label class="grid gap-1 text-sm">
+                {{ label('FIELD') }}
                 <select
-                  v-model="node.field"
+                  v-model="rule.field"
                   :class="inputClass"
-                  :data-testid="`group-field-${groupIndex}-${nodeIndex}`"
-                  :aria-label="label('FIELD')"
-                  @change="resetRule(node)"
+                  :data-testid="`rule-field-${index}`"
+                  @change="resetRule(rule)"
                 >
                   <option
                     v-for="field in fields"
@@ -1711,103 +1540,217 @@ onMounted(load);
                     {{ field.meaning }}
                   </option>
                 </select>
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('OPERATOR') }}
                 <select
-                  v-model="node.operator"
+                  v-model="rule.operator"
                   :class="inputClass"
-                  :data-testid="`group-operator-${groupIndex}-${nodeIndex}`"
-                  :aria-label="label('OPERATOR')"
-                  @change="resetRule(node)"
+                  :data-testid="`rule-operator-${index}`"
+                  @change="resetRule(rule)"
                 >
                   <option
-                    v-for="operator in operatorsFor(node)"
+                    v-for="operator in operatorsFor(rule)"
                     :key="operator"
                     :value="operator"
                   >
                     {{ label(`OP_${operator.toUpperCase()}`) }}
                   </option>
                 </select>
-                <template
-                  v-if="
-                    !['positive', 'negative', 'known'].includes(node.operator)
+              </label>
+              <label
+                v-if="
+                  !['positive', 'negative', 'known'].includes(rule.operator)
+                "
+                class="grid gap-1 text-sm"
+              >
+                {{ label('VALUE') }}
+                <template v-if="fields[rule.field]?.answer_type === 'money'">
+                  <span> {{ rule.value.currency }} </span>
+                  <input
+                    v-model="rule.value.amount"
+                    inputmode="decimal"
+                    required
+                    :class="inputClass"
+                    :data-testid="`rule-value-${index}`"
+                  />
+                </template>
+                <input
+                  v-else-if="fields[rule.field]?.answer_type === 'number'"
+                  v-model.number="rule.value"
+                  type="number"
+                  step="any"
+                  required
+                  :class="inputClass"
+                  :data-testid="`rule-value-${index}`"
+                />
+                <select
+                  v-else-if="fields[rule.field]?.answer_type === 'boolean'"
+                  v-model="rule.value"
+                  :class="inputClass"
+                >
+                  <option :value="true">
+                    {{ label('YES') }}
+                  </option>
+                  <option :value="false">
+                    {{ label('NO') }}
+                  </option>
+                </select>
+                <select
+                  v-else-if="fields[rule.field]?.answer_type === 'choice'"
+                  v-model="rule.value"
+                  :multiple="rule.operator === 'in'"
+                  :class="inputClass"
+                >
+                  <option
+                    v-for="option in fields[rule.field].options"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+                <input
+                  v-else
+                  v-model="rule.value"
+                  required
+                  :class="inputClass"
+                  :data-testid="`rule-value-${index}`"
+                />
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('EFFECT') }}
+                <select
+                  v-model="rule.kind"
+                  :class="inputClass"
+                  :data-testid="`rule-effect-${index}`"
+                  @change="
+                    rule.forced_outcome =
+                      rule.kind === 'hard_rule' ? 'unqualified' : null
                   "
                 >
-                  <input
-                    v-if="fields[node.field]?.answer_type === 'money'"
-                    v-model="node.value.amount"
-                    inputmode="decimal"
-                    :class="inputClass"
-                    :aria-label="label('VALUE')"
-                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
-                  />
-                  <input
-                    v-else-if="fields[node.field]?.answer_type === 'number'"
-                    v-model.number="node.value"
-                    type="number"
-                    :class="inputClass"
-                    :aria-label="label('VALUE')"
-                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
-                  />
-                  <select
-                    v-else-if="fields[node.field]?.answer_type === 'boolean'"
-                    v-model="node.value"
-                    :class="inputClass"
-                    :aria-label="label('VALUE')"
-                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
-                  >
-                    <option :value="true">{{ label('YES') }}</option>
-                    <option :value="false">{{ label('NO') }}</option>
-                  </select>
-                  <select
-                    v-else-if="fields[node.field]?.answer_type === 'choice'"
-                    v-model="node.value"
-                    :multiple="node.operator === 'in'"
-                    :class="inputClass"
-                    :aria-label="label('VALUE')"
-                    :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
-                  >
-                    <option
-                      v-for="option in fields[node.field].options"
-                      :key="option"
-                      :value="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                  <input v-else v-model="node.value" :class="inputClass" />
-                </template>
+                  <option value="score_rule">
+                    {{ label('ADD_SCORE') }}
+                  </option>
+                  <option value="hard_rule">
+                    {{ label('EXCLUDE') }}
+                  </option>
+                  <option value="requirement">
+                    {{ label('REQUIREMENT') }}
+                  </option>
+                </select>
+              </label>
+              <label
+                v-if="rule.kind === 'requirement'"
+                class="grid gap-1 text-sm"
+              >
+                {{ label('DIMENSION') }}
+                <select
+                  v-model="rule.dimension"
+                  :class="inputClass"
+                  :data-testid="`rule-dimension-${index}`"
+                >
+                  <option value="fit">{{ label('PURPOSE_FIT') }}</option>
+                  <option value="readiness">
+                    {{ label('PURPOSE_READINESS') }}
+                  </option>
+                  <option value="action_eligibility">
+                    {{ label('PURPOSE_ACTION_ELIGIBILITY') }}
+                  </option>
+                </select>
+              </label>
+              <label
+                v-if="rule.kind === 'score_rule'"
+                class="grid gap-1 text-sm"
+              >
+                {{ label('SCORE') }}
+                <input
+                  v-model.number="rule.score_delta"
+                  type="number"
+                  min="0"
+                  required
+                  :class="inputClass"
+                  :data-testid="`rule-score-${index}`"
+                />
+              </label>
+              <label class="grid gap-1 text-sm">
+                {{ label('PRIORITY') }}
+                <input
+                  v-model.number="rule.priority"
+                  type="number"
+                  min="0"
+                  required
+                  :class="inputClass"
+                />
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="rule.enabled" type="checkbox" />
+                {{ label('ENABLED') }}
+              </label>
+              <button
+                type="button"
+                :class="buttonClass"
+                @click="draft.rules.splice(index, 1)"
+              >
+                {{ label('REMOVE') }}
+              </button>
+            </div>
+            <button
+              type="button"
+              :class="buttonClass"
+              data-testid="add-rule"
+              @click="addRule"
+            >
+              {{ label('ADD_RULE') }}
+            </button>
+          </fieldset>
+          <fieldset class="grid gap-3">
+            <legend class="mb-3 text-base font-semibold">
+              Alternative requirements
+            </legend>
+            <p class="text-sm text-n-slate-11">
+              Combine typed requirements with all or any. A satisfied any branch
+              does not ask for the other branch.
+            </p>
+            <div
+              v-for="(group, groupIndex) in draft.requirement_groups"
+              :key="`requirement-group-${groupIndex}`"
+              class="grid gap-3 rounded-lg border border-n-weak p-4"
+            >
+              <div class="grid gap-3 sm:grid-cols-3">
+                <select v-model="group.dimension" :class="inputClass">
+                  <option value="fit">Fit</option>
+                  <option value="readiness">Readiness</option>
+                  <option value="action_eligibility">Action eligibility</option>
+                </select>
+                <select
+                  :value="groupBranch(group)"
+                  :class="inputClass"
+                  :data-testid="`group-branch-${groupIndex}`"
+                  @change="changeGroupBranch(group, $event.target.value)"
+                >
+                  <option value="all">All must apply</option>
+                  <option value="any">Any one can apply</option>
+                </select>
                 <button
                   type="button"
                   :class="buttonClass"
-                  @click="group[groupBranch(group)].splice(nodeIndex, 1)"
+                  @click="draft.requirement_groups.splice(groupIndex, 1)"
                 >
                   {{ label('REMOVE') }}
                 </button>
               </div>
-              <div v-else class="grid gap-2 rounded border border-n-weak p-3">
-                <div class="flex gap-2">
-                  <span class="text-sm">{{
-                    groupBranch(node) === 'all'
-                      ? 'All must apply'
-                      : 'Any one can apply'
-                  }}</span>
-                  <button
-                    type="button"
-                    :class="buttonClass"
-                    @click="group[groupBranch(group)].splice(nodeIndex, 1)"
-                  >
-                    {{ label('REMOVE') }}
-                  </button>
-                </div>
-                <div
-                  v-for="(leaf, leafIndex) in node[groupBranch(node)]"
-                  :key="leafIndex"
-                  class="grid gap-2 sm:grid-cols-4"
-                >
+              <template
+                v-for="(node, nodeIndex) in group[groupBranch(group)]"
+                :key="nodeIndex"
+              >
+                <div v-if="node.field" class="grid gap-2 sm:grid-cols-4">
                   <select
-                    v-model="leaf.field"
+                    v-model="node.field"
                     :class="inputClass"
+                    :data-testid="`group-field-${groupIndex}-${nodeIndex}`"
                     :aria-label="label('FIELD')"
-                    @change="resetRule(leaf)"
+                    @change="resetRule(node)"
                   >
                     <option
                       v-for="field in fields"
@@ -1818,13 +1761,14 @@ onMounted(load);
                     </option>
                   </select>
                   <select
-                    v-model="leaf.operator"
+                    v-model="node.operator"
                     :class="inputClass"
+                    :data-testid="`group-operator-${groupIndex}-${nodeIndex}`"
                     :aria-label="label('OPERATOR')"
-                    @change="resetRule(leaf)"
+                    @change="resetRule(node)"
                   >
                     <option
-                      v-for="operator in operatorsFor(leaf)"
+                      v-for="operator in operatorsFor(node)"
                       :key="operator"
                       :value="operator"
                     >
@@ -1833,121 +1777,239 @@ onMounted(load);
                   </select>
                   <template
                     v-if="
-                      !['positive', 'negative', 'known'].includes(leaf.operator)
+                      !['positive', 'negative', 'known'].includes(node.operator)
                     "
                   >
                     <input
-                      v-if="fields[leaf.field]?.answer_type === 'money'"
-                      v-model="leaf.value.amount"
+                      v-if="fields[node.field]?.answer_type === 'money'"
+                      v-model="node.value.amount"
                       inputmode="decimal"
                       :class="inputClass"
                       :aria-label="label('VALUE')"
+                      :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
                     />
                     <input
-                      v-else-if="fields[leaf.field]?.answer_type === 'number'"
-                      v-model.number="leaf.value"
+                      v-else-if="fields[node.field]?.answer_type === 'number'"
+                      v-model.number="node.value"
                       type="number"
                       :class="inputClass"
                       :aria-label="label('VALUE')"
+                      :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
                     />
                     <select
-                      v-else-if="fields[leaf.field]?.answer_type === 'boolean'"
-                      v-model="leaf.value"
+                      v-else-if="fields[node.field]?.answer_type === 'boolean'"
+                      v-model="node.value"
                       :class="inputClass"
                       :aria-label="label('VALUE')"
+                      :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
                     >
                       <option :value="true">{{ label('YES') }}</option>
                       <option :value="false">{{ label('NO') }}</option>
                     </select>
                     <select
-                      v-else-if="fields[leaf.field]?.answer_type === 'choice'"
-                      v-model="leaf.value"
-                      :multiple="leaf.operator === 'in'"
+                      v-else-if="fields[node.field]?.answer_type === 'choice'"
+                      v-model="node.value"
+                      :multiple="node.operator === 'in'"
                       :class="inputClass"
                       :aria-label="label('VALUE')"
+                      :data-testid="`group-value-${groupIndex}-${nodeIndex}`"
                     >
                       <option
-                        v-for="option in fields[leaf.field].options"
+                        v-for="option in fields[node.field].options"
                         :key="option"
                         :value="option"
                       >
                         {{ option }}
                       </option>
                     </select>
-                    <input v-else v-model="leaf.value" :class="inputClass" />
+                    <input v-else v-model="node.value" :class="inputClass" />
                   </template>
                   <button
                     type="button"
                     :class="buttonClass"
-                    @click="node[groupBranch(node)].splice(leafIndex, 1)"
+                    @click="group[groupBranch(group)].splice(nodeIndex, 1)"
                   >
                     {{ label('REMOVE') }}
                   </button>
                 </div>
+                <div v-else class="grid gap-2 rounded border border-n-weak p-3">
+                  <div class="flex gap-2">
+                    <span class="text-sm">{{
+                      groupBranch(node) === 'all'
+                        ? 'All must apply'
+                        : 'Any one can apply'
+                    }}</span>
+                    <button
+                      type="button"
+                      :class="buttonClass"
+                      @click="group[groupBranch(group)].splice(nodeIndex, 1)"
+                    >
+                      {{ label('REMOVE') }}
+                    </button>
+                  </div>
+                  <div
+                    v-for="(leaf, leafIndex) in node[groupBranch(node)]"
+                    :key="leafIndex"
+                    class="grid gap-2 sm:grid-cols-4"
+                  >
+                    <select
+                      v-model="leaf.field"
+                      :class="inputClass"
+                      :aria-label="label('FIELD')"
+                      @change="resetRule(leaf)"
+                    >
+                      <option
+                        v-for="field in fields"
+                        :key="field.key"
+                        :value="field.key"
+                      >
+                        {{ field.meaning }}
+                      </option>
+                    </select>
+                    <select
+                      v-model="leaf.operator"
+                      :class="inputClass"
+                      :aria-label="label('OPERATOR')"
+                      @change="resetRule(leaf)"
+                    >
+                      <option
+                        v-for="operator in operatorsFor(leaf)"
+                        :key="operator"
+                        :value="operator"
+                      >
+                        {{ label(`OP_${operator.toUpperCase()}`) }}
+                      </option>
+                    </select>
+                    <template
+                      v-if="
+                        !['positive', 'negative', 'known'].includes(
+                          leaf.operator
+                        )
+                      "
+                    >
+                      <input
+                        v-if="fields[leaf.field]?.answer_type === 'money'"
+                        v-model="leaf.value.amount"
+                        inputmode="decimal"
+                        :class="inputClass"
+                        :aria-label="label('VALUE')"
+                      />
+                      <input
+                        v-else-if="fields[leaf.field]?.answer_type === 'number'"
+                        v-model.number="leaf.value"
+                        type="number"
+                        :class="inputClass"
+                        :aria-label="label('VALUE')"
+                      />
+                      <select
+                        v-else-if="
+                          fields[leaf.field]?.answer_type === 'boolean'
+                        "
+                        v-model="leaf.value"
+                        :class="inputClass"
+                        :aria-label="label('VALUE')"
+                      >
+                        <option :value="true">{{ label('YES') }}</option>
+                        <option :value="false">{{ label('NO') }}</option>
+                      </select>
+                      <select
+                        v-else-if="fields[leaf.field]?.answer_type === 'choice'"
+                        v-model="leaf.value"
+                        :multiple="leaf.operator === 'in'"
+                        :class="inputClass"
+                        :aria-label="label('VALUE')"
+                      >
+                        <option
+                          v-for="option in fields[leaf.field].options"
+                          :key="option"
+                          :value="option"
+                        >
+                          {{ option }}
+                        </option>
+                      </select>
+                      <input v-else v-model="leaf.value" :class="inputClass" />
+                    </template>
+                    <button
+                      type="button"
+                      :class="buttonClass"
+                      @click="node[groupBranch(node)].splice(leafIndex, 1)"
+                    >
+                      {{ label('REMOVE') }}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    :class="buttonClass"
+                    @click="addNestedLeaf(node)"
+                  >
+                    Add requirement
+                  </button>
+                </div>
+              </template>
+              <div class="flex gap-2">
                 <button
                   type="button"
                   :class="buttonClass"
-                  @click="addNestedLeaf(node)"
+                  @click="addGroupLeaf(group)"
                 >
                   Add requirement
                 </button>
+                <button
+                  type="button"
+                  :class="buttonClass"
+                  @click="addNestedGroup(group)"
+                >
+                  Add all/any branch
+                </button>
               </div>
-            </template>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                :class="buttonClass"
-                @click="addGroupLeaf(group)"
-              >
-                Add requirement
-              </button>
-              <button
-                type="button"
-                :class="buttonClass"
-                @click="addNestedGroup(group)"
-              >
-                Add all/any branch
-              </button>
             </div>
-          </div>
+            <button
+              type="button"
+              :class="buttonClass"
+              data-testid="add-requirement-group"
+              @click="addRequirementGroup"
+            >
+              Add alternative group
+            </button>
+          </fieldset>
+          <!-- eslint-enable vue/no-bare-strings-in-template -->
+          <fieldset class="grid gap-3 sm:grid-cols-2">
+            <legend class="mb-3 text-base font-semibold">
+              {{ label('THRESHOLDS') }}
+            </legend>
+            <label
+              v-for="key in ['qualified', 'highly_qualified']"
+              :key="key"
+              class="grid gap-1 text-sm"
+            >
+              {{ label(key.toUpperCase()) }}
+              <input
+                v-model.number="draft.score_thresholds[key]"
+                type="number"
+                min="0"
+                required
+                :class="inputClass"
+              />
+            </label>
+          </fieldset>
+        </details>
+        <section class="grid gap-2" data-testid="preview-publish-section">
+          <h3 class="text-base font-semibold text-n-slate-12">
+            {{ label('PREVIEW_AND_PUBLISH') }}
+          </h3>
+          <p class="text-sm leading-6 text-n-slate-11">
+            {{ label('PREVIEW_AND_PUBLISH_HELP') }}
+          </p>
           <button
-            type="button"
-            :class="buttonClass"
-            data-testid="add-requirement-group"
-            @click="addRequirementGroup"
+            type="submit"
+            formnovalidate
+            data-testid="save-offer"
+            :disabled="saving || conflicted"
+            class="min-h-10 justify-self-start rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
           >
-            Add alternative group
+            {{ label(saving ? 'SAVING' : 'SAVE') }}
           </button>
-        </fieldset>
-        <!-- eslint-enable vue/no-bare-strings-in-template -->
-        <fieldset class="grid gap-3 sm:grid-cols-2">
-          <legend class="mb-3 text-base font-semibold">
-            {{ label('THRESHOLDS') }}
-          </legend>
-          <label
-            v-for="key in ['qualified', 'highly_qualified']"
-            :key="key"
-            class="grid gap-1 text-sm"
-          >
-            {{ label(key.toUpperCase()) }}
-            <input
-              v-model.number="draft.score_thresholds[key]"
-              type="number"
-              min="0"
-              required
-              :class="inputClass"
-            />
-          </label>
-        </fieldset>
-        <button
-          type="submit"
-          formnovalidate
-          data-testid="save-offer"
-          :disabled="saving || conflicted"
-          class="min-h-10 justify-self-start rounded-lg bg-n-brand px-4 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {{ label(saving ? 'SAVING' : 'SAVE') }}
-        </button>
+        </section>
       </fieldset>
     </form>
   </section>

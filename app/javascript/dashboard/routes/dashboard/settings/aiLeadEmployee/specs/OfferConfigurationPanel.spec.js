@@ -107,6 +107,36 @@ it('saves explicit qualification mode, question purpose, requirement dimension a
   });
 });
 
+it('keeps the six owner-facing setup sections while technical controls stay collapsed by default', async () => {
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  expect(
+    wrapper.get('[data-testid="business-about-section"]').text()
+  ).toContain('About the business');
+  expect(
+    wrapper.get('[data-testid="commercial-terms-section"]').text()
+  ).toContain('Offers and prices');
+  expect(wrapper.get('[data-testid="who-we-help-section"]').text()).toContain(
+    'Who we help'
+  );
+  expect(
+    wrapper.get('[data-testid="response-settings-section"]').text()
+  ).toContain('How the assistant should respond');
+  expect(wrapper.get('[data-testid="next-step-section"]').text()).toContain(
+    'What happens next'
+  );
+  expect(
+    wrapper.get('[data-testid="preview-publish-section"]').text()
+  ).toContain('Preview and publish');
+  expect(
+    wrapper.get('[data-testid="advanced-technical-controls"]').element.open
+  ).toBe(false);
+  expect(
+    wrapper.get('[data-testid="question-prompt-0"]').attributes('required')
+  ).toBeDefined();
+});
+
 it('submits qualification changes when an unrelated commercial amount is blank', async () => {
   const wrapper = mountPanel();
   await flushPromises();
