@@ -1123,7 +1123,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       ]
     )
     conversation.update!(offer: offer)
-    triggering_message.update!(content: 'I run a catering business and need more customers.')
+    triggering_message.update!(content: 'My customers are mostly local.')
     connection = create(:ai_provider_connection, account: account)
     intent.update!(pilot_authorization: create_pilot_authorization(connection))
     allow(provider_client).to receive(:complete).and_return(
@@ -1132,7 +1132,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
         content: {
           reply: 'Thanks for those details.',
           observations: [
-            { key: 'business_status', quote: 'I run a catering business and need more customers.',
+            { key: 'business_status', quote: 'My customers are mostly local.',
               typed_value: 'running', asserted: true, certainty: 'certain' }
           ],
           localized_prompts: {}
@@ -1152,6 +1152,159 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(authority).to include('provider_configuration_version' => connection.configuration_version)
   end
 
+  it 'omits the next Swahili qualification question when the provider does not translate the owner prompt' do
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        ),
+        question('team_size', 'How many team members do you have?').merge('answer_type' => 'number')
+      ]
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'Wateja wangu ni wa hapa. Tafadhali nijibu kwa Kiswahili.')
+    connection = create(:ai_provider_connection, account: account)
+    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-swahili-no-prompt', model: connection.model,
+        content: {
+          reply: 'Asante kwa maelezo.',
+          observations: [
+            { key: 'business_status', quote: 'Wateja wangu ni wa hapa.',
+              typed_value: 'running', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(intent.outbound_message.content).to eq('Asante kwa maelezo.')
+    expect(intent.outbound_message.content).not_to include('How many team members')
+  end
+
+  it 'uses the structured qualification path for ordinary enabled accounts with customer allowance controls' do # rubocop:disable RSpec/MultipleExpectations
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        ),
+        question('team_size', 'How many team members do you have?').merge('answer_type' => 'number')
+      ]
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'My customers are mostly local.')
+    connection = create(:ai_provider_connection, account: account)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
+    allow(provider_client).to receive(:complete).and_return(
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-nonpilot-qualification', model: connection.model,
+        content: {
+          reply: 'Thanks for those details.',
+          observations: [
+            { key: 'business_status', quote: 'My customers are mostly local.',
+              typed_value: 'running', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    )
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
+    expect(provider_client).to have_received(:complete).once
+    expect(provider_client).to have_received(:complete) do |arguments|
+      prompt = arguments.fetch(:messages).last.fetch(:content)
+      expect(prompt).to include('Do you currently run a business?', 'Current business status', 'USD', 'english', 'business_status')
+    end
+    expect(intent.ai_reply_usage).to be_reserved
+    evidence = QualificationEvidence.find_by!(account: account, contact: contact, offer: offer, field_key: 'business_status')
+    expect(evidence.value).to include('typed_value' => 'running')
+    authority = intent.outbound_message.additional_attributes.fetch('ai_lead_employee')
+    expect(authority).to include('provider_configuration_version' => connection.configuration_version,
+                                 'ai_reply_usage_id' => intent.ai_reply_usage.id)
+    expect(authority).not_to include('pilot_authorization_id')
+  end
+
+  it 'rejects structured observations when the selected Offer changes during the provider call' do
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        )
+      ]
+    )
+    replacement = create_offer(name: 'Replacement', qualification_mode: 'enabled')
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'My customers are mostly local.')
+    connection = create(:ai_provider_connection, account: account)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
+    allow(provider_client).to receive(:complete) do
+      conversation.update!(offer: replacement)
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-offer-drift', model: connection.model,
+        content: {
+          reply: 'Thanks for those details.',
+          observations: [
+            { key: 'business_status', quote: 'My customers are mostly local.',
+              typed_value: 'running', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    end
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'source_unverified')
+    expect(QualificationEvidence.where(account: account, contact: contact, offer: offer, field_key: 'business_status')).to be_empty
+  end
+
+  it 'rejects structured observations when the selected Offer configuration changes during the provider call' do
+    offer = create_offer(
+      qualification_mode: 'enabled',
+      questions: [
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        )
+      ]
+    )
+    conversation.update!(offer: offer)
+    triggering_message.update!(content: 'My customers are mostly local.')
+    connection = create(:ai_provider_connection, account: account)
+    allow(AiLeadEmployee::LaunchGate).to receive(:live_ai_enabled?).with(account).and_return(true)
+    allow(provider_client).to receive(:complete) do
+      offer.update!(configuration_version: offer.configuration_version + 1)
+      AiLeadEmployee::AiProvider::Response.new(
+        id: 'r19-offer-config-drift', model: connection.model,
+        content: {
+          reply: 'Thanks for those details.',
+          observations: [
+            { key: 'business_status', quote: 'My customers are mostly local.',
+              typed_value: 'running', asserted: true, certainty: 'certain' }
+          ],
+          localized_prompts: {}
+        }.to_json,
+        finish_reason: 'stop', configuration_version: connection.configuration_version
+      )
+    end
+
+    described_class.new(intent: intent, enqueue_deliveries: false).perform
+
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'source_unverified')
+    expect(QualificationEvidence.where(account: account, contact: contact, offer: offer, field_key: 'business_status')).to be_empty
+  end
+
   it 'blocks malformed pilot structured output without sending the raw provider payload' do
     offer = create_offer(qualification_mode: 'enabled', questions: [
                            question('business_status', 'Do you currently run a business?').merge(
@@ -1159,7 +1312,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
                            )
                          ])
     conversation.update!(offer: offer)
-    triggering_message.update!(content: 'I run a catering business.')
+    triggering_message.update!(content: 'My customers are mostly local.')
     connection = create(:ai_provider_connection, account: account)
     intent.update!(pilot_authorization: create_pilot_authorization(connection))
     allow(provider_client).to receive(:complete).and_return(

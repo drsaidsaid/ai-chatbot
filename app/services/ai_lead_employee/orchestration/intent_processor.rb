@@ -96,12 +96,13 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
       block_reason = final_block_reason
       next block_intent!(block_reason) if block_reason.present?
+      next request_review!('source_unverified') unless lock_structured_offer_context!
 
       lock_answer_sources! unless structured_qualification_only?
       next request_review!('source_unverified') if !structured_qualification_only? && !sources_still_current?
 
       structured = structured_qualification_response(response)
-      next request_review!('provider_failed') if intent.pilot_authorization && structured.malformed?
+      next request_review!('provider_failed') if structured_qualification_active? && structured.malformed?
 
       response.content = structured.reply if structured.reply.present?
       next request_review!('source_unverified') if !structured_qualification_only? && provider_review_required?(response)
@@ -246,6 +247,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     end
 
     @answer_result = answer_result
+    capture_structured_offer_context!(nil) if intent.pilot_authorization && structured_qualification_available?
   end
 
   def process_conversation_reply!
@@ -266,16 +268,20 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
   def prepare_structured_qualification_interpretation!(qualification_result)
     @structured_qualification_only = true
+    capture_structured_offer_context!(qualification_result)
     @answer_result = AiLeadEmployee::KnowledgeAnswerService::Result.new(answer: '', sources: [])
     qualification_result
   end
 
   def structured_qualification_interpretation_required?(qualification_result)
-    intent.pilot_authorization.present? &&
-      classification.intent == :qualification_answer &&
-      selected_offer&.qualification_enabled? &&
-      configured_new_evidence(qualification_result).empty? &&
+    classification.intent == :qualification_answer &&
+      structured_qualification_available? &&
+      Array(qualification_result&.new_evidence).empty? &&
       qualification_result&.next_question_key.present?
+  end
+
+  def structured_qualification_available?
+    selected_offer&.enabled? && selected_offer.qualification_enabled? && selected_offer.questions.present?
   end
 
   def configured_new_evidence(qualification_result)
@@ -443,36 +449,75 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def structured_qualification_contract
-    return unless intent.pilot_authorization
+    return unless structured_qualification_active?
 
-    fields = selected_offer&.questions.to_a.map { |field| field.slice('key', 'meaning', 'answer_type', 'options', 'period') }
+    fields = @structured_offer_fields
     <<~CONTRACT.squish
       Return JSON only with reply, observations, and localized_prompts. When an approved source answer is present, reply must use only that approved source answer; otherwise reply must be a brief acknowledgment only.
       observations are candidates with key, quote copied exactly from one full asserted Lead clause, typed_value, asserted true, and certainty "certain".
-      Use the full Lead clause and field meaning when proposing a value; skip negated, hypothetical, future, goal, third-party, ambiguous, conflicting, action-agreement, and consent facts.
-      Never infer eligibility, requirements, handoff, action agreement, or a next question. Current Offer fields: #{fields.to_json}.
-      localized_prompts maps only those field keys to a rendering in the Lead's requested language.
+      Use the full Lead clause, owner prompt, field meaning, currency, period, requested language, and pending question context when proposing a value; skip ambiguous, conflicting, unsupported, third-party, action-agreement, and consent facts.
+      Goal or negative facts are valid only when the configured field meaning and owner prompt ask for that kind of fact; otherwise skip them.
+      Never infer eligibility, requirements, handoff, action agreement, or a next question. Current requested language: #{classification.language}. Pending question key: #{@structured_offer_context['next_question_key']}. Current Offer fields: #{fields.to_json}.
+      localized_prompts maps only enabled field keys to a translation or rendering of the owner prompt in the Lead's requested language; do not invent a new question.
     CONTRACT
   end
 
   def structured_qualification_response(response)
-    unless intent.pilot_authorization
+    unless structured_qualification_active?
       return AiLeadEmployee::StructuredQualificationResponse::Result.new(
         reply: response.content, observations: {}, localized_prompts: {}, malformed: false
       )
     end
 
     AiLeadEmployee::StructuredQualificationResponse.new(
-      content: response.content, offer: selected_offer, incoming_message: triggering_message
+      content: response.content, offer: @locked_structured_offer || selected_offer, incoming_message: triggering_message
     ).perform
   end
 
   def record_structured_observations!(observations)
-    return if observations.blank? || selected_offer.blank?
+    return if observations.blank? || (@locked_structured_offer || selected_offer).blank?
 
     AiLeadEmployee::OfferEvidenceRecorder.new(
-      conversation: conversation, offer: selected_offer, incoming_message: triggering_message, observations: observations
+      conversation: conversation, offer: @locked_structured_offer || selected_offer, incoming_message: triggering_message, observations: observations
     ).perform
+  end
+
+  def capture_structured_offer_context!(qualification_result)
+    offer = selected_offer
+    @structured_offer_context = {
+      'scope' => 'structured_qualification', 'account_id' => account.id, 'contact_id' => conversation.contact_id,
+      'origin_conversation_id' => conversation.id, 'offer_id' => offer.id,
+      'selection_version' => conversation.offer_selection_version,
+      'configuration_version' => offer.configuration_version,
+      'next_question_key' => qualification_result&.next_question_key
+    }.freeze
+    @structured_offer_fields = offer.questions.reject { |field| field['enabled'] == false }.map do |field|
+      field.slice('key', 'meaning', 'answer_type', 'options', 'currency', 'period', 'prompt')
+           .merge('currency' => offer.currency)
+    end
+  end
+
+  def structured_qualification_active?
+    @structured_offer_context.present?
+  end
+
+  def lock_structured_offer_context! # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    return true unless structured_qualification_active?
+
+    context = @structured_offer_context
+    return false unless context['account_id'] == account.id && context['contact_id'] == conversation.contact_id &&
+                        context['origin_conversation_id'] == conversation.id
+    return false unless conversation.offer_id == context['offer_id'] &&
+                        conversation.offer_selection_version == context['selection_version']
+
+    @locked_structured_offer = AiLeadEmployee::Offer.where(account_id: account.id, id: context['offer_id'])
+                                                    .lock('FOR NO KEY UPDATE').first
+    return false unless @locked_structured_offer&.enabled? &&
+                        @locked_structured_offer.configuration_version == context['configuration_version'] &&
+                        @locked_structured_offer.questions.present?
+
+    conversation.contact.lock!
+    true
   end
 
   def localize_next_question!(qualification_result, prompts)

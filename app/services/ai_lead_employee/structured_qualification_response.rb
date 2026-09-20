@@ -9,10 +9,13 @@ class AiLeadEmployee::StructuredQualificationResponse
   end
   GOAL_OR_FUTURE = /\b(?:goal|target|aim|plan|planning|want|would like|hope|future|lengo|malengo|nataka|ningependa|
                     natarajia|mpango|mipango|kufikia|nitafikia)\b/ix
+  GOAL_FIELD = /\b(?:goal|target|aim|desired|future|lengo|malengo)\b/i
   NEGATION = /\b(?:no|not|never|without|don't|dont|cannot|can't|sina|hapana|si|sio|siyo|bila)\b/i
   HYPOTHETICAL = /\b(?:if|would|could|might|maybe|perhaps|ikiwa|endapo|labda)\b/i
+  THIRD_PARTY = /\b(?:he|she|they|them|his|her|their|friend|partner|spouse|rafiki|yeye|wao)\b/i
   MONTHLY = /\b(?:monthly|per month|kwa mwezi)\b/i
   YEARLY = /\b(?:yearly|annually|annual|per year|kwa mwaka)\b/i
+  CLAUSE_SPLIT = /(?<=[.!?])\s+|[,;]\s+|\s+\b(?:and|but|na|lakini)\b\s+/i
 
   def initialize(content:, offer:, incoming_message:)
     @content = content.to_s
@@ -20,14 +23,16 @@ class AiLeadEmployee::StructuredQualificationResponse
     @incoming_message = incoming_message
   end
 
-  def perform
+  def perform # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    return fallback unless offer&.enabled? && offer.questions.present?
+
     payload = JSON.parse(content)
     return fallback unless payload.is_a?(Hash) && payload['reply'].is_a?(String)
     return fallback if payload.key?('observations') && !payload['observations'].is_a?(Array)
 
     Result.new(
       reply: payload['reply'],
-      observations: Array(payload['observations']).filter_map { |candidate| observation(candidate) }.to_h,
+      observations: observations(Array(payload['observations'])),
       localized_prompts: localized_prompts(payload['localized_prompts']),
       malformed: false
     )
@@ -38,6 +43,17 @@ class AiLeadEmployee::StructuredQualificationResponse
   private
 
   attr_reader :content, :offer, :incoming_message
+
+  def observations(candidates)
+    candidates.filter_map { |candidate| observation(candidate) }
+              .group_by(&:first)
+              .filter_map { |key, values| [key, values.first.last] unless conflicting?(values.map(&:last)) }
+              .to_h
+  end
+
+  def conflicting?(values)
+    values.map { |value| value.except('quote') }.uniq.many?
+  end
 
   def fallback
     Result.new(reply: nil, observations: {}, localized_prompts: {}, malformed: true)
@@ -53,7 +69,7 @@ class AiLeadEmployee::StructuredQualificationResponse
     return unless question && question['enabled'] != false && quote.present? && incoming_message.content.to_s.include?(quote)
     return if action_agreement?(key)
     return unless asserted_candidate?(values)
-    return unless asserted_quote?(quote)
+    return unless asserted_quote?(question, quote, values)
 
     typed = validated_observation(question, quote, values)
     return unless typed
@@ -69,11 +85,29 @@ class AiLeadEmployee::StructuredQualificationResponse
     candidate['asserted'] == true && candidate['certainty'] == 'certain'
   end
 
-  def asserted_quote?(quote)
-    return false if quote.include?('?')
-    return false if quote.match?(GOAL_OR_FUTURE) || quote.match?(NEGATION) || quote.match?(HYPOTHETICAL)
+  def asserted_quote?(question, quote, candidate) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    context = containing_clause(quote)
+    return false if context.include?('?')
+    return false if context.match?(HYPOTHETICAL) || context.match?(THIRD_PARTY)
+    return false if context.match?(GOAL_OR_FUTURE) && !goal_field?(question)
+    return false if context.match?(NEGATION) && !negative_value?(question, candidate)
 
-    quote.split.size >= 2
+    quote.split.size >= 2 || question['answer_type'] == 'number'
+  end
+
+  def containing_clause(quote)
+    incoming_message.content.to_s.split(CLAUSE_SPLIT).find { |clause| clause.include?(quote) }.presence || quote
+  end
+
+  def goal_field?(question)
+    [question['key'], question['meaning'], question['prompt']].compact.join(' ').match?(GOAL_FIELD)
+  end
+
+  def negative_value?(question, candidate)
+    return true if question['answer_type'] == 'boolean' && candidate['typed_value'] == false
+    return true if question['answer_type'] == 'choice' && candidate['typed_value'].to_s.match?(/\b(?:no|not|none|negative)\b/)
+
+    false
   end
 
   def validated_observation(question, quote, candidate) # rubocop:disable Metrics/CyclomaticComplexity
@@ -112,10 +146,12 @@ class AiLeadEmployee::StructuredQualificationResponse
   end
 
   def number_observation(quote, candidate)
-    return unless quote.match?(/\A\s*\d+(?:\.\d+)?\s*\z/)
+    matches = quote.scan(/(?<![\w.])\d+(?:\.\d+)?(?![\w.])/)
+    return unless matches.one?
 
-    value = BigDecimal(quote)
-    return unless candidate['typed_value'].to_s == value.to_s('F')
+    value = BigDecimal(matches.first)
+    candidate_value = BigDecimal(candidate['typed_value'].to_s)
+    return unless candidate_value == value
 
     { 'typed_value' => value.frac.zero? ? value.to_i : value.to_f }
   rescue ArgumentError
