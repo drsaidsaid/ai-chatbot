@@ -8,6 +8,8 @@ class AiLeadEmployee::AiProviderUsage < ApplicationRecord
 
   belongs_to :account
   belongs_to :ai_provider_connection, class_name: 'AiLeadEmployee::AiProviderConnection'
+  belongs_to :pilot_authorization, class_name: 'AiLeadEmployee::PilotAuthorization', optional: true
+  belongs_to :ai_orchestration_intent, class_name: 'AiLeadEmployee::OrchestrationIntent', optional: true
 
   enum :status, STATUSES.index_with(&:itself)
 

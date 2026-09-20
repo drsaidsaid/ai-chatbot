@@ -177,7 +177,7 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def launch_gate_not_approved?
-    enforce_launch_gate && !AiLeadEmployee::LaunchGate.live_ai_enabled?(account)
+    enforce_launch_gate && !AiLeadEmployee::LaunchGate.live_ai_enabled?(account) && !pilot_authorization_current?
   end
 
   def stale_control_version?
@@ -340,12 +340,17 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def build_provider_answer(answer_result)
-    @reply_usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: intent) if provider_purpose == 'answer'
-    ai_provider_client.complete(
-      messages: provider_messages(answer_result),
-      temperature: 0.1,
-      purpose: provider_purpose
-    )
+    if intent.pilot_authorization
+      ai_provider_client.complete(
+        messages: provider_messages(answer_result), temperature: 0.1, purpose: provider_purpose,
+        pilot_authorization: intent.pilot_authorization, orchestration_intent: intent
+      )
+    else
+      @reply_usage = AiLeadEmployee::ReplyAllowance.reserve!(intent: intent) if provider_purpose == 'answer'
+      ai_provider_client.complete(
+        messages: provider_messages(answer_result), temperature: 0.1, purpose: provider_purpose
+      )
+    end
   end
 
   def ai_provider_client
@@ -415,7 +420,9 @@ class AiLeadEmployee::Orchestration::IntentProcessor
 
     {
       provider_configuration_version: provider_response.configuration_version,
-      provider_usage_period_on: provider_response.usage_period_on&.iso8601
+      provider_usage_period_on: provider_response.usage_period_on&.iso8601,
+      provider_usage_id: provider_response.provider_usage_id,
+      pilot_authorization_id: intent.pilot_authorization_id
     }
   end
 
@@ -677,6 +684,11 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     release_reply_allowance!(reason)
     intent.update!(state: :blocked, blocked_reason: reason, blocked_at: Time.current, review_request: review_request)
     intent
+  end
+
+  def pilot_authorization_current?
+    authorization = intent.pilot_authorization
+    authorization.present? && authorization == AiLeadEmployee::PilotAuthorization.current_for(message: triggering_message)
   end
 end
 # rubocop:enable Metrics/ClassLength

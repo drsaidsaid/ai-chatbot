@@ -2,6 +2,24 @@
 
 Status: Approved for implementation; blocked by the issues below.
 
+## Bounded owner-funded pilot-control increment
+
+ADR 0018 adds a separate Pilot Authorization for a single exact Lead and
+Conversation revision. It does not approve launch and creates no live
+authorization. Platform activation requires a dedicated permission and a fresh
+verification from OpenRouter's current-key endpoint; only a key fingerprint and
+sanitized response digest are stored. The implementation counts each provider
+HTTP attempt in the existing usage ledger, serializes admission, excludes
+customer AI Reply Credits, and rechecks the authorization at canonical outbound
+dispatch. The final admitted answer is not rejected merely because its admission
+reached the attempt limit.
+
+Focused fake-provider coverage owns account/contact/inbox/recipient/control and
+provider revisions, expiry, pause, takeover, concurrent admission, attempt caps,
+unknown cost, stale dispatch and dedicated Platform permission. Deployment,
+real sends, paid provider calls, an activated authorization and full R17 launch
+evidence remain blocked outside this increment.
+
 ## Parent
 
 https://github.com/drsaidsaid/ai-chatbot/issues/14

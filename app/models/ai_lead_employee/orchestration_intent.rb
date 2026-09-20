@@ -52,6 +52,7 @@ class AiLeadEmployee::OrchestrationIntent < ApplicationRecord
   belongs_to :triggering_message, class_name: 'Message'
   belongs_to :review_request, class_name: 'HumanReviewRequest', optional: true
   belongs_to :outbound_message, class_name: 'Message', optional: true
+  belongs_to :pilot_authorization, class_name: 'AiLeadEmployee::PilotAuthorization', optional: true
   has_one :ai_reply_usage, class_name: 'AiLeadEmployee::AiReplyUsage', foreign_key: :ai_orchestration_intent_id,
                            inverse_of: :ai_orchestration_intent, dependent: :restrict_with_exception
 

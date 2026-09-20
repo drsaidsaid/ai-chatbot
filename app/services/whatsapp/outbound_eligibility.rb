@@ -88,10 +88,10 @@ class Whatsapp::OutboundEligibility
     follow_up&.pending? && follow_up.control_version == @conversation.control_version && follow_up.scheduled_at <= Time.current
   end
 
-  def automation_failure # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def automation_failure # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     return 'control_changed' unless @conversation.open? && @conversation.control_version == @delivery.observed_control_version
     return booking_confirmation_failure if booking_confirmation?
-    return 'launch_not_approved' unless AiLeadEmployee::LaunchGate.live_ai_enabled?(@delivery.account)
+    return 'launch_not_approved' unless pilot_delivery? || AiLeadEmployee::LaunchGate.live_ai_enabled?(@delivery.account)
 
     alert = alert_authority
     return alert.failure_code || qualification_failure(alert) if alert.alert?
@@ -101,7 +101,7 @@ class Whatsapp::OutboundEligibility
     return qualification_failure(alert) unless provider_control_required?
 
     attributes = @message.additional_attributes.fetch('ai_lead_employee', {})
-    AiLeadEmployee::AiProvider::RuntimeControl.failure_code_locked(
+    pilot_dispatch_failure || AiLeadEmployee::AiProvider::RuntimeControl.failure_code_locked(
       connection: @authority_records[:provider_connection],
       configuration_version: attributes['provider_configuration_version'],
       usage_period_on: attributes['provider_usage_period_on']
@@ -134,7 +134,7 @@ class Whatsapp::OutboundEligibility
   end
 
   def automation_prerequisite_failure
-    lead_automation_failure || AiLeadEmployee::ReplyAllowance.delivery_failure_code(message: @message)
+    lead_automation_failure || (AiLeadEmployee::ReplyAllowance.delivery_failure_code(message: @message) unless pilot_delivery?)
   end
 
   def booking_confirmation?
@@ -178,5 +178,20 @@ class Whatsapp::OutboundEligibility
 
   def alert_authority
     @alert_authority ||= Whatsapp::OutboundAlertAuthority.new(@message)
+  end
+
+  def pilot_delivery?
+    @message.additional_attributes.dig('ai_lead_employee', 'pilot_authorization_id').present?
+  end
+
+  def pilot_dispatch_failure
+    return unless pilot_delivery?
+
+    AiLeadEmployee::PilotDispatchAuthority.new(
+      message: @message,
+      conversation: @conversation,
+      authorization: @authority_records[:pilot_authorization],
+      usage: @authority_records[:provider_usage]
+    ).failure_code
   end
 end

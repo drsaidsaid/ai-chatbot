@@ -197,6 +197,17 @@ _Avoid_: Fake conversation, test chat
 The server-side approval record that keeps live AI operation disabled until required Evaluation Runs, reviewed qualification accuracy, zero serious issues, team roleplay, pilot reviews, and admin approval are complete.
 _Avoid_: Frontend toggle, feature flag
 
+**Pilot Authorization**:
+An expiring Platform Operator authority for one Business Account, Inbox, Lead,
+Conversation control revision, WhatsApp recipient and AI Provider Connection
+revision. It permits owner-funded supervised orchestration while the Launch Gate
+remains closed, without consuming customer AI Reply Credits. Every provider
+attempt and outbound answer retains the authorization identity; pause, expiry,
+takeover, provider drift or unknown cost fails closed. A configured provider
+budget is evidence of a bounded control, not a promise that the provider cannot
+overshoot it.
+_Avoid_: Launch approval, customer allowance, global pilot mode
+
 **Booking**:
 A calendar reservation with confirmed start and end times, created under the selected Offer’s eligibility, Lead agreement and any applicable payment requirements.
 _Avoid_: Call request, appointment lead

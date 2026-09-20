@@ -17,4 +17,8 @@ class PlatformApp < ApplicationRecord
   def finance_operator?
     finance_operations_enabled?
   end
+
+  def pilot_operator?
+    pilot_operations_enabled?
+  end
 end

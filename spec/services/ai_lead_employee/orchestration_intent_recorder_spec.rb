@@ -98,6 +98,34 @@ RSpec.describe AiLeadEmployee::OrchestrationIntentRecorder do
     expect(enqueued_jobs.map { |job| job[:job] }).not_to include(AiLeadEmployee::OrchestrationIntentJob)
   end
 
+  it 'records a launch-paused intent only for the exact active Pilot Authorization' do
+    contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{sender_number}")
+    contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: sender_number)
+    conversation = create(:conversation, account: whatsapp_channel.account, inbox: whatsapp_channel.inbox,
+                                         contact: contact, contact_inbox: contact_inbox, control_state: :ai_active)
+    message = create(:message, account: whatsapp_channel.account, inbox: whatsapp_channel.inbox,
+                               conversation: conversation, sender: contact, message_type: :incoming,
+                               content: 'Can you help?', source_id: 'wamid.PILOT.LEAD')
+    provider = create(:ai_provider_connection, account: whatsapp_channel.account)
+    platform_app = create(:platform_app)
+    authorization = AiLeadEmployee::PilotAuthorization.create!(
+      account: whatsapp_channel.account, inbox: whatsapp_channel.inbox, contact: contact,
+      conversation: conversation, ai_provider_connection: provider,
+      recipient: sender_number, control_version: conversation.control_version,
+      provider_configuration_version: provider.configuration_version,
+      max_attempts: 3, max_spend_usd: 1.00, provider_limit_usd: 1.00,
+      provider_limit_verified_at: Time.current, provider_limit_evidence: {
+        'kind' => 'openrouter_key_limit', 'key_fingerprint' => 'sha256:test',
+        'verification_digest' => 'sha256:verified-response'
+      }, starts_at: 1.minute.ago, expires_at: 1.hour.from_now,
+      authorized_by_platform_app: platform_app
+    )
+
+    intent = described_class.new(message: message, enqueue: false).perform
+
+    expect(intent).to have_attributes(pilot_authorization_id: authorization.id, triggering_message_id: message.id)
+  end
+
   it 'creates a Review Request without orchestration intent for unsupported media' do
     approve_launch_gate!
 

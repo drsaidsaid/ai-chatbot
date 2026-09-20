@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_19_001000) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_20_000100) do
   # These extensions should be enabled to support this database
   enable_extension "btree_gist"
   enable_extension "pg_stat_statements"
@@ -262,6 +262,43 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_001000) do
     t.index ["id", "account_id"], name: "idx_ai_offer_account_scope", unique: true
   end
 
+  create_table "ai_lead_employee_pilot_authorizations", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "inbox_id", null: false
+    t.bigint "contact_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "ai_provider_connection_id", null: false
+    t.bigint "authorized_by_platform_app_id", null: false
+    t.string "recipient", null: false
+    t.integer "control_version", null: false
+    t.integer "provider_configuration_version", null: false
+    t.string "status", default: "active", null: false
+    t.integer "max_attempts", null: false
+    t.decimal "max_spend_usd", precision: 18, scale: 8, null: false
+    t.decimal "provider_limit_usd", precision: 18, scale: 8, null: false
+    t.datetime "provider_limit_verified_at", null: false
+    t.jsonb "provider_limit_evidence", default: {}, null: false
+    t.datetime "starts_at", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "paused_at"
+    t.string "pause_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "conversation_id", "status"], name: "idx_pilot_authorizations_on_scope_status"
+    t.index ["account_id", "conversation_id"], name: "idx_one_active_pilot_authorization_per_conversation", unique: true, where: "((status)::text = 'active'::text)"
+    t.index ["account_id"], name: "index_ai_lead_employee_pilot_authorizations_on_account_id"
+    t.index ["ai_provider_connection_id"], name: "idx_on_ai_provider_connection_id_1ff92f9619"
+    t.index ["authorized_by_platform_app_id"], name: "idx_pilot_authorizations_on_platform_app"
+    t.index ["contact_id"], name: "index_ai_lead_employee_pilot_authorizations_on_contact_id"
+    t.index ["conversation_id"], name: "index_ai_lead_employee_pilot_authorizations_on_conversation_id"
+    t.index ["inbox_id"], name: "index_ai_lead_employee_pilot_authorizations_on_inbox_id"
+    t.check_constraint "expires_at > starts_at", name: "pilot_authorizations_forward_window"
+    t.check_constraint "max_attempts > 0", name: "pilot_authorizations_positive_attempts"
+    t.check_constraint "max_spend_usd > 0::numeric", name: "pilot_authorizations_positive_spend"
+    t.check_constraint "provider_limit_usd > 0::numeric AND provider_limit_usd <= max_spend_usd", name: "pilot_authorizations_bounded_provider_limit"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'paused'::character varying, 'revoked'::character varying]::text[])", name: "pilot_authorizations_status"
+  end
+
   create_table "ai_orchestration_intents", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "conversation_id", null: false
@@ -284,12 +321,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_001000) do
     t.datetime "updated_at", null: false
     t.string "owner_token"
     t.datetime "lease_expires_at"
+    t.bigint "pilot_authorization_id"
     t.index ["account_id", "conversation_id", "state"], name: "idx_on_account_id_conversation_id_state_b83b69ea47"
     t.index ["account_id", "conversation_id", "triggering_message_id", "observed_control_version"], name: "idx_ai_orchestration_intents_on_logical_trigger", unique: true
     t.index ["account_id", "idempotency_key"], name: "idx_on_account_id_idempotency_key_c7b0a1d67b", unique: true
     t.index ["account_id"], name: "index_ai_orchestration_intents_on_account_id"
     t.index ["conversation_id"], name: "index_ai_orchestration_intents_on_conversation_id"
     t.index ["outbound_message_id"], name: "index_ai_orchestration_intents_on_outbound_message_id"
+    t.index ["pilot_authorization_id"], name: "idx_ai_intents_on_pilot_authorization"
     t.index ["review_request_id"], name: "index_ai_orchestration_intents_on_review_request_id"
     t.index ["state", "lease_expires_at"], name: "index_ai_orchestration_intents_on_state_and_lease_expires_at"
     t.index ["triggering_message_id"], name: "index_ai_orchestration_intents_on_triggering_message_id"
@@ -335,10 +374,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_001000) do
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "pilot_authorization_id"
+    t.bigint "ai_orchestration_intent_id"
     t.index ["account_id", "period_on"], name: "index_ai_provider_usages_on_account_id_and_period_on"
     t.index ["account_id"], name: "index_ai_provider_usages_on_account_id"
+    t.index ["ai_orchestration_intent_id"], name: "idx_ai_provider_usages_on_orchestration_intent"
     t.index ["ai_provider_connection_id", "configuration_version"], name: "idx_ai_provider_usages_on_connection_version"
     t.index ["ai_provider_connection_id"], name: "index_ai_provider_usages_on_ai_provider_connection_id"
+    t.index ["pilot_authorization_id"], name: "idx_ai_provider_usages_on_pilot_authorization"
   end
 
   create_table "ai_reply_usages", force: :cascade do |t|
@@ -2079,6 +2122,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_001000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "finance_operations_enabled", default: false, null: false
+    t.boolean "pilot_operations_enabled", default: false, null: false
   end
 
   create_table "platform_banners", force: :cascade do |t|
@@ -2586,13 +2630,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_19_001000) do
   add_foreign_key "ai_lead_employee_launch_gates", "accounts"
   add_foreign_key "ai_lead_employee_launch_gates", "users", column: "approved_by_id"
   add_foreign_key "ai_lead_employee_offers", "accounts"
+  add_foreign_key "ai_lead_employee_pilot_authorizations", "accounts"
+  add_foreign_key "ai_lead_employee_pilot_authorizations", "ai_provider_connections"
+  add_foreign_key "ai_lead_employee_pilot_authorizations", "contacts"
+  add_foreign_key "ai_lead_employee_pilot_authorizations", "conversations"
+  add_foreign_key "ai_lead_employee_pilot_authorizations", "inboxes"
+  add_foreign_key "ai_lead_employee_pilot_authorizations", "platform_apps", column: "authorized_by_platform_app_id"
   add_foreign_key "ai_orchestration_intents", "accounts"
+  add_foreign_key "ai_orchestration_intents", "ai_lead_employee_pilot_authorizations", column: "pilot_authorization_id"
   add_foreign_key "ai_orchestration_intents", "conversations"
   add_foreign_key "ai_orchestration_intents", "human_review_requests", column: "review_request_id"
   add_foreign_key "ai_orchestration_intents", "messages", column: "outbound_message_id"
   add_foreign_key "ai_orchestration_intents", "messages", column: "triggering_message_id"
   add_foreign_key "ai_provider_connections", "accounts"
   add_foreign_key "ai_provider_usages", "accounts"
+  add_foreign_key "ai_provider_usages", "ai_lead_employee_pilot_authorizations", column: "pilot_authorization_id"
+  add_foreign_key "ai_provider_usages", "ai_orchestration_intents"
   add_foreign_key "ai_provider_usages", "ai_provider_connections"
   add_foreign_key "ai_reply_usages", "accounts"
   add_foreign_key "ai_reply_usages", "ai_orchestration_intents"
