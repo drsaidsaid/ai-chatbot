@@ -3,19 +3,30 @@
 class AiLeadEmployee::ContextualQualificationQuestion
   PURPOSE_PRIORITY = { 'fit' => 0, 'readiness' => 1, 'action_eligibility' => 2 }.freeze
 
-  def initialize(questions:, evidence:)
+  def initialize(questions:, evidence:, assessment:)
     @questions = questions
     @evidence = evidence || {}
+    @assessment = assessment || {}
   end
 
   def perform
-    questions.select { |question| question['enabled'] != false && unanswered?(question['key']) }
+    return if assessment.dig('fit', 'status') == 'not_met'
+
+    questions.select { |question| eligible?(question) }
              .min_by { |question| priority(question) }
   end
 
   private
 
-  attr_reader :evidence, :questions
+  attr_reader :assessment, :evidence, :questions
+
+  def eligible?(question)
+    question['enabled'] != false && missing_fields.include?(question['key']) && unanswered?(question['key'])
+  end
+
+  def missing_fields
+    @missing_fields ||= assessment.values.flat_map { |dimension| Array(dimension['missing_fields']) }.uniq
+  end
 
   def unanswered?(key)
     fact = evidence[key]

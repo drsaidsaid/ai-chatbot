@@ -428,10 +428,11 @@ class AiLeadEmployee::Orchestration::IntentProcessor
   end
 
   def select_contextual_question!(result)
-    return result unless result&.qualification && selected_offer
+    return result unless result&.qualification && result.qualification_context && selected_offer
 
     question = AiLeadEmployee::ContextualQualificationQuestion.new(
-      questions: selected_offer.questions, evidence: result.qualification.evidence_snapshot
+      questions: selected_offer.questions, evidence: result.qualification.evidence_snapshot,
+      assessment: result.assessment
     ).perform
     result.next_question = question&.fetch('prompt')
     result.next_question_key = question&.fetch('key')

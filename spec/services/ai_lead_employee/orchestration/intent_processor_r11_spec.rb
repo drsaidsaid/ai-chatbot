@@ -1107,14 +1107,18 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(QualificationEvidence.where(offer: offer, field_key: 'team_size')).not_to exist
   end
 
-  it 'binds a lead reply to the localized prompt that was actually emitted' do
+  it 'selects a contextual prompt atomically and binds the next short reply only to that field' do
     offer = create_offer(
       qualification_mode: 'enabled',
       questions: [
-        question('business_status', 'Do you currently run a business?').merge(
-          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running]
+        question('monthly_metric', 'What is your current monthly amount?').merge(
+          'answer_type' => 'money', 'purpose' => 'readiness', 'position' => 0
         ),
-        question('team_size', 'How many team members do you have?').merge('answer_type' => 'number')
+        question('business_status', 'Do you currently run a business?').merge(
+          'meaning' => 'Current business status', 'answer_type' => 'choice', 'options' => %w[running not_running],
+          'position' => 1
+        ),
+        question('team_size', 'How many team members do you have?').merge('answer_type' => 'number', 'position' => 2)
       ]
     )
     conversation.update!(offer: offer)
@@ -1136,14 +1140,23 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
       )
     )
     described_class.new(intent: intent, enqueue_deliveries: false).perform
+    qualification_payload = intent.outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification')
+    delivery_context = intent.outbound_message.additional_attributes.dig('ai_lead_employee', 'qualification_context')
+
+    expect(intent.outbound_message.content).to eq("Asante kwa maelezo.\n\nUna wafanyakazi wangapi?")
+    expect(qualification_payload).to include(
+      'next_question' => 'Una wafanyakazi wangapi?', 'next_question_key' => 'team_size'
+    )
+    expect(delivery_context).to include('next_question_key' => 'team_size')
+
     followup, followup_intent = followup_records('12')
 
     described_class.new(intent: followup_intent, enqueue_deliveries: false, enforce_launch_gate: false).perform
 
-    expect(intent.outbound_message.content).to eq("Asante kwa maelezo.\n\nUna wafanyakazi wangapi?")
     expect(followup.reload).to be_incoming
     evidence = QualificationEvidence.find_by!(account: account, contact: contact, offer: offer, field_key: 'team_size')
     expect(evidence.value).to include('typed_value' => 12, 'polarity' => 'positive')
+    expect(QualificationEvidence.where(offer: offer, field_key: 'monthly_metric')).not_to exist
     expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
   end
 
