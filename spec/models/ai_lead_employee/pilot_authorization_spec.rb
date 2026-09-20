@@ -21,7 +21,8 @@ RSpec.describe AiLeadEmployee::PilotAuthorization do
       account: account, inbox: channel.inbox, contact: contact, conversation: conversation,
       ai_provider_connection: provider, authorized_by_platform_app: create(:platform_app), recipient: contact_inbox.source_id,
       control_version: conversation.control_version, provider_configuration_version: provider.configuration_version,
-      max_attempts: 2, max_spend_usd: 1, provider_limit_usd: 1, provider_limit_verified_at: Time.current,
+      max_attempts: 2, max_spend_usd: 1, provider_limit_usd: 1,
+      external_owner_approval_reference: 'test-owner-approval', provider_limit_verified_at: Time.current,
       provider_limit_evidence: { kind: 'openrouter_key_limit', key_fingerprint: 'sha256:test',
                                  verification_digest: 'sha256:response' },
       starts_at: 1.minute.ago, expires_at: 1.hour.from_now
