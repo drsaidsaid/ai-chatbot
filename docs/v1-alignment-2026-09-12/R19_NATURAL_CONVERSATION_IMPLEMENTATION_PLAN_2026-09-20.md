@@ -1,6 +1,6 @@
 # R19 natural conversation and plain-language setup — implementation plan
 
-Status: proposed design only, 20 September 2026.  This plan implements the
+Status: coordinator-reviewed implementation direction, 20 September 2026.  This plan implements the
 owner correction in [r19.md](r19.md), the
 [natural-conversation audit](NATURAL_CONVERSATION_AUDIT_2026-09-20.md), and the
 owner-observable acceptance matrix in
@@ -17,7 +17,7 @@ required flag and stored order.  `SafeConversationReplyService#useful_next_quest
 then appends that prompt for greeting, acknowledgement, strategy, and
 qualification-answer intents.  The local safe-reply path does not localize it.
 This is the direct cause of a Swahili greeting becoming an English revenue
-interview.  In the real 135/136 case, the two money observations were also
+interview.  In the real 135/136 case, the money revenue and text goal observations were also
 rejected as `typed_mismatch`; prompt wording cannot make the stored evidence
 reliable by itself.
 
@@ -104,8 +104,9 @@ the language.  It has these invariants:
 - A factual business question is answered from approved knowledge before any
   follow-up.  An unknown relevant question creates the current Review Request
   and receives only a truthful acknowledgement, never an appended interview.
-- It selects at most one enabled, unsatisfied, relevant, non-sensitive
-  information requirement.  Existing asserted evidence and correction history
+- It selects at most one enabled, unsatisfied, relevant
+  information requirement. Financial questions require appropriate business context;
+  they are not prohibited once relevant to the approved Offer and conversation.  Existing asserted evidence and correction history
   suppress repeat questions; optional goal/obstacle information can be useful
   without becoming a forced gate.  Requiredness remains assessment/action
   semantics, not utterance order.
@@ -219,3 +220,11 @@ Focused Rails/Vue checks, lint, build, cached-diff check, and immutable
 release evidence follow each implementation slice.  A final supervised pilot
 must cover the matrix above before readiness is claimed; mocked provider output
 alone is insufficient.
+
+## Coordinator review and first implementation boundary
+
+Proceed with the existing owner-authorized correction; the ADR requirement is an internal design record, not a new user permission requirement. Conditional outcomes are already requested by the owner. Record representation/precedence before implementing them; do not silently omit them from final acceptance.
+
+The first bounded slice centralizes question eligibility and suppresses greetings/unknown/refusal/human/stop interviews across reply paths, with tests preserving eligible handover and approved information replies. It must not invent universal profession, income or coaching stages. Assessment-required and conversation-useful remain different concepts. If a local path cannot render the configured question in the current language, omit the follow-up rather than copy another language; subsequent language/rendering work must make useful questions available without new unmetered calls. Do not claim adaptive selection fully implemented by simply wrapping the old ordered selector.
+
+Prepare the six-section UI immediately after this small runtime slice, before extended low-level tuning, so the owner can inspect tangible setup improvements. Preserve the current CE design and sole price/source authority. Future contextual selection must support arbitrary business-defined information requirements and optional goal/obstacle fields.
