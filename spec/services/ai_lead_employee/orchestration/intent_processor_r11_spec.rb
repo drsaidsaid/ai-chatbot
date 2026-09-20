@@ -1222,6 +1222,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
 
     provider_prompt = captured_provider_messages.map { |message| message.fetch(:content) }.join("\n")
     expect(provider_prompt).to include('reply in the requested language')
+    expect(provider_prompt).to include('shortest independent current-fact clause')
+    expect(provider_prompt).to include('do not include adjacent goals')
     expect(provider_prompt).to include('money fields')
     expect(provider_prompt).to include('amount_minor')
     expect(provider_prompt).to include('TZS 800,000 => 80000000')

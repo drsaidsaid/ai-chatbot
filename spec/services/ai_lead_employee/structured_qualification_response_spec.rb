@@ -69,6 +69,8 @@ RSpec.describe AiLeadEmployee::StructuredQualificationResponse do
             typed_value: 300_000_000, asserted: true, certainty: 'certain' },
           { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi',
             typed_value: 300_000_000, asserted: true, certainty: 'certain' },
+          { key: 'monthly_business_revenue_tzs', quote: 'Mapato yangu ni shilingi 800,000 kwa mwezi, na lengo ni kufikia milioni 3.',
+            typed_value: 80_000_000, asserted: true, certainty: 'certain' },
           { key: 'expert_willingness', quote: 'Je, programu yenu inaweza kunisaidia?',
             typed_value: true, asserted: true, certainty: 'certain' },
           { key: 'sales_call_agreement', quote: 'Ndiyo, nina biashara ya kufundisha watu ujuzi mtandaoni.',
