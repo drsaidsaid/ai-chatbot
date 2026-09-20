@@ -7,7 +7,7 @@ class AiLeadEmployee::LanguageDetector
     asante biashara habari hali jina karibu kama kuhusu kujua kuongea lugha maelezo
     kujiunga mambo malalamiko mnakubali mnasafirisha msaada mtandaoni nahitaji naitwa naomba nataka ndio ndiyo nimelipa
     hapana huduma je jinsi labda lini mna mnafundisha naam naweza ndiyo ndivyo ni ninaweza ningependa nini sawa
-    sijui simaanishi siwezi tafadhali unaongea utapeli wapi
+    sijui simaanishi siwezi tafadhali unaongea utapeli wapi ukoje mkoje ikoje
   ] + AiLeadEmployee::InformationRequest::SWAHILI_LANGUAGE_TOKENS).uniq.freeze
 
   def self.detect(content)
