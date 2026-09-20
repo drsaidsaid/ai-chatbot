@@ -1189,7 +1189,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(followup_intent.reload).to have_attributes(state: 'completed', review_request: nil)
   end
 
-  it 'binds an affirmative prompted answer and extracts additional facts from the same reply' do # rubocop:disable RSpec/ExampleLength
+  it 'binds an affirmative prompted answer and extracts additional facts from the same reply' do # rubocop:disable RSpec/ExampleLength, RSpec/MultipleExpectations
     offer = create_offer(
       name: 'Online Profits University',
       currency: 'TZS',
@@ -1225,7 +1225,9 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
                'mapato yake ni shilingi 800,000 kwa mwezi. Lengo langu ni kufikia shilingi milioni 3 kwa mwezi.'
     )
     connection = create(:ai_provider_connection, account: account)
-    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    authorization = create_pilot_authorization(connection)
+    intent.update!(pilot_authorization: authorization)
+    usage = create_completed_provider_usage(connection, authorization)
     allow(provider_client).to receive(:complete).and_return(
       AiLeadEmployee::AiProvider::Response.new(
         id: 'r19-prompted-multi-fact', model: connection.model,
@@ -1247,7 +1249,8 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
             investment_readiness_12_months: 'Je, uko tayari kuwekeza katika ushauri wa miezi 12?'
           }
         }.to_json,
-        finish_reason: 'stop', configuration_version: connection.configuration_version
+        finish_reason: 'stop', configuration_version: connection.configuration_version,
+        usage_period_on: usage.period_on, provider_usage_id: usage.id
       )
     )
 
@@ -1265,6 +1268,10 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     expect(intent.decision.dig('structured_qualification', 'accepted_field_keys')).to include('expert_willingness')
     expect(intent.reload.outbound_message.content).to eq(
       "Asante kwa maelezo.\n\nJe, uko tayari kuwekeza katika ushauri wa miezi 12?"
+    )
+    expect(intent.decision['status']).to eq('structured_qualification_reply')
+    expect_pilot_delivery_eligible(
+      intent.outbound_message, connection: connection, authorization: authorization, usage: usage
     )
     expect(provider_client).to have_received(:complete).once
   end
@@ -1678,7 +1685,7 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     )
   end
 
-  it 'omits the next Swahili qualification question when the provider does not translate the owner prompt' do
+  it 'fails closed when the provider omits the recalculated next Swahili qualification prompt' do
     offer = create_offer(
       qualification_mode: 'enabled',
       questions: [
@@ -1691,7 +1698,9 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
     conversation.update!(offer: offer)
     triggering_message.update!(content: 'Wateja wangu ni wa hapa. Tafadhali nijibu kwa Kiswahili.')
     connection = create(:ai_provider_connection, account: account)
-    intent.update!(pilot_authorization: create_pilot_authorization(connection))
+    authorization = create_pilot_authorization(connection)
+    intent.update!(pilot_authorization: authorization)
+    usage = create_completed_provider_usage(connection, authorization)
     allow(provider_client).to receive(:complete).and_return(
       AiLeadEmployee::AiProvider::Response.new(
         id: 'r19-swahili-no-prompt', model: connection.model,
@@ -1703,15 +1712,25 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
           ],
           localized_prompts: {}
         }.to_json,
-        finish_reason: 'stop', configuration_version: connection.configuration_version
+        finish_reason: 'stop', configuration_version: connection.configuration_version,
+        usage_period_on: usage.period_on, provider_usage_id: usage.id
       )
     )
 
     described_class.new(intent: intent, enqueue_deliveries: false).perform
 
-    expect(intent.reload).to have_attributes(state: 'completed', review_request: nil)
-    expect(intent.outbound_message.content).to eq('Asante kwa maelezo.')
-    expect(intent.outbound_message.content).not_to include('How many team members')
+    expect(intent.reload).to have_attributes(state: 'blocked', blocked_reason: 'provider_failed')
+    expect(intent.review_request).to have_attributes(reason: 'provider_failed', status: 'open')
+    expect(intent.outbound_message.content).to eq(
+      'Bado sina jibu lililothibitishwa. Nimeweka swali lako kwa timu ili ilipitie.'
+    )
+    expect(intent.outbound_message.content).not_to eq('Asante kwa maelezo.')
+    expect(QualificationEvidence.where(offer: offer, field_key: 'business_status')).to exist
+    authority = intent.outbound_message.additional_attributes.fetch('ai_lead_employee')
+    expect(authority).not_to include('provider_usage_id', 'provider_configuration_version', 'provider_usage_period_on')
+    expect_pilot_delivery_eligible(
+      intent.outbound_message, connection: connection, authorization: authorization, usage: nil
+    )
   end
 
   it 'uses the structured qualification path for ordinary enabled accounts with customer allowance controls' do # rubocop:disable RSpec/MultipleExpectations
@@ -2125,5 +2144,26 @@ RSpec.describe AiLeadEmployee::Orchestration::IntentProcessor do
                                  verification_digest: 'sha256:response' },
       starts_at: 1.minute.ago, expires_at: 1.hour.from_now
     )
+  end
+
+  def create_completed_provider_usage(connection, authorization)
+    AiLeadEmployee::AiProviderUsage.create!(
+      account: account, ai_provider_connection: connection, pilot_authorization: authorization,
+      ai_orchestration_intent: intent, configuration_version: connection.configuration_version,
+      purpose: 'answer', period_on: Date.current, status: 'completed', requested_output_tokens: 512,
+      input_tokens: 943, output_tokens: 345, total_tokens: 1288,
+      cost_available: true, cost_usd: 0.00034845, started_at: 1.minute.ago, completed_at: Time.current
+    )
+  end
+
+  def expect_pilot_delivery_eligible(message, connection:, authorization:, usage:)
+    failure_code = Whatsapp::OutboundEligibility.new(
+      delivery: message.whatsapp_outbound_delivery, channel: channel, recipient: contact_inbox.source_id,
+      authority_records: {
+        pilot_authorization: authorization, provider_connection: connection,
+        provider_usage: usage, orchestration_intent: intent
+      }
+    ).failure_code
+    expect(failure_code).to be_nil
   end
 end

@@ -169,6 +169,41 @@ RSpec.describe 'Provider-free Pilot delivery authority' do # rubocop:disable RSp
     expect(eligibility_failure).to eq('pilot_intent_invalid')
   end
 
+  it 'rejects provider usage injected into a provider-free Conversation Reply' do
+    usage = completed_provider_usage(intent)
+    message.update!(additional_attributes: message.additional_attributes.deep_merge(
+      'ai_lead_employee' => {
+        'provider_usage_id' => usage.id,
+        'provider_configuration_version' => provider.configuration_version,
+        'provider_usage_period_on' => usage.period_on.iso8601
+      }
+    ))
+
+    expect(eligibility_failure(provider_usage: usage)).to eq('pilot_usage_invalid')
+  end
+
+  it 'rejects mismatched usage on a provider-backed Structured Qualification Reply' do
+    other_incoming = create(:message, account: account, inbox: channel.inbox, conversation: conversation, sender: contact,
+                                      message_type: :incoming, content: 'Other qualification answer')
+    other_intent = create(:ai_orchestration_intent, account: account, conversation: conversation,
+                                                    triggering_message: other_incoming,
+                                                    observed_control_version: conversation.control_version,
+                                                    pilot_authorization: authorization)
+    other_usage = completed_provider_usage(other_intent)
+    message
+    intent.update!(decision: { 'status' => 'structured_qualification_reply' })
+    message.update!(additional_attributes: message.additional_attributes.deep_merge(
+      'ai_lead_employee' => {
+        'outbound_intent_status' => 'structured_qualification_reply',
+        'provider_usage_id' => other_usage.id,
+        'provider_configuration_version' => provider.configuration_version,
+        'provider_usage_period_on' => other_usage.period_on.iso8601
+      }
+    ))
+
+    expect(eligibility_failure(provider_usage: other_usage)).to eq('pilot_usage_invalid')
+  end
+
   it 'rejects a review acknowledgment whose persisted acknowledgment points elsewhere' do
     message
     review = HumanReviewRequest.create!(account: account, conversation: conversation, lead_message: incoming,
@@ -182,18 +217,27 @@ RSpec.describe 'Provider-free Pilot delivery authority' do # rubocop:disable RSp
     expect(eligibility_failure).to eq('pilot_intent_invalid')
   end
 
-  def eligibility_failure(authorization_record: authorization)
+  def eligibility_failure(authorization_record: authorization, provider_usage: nil)
     delivery.reload.conversation.reload
     Whatsapp::OutboundEligibility.new(
       delivery: delivery, channel: channel, recipient: contact_inbox.source_id,
       authority_records: {
         pilot_authorization: authorization_record.reload,
         provider_connection: provider.reload,
-        provider_usage: nil,
+        provider_usage: provider_usage,
         orchestration_intent: AiLeadEmployee::OrchestrationIntent.find_by(id: message.additional_attributes.dig(
           'ai_lead_employee', 'orchestration_intent_id'
         ))
       }
     ).failure_code
+  end
+
+  def completed_provider_usage(usage_intent)
+    AiLeadEmployee::AiProviderUsage.create!(
+      account: account, ai_provider_connection: provider, pilot_authorization: authorization,
+      ai_orchestration_intent: usage_intent, configuration_version: provider.configuration_version,
+      purpose: 'answer', period_on: Date.current, status: 'completed', requested_output_tokens: 128,
+      cost_available: true, cost_usd: 0.01, started_at: 1.minute.ago, completed_at: Time.current
+    )
   end
 end

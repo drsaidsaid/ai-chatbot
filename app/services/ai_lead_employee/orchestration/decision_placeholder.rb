@@ -18,5 +18,6 @@ module AiLeadEmployee::Orchestration::DecisionPlaceholder
   }.freeze
   DELIVERY_BOUNDARY = 'outbox'
   OUTBOUND_INTENT_STATUS = 'grounded_answer'
+  STRUCTURED_QUALIFICATION_REPLY_STATUS = 'structured_qualification_reply'
   OUTBOX_EVENT_TYPE = 'ai_employee.outbound_intent_recorded'
 end
