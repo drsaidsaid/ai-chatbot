@@ -90,7 +90,7 @@ const filters = ref({
 });
 
 const surfaceFilters = computed(() => {
-  if (props.surface === 'HOT_LEADS') return { quality: 'highly_qualified' };
+  if (props.surface === 'HOT_LEADS') return { hot: 'true' };
   if (props.surface === 'REVIEWS') return { review_status: 'open' };
   if (props.surface === 'BOOKINGS') return { booking_status: 'booked' };
   return {};

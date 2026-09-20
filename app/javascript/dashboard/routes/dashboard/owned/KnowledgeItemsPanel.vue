@@ -371,6 +371,20 @@ const applyAnswerLifecycle = async (answer, action) => {
     item.id === data.id ? data : item
   );
 };
+const retryKnowledgeAlerts = async answer => {
+  isSaving.value = true;
+  try {
+    const { data } = await KnowledgeItemsAPI.retryAlerts(answer.id);
+    approvedAnswers.value = approvedAnswers.value.map(item =>
+      item.id === data.id ? data : item
+    );
+    useAlert('Knowledge alert retry queued.');
+  } catch {
+    useAlert('Unable to retry the knowledge alert.');
+  } finally {
+    isSaving.value = false;
+  }
+};
 const setDocumentOffer = value => {
   updateDocumentField('offer_ids', value ? [Number(value)] : []);
   if (value) updateDocumentField('general_question_access', false);
@@ -1050,6 +1064,31 @@ onMounted(loadWorkspace);
           <p class="mt-2 whitespace-pre-line text-sm leading-6 text-n-slate-11">
             {{ selectedAnswer.answer }}
           </p>
+          <section
+            v-if="selectedAnswer.alert_deliveries?.length"
+            class="mt-5 grid gap-2 rounded-lg border border-n-weak p-3 text-sm"
+          >
+            <p class="font-semibold text-n-slate-12">Approval alert delivery</p>
+            <p
+              v-for="delivery in selectedAnswer.alert_deliveries"
+              :key="delivery.message_id"
+              class="text-n-slate-11"
+            >
+              {{ delivery.recipient }}: {{ delivery.status }}
+              <span v-if="delivery.error"> — {{ delivery.error }}</span>
+            </p>
+            <button
+              v-if="
+                selectedAnswer.alert_deliveries.some(item => item.recoverable)
+              "
+              type="button"
+              class="w-fit rounded-lg border border-n-weak px-3 py-2 font-medium"
+              :disabled="isSaving"
+              @click="retryKnowledgeAlerts(selectedAnswer)"
+            >
+              Retry failed alert
+            </button>
+          </section>
           <p
             v-if="selectedAnswer.conflict_count"
             class="mt-5 rounded-lg border border-n-amber-5 bg-n-amber-2 p-3 text-sm text-n-amber-12"

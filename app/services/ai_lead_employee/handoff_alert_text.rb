@@ -11,13 +11,9 @@ class AiLeadEmployee::HandoffAlertText
     [
       'Hot Lead handoff',
       "Conversation: #{conversation_url}",
+      "Owner: #{conversation.assignee&.name || 'Unassigned'}",
       "Contact: #{conversation.contact.name} #{conversation.contact.phone_number} #{conversation.contact.email}".squish,
-      "Business type: #{value_for('business_type')}",
-      "Problem: #{value_for('problem')}",
-      "Lead volume: #{value_for('lead_volume')}",
-      "Urgency: #{value_for('urgency')}",
-      "Budget signal: #{value_for('budget')}",
-      "Decision authority: #{value_for('decision_authority')}",
+      *evidence_lines,
       "Qualification reasons: #{qualification.reasons.join('; ')}"
     ].join("\n")
   end
@@ -26,8 +22,15 @@ class AiLeadEmployee::HandoffAlertText
 
   attr_reader :account, :conversation, :qualification
 
-  def value_for(signal)
-    qualification.evidence_snapshot.dig(signal, 'value').presence || 'Not provided'
+  def evidence_lines
+    configured_labels = qualification.offer&.questions.to_a.index_by { |question| question['key'] }
+    qualification.evidence_snapshot.filter_map do |key, evidence|
+      value = evidence.to_h['value'].presence
+      next if value.blank?
+
+      label = configured_labels.dig(key, 'label').presence || key.to_s.humanize
+      "#{label}: #{value}"
+    end
   end
 
   def conversation_url

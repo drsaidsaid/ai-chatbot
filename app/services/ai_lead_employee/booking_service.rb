@@ -436,33 +436,24 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
   end
 
   def alert_recipients
-    routes = Array(account.settings&.dig('ai_lead_employee', 'alert_routes', PREPARATION_ALERT_TYPE))
-    routes = [{ 'type' => 'assignee' }] if routes.blank?
-    routes.filter_map { |route| recipient_for(route) }.flatten.compact.uniq
-  end
-
-  def recipient_for(route)
-    case route.to_h['type']
-    when 'assignee'
-      conversation.assignee&.custom_attributes&.dig('whatsapp_alert_phone')
-    when 'admin'
-      account.administrators.map { |admin| admin.custom_attributes&.dig('whatsapp_alert_phone') }
-    else
-      route.to_h['recipient']
-    end
+    AiLeadEmployee::HandoffAlertRecipients
+      .new(account: account, alert_type: PREPARATION_ALERT_TYPE)
+      .for(conversation.assignee, fallback_routes: [{ 'type' => 'assignee' }])
   end
 
   def confirmation_text(booking)
     "Your call is booked for #{booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z')}."
   end
 
-  def preparation_alert_text(booking) # rubocop:disable Metrics/AbcSize
+  def preparation_alert_text(booking) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     evidence = qualification&.evidence_snapshot.to_h
     [
       'Call booked with Hot Lead',
+      "Open: #{conversation_url}",
+      "Owner: #{conversation.assignee&.name || booking.assignee&.name || 'Unassigned'}",
       "Lead: #{conversation.contact.name} #{conversation.contact.phone_number} #{conversation.contact.email}".squish,
       "When: #{booking.starts_at.in_time_zone(booking.timezone).strftime('%A, %B %-d at %-l:%M %p %Z')}",
-      "Summary: #{qualification&.reasons.to_a.join('; ').presence || @eligibility.offer.name}",
+      "Summary: #{qualification&.reasons.to_a.join('; ').presence || @eligibility.offer&.name || 'Booked call'}",
       "Strongest evidence: #{strongest_evidence}",
       "Likely objection: #{evidence.dig('budget', 'value').to_s.include?('$') ? 'Budget fit' : 'Timing or budget fit'}",
       'Suggested opening question: What would make this call most useful for you today?'
@@ -473,6 +464,12 @@ class AiLeadEmployee::BookingService # rubocop:disable Metrics/ClassLength
     qualification&.evidence_snapshot.to_h.slice('problem', 'urgency', 'budget', 'decision_authority').map do |signal, evidence|
       "#{signal.humanize}: #{evidence['value']}"
     end.join('; ')
+  end
+
+  def conversation_url
+    base_url = ENV.fetch('FRONTEND_URL', '').presence
+    path = "/app/accounts/#{account.id}/conversations/#{conversation.display_id}?queue=bookings"
+    base_url ? "#{base_url.delete_suffix('/')}#{path}" : path
   end
 
   def qualification_snapshot

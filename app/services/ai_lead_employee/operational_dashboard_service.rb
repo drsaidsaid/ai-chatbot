@@ -3,7 +3,7 @@
 class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/ClassLength
   QUEUES = [
     { key: 'all_leads', filters: {} },
-    { key: 'hot_leads', filters: { quality: 'highly_qualified' } },
+    { key: 'hot_leads', filters: { hot: 'true' } },
     { key: 'reviews', filters: { review_status: 'open' } },
     { key: 'unanswered_questions', filters: { review_status: 'open' } },
     { key: 'knowledge_approval', filters: { knowledge_approval: 'true' } },
@@ -65,6 +65,7 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
   def apply_filters(scope)
     [
       method(:apply_quality_filter),
+      method(:apply_hot_filter),
       method(:apply_follow_up_filter),
       method(:apply_conversation_filter),
       method(:apply_booking_filter)
@@ -75,6 +76,13 @@ class AiLeadEmployee::OperationalDashboardService # rubocop:disable Metrics/Clas
     return scope if filters[:quality].blank?
 
     scope.where(quality: filters[:quality])
+  end
+
+  def apply_hot_filter(scope)
+    return scope unless truthy?(filters[:hot])
+
+    scope.where(quality: :highly_qualified)
+         .where(id: LeadHandoff.open.where(account: account).select(:lead_qualification_id))
   end
 
   def apply_follow_up_filter(scope)

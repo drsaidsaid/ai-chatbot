@@ -184,6 +184,7 @@ Rails.application.routes.draw do
               post :approve
               post :reject
               post :deactivate
+              post :retry_alerts
             end
           end
           resources :knowledge_documents, only: [:index, :show, :create, :update, :destroy] do
@@ -216,6 +217,7 @@ Rails.application.routes.draw do
             resources :requests, controller: 'ai_subscription_requests', only: [:create]
           end
           resource :qualification_configuration, only: [:show, :update]
+          resource :alert_configuration, only: [:show, :update]
           resources :qualification_offers, only: [:index, :show, :create, :update] do
             member do
               patch 'commercial_terms', action: :update_commercial_terms

@@ -144,6 +144,11 @@ RSpec.describe AiLeadEmployee::BookingService do
       expect(conversation.reload).to have_attributes(control_state: 'human_active', control_version: 5)
       expect(Message.find(booking.confirmation_message_id).content).to include('Monday, August 31 at 9:00 AM EAT')
       expect(booking.preparation_alert_deliveries.size).to eq(1)
+      alert = account.messages.find(booking.preparation_alert_deliveries.sole.fetch('message_id'))
+      expect(alert.content).to include(
+        "/app/accounts/#{account.id}/conversations/#{conversation.display_id}?queue=bookings",
+        "Owner: #{operator.name}"
+      )
     end
   end
 

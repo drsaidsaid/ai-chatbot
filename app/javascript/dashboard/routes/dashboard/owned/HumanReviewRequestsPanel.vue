@@ -208,6 +208,23 @@ const proposeKnowledge = async request => {
   }
 };
 
+const assignReviewRequest = async (request, assignedUserId) => {
+  resolvingId.value = request.id;
+  try {
+    const { data } = await HumanReviewRequestsAPI.assign(request.id, {
+      assigned_user_id: Number(assignedUserId),
+    });
+    reviewRequests.value = reviewRequests.value.map(candidate =>
+      candidate.id === request.id ? data : candidate
+    );
+    useAlert('Review assignment saved.');
+  } catch {
+    useAlert('Unable to assign this review.');
+  } finally {
+    resolvingId.value = null;
+  }
+};
+
 const proposeConfigurationSuggestion = async request => {
   resolvingId.value = request.id;
   try {
@@ -371,6 +388,29 @@ watch(() => [props.reviewId, props.conversationId], loadReviewRequests);
           }}
         </a>
       </div>
+      <label
+        v-if="currentRole === 'administrator'"
+        class="grid max-w-sm gap-1 text-xs text-n-slate-11"
+      >
+        <span>{{ t('AI_LEAD_EMPLOYEE.REVIEWS.ASSIGN_OPERATOR') }}</span>
+        <select
+          :value="request.assigned_user?.id || ''"
+          class="rounded-md border border-n-weak bg-n-background px-3 py-2 text-sm text-n-slate-12"
+          :disabled="resolvingId === request.id"
+          @change="assignReviewRequest(request, $event.target.value)"
+        >
+          <option value="" disabled>
+            {{ t('AI_LEAD_EMPLOYEE.REVIEWS.SELECT_TEAM_MEMBER') }}
+          </option>
+          <option
+            v-for="user in request.assignable_users"
+            :key="user.id"
+            :value="user.id"
+          >
+            {{ user.name }}
+          </option>
+        </select>
+      </label>
       <textarea
         v-model="resolutionForms[request.id].answer"
         :disabled="Boolean(resolutionResults[request.id])"

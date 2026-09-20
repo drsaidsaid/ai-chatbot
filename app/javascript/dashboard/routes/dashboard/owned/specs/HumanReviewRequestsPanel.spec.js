@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { createI18n } from 'vue-i18n';
+import { ref } from 'vue';
 import HumanReviewRequestsPanel from '../HumanReviewRequestsPanel.vue';
 import HumanReviewRequestsAPI from 'dashboard/api/humanReviewRequests';
 import ReviewConfigurationSuggestionsAPI from 'dashboard/api/reviewConfigurationSuggestions';
@@ -15,6 +16,7 @@ vi.mock('dashboard/api/humanReviewRequests', () => ({
     proposeKnowledge: vi.fn(),
     proposeConfigurationSuggestion: vi.fn(),
     reviewConfigurationSuggestion: vi.fn(),
+    assign: vi.fn(),
   },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -29,7 +31,11 @@ const review = {
   reason: 'sensitive_question',
   conversation_id: 12,
   conversation_display_id: 42,
-  assigned_user: { name: 'Asha' },
+  assigned_user: { id: 10, name: 'Asha' },
+  assignable_users: [
+    { id: 10, name: 'Asha' },
+    { id: 11, name: 'Baraka' },
+  ],
 };
 const proposeKnowledgeLabel = 'Propose this answer as reusable knowledge';
 
@@ -60,7 +66,7 @@ const mountPanel = async ({ conversationId = 12, reviewId = 8 } = {}) => {
 describe('HumanReviewRequestsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useMapGetter.mockReturnValue({ value: 'agent' });
+    useMapGetter.mockReturnValue(ref('agent'));
     ReviewConfigurationSuggestionsAPI.get.mockResolvedValue({ data: [] });
     HumanReviewRequestsAPI.show.mockResolvedValue({ data: review });
     HumanReviewRequestsAPI.resolve.mockResolvedValue({
@@ -92,6 +98,9 @@ describe('HumanReviewRequestsPanel', () => {
           evidence: 'Can I get a refund?',
         },
       },
+    });
+    HumanReviewRequestsAPI.assign.mockResolvedValue({
+      data: { ...review, assigned_user: { id: 11, name: 'Baraka' } },
     });
   });
 
@@ -134,6 +143,19 @@ describe('HumanReviewRequestsPanel', () => {
       })
     );
     expect(wrapper.text()).toContain('Open draft knowledge proposal');
+  });
+
+  it('lets an administrator reassign a review through the canonical endpoint', async () => {
+    useMapGetter.mockReturnValue(ref('administrator'));
+    const wrapper = await mountPanel();
+
+    await wrapper.get('select').setValue('11');
+    await flushPromises();
+
+    expect(HumanReviewRequestsAPI.assign).toHaveBeenCalledWith(8, {
+      assigned_user_id: 11,
+    });
+    expect(wrapper.text()).toContain('Assigned to Baraka');
   });
 
   it('restores a resolved review directly from its persisted response', async () => {
@@ -187,7 +209,7 @@ describe('HumanReviewRequestsPanel', () => {
   });
 
   it('shows pending configuration feedback in an administrator queue', async () => {
-    useMapGetter.mockReturnValue({ value: 'administrator' });
+    useMapGetter.mockReturnValue(ref('administrator'));
     HumanReviewRequestsAPI.get.mockResolvedValue({ data: [] });
     ReviewConfigurationSuggestionsAPI.get.mockResolvedValue({
       data: [

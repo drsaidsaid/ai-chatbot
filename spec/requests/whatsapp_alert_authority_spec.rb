@@ -126,6 +126,140 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
     end
   end
 
+  it 'serializes concurrent Review replays into one linked alert Message' do
+    lead_message = create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                                    message_type: :incoming, content: 'A second question', provider_created_at: Time.current)
+    start = Queue.new
+    workers = Array.new(2) do |index|
+      start_worker("r14-review-replay-#{index}") do
+        start.pop
+        AiLeadEmployee::HumanReviewRequestService.new(
+          conversation: @conversation, lead_message: lead_message,
+          reason: :no_approved_knowledge, enqueue_alerts: false
+        ).perform.request.id
+      end
+    end
+    workers.size.times { start << true }
+    request_ids = workers.map(&:value)
+    request = HumanReviewRequest.find(request_ids.first)
+    alert_messages = Message.where("additional_attributes #>> '{ai_lead_employee,review_request_id}' = ?", request.id.to_s)
+
+    expect(request_ids.uniq).to contain_exactly(request.id)
+    expect(request.reload.alert_deliveries.one?).to be(true)
+    expect(alert_messages.count).to eq(1)
+    expect(request.alert_deliveries.sole['message_id']).to eq(alert_messages.sole.id)
+  end
+
+  it 'publishes Review dispatch only after its Message link is committed' do
+    lead_message = create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                                    message_type: :incoming, content: 'A committed question', provider_created_at: Time.current)
+    observed = nil
+    allow(SendReplyJob).to receive(:perform_later) do |message_id|
+      observed = Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          request = HumanReviewRequest.find_by!(lead_message: lead_message, reason: :no_approved_knowledge)
+          [Message.exists?(message_id), request.alert_deliveries.sole['message_id']]
+        end
+      end.value
+    end
+
+    result = nil
+    ApplicationRecord.transaction do
+      result = AiLeadEmployee::HumanReviewRequestService.new(
+        conversation: @conversation, lead_message: lead_message, reason: :no_approved_knowledge
+      ).perform
+    end
+
+    expect(observed).to eq([true, result.request.alert_deliveries.sole['message_id']])
+    expect(SendReplyJob).to have_received(:perform_later).once
+  end
+
+  it 'drops Review dispatch publication when an enclosing transaction rolls back' do
+    lead_message = create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                                    message_type: :incoming, content: 'A rolled back question', provider_created_at: Time.current)
+    allow(SendReplyJob).to receive(:perform_later)
+
+    ApplicationRecord.transaction do
+      AiLeadEmployee::HumanReviewRequestService.new(
+        conversation: @conversation, lead_message: lead_message, reason: :no_approved_knowledge
+      ).perform
+      raise ActiveRecord::Rollback
+    end
+
+    expect(HumanReviewRequest.where(lead_message: lead_message, reason: :no_approved_knowledge)).to be_empty
+    expect(Message.where("additional_attributes #>> '{ai_lead_employee,review_request_id}' IS NOT NULL").where.not(id: @alert.id)).to be_empty
+    expect(SendReplyJob).not_to have_received(:perform_later)
+  end
+
+  it 'restarts knowledge reconciliation when unlocked metadata discovers a new alert Conversation' do
+    configure_domain_alert_routes(AiLeadEmployee::KnowledgeApprovalAlertDeliveryService::ALERT_TYPE)
+    item = create(:knowledge_item, account: @channel.account, status: :draft, approved_at: nil, metadata: {})
+    stale_service = AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item, enqueue: false)
+    first_snapshot = Queue.new
+    snapshot_release = Queue.new
+    locked_sets = Queue.new
+    first_call = true
+    allow(stale_service).to receive(:lock_alert_conversations!).and_wrap_original do |method, conversation_ids|
+      locked_sets << conversation_ids
+      if first_call
+        first_call = false
+        first_snapshot << true
+        snapshot_release.pop
+      end
+      method.call(conversation_ids)
+    end
+    stale_worker = start_worker('r14-stale-knowledge-snapshot') { stale_service.perform }
+    Timeout.timeout(10) { first_snapshot.pop }
+    AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item.reload, enqueue: false).perform
+    alert = Message.find(item.reload.metadata.fetch('knowledge_approval_alert_deliveries').sole.fetch('message_id'))
+    snapshot_release << true
+    stale_worker.value
+
+    expect([locked_sets.pop, locked_sets.pop]).to eq([[], [alert.conversation_id]])
+    expect(Message.where("additional_attributes #>> '{ai_lead_employee,knowledge_item_id}' = ?", item.id.to_s).count).to eq(1)
+  ensure
+    snapshot_release << true if snapshot_release
+  end
+
+  it 'serializes a knowledge retry with dispatch using Conversation then approval authority' do
+    configure_domain_alert_routes(AiLeadEmployee::KnowledgeApprovalAlertDeliveryService::ALERT_TYPE)
+    item = create(:knowledge_item, account: @channel.account, status: :draft, approved_at: nil, metadata: {})
+    AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item, enqueue: false).perform
+    alert = Message.find(item.reload.metadata.fetch('knowledge_approval_alert_deliveries').sole.fetch('message_id'))
+    create(:message, account: @channel.account, inbox: @channel.inbox, conversation: alert.conversation,
+                     message_type: :incoming, provider_created_at: Time.current)
+    alert.update!(status: :failed, external_error: 'retry requested')
+    entered = Queue.new
+    dispatch_release = Queue.new
+    allow_any_instance_of(Whatsapp::OutboundAlertAuthority).to receive(:lock_record!).and_wrap_original do |method| # rubocop:disable RSpec/AnyInstance
+      if Thread.current[:r14_pause_knowledge_dispatch]
+        entered << true
+        dispatch_release.pop
+      end
+      method.call
+    end
+    dispatch = start_worker('r14-knowledge-dispatch') do
+      Thread.current[:r14_pause_knowledge_dispatch] = true
+      SendReplyJob.perform_now(alert.id)
+    ensure
+      Thread.current[:r14_pause_knowledge_dispatch] = false
+    end
+    Timeout.timeout(10) { entered.pop }
+    retry_worker = start_worker('r14-knowledge-retry') do
+      AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item.reload, enqueue: false).perform
+    end
+    await_blocked!(retry_worker, 'r14-knowledge-retry')
+    dispatch_release << true
+    dispatch.value
+    retry_worker.value
+
+    expect(alert.reload.whatsapp_outbound_delivery).to be_accepted
+    expect(@provider_request).to have_been_requested.once
+    expect(Message.where("additional_attributes #>> '{ai_lead_employee,knowledge_item_id}' = ?", item.id.to_s).count).to eq(1)
+  ensure
+    dispatch_release << true if dispatch_release
+  end
+
   it 'does not discover a newly committed origin review after the authority prefix recorded absence' do
     inserted = Queue.new
     creator = start_worker('r09-late-review-creator') do
@@ -312,8 +446,7 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
         FOR EACH ROW EXECUTE FUNCTION r04_pause_booking_preparation();
       SQL
       preparation = start_worker('r04-booking-preparation') do
-        AiLeadEmployee::BookingService.new(conversation: @conversation, qualification: booking.lead_qualification,
-                                           starts_at: booking.starts_at, idempotency_key: booking.idempotency_key).perform
+        booking_service_for(booking).perform
       end
       await_blocked_or_finished(preparation, 'r04-booking-preparation')
       contender = start_worker('r04-booking-contender') do
@@ -420,27 +553,55 @@ RSpec.describe 'WhatsApp alert authorization and review rejection', type: :reque
   end
 
   def configure_domain_alert_routes(type)
+    recipient = create(:user, account: @channel.account,
+                              custom_attributes: { 'whatsapp_alert_phone' => '255700000094' })
     @channel.account.update!(settings: @channel.account.settings.deep_merge(
-      'ai_lead_employee' => { 'alert_routes' => { type => [{ 'type' => 'whatsapp', 'recipient' => '255700000094' }] } }
+      'ai_lead_employee' => {
+        'alert_routes' => { type => [{ 'type' => 'whatsapp', 'recipient' => recipient.custom_attributes['whatsapp_alert_phone'] }] }
+      }
     ))
   end
 
   def canonical_domain_alert(kind)
     type = kind == 'booking' ? AiLeadEmployee::BookingService::PREPARATION_ALERT_TYPE : AiLeadEmployee::HighlyQualifiedHandoffService::ALERT_TYPE
     configure_domain_alert_routes(type)
-    if kind == 'booking'
-      record = create(:booking, account: @channel.account, conversation: @conversation, contact: @conversation.contact,
-                                idempotency_key: 'existing-booking')
-      AiLeadEmployee::BookingService.new(conversation: @conversation, qualification: record.lead_qualification,
-                                         starts_at: record.starts_at, idempotency_key: record.idempotency_key).perform
-      @alert = Message.find(record.reload.preparation_alert_deliveries.sole['message_id'])
-    else
-      record = create(:lead_handoff, account: @channel.account, conversation: @conversation, contact: @conversation.contact)
-      AiLeadEmployee::HandoffAlertDeliveryService.new(handoff: record, alert_text: 'Prepare for this Lead', recipients: ['255700000094'],
-                                                      enqueue: false).perform
-      @alert = Message.find(record.reload.alert_deliveries.sole['message_id'])
-    end
+    kind == 'booking' ? canonical_booking_alert : canonical_handoff_alert
+  end
+
+  def canonical_booking_alert
+    record = create(:booking, account: @channel.account, conversation: @conversation, contact: @conversation.contact,
+                              idempotency_key: 'existing-booking')
+    record.update!(agreement_message: booking_agreement_message(record))
+    create(:google_calendar_connection, account: @channel.account, calendar_id: record.calendar_id)
+    stub_google_cancellation
+    booking_service_for(record).perform
+    @alert = Message.find(record.reload.preparation_alert_deliveries.sole['message_id'])
     record
+  end
+
+  def canonical_handoff_alert
+    record = create(:lead_handoff, account: @channel.account, conversation: @conversation, contact: @conversation.contact)
+    AiLeadEmployee::HandoffAlertDeliveryService.new(handoff: record, alert_text: 'Prepare for this Lead', recipients: ['255700000094'],
+                                                    enqueue: false).perform
+    @alert = Message.find(record.reload.alert_deliveries.sole['message_id'])
+    record
+  end
+
+  def booking_agreement_message(booking)
+    create(:message, account: @channel.account, inbox: @channel.inbox, conversation: @conversation,
+                     sender: @conversation.contact, message_type: :incoming, provider_created_at: booking.starts_at - 1.minute)
+  end
+
+  def stub_google_cancellation
+    stub_request(:delete, %r{https://www.googleapis.com/calendar/v3/calendars/.*/events/.*}).to_return(status: 204)
+  end
+
+  def booking_service_for(booking)
+    AiLeadEmployee::BookingService.new(
+      conversation: @conversation, qualification: booking.lead_qualification,
+      starts_at: booking.starts_at, agreed_starts_at: booking.starts_at,
+      agreement_message: booking.agreement_message, idempotency_key: booking.idempotency_key
+    )
   end
 end
 # rubocop:enable RSpec/InstanceVariable

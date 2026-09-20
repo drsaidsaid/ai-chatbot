@@ -25,6 +25,8 @@ class Whatsapp::OutboundAlertAuthority
   def failure_code
     return 'alert_authority_unavailable' unless record
 
+    return knowledge_alert_failure if knowledge_alert?
+
     subscription_alert? ? subscription_alert_failure : conversation_alert_failure
   end
 
@@ -68,6 +70,8 @@ class Whatsapp::OutboundAlertAuthority
                 AiLeadEmployee::AiSubscriptionAlert.find_by(
                   account_id: @message.account_id, id: @attributes['ai_subscription_alert_id']
                 )
+              when AiLeadEmployee::KnowledgeApprovalAlertDeliveryService::ALERT_TYPE
+                KnowledgeItem.find_by(account_id: @message.account_id, id: @attributes['knowledge_item_id'])
               end
   end
 
@@ -79,23 +83,45 @@ class Whatsapp::OutboundAlertAuthority
     nil
   end
 
+  def knowledge_alert_failure
+    return 'control_changed' unless record.draft?
+    return 'alert_recipient_removed' unless current_recipients.include?(normalize(@attributes['alert_recipient']))
+    return 'invalid_recipient' unless normalize(@attributes['alert_recipient']) == @message.conversation.contact_inbox.source_id
+
+    nil
+  end
+
   def subscription_alert?
     record.is_a?(AiLeadEmployee::AiSubscriptionAlert)
+  end
+
+  def knowledge_alert?
+    record.is_a?(KnowledgeItem)
   end
 
   def record_current?
     current = record.is_a?(Booking) ? record.confirmed? : record.open?
     return false unless current
-    return true if record.is_a?(HumanReviewRequest) || record.assignee_id.nil?
+    return review_request_current? if record.is_a?(HumanReviewRequest)
+    return true if record.assignee_id.nil?
 
     record.assignee_id == record.conversation.assignee_id &&
       AccountUser.exists?(account_id: @message.account_id, user_id: record.assignee_id)
   end
 
+  def review_request_current?
+    return true if record.assigned_user_id.nil?
+
+    record.assigned_user_id == record.conversation.assignee_id &&
+      AccountUser.exists?(account_id: @message.account_id, user_id: record.assigned_user_id)
+  end
+
   def current_recipients
     account = @message.account.reload
     return subscription_alert_recipients if subscription_alert?
-    return Array(account.settings&.dig('ai_review_alert_recipients')).map { |value| normalize(value) } if record.is_a?(HumanReviewRequest)
+    if record.is_a?(HumanReviewRequest) && alert_routes(account).empty?
+      return Array(account.settings&.dig('ai_review_alert_recipients')).map { |value| normalize(value) }
+    end
 
     routed_recipients(account)
   end
@@ -119,11 +145,34 @@ class Whatsapp::OutboundAlertAuthority
     when 'admin'
       account.administrators.map { |user| user.custom_attributes['whatsapp_alert_phone'] }
     when 'assignee'
-      user = record.conversation.assignee
-      user.custom_attributes['whatsapp_alert_phone'] if user && AccountUser.exists?(account_id: account.id, user_id: user.id)
-    else
-      route.to_h['recipient']
+      assignee_alert_phone(account)
+    when 'member'
+      member_alert_phone(route, account)
+    when 'whatsapp'
+      verified_alert_phone(route, account)
     end
+  end
+
+  def assignee_alert_phone(account)
+    user = if knowledge_alert?
+             account.users.find_by(id: account.settings&.dig('ai_lead_employee', 'human_operator_id'))
+           elsif record.is_a?(HumanReviewRequest)
+             record.assigned_user
+           else
+             record.conversation.assignee
+           end
+    user.custom_attributes['whatsapp_alert_phone'] if user && AccountUser.exists?(account_id: account.id, user_id: user.id)
+  end
+
+  def member_alert_phone(route, account)
+    account.users.find_by(id: route.to_h['user_id'])&.custom_attributes&.dig('whatsapp_alert_phone')
+  end
+
+  def verified_alert_phone(route, account)
+    recipient = normalize(route.to_h['recipient'])
+    account.users.reload.find do |user|
+      normalize(user.custom_attributes['whatsapp_alert_phone']) == recipient
+    end&.custom_attributes&.dig('whatsapp_alert_phone')
   end
 
   def normalize(value)

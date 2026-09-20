@@ -2,7 +2,7 @@
 
 class Api::V1::Accounts::KnowledgeItemsController < Api::V1::Accounts::BaseController
   before_action :check_admin_authorization?
-  before_action :knowledge_item, only: [:show, :update, :destroy, :approve, :reject, :deactivate]
+  before_action :knowledge_item, only: [:show, :update, :destroy, :approve, :reject, :deactivate, :retry_alerts]
 
   def index
     items = current_account.knowledge_items.order(updated_at: :desc)
@@ -49,6 +49,11 @@ class Api::V1::Accounts::KnowledgeItemsController < Api::V1::Accounts::BaseContr
     render json: payload(@knowledge_item, items: current_account.knowledge_items)
   end
 
+  def retry_alerts
+    AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: @knowledge_item).perform
+    render json: payload(@knowledge_item.reload, items: current_account.knowledge_items)
+  end
+
   private
 
   def knowledge_item
@@ -70,7 +75,8 @@ class Api::V1::Accounts::KnowledgeItemsController < Api::V1::Accounts::BaseContr
 
     item.as_json.merge(
       'conflict_count' => conflicts.size,
-      'conflict_ids' => conflicts.map(&:id)
+      'conflict_ids' => conflicts.map(&:id),
+      'alert_deliveries' => AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: item).current_deliveries
     )
   end
 end

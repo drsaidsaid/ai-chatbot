@@ -21,6 +21,7 @@ it('keeps every Settings section reachable from provider deep links and restores
     'owned_ai_provider_settings',
     'owned_test_center_index',
     'settings_teams_list',
+    'ai_lead_employee_settings_team_assignment',
     'ai_lead_employee_settings_alerts',
     'general_settings_index',
   ];

@@ -28,12 +28,13 @@ class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::Base
   end
 
   def propose_knowledge
-    @review_request.propose_knowledge!(
+    knowledge_item = @review_request.propose_knowledge!(
       proposer: Current.user,
       source_kind: proposal_source_kind,
       title: proposal_params[:title],
       answer: proposal_params[:answer]
     )
+    AiLeadEmployee::KnowledgeApprovalAlertDeliveryService.new(knowledge_item: knowledge_item).perform
     render json: payload(@review_request.reload)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -147,12 +148,17 @@ class Api::V1::Accounts::HumanReviewRequestsController < Api::V1::Accounts::Base
   def payload(request)
     base_payload(request).merge(
       resolution_payload(request),
+      assignable_users: assignable_users,
       alert_recipients: request.alert_recipients,
       alert_deliveries: request.alert_deliveries,
       created_at: request.created_at,
       resolved_at: request.resolved_at,
       rejected_at: request.rejected_at
     )
+  end
+
+  def assignable_users
+    current_account.users.order(:name, :id).map { |user| { id: user.id, name: user.name } }
   end
 
   def base_payload(request)

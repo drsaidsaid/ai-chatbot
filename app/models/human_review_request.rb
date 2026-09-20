@@ -44,7 +44,7 @@
 #  fk_rails_...  (knowledge_item_id => knowledge_items.id)
 #  fk_rails_...  (lead_message_id => messages.id)
 #
-class HumanReviewRequest < ApplicationRecord
+class HumanReviewRequest < ApplicationRecord # rubocop:disable Metrics/ClassLength
   belongs_to :account
   belongs_to :conversation
   belongs_to :lead_message, class_name: 'Message'
@@ -80,7 +80,18 @@ class HumanReviewRequest < ApplicationRecord
   scope :operator_queue, -> { open.order(created_at: :asc) }
 
   def assign_to!(user)
-    update!(assigned_user: user)
+    transaction do
+      locked_conversation = Conversation.where(account_id: account_id, id: conversation_id).lock('FOR NO KEY UPDATE').first!
+      with_lock do
+        previous_assignee_id = assigned_user_id
+        return self if previous_assignee_id == user&.id && locked_conversation.assignee_id == user&.id
+
+        Conversations::AssignmentService.new(conversation: locked_conversation, assignee_id: user&.id).perform
+        update!(assigned_user: user)
+        audit_assignment!(previous_assignee_id) if previous_assignee_id != assigned_user_id
+      end
+    end
+    self
   end
 
   def reject!(operator_answer:)
@@ -157,6 +168,21 @@ class HumanReviewRequest < ApplicationRecord
   end
 
   private
+
+  def audit_assignment!(previous_assignee_id)
+    Audited::Audit.create!(
+      auditable: self,
+      associated: account,
+      user: Current.user,
+      action: 'update',
+      audited_changes: {
+        'ai_lead_employee_action' => 'human_review_assignment',
+        'assigned_user_id' => [previous_assignee_id, assigned_user_id]
+      },
+      version: Audited::Audit.where(auditable: self).maximum(:version).to_i + 1,
+      created_at: Time.current
+    )
+  end
 
   def resolution_message(answer:, operator:, resolution_kind:, existing_message:, locked_conversation:)
     return existing_message if existing_message
