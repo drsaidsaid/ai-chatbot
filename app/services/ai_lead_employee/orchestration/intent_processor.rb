@@ -420,10 +420,24 @@ class AiLeadEmployee::Orchestration::IntentProcessor
     return unless account.qualification_offers.enabled_in_order.exists?
     return if selected_offer && !selected_offer.qualification_enabled?
 
-    AiLeadEmployee::QualificationService.new(
+    result = AiLeadEmployee::QualificationService.new(
       conversation: conversation,
       incoming_message: triggering_message
     ).perform
+    select_contextual_question!(result)
+  end
+
+  def select_contextual_question!(result)
+    return result unless result&.qualification && result.qualification_context && selected_offer
+
+    question = AiLeadEmployee::ContextualQualificationQuestion.new(
+      questions: selected_offer.questions, evidence: result.qualification.evidence_snapshot,
+      assessment: result.assessment
+    ).perform
+    result.next_question = question&.fetch('prompt')
+    result.next_question_key = question&.fetch('key')
+    result.qualification_context = result.qualification_context.merge('next_question_key' => result.next_question_key).freeze
+    result
   end
 
   def create_highly_qualified_handoff(qualification_result)
