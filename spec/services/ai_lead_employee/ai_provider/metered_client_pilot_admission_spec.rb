@@ -79,6 +79,37 @@ RSpec.describe AiLeadEmployee::AiProvider::MeteredClient do
     expect(authorization.reload).to be_active
   end
 
+  it 'serializes two PostgreSQL workers contending for the final pilot attempt' do
+    allow(adapter).to receive(:complete).and_return(response)
+    start = Queue.new
+    outcomes = Queue.new
+    workers = Array.new(2) do
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          start.pop
+          worker = described_class.new(connection: provider.reload, adapter: adapter)
+          begin
+            worker.complete(messages: [{ role: 'user', content: 'Question' }],
+                            pilot_authorization: authorization.reload, orchestration_intent: intent.reload)
+            outcomes << :completed
+          rescue AiLeadEmployee::AiProvider::PilotBusyFailure, AiLeadEmployee::AiProvider::PilotAdmissionFailure => e
+            outcomes << e.class
+          end
+        end
+      end
+    end
+    2.times { start << true }
+    workers.each(&:join)
+
+    results = Array.new(2) { outcomes.pop }
+    expect(results).to include(:completed)
+    expect(adapter).to have_received(:complete).once
+    expect(AiLeadEmployee::AiProviderUsage.where(pilot_authorization: authorization).count).to eq(1)
+    expect(AiLeadEmployee::AiProviderUsage.find_by!(pilot_authorization: authorization)).to have_attributes(
+      status: 'completed', cost_available: true
+    )
+  end
+
   it 'preserves a failed provider HTTP attempt and pauses later pilot admission for unknown cost' do
     allow(adapter).to receive(:complete).once.and_raise(AiLeadEmployee::AiProvider::TimeoutFailure)
 
