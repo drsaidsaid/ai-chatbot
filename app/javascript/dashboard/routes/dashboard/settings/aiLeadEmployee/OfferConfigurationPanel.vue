@@ -220,6 +220,12 @@ const newRequirementLeaf = () => ({
   value: null,
 });
 const groupBranch = group => (group.all ? 'all' : 'any');
+const changeGroupBranch = (group, branch) => {
+  const previous = groupBranch(group);
+  const children = group[previous];
+  delete group[previous];
+  group[branch] = children;
+};
 const addRequirementGroup = () =>
   draft.value.requirement_groups.push({
     dimension: 'fit',
@@ -1660,10 +1666,8 @@ onMounted(load);
               <select
                 :value="groupBranch(group)"
                 :class="inputClass"
-                @change="
-                  group[$event.target.value] = group[groupBranch(group)];
-                  delete group[groupBranch(group)];
-                "
+                :data-testid="`group-branch-${groupIndex}`"
+                @change="changeGroupBranch(group, $event.target.value)"
               >
                 <option value="all">All must apply</option>
                 <option value="any">Any one can apply</option>
@@ -1681,7 +1685,12 @@ onMounted(load);
               :key="nodeIndex"
             >
               <div v-if="node.field" class="grid gap-2 sm:grid-cols-4">
-                <select v-model="node.field" :class="inputClass">
+                <select
+                  v-model="node.field"
+                  :class="inputClass"
+                  :data-testid="`group-field-${groupIndex}-${nodeIndex}`"
+                  @change="resetRule(node)"
+                >
                   <option
                     v-for="field in fields"
                     :key="field.key"
@@ -1690,7 +1699,12 @@ onMounted(load);
                     {{ field.meaning }}
                   </option>
                 </select>
-                <select v-model="node.operator" :class="inputClass">
+                <select
+                  v-model="node.operator"
+                  :class="inputClass"
+                  :data-testid="`group-operator-${groupIndex}-${nodeIndex}`"
+                  @change="resetRule(node)"
+                >
                   <option
                     v-for="operator in operatorsFor(node)"
                     :key="operator"
@@ -1699,7 +1713,40 @@ onMounted(load);
                     {{ operator }}
                   </option>
                 </select>
-                <input v-model="node.value" :class="inputClass" />
+                <input
+                  v-if="fields[node.field]?.answer_type === 'money'"
+                  v-model="node.value.amount"
+                  inputmode="decimal"
+                  :class="inputClass"
+                />
+                <input
+                  v-else-if="fields[node.field]?.answer_type === 'number'"
+                  v-model.number="node.value"
+                  type="number"
+                  :class="inputClass"
+                />
+                <select
+                  v-else-if="fields[node.field]?.answer_type === 'boolean'"
+                  v-model="node.value"
+                  :class="inputClass"
+                >
+                  <option :value="true">{{ label('YES') }}</option>
+                  <option :value="false">{{ label('NO') }}</option>
+                </select>
+                <select
+                  v-else-if="fields[node.field]?.answer_type === 'choice'"
+                  v-model="node.value"
+                  :class="inputClass"
+                >
+                  <option
+                    v-for="option in fields[node.field].options"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+                <input v-else v-model="node.value" :class="inputClass" />
                 <button
                   type="button"
                   :class="buttonClass"
@@ -1728,7 +1775,11 @@ onMounted(load);
                   :key="leafIndex"
                   class="grid gap-2 sm:grid-cols-4"
                 >
-                  <select v-model="leaf.field" :class="inputClass">
+                  <select
+                    v-model="leaf.field"
+                    :class="inputClass"
+                    @change="resetRule(leaf)"
+                  >
                     <option
                       v-for="field in fields"
                       :key="field.key"
@@ -1737,7 +1788,11 @@ onMounted(load);
                       {{ field.meaning }}
                     </option>
                   </select>
-                  <select v-model="leaf.operator" :class="inputClass">
+                  <select
+                    v-model="leaf.operator"
+                    :class="inputClass"
+                    @change="resetRule(leaf)"
+                  >
                     <option
                       v-for="operator in operatorsFor(leaf)"
                       :key="operator"
@@ -1746,7 +1801,40 @@ onMounted(load);
                       {{ operator }}
                     </option>
                   </select>
-                  <input v-model="leaf.value" :class="inputClass" />
+                  <input
+                    v-if="fields[leaf.field]?.answer_type === 'money'"
+                    v-model="leaf.value.amount"
+                    inputmode="decimal"
+                    :class="inputClass"
+                  />
+                  <input
+                    v-else-if="fields[leaf.field]?.answer_type === 'number'"
+                    v-model.number="leaf.value"
+                    type="number"
+                    :class="inputClass"
+                  />
+                  <select
+                    v-else-if="fields[leaf.field]?.answer_type === 'boolean'"
+                    v-model="leaf.value"
+                    :class="inputClass"
+                  >
+                    <option :value="true">{{ label('YES') }}</option>
+                    <option :value="false">{{ label('NO') }}</option>
+                  </select>
+                  <select
+                    v-else-if="fields[leaf.field]?.answer_type === 'choice'"
+                    v-model="leaf.value"
+                    :class="inputClass"
+                  >
+                    <option
+                      v-for="option in fields[leaf.field].options"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                  <input v-else v-model="leaf.value" :class="inputClass" />
                   <button
                     type="button"
                     :class="buttonClass"

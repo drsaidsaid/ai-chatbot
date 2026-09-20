@@ -9,7 +9,7 @@ RSpec.describe 'Typed alternative Offer requirements', type: :request do
     offer = r09_create_offer(group_configuration)
 
     expect(offer.fetch('requirement_groups')).to include(
-      include('dimension' => 'fit', 'all' => include(include('any' => be_an(Array))))
+      include('dimension' => 'fit', 'any' => include(include('all' => be_an(Array))))
     )
 
     invalid = group_configuration(requirement_groups: [{ 'dimension' => 'fit', 'any' => [] }])
@@ -61,16 +61,13 @@ RSpec.describe 'Typed alternative Offer requirements', type: :request do
                                            prompt: 'Would you like a sales call?')
     ]
     groups = requirement_groups || [
-      { 'dimension' => 'fit', 'all' => [
-        { 'any' => [
-          { 'field' => 'business_status', 'operator' => 'eq', 'value' => 'no_business' },
-          { 'all' => [
-            { 'field' => 'business_status', 'operator' => 'eq', 'value' => 'operating_business' },
-            { 'field' => 'monthly_business_revenue_tzs', 'operator' => 'lt',
-              'value' => { 'amount' => '1000000', 'currency' => 'TZS' } }
-          ] }
-        ] },
-        { 'field' => 'expert_willingness', 'operator' => 'eq', 'value' => true }
+      { 'dimension' => 'fit', 'any' => [
+        { 'field' => 'business_status', 'operator' => 'eq', 'value' => 'no_business' },
+        { 'all' => [
+          { 'field' => 'business_status', 'operator' => 'eq', 'value' => 'operating_business' },
+          { 'field' => 'monthly_business_revenue_tzs', 'operator' => 'lt',
+            'value' => { 'amount' => '1000000', 'currency' => 'TZS' } }
+        ] }
       ] },
       { 'dimension' => 'action_eligibility', 'all' => [
         { 'field' => 'sales_call_agreement', 'operator' => 'eq', 'value' => true }

@@ -12,7 +12,7 @@ class AiLeadEmployee::OfferRules # rubocop:disable Metrics/ClassLength
   ORDERED_OPERATORS = %w[lt lte gt gte].freeze
   REQUIREMENT_DIMENSIONS = %w[fit readiness action_eligibility].freeze
   GROUP_KEYS = %w[all any].freeze
-  MAX_GROUP_DEPTH = 4
+  MAX_GROUP_DEPTH = 2
   MAX_GROUP_CHILDREN = 8
   MAX_REQUIREMENT_GROUPS = 12
 

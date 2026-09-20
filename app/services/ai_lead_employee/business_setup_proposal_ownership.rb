@@ -3,7 +3,8 @@
 class AiLeadEmployee::BusinessSetupProposalOwnership
   def self.remove_unchanged_fields!(configuration, previous_proposal)
     ownership = previous_proposal.fetch('source_ownership', {})
-    retired_keys = unchanged_keys(configuration, ownership, previous_proposal)
+    protected_keys = group_fields(configuration.fetch('requirement_groups', []))
+    retired_keys = unchanged_keys(configuration, ownership, previous_proposal) - protected_keys
     configuration['questions'] = Array(configuration['questions']).reject { |question| retired_keys.include?(question['key']) }
     configuration['rules'] = Array(configuration['rules']).reject { |rule| retired_keys.include?(rule['field']) }
   end
@@ -50,4 +51,11 @@ class AiLeadEmployee::BusinessSetupProposalOwnership
     Array(values).select { |value| value[key] == field }
   end
   private_class_method :field_values
+
+  def self.group_fields(nodes)
+    Array(nodes).flat_map do |node|
+      node['field'] || group_fields(node['all'] || node['any'])
+    end.compact.uniq
+  end
+  private_class_method :group_fields
 end

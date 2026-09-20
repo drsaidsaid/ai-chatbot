@@ -40,6 +40,7 @@ const offer = () => ({
     },
   ],
   rules: [],
+  requirement_groups: [],
   score_weights: { budget: 20 },
   score_thresholds: { qualified: 60, highly_qualified: 80 },
   commercial_terms_draft: null,
@@ -943,4 +944,43 @@ it('updates existing money-rule currency without converting amounts and retains 
   await wrapper.get('form').trigger('submit');
   await flushPromises();
   expect(wrapper.text()).toContain('Offer saved');
+});
+
+it('edits and reloads typed alternative groups without losing children when switching any to all', async () => {
+  const saved = offer();
+  saved.requirement_groups = [
+    {
+      dimension: 'fit',
+      any: [
+        {
+          field: 'budget',
+          operator: 'lt',
+          value: { amount: '1000000.00', currency: 'TZS' },
+        },
+      ],
+    },
+  ];
+  axios.get.mockResolvedValue({ data: [saved] });
+  const wrapper = mountPanel();
+  await flushPromises();
+
+  await wrapper.get('[data-testid="group-branch-0"]').setValue('all');
+  expect(wrapper.get('[data-testid="group-field-0-0"]').element.value).toBe(
+    'budget'
+  );
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+
+  expect(axios.patch.mock.calls[0][1].offer.requirement_groups).toEqual([
+    {
+      dimension: 'fit',
+      all: [
+        {
+          field: 'budget',
+          operator: 'lt',
+          value: { amount: '1000000.00', currency: 'TZS' },
+        },
+      ],
+    },
+  ]);
 });
