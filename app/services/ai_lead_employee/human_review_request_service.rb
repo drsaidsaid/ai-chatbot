@@ -5,6 +5,7 @@ class AiLeadEmployee::HumanReviewRequestService
 
   ALERT_TYPE = 'human_review_request'
   ALERT_TEXT_PREFIX = 'Human review needed'
+  PRICING_UNAVAILABLE_REASONS = %w[no_published_price price_not_current offer_not_selected].freeze
 
   def initialize(conversation:, lead_message:, reason:, enqueue_alerts: true)
     @conversation = conversation
@@ -23,7 +24,7 @@ class AiLeadEmployee::HumanReviewRequestService
     request = conversation.account.human_review_requests.find_by!(
       conversation: conversation,
       lead_message: lead_message,
-      reason: reason
+      reason: review_reason
     )
     ensure_assignment!(request)
     deliver_alerts!(request)
@@ -34,6 +35,14 @@ class AiLeadEmployee::HumanReviewRequestService
 
   attr_reader :conversation, :lead_message, :reason, :enqueue_alerts
 
+  # Pricing refusals need a human decision but are not separate review
+  # categories. The orchestration intent retains the original refusal reason.
+  def review_reason
+    return 'no_approved_knowledge' if PRICING_UNAVAILABLE_REASONS.include?(reason.to_s)
+
+    reason
+  end
+
   def find_or_create_request
     request = nil
     created = false
@@ -42,7 +51,7 @@ class AiLeadEmployee::HumanReviewRequestService
       request = conversation.account.human_review_requests.find_or_initialize_by(
         conversation: conversation,
         lead_message: lead_message,
-        reason: reason
+        reason: review_reason
       )
       created = request.new_record?
       request.assign_attributes(question: lead_message.content.to_s) if created

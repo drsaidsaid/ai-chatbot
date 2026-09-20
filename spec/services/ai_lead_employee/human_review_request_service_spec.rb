@@ -71,6 +71,21 @@ RSpec.describe AiLeadEmployee::HumanReviewRequestService do
     expect(Meta::Whatsapp::TextMessageClient).not_to have_received(:new)
   end
 
+  it 'normalizes pricing availability refusals into the established approved-data review workflow' do
+    %w[no_published_price price_not_current offer_not_selected].each do |pricing_reason|
+      result = described_class.new(
+        conversation: conversation,
+        lead_message: message,
+        reason: pricing_reason,
+        enqueue_alerts: false
+      ).perform
+
+      expect(result.request.reason).to eq('no_approved_knowledge')
+    end
+
+    expect(HumanReviewRequest.where(conversation: conversation, lead_message: message).count).to eq(1)
+  end
+
   it 'assigns a configured default owner and routes an urgent review only to the configured Business Account member' do
     owner = create(:user, account: account, role: :agent, custom_attributes: { 'whatsapp_alert_phone' => '+255700000099' })
     account.update!(
